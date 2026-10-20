@@ -4,7 +4,6 @@
 
 let supabaseClient = null;
 
-/* Inisialisasi client Supabase (sekali saja) */
 function initSupabase() {
   if (supabaseClient) return supabaseClient;
   if (typeof supabase === 'undefined') {
@@ -15,18 +14,15 @@ function initSupabase() {
   return supabaseClient;
 }
 
-/* Ambil profil user yang sedang login */
 async function getProfile() {
   const client = initSupabase();
   const { data: { user } } = await client.auth.getUser();
   if (!user) return null;
-
   const { data, error } = await client
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single();
-
   if (error) {
     console.error('getProfile error:', error);
     return null;
@@ -34,7 +30,6 @@ async function getProfile() {
   return data;
 }
 
-/* Logout & redirect ke halaman login */
 async function doLogout() {
   const client = initSupabase();
   await client.auth.signOut();
@@ -42,20 +37,17 @@ async function doLogout() {
   window.location.href = '../login.html';
 }
 
-/* Redirect ke dashboard sesuai role */
 function redirectByRole(role) {
   const base = window.location.pathname.includes('/operator/')
     || window.location.pathname.includes('/guru/')
     || window.location.pathname.includes('/siswa/')
     ? '../' : '';
-
   if (role === 'operator') window.location.href = base + 'operator/dashboard.html';
   else if (role === 'guru') window.location.href = base + 'guru/dashboard.html';
   else if (role === 'siswa') window.location.href = base + 'siswa/dashboard.html';
   else window.location.href = base + 'login.html';
 }
 
-/* Proteksi halaman: harus login & role sesuai */
 async function requireAuth(expectedRole) {
   const profile = await getProfile();
   if (!profile) {
@@ -114,7 +106,6 @@ async function isSubjectUsed(subjectId) {
     .select('*', { count: 'exact', head: true })
     .eq('subject_id', subjectId);
   if (err1) throw err1;
-
   if (assignCount > 0) return { used: true, by: 'penugasan guru', count: assignCount };
   return { used: false };
 }
@@ -129,7 +120,6 @@ async function deleteSubject(id) {
    CRUD KELAS (CLASSES)
    ============================================================ */
 
-/* Ambil semua kelas di sekolah user */
 async function getClasses(schoolId) {
   const client = initSupabase();
   let query = client.from('classes').select('*').order('name', { ascending: true });
@@ -139,24 +129,17 @@ async function getClasses(schoolId) {
   return data || [];
 }
 
-/* Buat kelas baru */
 async function createClass({ name, grade, room, schoolId }) {
   const client = initSupabase();
   const { data, error } = await client
     .from('classes')
-    .insert([{
-      name,
-      grade,
-      room,
-      school_id: schoolId
-    }])
+    .insert([{ name, grade, room, school_id: schoolId }])
     .select()
     .single();
   if (error) throw error;
   return data;
 }
 
-/* Update kelas */
 async function updateClass(id, { name, grade, room }) {
   const client = initSupabase();
   const { data, error } = await client
@@ -169,7 +152,6 @@ async function updateClass(id, { name, grade, room }) {
   return data;
 }
 
-/* Cek apakah kelas dipakai (di teacher_assign atau enrollments) */
 async function isClassUsed(classId) {
   const client = initSupabase();
 
@@ -178,7 +160,6 @@ async function isClassUsed(classId) {
     .select('*', { count: 'exact', head: true })
     .eq('class_id', classId);
   if (err1) throw err1;
-
   if (assignCount > 0) return { used: true, by: 'penugasan guru', count: assignCount };
 
   const { count: enrollCount, error: err2 } = await client
@@ -186,15 +167,87 @@ async function isClassUsed(classId) {
     .select('*', { count: 'exact', head: true })
     .eq('class_id', classId);
   if (err2) throw err2;
-
   if (enrollCount > 0) return { used: true, by: 'enrollment siswa', count: enrollCount };
 
   return { used: false };
 }
 
-/* Hapus kelas (hanya jika tidak dipakai) */
 async function deleteClass(id) {
   const client = initSupabase();
   const { error } = await client.from('classes').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ============================================================
+   CRUD GURU (PROFILES role=guru)
+   ============================================================ */
+
+/* Ambil semua guru di sekolah user */
+async function getTeachers(schoolId) {
+  const client = initSupabase();
+  let query = client
+    .from('profiles')
+    .select('*')
+    .eq('role', 'guru')
+    .order('name', { ascending: true });
+  if (schoolId) query = query.eq('school_id', schoolId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+/* Buat profil guru baru (user Auth harus dibuat manual di Supabase) */
+async function createTeacher({ id, email, name, schoolId }) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('profiles')
+    .insert([{
+      id,
+      email,
+      name,
+      role: 'guru',
+      school_id: schoolId,
+      status: 'active'
+    }])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/* Update profil guru (name, email — id & role tidak diubah) */
+async function updateTeacher(id, { name, email }) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('profiles')
+    .update({ name, email })
+    .eq('id', id)
+    .eq('role', 'guru')
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/* Cek apakah guru dipakai (di teacher_assign) */
+async function isTeacherUsed(teacherId) {
+  const client = initSupabase();
+  const { count, error } = await client
+    .from('teacher_assign')
+    .select('*', { count: 'exact', head: true })
+    .eq('teacher_id', teacherId);
+  if (error) throw error;
+  if (count > 0) return { used: true, by: 'penugasan guru', count };
+  return { used: false };
+}
+
+/* Hapus profil guru — user Auth tetap ada, harus dihapus manual di Supabase */
+async function deleteTeacher(id) {
+  const client = initSupabase();
+  const { error } = await client
+    .from('profiles')
+    .delete()
+    .eq('id', id)
+    .eq('role', 'guru');
   if (error) throw error;
 }

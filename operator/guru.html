@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Guru — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+    .search-input {
+      padding: 0.6rem 1rem; border: 1px solid var(--tb-border);
+      border-radius: 30px; font-size: 0.85rem; outline: none;
+      min-width: 220px; font-family: inherit;
+    }
+    .search-input:focus { border-color: var(--tb-primary); box-shadow: 0 0 0 3px rgba(46,204,113,0.15); }
+
+    .btn-sm { padding: 0.5rem 1rem; font-size: 0.8rem; }
+
+    .info-card {
+      background: #fff3cd; border-left: 4px solid var(--tb-warning);
+      border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 1.5rem;
+      font-size: 0.85rem; color: #856404;
+    }
+    .info-card strong { color: #7d6608; }
+    .info-card code {
+      background: white; padding: 2px 6px; border-radius: 4px;
+      font-family: monospace; font-size: 0.8rem;
+    }
+
+    .table-card {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1); overflow: hidden;
+      box-shadow: var(--tb-shadow-sm);
+    }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table thead { background: var(--tb-light); }
+    .data-table th {
+      padding: 0.9rem 1rem; text-align: left; font-weight: 600;
+      color: var(--tb-dark); border-bottom: 2px solid var(--tb-primary);
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .data-table td { padding: 0.8rem 1rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    .data-table tr:hover { background: #f8f9fa; }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    .nama-guru { font-weight: 600; color: var(--tb-text); }
+    .email-teks { color: var(--tb-text-muted); font-size: 0.8rem; }
+    .uid-teks { font-family: monospace; font-size: 0.7rem; color: #888; }
+
+    .status-badge {
+      display: inline-block; padding: 3px 12px; border-radius: 20px;
+      font-weight: 600; font-size: 0.7rem;
+    }
+    .status-active { background: var(--tb-light); color: var(--tb-dark); }
+    .status-inactive { background: #fadbd8; color: var(--tb-danger); }
+
+    .action-btns { display: flex; gap: 6px; }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--tb-border);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--tb-transition); font-size: 0.9rem;
+    }
+    .btn-icon:hover { background: var(--tb-light); border-color: var(--tb-primary); }
+    .btn-icon.danger:hover { background: #fadbd8; border-color: var(--tb-danger); }
+
+    .empty-row { text-align: center; padding: 3rem 1rem; color: var(--tb-text-muted); }
+    .empty-row .emoji { font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: white; border-radius: var(--tb-radius-lg);
+      padding: 2rem; width: 100%; max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: tbFadeInUp 0.3s ease;
+      margin: auto;
+    }
+    .modal-card h2 { font-size: 1.3rem; color: var(--tb-dark); margin-bottom: 1rem; font-weight: 700; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; }
+
+    .form-hint {
+      font-size: 0.7rem; color: var(--tb-text-muted);
+      margin-top: -0.6rem; margin-bottom: 1rem;
+      padding-left: 4px; line-height: 1.5;
+    }
+    .form-hint code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-family: monospace; }
+
+    .btn-secondary {
+      background: #6c757d; color: white; border: none;
+      padding: 0.6rem 1.2rem; border-radius: 30px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; transition: var(--tb-transition);
+    }
+    .btn-secondary:hover { background: #5a6268; }
+
+    .btn-danger {
+      background: var(--tb-danger); color: white; border: none;
+      padding: 0.6rem 1.2rem; border-radius: 30px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; transition: var(--tb-transition);
+    }
+    .btn-danger:hover { background: #c0392b; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--tb-dark); color: white;
+      padding: 1rem 1.4rem; border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease; z-index: 3000;
+      max-width: 360px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--tb-danger); }
+
+    .info-bar {
+      background: var(--tb-light); border-radius: 12px;
+      padding: 0.7rem 1rem; margin-bottom: 1rem;
+      font-size: 0.8rem; color: var(--tb-dark); font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Operator</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box">
+    <div class="spinner"></div>
+    <p>Memuat data guru...</p>
+  </div>
+
+  <div class="page-container hidden" id="pageContent">
+
+    <div class="page-toolbar">
+      <div>
+        <h1>👨‍🏫 Manajemen Guru
+          <small>Kelola daftar guru di sekolah Anda</small>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Cari guru..." oninput="renderTable()">
+        <button class="btn-primary btn-sm" onclick="openModal()">+ Tambah Guru</button>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <strong>⚠️ Penting:</strong> Untuk menambah guru, buat dulu akunnya di
+      <strong>Supabase Dashboard → Authentication → Users</strong>, centang
+      <em>Auto Confirm User</em>, lalu salin <strong>UID</strong>-nya dan tempel di form.
+      <br>Panduan lengkap ada di dialog "+ Tambah Guru".
+    </div>
+
+    <div class="info-bar">
+      <span>ℹ️</span>
+      <span>Total: <strong id="totalCount">0</strong> guru ·
+            Menampilkan: <strong id="shownCount">0</strong></span>
+    </div>
+
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:50px;">No</th>
+            <th>Nama Guru</th>
+            <th style="width:240px;">Email</th>
+            <th style="width:120px;">Status</th>
+            <th style="width:120px;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="5" class="empty-row">Memuat...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top: 1rem; text-align:center;">
+      <a href="dashboard.html" class="btn-secondary" style="text-decoration:none; display:inline-block;">
+        ← Kembali ke Dashboard
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Modal Form -->
+  <div class="modal-overlay" id="modalForm">
+    <div class="modal-card">
+      <h2 id="modalTitle">Tambah Guru</h2>
+
+      <div id="guideBox" style="background: #fff3cd; border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 1rem; font-size: 0.75rem; color: #856404; line-height: 1.5;">
+        <strong>📋 Langkah membuat akun guru:</strong>
+        <ol style="margin: 0.5rem 0 0 1rem; padding: 0;">
+          <li>Buka <strong>Supabase → Authentication → Users → Add user</strong></li>
+          <li>Isi email + password (min 6 karakter)</li>
+          <li>Centang <strong>Auto Confirm User</strong></li>
+          <li>Klik <strong>Create user</strong></li>
+          <li>Salin <strong>UID</strong> dari daftar user, paste di bawah</li>
+        </ol>
+      </div>
+
+      <label class="form-label" for="inputUid">UID Guru (dari Supabase Auth) <span style="color:var(--tb-danger);">*</span></label>
+      <input type="text" id="inputUid" class="form-input" placeholder="Contoh: a1b2c3d4-e5f6-7890-abcd-ef1234567890" maxlength="36">
+      <p class="form-hint">Format: <code>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code></p>
+
+      <label class="form-label" for="inputName">Nama Lengkap <span style="color:var(--tb-danger);">*</span></label>
+      <input type="text" id="inputName" class="form-input" placeholder="Contoh: Budi Santoso, S.Pd." maxlength="100">
+
+      <label class="form-label" for="inputEmail">Email <span style="color:var(--tb-danger);">*</span></label>
+      <input type="email" id="inputEmail" class="form-input" placeholder="Contoh: budi@sekolah.sch.id" maxlength="100">
+      <p class="form-hint">Harus sama dengan email yang Anda daftarkan di Supabase Auth</p>
+
+      <div id="modalError" class="alert alert-error hidden" style="margin-top:0;"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Batal</button>
+        <button class="btn-primary" id="btnSave" onclick="saveTeacher()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus -->
+  <div class="modal-overlay" id="modalDelete">
+    <div class="modal-card">
+      <h2>🗑️ Hapus Guru?</h2>
+      <p id="deleteMessage" style="color: var(--tb-text); margin-bottom: 0.8rem;">
+        Anda yakin ingin menghapus guru ini?
+      </p>
+      <p style="font-size: 0.75rem; color: var(--tb-text-muted); background: #fef9e7; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem;">
+        ⚠️ Profil akan dihapus dari daftar Tembok Belajar, tapi akun login guru masih ada di Supabase Auth. Untuk menghapus akun login sepenuhnya, hapus manual di <strong>Supabase → Authentication → Users</strong>.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let allTeachers = [];
+    let editingId = null;
+    let deletingId = null;
+    let currentUser = null;
+    let currentSchoolId = 1;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('operator');
+      if (!currentUser) return;
+
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+      currentSchoolId = currentUser.school_id || 1;
+
+      await loadTeachers();
+    })();
+
+    async function loadTeachers() {
+      try {
+        allTeachers = await getTeachers(currentSchoolId);
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('pageContent').classList.remove('hidden');
+        renderTable();
+      } catch (err) {
+        console.error('Gagal load guru:', err);
+        document.getElementById('loading').innerHTML =
+          '<p style="color:var(--tb-danger);">Gagal memuat guru: ' + err.message + '</p>';
+      }
+    }
+
+    function renderTable() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const filtered = allTeachers.filter(t =>
+        (t.name || '').toLowerCase().includes(keyword) ||
+        (t.email || '').toLowerCase().includes(keyword)
+      );
+
+      document.getElementById('totalCount').textContent = allTeachers.length;
+      document.getElementById('shownCount').textContent = filtered.length;
+
+      const tbody = document.getElementById('tableBody');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="5" class="empty-row">
+            <span class="emoji">👨‍🏫</span>
+            ${allTeachers.length === 0
+              ? 'Belum ada guru. Klik "+ Tambah Guru" untuk memulai.'
+              : 'Tidak ada guru yang cocok dengan pencarian.'}
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((t, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td class="nama-guru">${escapeHtml(t.name)}</td>
+          <td class="email-teks">${escapeHtml(t.email)}</td>
+          <td><span class="status-badge ${t.status === 'active' ? 'status-active' : 'status-inactive'}">
+            ${t.status === 'active' ? '✓ Aktif' : '✕ Nonaktif'}</span></td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-icon" title="Edit" onclick="openModal('${t.id}')">✏️</button>
+              <button class="btn-icon danger" title="Hapus" onclick="openDelete('${t.id}')">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openModal(id = null) {
+      editingId = id;
+      const title = document.getElementById('modalTitle');
+      const inputUid = document.getElementById('inputUid');
+      const inputName = document.getElementById('inputName');
+      const inputEmail = document.getElementById('inputEmail');
+      const errBox = document.getElementById('modalError');
+      const btnSave = document.getElementById('btnSave');
+      const guideBox = document.getElementById('guideBox');
+
+      errBox.classList.add('hidden');
+      btnSave.disabled = false;
+      btnSave.textContent = 'Simpan';
+
+      if (id) {
+        const teacher = allTeachers.find(t => t.id === id);
+        if (!teacher) return;
+        title.textContent = 'Edit Guru';
+        inputUid.value = teacher.id || '';
+        inputUid.disabled = true;
+        inputUid.style.background = '#f5f5f5';
+        inputName.value = teacher.name || '';
+        inputEmail.value = teacher.email || '';
+        guideBox.style.display = 'none';
+      } else {
+        title.textContent = 'Tambah Guru';
+        inputUid.value = '';
+        inputUid.disabled = false;
+        inputUid.style.background = '';
+        inputName.value = '';
+        inputEmail.value = '';
+        guideBox.style.display = 'block';
+      }
+
+      document.getElementById('modalForm').classList.add('active');
+      setTimeout(() => {
+        if (id) inputName.focus(); else inputUid.focus();
+      }, 100);
+    }
+
+    function closeModal() {
+      document.getElementById('modalForm').classList.remove('active');
+      editingId = null;
+    }
+
+    async function saveTeacher() {
+      const uid = document.getElementById('inputUid').value.trim();
+      const name = document.getElementById('inputName').value.trim();
+      const email = document.getElementById('inputEmail').value.trim().toLowerCase();
+      const errBox = document.getElementById('modalError');
+      const btnSave = document.getElementById('btnSave');
+
+      if (!uid && !editingId) {
+        errBox.textContent = 'UID wajib diisi (dari Supabase Auth).';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid) && !editingId) {
+        errBox.textContent = 'Format UID tidak valid. Harus berbentuk UUID (36 karakter dengan tanda hubung).';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (!name) {
+        errBox.textContent = 'Nama wajib diisi.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (!email || !email.includes('@')) {
+        errBox.textContent = 'Email tidak valid.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      errBox.classList.add('hidden');
+      btnSave.disabled = true;
+      btnSave.textContent = 'Menyimpan...';
+
+      try {
+        if (editingId) {
+          await updateTeacher(editingId, { name, email });
+          showToast('✅ Data guru berhasil diperbarui');
+        } else {
+          await createTeacher({ id: uid, email, name, schoolId: currentSchoolId });
+          showToast('✅ Guru berhasil ditambahkan. Sekarang guru bisa login.');
+        }
+        closeModal();
+        await loadTeachers();
+      } catch (err) {
+        console.error('Save error:', err);
+        let msg = err.message;
+        if (msg.includes('duplicate key') || msg.includes('violates unique')) {
+          msg = 'UID atau email sudah terdaftar. Periksa kembali data Anda.';
+        }
+        if (msg.includes('foreign key')) {
+          msg = 'UID tidak ditemukan di Auth. Pastikan akun sudah dibuat di Supabase → Authentication → Users.';
+        }
+        errBox.textContent = 'Gagal menyimpan: ' + msg;
+        errBox.classList.remove('hidden');
+        btnSave.disabled = false;
+        btnSave.textContent = 'Simpan';
+      }
+    }
+
+    function openDelete(id) {
+      deletingId = id;
+      const teacher = allTeachers.find(t => t.id === id);
+      if (!teacher) return;
+
+      document.getElementById('deleteMessage').innerHTML =
+        'Anda yakin ingin menghapus guru <strong>' + escapeHtml(teacher.name) + '</strong>? ' +
+        'Profilnya akan hilang dari Tembok Belajar.';
+
+      document.getElementById('modalDelete').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('modalDelete').classList.remove('active');
+      deletingId = null;
+    }
+
+    async function confirmDelete() {
+      if (!deletingId) return;
+      const btn = document.getElementById('btnConfirmDelete');
+      btn.disabled = true;
+      btn.textContent = 'Menghapus...';
+
+      try {
+        const check = await isTeacherUsed(deletingId);
+        if (check.used) {
+          closeDeleteModal();
+          showToast('⚠️ Guru sedang dipakai (' + check.by + '), tidak bisa dihapus.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Ya, Hapus';
+          return;
+        }
+        await deleteTeacher(deletingId);
+        closeDeleteModal();
+        showToast('🗑️ Guru berhasil dihapus dari daftar Tembok Belajar');
+        await loadTeachers();
+      } catch (err) {
+        console.error('Delete error:', err);
+        showToast('Gagal menghapus: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus';
+      }
+    }
+
+    /* ============================================================
+       UTILS
+       ============================================================ */
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : '');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && document.getElementById('modalForm').classList.contains('active')) {
+        saveTeacher();
+      }
+      if (e.key === 'Escape') {
+        closeModal();
+        closeDeleteModal();
+      }
+    });
+  </script>
+</body>
+</html>
