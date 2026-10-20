@@ -6,37 +6,30 @@
   <title>Manajemen Guru — Tembok Belajar</title>
   <link rel="stylesheet" href="../assets/css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-
     .page-toolbar {
       display: flex; justify-content: space-between; align-items: center;
       gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
     }
     .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
     .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
-
     .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
-
     .search-input {
       padding: 0.6rem 1rem; border: 1px solid var(--tb-border);
       border-radius: 30px; font-size: 0.85rem; outline: none;
       min-width: 220px; font-family: inherit;
     }
     .search-input:focus { border-color: var(--tb-primary); box-shadow: 0 0 0 3px rgba(46,204,113,0.15); }
-
     .btn-sm { padding: 0.5rem 1rem; font-size: 0.8rem; }
-
-    .info-card {
-      background: #fff3cd; border-left: 4px solid var(--tb-warning);
-      border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 1.5rem;
-      font-size: 0.85rem; color: #856404;
+    .btn-outline {
+      background: transparent; border: 1px solid var(--tb-primary);
+      color: var(--tb-primary); padding: 0.5rem 1rem; border-radius: 30px;
+      cursor: pointer; font-size: 0.8rem; font-weight: 600;
+      transition: var(--tb-transition); display: inline-flex; align-items: center; gap: 6px;
     }
-    .info-card strong { color: #7d6608; }
-    .info-card code {
-      background: white; padding: 2px 6px; border-radius: 4px;
-      font-family: monospace; font-size: 0.8rem;
-    }
+    .btn-outline:hover { background: var(--tb-light); }
 
     .table-card {
       background: white; border-radius: var(--tb-radius-lg);
@@ -56,8 +49,6 @@
 
     .nama-guru { font-weight: 600; color: var(--tb-text); }
     .email-teks { color: var(--tb-text-muted); font-size: 0.8rem; }
-    .uid-teks { font-family: monospace; font-size: 0.7rem; color: #888; }
-
     .status-badge {
       display: inline-block; padding: 3px 12px; border-radius: 20px;
       font-weight: 600; font-size: 0.7rem;
@@ -99,7 +90,6 @@
       margin-top: -0.6rem; margin-bottom: 1rem;
       padding-left: 4px; line-height: 1.5;
     }
-    .form-hint code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-family: monospace; }
 
     .btn-secondary {
       background: #6c757d; color: white; border: none;
@@ -124,7 +114,7 @@
       display: flex; align-items: center; gap: 10px;
       opacity: 0; transform: translateY(20px);
       transition: all 0.3s ease; z-index: 3000;
-      max-width: 360px;
+      max-width: 400px; line-height: 1.5;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.error { background: var(--tb-danger); }
@@ -135,6 +125,29 @@
       font-size: 0.8rem; color: var(--tb-dark); font-weight: 500;
       display: flex; align-items: center; gap: 8px;
     }
+
+    .progress-box {
+      background: white; border-radius: 12px; padding: 1rem;
+      margin-top: 1rem; border: 1px solid var(--tb-border);
+    }
+    .progress-label {
+      font-size: 0.8rem; color: var(--tb-text); margin-bottom: 0.5rem;
+      display: flex; justify-content: space-between;
+    }
+    .progress-bar {
+      width: 100%; height: 12px; background: #f0f0f0;
+      border-radius: 20px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--tb-primary), var(--tb-secondary));
+      width: 0%; transition: width 0.3s ease;
+    }
+    .progress-detail {
+      font-size: 0.7rem; color: var(--tb-text-muted); margin-top: 0.5rem;
+      max-height: 150px; overflow-y: auto;
+    }
+    .progress-detail .item-ok { color: var(--tb-dark); }
+    .progress-detail .item-err { color: var(--tb-danger); }
   </style>
 </head>
 <body>
@@ -158,20 +171,16 @@
     <div class="page-toolbar">
       <div>
         <h1>👨‍🏫 Manajemen Guru
-          <small>Kelola daftar guru di sekolah Anda</small>
+          <small>Kelola daftar guru — tambah satu per satu atau import dari Excel</small>
         </h1>
       </div>
       <div class="toolbar-actions">
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 Cari guru..." oninput="renderTable()">
+        <button class="btn-outline btn-sm" onclick="openImportModal()">
+          📥 Import Excel
+        </button>
         <button class="btn-primary btn-sm" onclick="openModal()">+ Tambah Guru</button>
       </div>
-    </div>
-
-    <div class="info-card">
-      <strong>⚠️ Penting:</strong> Untuk menambah guru, buat dulu akunnya di
-      <strong>Supabase Dashboard → Authentication → Users</strong>, centang
-      <em>Auto Confirm User</em>, lalu salin <strong>UID</strong>-nya dan tempel di form.
-      <br>Panduan lengkap ada di dialog "+ Tambah Guru".
     </div>
 
     <div class="info-bar">
@@ -205,32 +214,26 @@
 
   </div>
 
-  <!-- Modal Form -->
+  <!-- Modal Form (Tambah/Edit) -->
   <div class="modal-overlay" id="modalForm">
     <div class="modal-card">
       <h2 id="modalTitle">Tambah Guru</h2>
 
-      <div id="guideBox" style="background: #fff3cd; border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 1rem; font-size: 0.75rem; color: #856404; line-height: 1.5;">
-        <strong>📋 Langkah membuat akun guru:</strong>
-        <ol style="margin: 0.5rem 0 0 1rem; padding: 0;">
-          <li>Buka <strong>Supabase → Authentication → Users → Add user</strong></li>
-          <li>Isi email + password (min 6 karakter)</li>
-          <li>Centang <strong>Auto Confirm User</strong></li>
-          <li>Klik <strong>Create user</strong></li>
-          <li>Salin <strong>UID</strong> dari daftar user, paste di bawah</li>
-        </ol>
-      </div>
-
-      <label class="form-label" for="inputUid">UID Guru (dari Supabase Auth) <span style="color:var(--tb-danger);">*</span></label>
-      <input type="text" id="inputUid" class="form-input" placeholder="Contoh: a1b2c3d4-e5f6-7890-abcd-ef1234567890" maxlength="36">
-      <p class="form-hint">Format: <code>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code></p>
+      <p id="formDesc" style="font-size: 0.75rem; color: var(--tb-text-muted); margin-bottom: 1rem;">
+        Akun login dan profil guru akan dibuat otomatis. Guru bisa langsung login dengan email & password ini.
+      </p>
 
       <label class="form-label" for="inputName">Nama Lengkap <span style="color:var(--tb-danger);">*</span></label>
       <input type="text" id="inputName" class="form-input" placeholder="Contoh: Budi Santoso, S.Pd." maxlength="100">
 
       <label class="form-label" for="inputEmail">Email <span style="color:var(--tb-danger);">*</span></label>
       <input type="email" id="inputEmail" class="form-input" placeholder="Contoh: budi@sekolah.sch.id" maxlength="100">
-      <p class="form-hint">Harus sama dengan email yang Anda daftarkan di Supabase Auth</p>
+
+      <div id="passwordField">
+        <label class="form-label" for="inputPassword">Password Awal <span style="color:var(--tb-danger);">*</span></label>
+        <input type="password" id="inputPassword" class="form-input" placeholder="Minimal 6 karakter" maxlength="50">
+        <p class="form-hint">Guru bisa mengganti password setelah login pertama.</p>
+      </div>
 
       <div id="modalError" class="alert alert-error hidden" style="margin-top:0;"></div>
 
@@ -241,13 +244,56 @@
     </div>
   </div>
 
+  <!-- Modal Import Excel -->
+  <div class="modal-overlay" id="modalImport">
+    <div class="modal-card" style="max-width: 600px;">
+      <h2>📥 Import Guru dari Excel</h2>
+
+      <div style="background: #e8f4fd; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; font-size: 0.8rem; line-height: 1.6;">
+        <strong>📋 Langkah:</strong>
+        <ol style="margin: 0.5rem 0 0 1rem; padding: 0;">
+          <li>Klik <strong>"Download Template"</strong> di bawah</li>
+          <li>Buka file Excel → isi kolom: <strong>Nama, Email, Password</strong></li>
+          <li>Simpan file</li>
+          <li>Klik <strong>"Pilih File Excel"</strong> → pilih file yang sudah diisi</li>
+          <li>Klik <strong>"Mulai Import"</strong> → tunggu proses selesai</li>
+        </ol>
+      </div>
+
+      <button class="btn-outline" style="width: 100%; justify-content: center; margin-bottom: 1rem;" onclick="downloadTemplate()">
+        ⬇️ Download Template Excel
+      </button>
+
+      <label class="form-label">Pilih File Excel (.xlsx)</label>
+      <input type="file" id="fileInput" accept=".xlsx, .xls" class="form-input" onchange="onFileSelected(event)">
+
+      <div id="fileInfo" style="font-size: 0.8rem; color: var(--tb-text-muted); margin-bottom: 0.8rem;"></div>
+
+      <div id="progressBox" class="progress-box hidden">
+        <div class="progress-label">
+          <span>Memproses...</span>
+          <span id="progressText">0 / 0</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-detail" id="progressDetail"></div>
+      </div>
+
+      <div id="importError" class="alert alert-error hidden" style="margin-top: 0.8rem;"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeImportModal()">Tutup</button>
+        <button class="btn-primary" id="btnImport" onclick="startImport()" disabled>
+          🚀 Mulai Import
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Konfirmasi Hapus -->
   <div class="modal-overlay" id="modalDelete">
     <div class="modal-card">
       <h2>🗑️ Hapus Guru?</h2>
-      <p id="deleteMessage" style="color: var(--tb-text); margin-bottom: 0.8rem;">
-        Anda yakin ingin menghapus guru ini?
-      </p>
+      <p id="deleteMessage" style="color: var(--tb-text); margin-bottom: 0.8rem;"></p>
       <p style="font-size: 0.75rem; color: var(--tb-text-muted); background: #fef9e7; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem;">
         ⚠️ Profil akan dihapus dari daftar Tembok Belajar, tapi akun login guru masih ada di Supabase Auth. Untuk menghapus akun login sepenuhnya, hapus manual di <strong>Supabase → Authentication → Users</strong>.
       </p>
@@ -268,6 +314,7 @@
     let deletingId = null;
     let currentUser = null;
     let currentSchoolId = 1;
+    let selectedExcelData = null;
 
     (async () => {
       initSupabase();
@@ -311,7 +358,7 @@
           <tr><td colspan="5" class="empty-row">
             <span class="emoji">👨‍🏫</span>
             ${allTeachers.length === 0
-              ? 'Belum ada guru. Klik "+ Tambah Guru" untuk memulai.'
+              ? 'Belum ada guru. Klik "+ Tambah Guru" atau "Import Excel".'
               : 'Tidak ada guru yang cocok dengan pencarian.'}
           </td></tr>`;
         return;
@@ -334,15 +381,18 @@
       `).join('');
     }
 
+    /* ============================================================
+       MODAL TAMBAH/EDIT
+       ============================================================ */
     function openModal(id = null) {
       editingId = id;
       const title = document.getElementById('modalTitle');
-      const inputUid = document.getElementById('inputUid');
+      const desc = document.getElementById('formDesc');
+      const passwordField = document.getElementById('passwordField');
       const inputName = document.getElementById('inputName');
       const inputEmail = document.getElementById('inputEmail');
       const errBox = document.getElementById('modalError');
       const btnSave = document.getElementById('btnSave');
-      const guideBox = document.getElementById('guideBox');
 
       errBox.classList.add('hidden');
       btnSave.disabled = false;
@@ -352,26 +402,21 @@
         const teacher = allTeachers.find(t => t.id === id);
         if (!teacher) return;
         title.textContent = 'Edit Guru';
-        inputUid.value = teacher.id || '';
-        inputUid.disabled = true;
-        inputUid.style.background = '#f5f5f5';
+        desc.textContent = 'Ubah nama atau email guru. Password tidak diubah di sini.';
         inputName.value = teacher.name || '';
         inputEmail.value = teacher.email || '';
-        guideBox.style.display = 'none';
+        passwordField.style.display = 'none';
       } else {
         title.textContent = 'Tambah Guru';
-        inputUid.value = '';
-        inputUid.disabled = false;
-        inputUid.style.background = '';
+        desc.textContent = 'Akun login dan profil guru akan dibuat otomatis.';
         inputName.value = '';
         inputEmail.value = '';
-        guideBox.style.display = 'block';
+        document.getElementById('inputPassword').value = '';
+        passwordField.style.display = 'block';
       }
 
       document.getElementById('modalForm').classList.add('active');
-      setTimeout(() => {
-        if (id) inputName.focus(); else inputUid.focus();
-      }, 100);
+      setTimeout(() => inputName.focus(), 100);
     }
 
     function closeModal() {
@@ -380,29 +425,13 @@
     }
 
     async function saveTeacher() {
-      const uid = document.getElementById('inputUid').value.trim();
       const name = document.getElementById('inputName').value.trim();
       const email = document.getElementById('inputEmail').value.trim().toLowerCase();
       const errBox = document.getElementById('modalError');
       const btnSave = document.getElementById('btnSave');
 
-      if (!uid && !editingId) {
-        errBox.textContent = 'UID wajib diisi (dari Supabase Auth).';
-        errBox.classList.remove('hidden');
-        return;
-      }
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid) && !editingId) {
-        errBox.textContent = 'Format UID tidak valid. Harus berbentuk UUID (36 karakter dengan tanda hubung).';
-        errBox.classList.remove('hidden');
-        return;
-      }
-      if (!name) {
-        errBox.textContent = 'Nama wajib diisi.';
-        errBox.classList.remove('hidden');
-        return;
-      }
-      if (!email || !email.includes('@')) {
-        errBox.textContent = 'Email tidak valid.';
+      if (!name || !email) {
+        errBox.textContent = 'Nama dan email wajib diisi.';
         errBox.classList.remove('hidden');
         return;
       }
@@ -416,19 +445,30 @@
           await updateTeacher(editingId, { name, email });
           showToast('✅ Data guru berhasil diperbarui');
         } else {
-          await createTeacher({ id: uid, email, name, schoolId: currentSchoolId });
-          showToast('✅ Guru berhasil ditambahkan. Sekarang guru bisa login.');
+          const password = document.getElementById('inputPassword').value;
+          if (!password || password.length < 6) {
+            errBox.textContent = 'Password minimal 6 karakter.';
+            errBox.classList.remove('hidden');
+            btnSave.disabled = false;
+            btnSave.textContent = 'Simpan';
+            return;
+          }
+
+          const { data, error } = await supabaseClient.functions.invoke('create-teacher', {
+            body: { email, password, name, schoolId: currentSchoolId }
+          });
+          if (error) throw error;
+          if (data && data.error) throw new Error(data.error);
+          showToast('✅ Guru berhasil dibuat. Sekarang bisa login.');
         }
+
         closeModal();
         await loadTeachers();
       } catch (err) {
         console.error('Save error:', err);
         let msg = err.message;
-        if (msg.includes('duplicate key') || msg.includes('violates unique')) {
-          msg = 'UID atau email sudah terdaftar. Periksa kembali data Anda.';
-        }
-        if (msg.includes('foreign key')) {
-          msg = 'UID tidak ditemukan di Auth. Pastikan akun sudah dibuat di Supabase → Authentication → Users.';
+        if (msg.includes('duplicate') || msg.includes('already')) {
+          msg = 'Email sudah terdaftar. Gunakan email lain.';
         }
         errBox.textContent = 'Gagal menyimpan: ' + msg;
         errBox.classList.remove('hidden');
@@ -437,6 +477,175 @@
       }
     }
 
+    /* ============================================================
+       IMPORT EXCEL
+       ============================================================ */
+    function openImportModal() {
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileInfo').textContent = '';
+      document.getElementById('progressBox').classList.add('hidden');
+      document.getElementById('importError').classList.add('hidden');
+      document.getElementById('btnImport').disabled = true;
+      selectedExcelData = null;
+      document.getElementById('modalImport').classList.add('active');
+    }
+
+    function closeImportModal() {
+      document.getElementById('modalImport').classList.remove('active');
+    }
+
+    function downloadTemplate() {
+      const ws = XLSX.utils.aoa_to_sheet([
+        ['Nama', 'Email', 'Password'],
+        ['Budi Santoso', 'budi@sekolah.sch.id', 'Guru123!'],
+        ['Siti Nurhaliza', 'siti@sekolah.sch.id', 'Guru123!'],
+        ['Ahmad Fauzi', 'ahmad@sekolah.sch.id', 'Guru123!']
+      ]);
+
+      ws['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 15 }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Guru');
+      XLSX.writeFile(wb, 'Template_Import_Guru.xlsx');
+
+      showToast('📥 Template berhasil diunduh');
+    }
+
+    function onFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        selectedExcelData = null;
+        document.getElementById('btnImport').disabled = true;
+        document.getElementById('fileInfo').textContent = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+          const valid = rows.filter(r =>
+            (r.Nama || r.nama || '').toString().trim() &&
+            (r.Email || r.email || '').toString().trim() &&
+            (r.Password || r.password || '').toString().trim()
+          );
+
+          if (valid.length === 0) {
+            document.getElementById('fileInfo').innerHTML =
+              '<span style="color:var(--tb-danger);">❌ File tidak berisi data valid. Pastikan kolom: Nama, Email, Password.</span>';
+            document.getElementById('btnImport').disabled = true;
+            selectedExcelData = null;
+            return;
+          }
+
+          selectedExcelData = valid.map(r => ({
+            name: (r.Nama || r.nama || '').toString().trim(),
+            email: (r.Email || r.email || '').toString().trim().toLowerCase(),
+            password: (r.Password || r.password || '').toString().trim()
+          }));
+
+          document.getElementById('fileInfo').innerHTML =
+            '<span style="color:var(--tb-dark);">✅ File valid: <strong>' + selectedExcelData.length +
+            ' baris guru</strong> siap diimport.</span>';
+          document.getElementById('btnImport').disabled = false;
+          document.getElementById('importError').classList.add('hidden');
+
+        } catch (err) {
+          console.error('Baca Excel error:', err);
+          document.getElementById('fileInfo').innerHTML =
+            '<span style="color:var(--tb-danger);">❌ Gagal membaca file: ' + err.message + '</span>';
+          document.getElementById('btnImport').disabled = true;
+          selectedExcelData = null;
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    async function startImport() {
+      if (!selectedExcelData || selectedExcelData.length === 0) return;
+
+      const btnImport = document.getElementById('btnImport');
+      btnImport.disabled = true;
+      btnImport.textContent = 'Memproses...';
+
+      const progressBox = document.getElementById('progressBox');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const progressDetail = document.getElementById('progressDetail');
+      const importError = document.getElementById('importError');
+
+      progressBox.classList.remove('hidden');
+      progressDetail.innerHTML = '';
+      importError.classList.add('hidden');
+
+      const total = selectedExcelData.length;
+      let success = 0;
+      let failed = 0;
+      const errors = [];
+
+      for (let i = 0; i < total; i++) {
+        const row = selectedExcelData[i];
+        progressText.textContent = (i + 1) + ' / ' + total;
+        progressFill.style.width = (((i + 1) / total) * 100) + '%';
+
+        const detailItem = document.createElement('div');
+        detailItem.textContent = '⏳ Memproses: ' + row.name + ' (' + row.email + ')';
+        progressDetail.appendChild(detailItem);
+        progressDetail.scrollTop = progressDetail.scrollHeight;
+
+        try {
+          const { data, error } = await supabaseClient.functions.invoke('create-teacher', {
+            body: {
+              email: row.email,
+              password: row.password,
+              name: row.name,
+              schoolId: currentSchoolId
+            }
+          });
+
+          if (error) throw new Error(error.message);
+          if (data && data.error) throw new Error(data.error);
+
+          success++;
+          detailItem.textContent = '✅ ' + row.name + ' (' + row.email + ') — berhasil';
+          detailItem.className = 'item-ok';
+
+        } catch (err) {
+          failed++;
+          const msg = err.message || 'Unknown error';
+          errors.push(row.email + ': ' + msg);
+          detailItem.textContent = '❌ ' + row.name + ' (' + row.email + ') — ' + msg;
+          detailItem.className = 'item-err';
+        }
+      }
+
+      progressText.textContent = total + ' / ' + total + ' selesai';
+
+      if (failed > 0) {
+        importError.innerHTML =
+          '<strong>⚠️ ' + failed + ' dari ' + total + ' gagal:</strong><br>' +
+          errors.map(e => '• ' + e).join('<br>');
+        importError.classList.remove('hidden');
+      }
+
+      btnImport.textContent = '🚀 Mulai Import';
+      btnImport.disabled = false;
+
+      showToast(
+        success + ' guru berhasil dibuat, ' + failed + ' gagal.',
+        failed === 0 ? 'success' : 'error'
+      );
+
+      await loadTeachers();
+    }
+
+    /* ============================================================
+       HAPUS GURU
+       ============================================================ */
     function openDelete(id) {
       deletingId = id;
       const teacher = allTeachers.find(t => t.id === id);
@@ -497,7 +706,7 @@
       t.textContent = msg;
       t.className = 'toast show ' + (type === 'error' ? 'error' : '');
       clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
     }
 
     document.addEventListener('keydown', e => {
@@ -506,6 +715,7 @@
       }
       if (e.key === 'Escape') {
         closeModal();
+        closeImportModal();
         closeDeleteModal();
       }
     });
