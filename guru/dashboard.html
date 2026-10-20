@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Guru — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box">
+    <div class="spinner"></div>
+    <p>Memuat dashboard...</p>
+  </div>
+
+  <div id="dashboard" class="dash-container hidden">
+    <div class="dash-hero">
+      <h1 id="greeting">Halo!</h1>
+      <p class="muted" id="subGreeting"></p>
+    </div>
+
+    <div class="stat-grid" id="statsGrid"></div>
+
+    <div class="dash-panel">
+      <h2 class="panel-title">📌 Menu Cepat</h2>
+      <div class="quick-menu" id="quickMenu"></div>
+    </div>
+
+    <div class="dash-panel">
+      <h2 class="panel-title">ℹ️ Info</h2>
+      <p class="muted" id="roleInfo">
+        Panel Guru sedang dibangun. Fitur akan ditambahkan di Fase 5-6.
+      </p>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    (async () => {
+      initSupabase();
+      const profile = await requireAuth('guru');
+      if (!profile) return;
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+
+      document.getElementById('userName').textContent = profile.name;
+      document.getElementById('userAvatar').textContent = profile.name.charAt(0).toUpperCase();
+      document.getElementById('greeting').textContent = 'Halo, ' + profile.name + '!';
+      document.getElementById('subGreeting').textContent = 'Guru · ' + profile.email;
+
+      const stats = [
+        { label: 'Mapel Diampu', value: '-' },
+        { label: 'Kelas Diampu', value: '-' },
+        { label: 'Aktivitas Dibuat', value: '-' },
+        { label: 'Submission Masuk', value: '-' }
+      ];
+      document.getElementById('statsGrid').innerHTML = stats.map(s => `
+        <div class="stat-card">
+          <div class="stat-value">${s.value}</div>
+          <div class="stat-label">${s.label}</div>
+        </div>
+      `).join('');
+
+      const menus = [
+        { icon: '📚', label: 'Mapel Saya' },
+        { icon: '📄', label: 'Materi (Page Builder)' },
+        { icon: '✏️', label: 'Aktivitas & Tugas' },
+        { icon: '📝', label: 'Penilaian' },
+        { icon: '📊', label: 'Grade Book' },
+        { icon: '💬', label: 'Forum Kelas' },
+        { icon: '📈', label: 'Progress Siswa' },
+        { icon: '🖨️', label: 'Cetak Rapor' }
+      ];
+      document.getElementById('quickMenu').innerHTML = menus.map(m => `
+        <div class="quick-item" onclick="alert('Fitur ${m.label} akan dibuat di Fase 5-6.')">
+          <span class="quick-icon">${m.icon}</span>
+          <span>${m.label}</span>
+        </div>
+      `).join('');
+    })();
+  </script>
+</body>
+</html>

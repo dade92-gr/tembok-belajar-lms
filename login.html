@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masuk — Tembok Belajar</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="login-body">
+
+  <div class="login-card">
+    <div class="login-logo">🧱</div>
+    <h1 class="login-title">Tembok Belajar</h1>
+    <p class="login-sub">Sistem Pembelajaran Multi-Sekolah</p>
+
+    <form onsubmit="handleLogin(event)">
+      <label class="form-label" for="email">Email</label>
+      <input 
+        type="email" 
+        id="email" 
+        class="form-input" 
+        placeholder="nama@sekolah.sch.id" 
+        autocomplete="email"
+        required>
+
+      <label class="form-label" for="password">Password</label>
+      <input 
+        type="password" 
+        id="password" 
+        class="form-input" 
+        placeholder="••••••••" 
+        autocomplete="current-password"
+        required>
+
+      <button type="submit" id="btnLogin" class="btn-primary btn-block">
+        Masuk
+      </button>
+    </form>
+
+    <div id="message" class="alert hidden"></div>
+
+    <div class="login-hint">
+      <strong>Akun demo:</strong><br>
+      operator@tembokbelajar.id · guru@tembokbelajar.id · siswa@tembokbelajar.id
+    </div>
+  </div>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script>
+    // Inisialisasi Supabase saat halaman dimuat
+    initSupabase();
+
+    // Cek jika user sudah login → langsung redirect ke dashboard
+    (async () => {
+      try {
+        const profile = await getProfile();
+        if (profile) {
+          redirectByRole(profile.role);
+        }
+      } catch (e) {
+        // Abaikan error — user belum login
+      }
+    })();
+  </script>
+</body>
+</html>
