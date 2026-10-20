@@ -73,21 +73,23 @@
         </div>
       `).join('');
 
-      const menus = [
-        { icon: '👥', label: 'Manajemen Siswa' },
-        { icon: '👨‍🏫', label: 'Manajemen Guru' },
-        { icon: '🏫', label: 'Manajemen Kelas' },
-        { icon: '📚', label: 'Manajemen Mapel' },
-        { icon: '🔗', label: 'Penugasan Guru' },
-        { icon: '📋', label: 'Enrollment Siswa' },
-        { icon: '📈', label: 'Laporan Master' }
-      ];
+const menus = [
+  { icon: '👥', label: 'Manajemen Siswa',    url: '#' },
+  { icon: '👨‍🏫', label: 'Manajemen Guru',     url: '#' },
+  { icon: '🏫', label: 'Manajemen Kelas',    url: '#' },
+  { icon: '📚', label: 'Manajemen Mapel',    url: 'mapel.html' },
+  { icon: '🔗', label: 'Penugasan Guru',     url: '#' },
+  { icon: '📋', label: 'Enrollment Siswa',   url: '#' },
+  { icon: '📈', label: 'Laporan Master',     url: '#' }
+];
       document.getElementById('quickMenu').innerHTML = menus.map(m => `
-        <div class="quick-item" onclick="alert('Fitur ${m.label} akan dibuat di Fase 4.')">
-          <span class="quick-icon">${m.icon}</span>
-          <span>${m.label}</span>
-        </div>
-      `).join('');
+  <div class="quick-item" onclick="${m.url === '#' 
+    ? `alert('Fitur ${m.label} akan dibuat di fase berikutnya.')` 
+    : `window.location.href='${m.url}'`}">
+    <span class="quick-icon">${m.icon}</span>
+    <span>${m.label}</span>
+  </div>
+`).join('');
     })();
   </script>
 </body>
