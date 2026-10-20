@@ -75,7 +75,6 @@ async function requireAuth(expectedRole) {
    CRUD MAPEL (SUBJECTS)
    ============================================================ */
 
-/* Ambil semua mapel di sekolah user */
 async function getSubjects(schoolId) {
   const client = initSupabase();
   let query = client.from('subjects').select('*').order('name', { ascending: true });
@@ -85,7 +84,6 @@ async function getSubjects(schoolId) {
   return data || [];
 }
 
-/* Buat mapel baru */
 async function createSubject({ name, code, schoolId }) {
   const client = initSupabase();
   const { data, error } = await client
@@ -97,7 +95,6 @@ async function createSubject({ name, code, schoolId }) {
   return data;
 }
 
-/* Update mapel */
 async function updateSubject(id, { name, code }) {
   const client = initSupabase();
   const { data, error } = await client
@@ -110,7 +107,6 @@ async function updateSubject(id, { name, code }) {
   return data;
 }
 
-/* Cek apakah mapel dipakai (di teacher_assign atau classes) */
 async function isSubjectUsed(subjectId) {
   const client = initSupabase();
   const { count: assignCount, error: err1 } = await client
@@ -120,13 +116,85 @@ async function isSubjectUsed(subjectId) {
   if (err1) throw err1;
 
   if (assignCount > 0) return { used: true, by: 'penugasan guru', count: assignCount };
+  return { used: false };
+}
+
+async function deleteSubject(id) {
+  const client = initSupabase();
+  const { error } = await client.from('subjects').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ============================================================
+   CRUD KELAS (CLASSES)
+   ============================================================ */
+
+/* Ambil semua kelas di sekolah user */
+async function getClasses(schoolId) {
+  const client = initSupabase();
+  let query = client.from('classes').select('*').order('name', { ascending: true });
+  if (schoolId) query = query.eq('school_id', schoolId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+/* Buat kelas baru */
+async function createClass({ name, grade, room, schoolId }) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('classes')
+    .insert([{
+      name,
+      grade,
+      room,
+      school_id: schoolId
+    }])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/* Update kelas */
+async function updateClass(id, { name, grade, room }) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('classes')
+    .update({ name, grade, room })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/* Cek apakah kelas dipakai (di teacher_assign atau enrollments) */
+async function isClassUsed(classId) {
+  const client = initSupabase();
+
+  const { count: assignCount, error: err1 } = await client
+    .from('teacher_assign')
+    .select('*', { count: 'exact', head: true })
+    .eq('class_id', classId);
+  if (err1) throw err1;
+
+  if (assignCount > 0) return { used: true, by: 'penugasan guru', count: assignCount };
+
+  const { count: enrollCount, error: err2 } = await client
+    .from('enrollments')
+    .select('*', { count: 'exact', head: true })
+    .eq('class_id', classId);
+  if (err2) throw err2;
+
+  if (enrollCount > 0) return { used: true, by: 'enrollment siswa', count: enrollCount };
 
   return { used: false };
 }
 
-/* Hapus mapel (hanya jika tidak dipakai) */
-async function deleteSubject(id) {
+/* Hapus kelas (hanya jika tidak dipakai) */
+async function deleteClass(id) {
   const client = initSupabase();
-  const { error } = await client.from('subjects').delete().eq('id', id);
+  const { error } = await client.from('classes').delete().eq('id', id);
   if (error) throw error;
 }
