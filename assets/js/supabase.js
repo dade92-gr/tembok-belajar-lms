@@ -182,7 +182,6 @@ async function deleteClass(id) {
    CRUD GURU (PROFILES role=guru)
    ============================================================ */
 
-/* Ambil semua guru di sekolah user */
 async function getTeachers(schoolId) {
   const client = initSupabase();
   let query = client
@@ -196,26 +195,6 @@ async function getTeachers(schoolId) {
   return data || [];
 }
 
-/* Buat profil guru baru (user Auth harus dibuat manual di Supabase) */
-async function createTeacher({ id, email, name, schoolId }) {
-  const client = initSupabase();
-  const { data, error } = await client
-    .from('profiles')
-    .insert([{
-      id,
-      email,
-      name,
-      role: 'guru',
-      school_id: schoolId,
-      status: 'active'
-    }])
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
-
-/* Update profil guru (name, email — id & role tidak diubah) */
 async function updateTeacher(id, { name, email }) {
   const client = initSupabase();
   const { data, error } = await client
@@ -229,7 +208,6 @@ async function updateTeacher(id, { name, email }) {
   return data;
 }
 
-/* Cek apakah guru dipakai (di teacher_assign) */
 async function isTeacherUsed(teacherId) {
   const client = initSupabase();
   const { count, error } = await client
@@ -241,7 +219,6 @@ async function isTeacherUsed(teacherId) {
   return { used: false };
 }
 
-/* Hapus profil guru — user Auth tetap ada, harus dihapus manual di Supabase */
 async function deleteTeacher(id) {
   const client = initSupabase();
   const { error } = await client
@@ -291,4 +268,158 @@ async function isStudentUsed(studentId) {
   if (error) throw error;
   if (count > 0) return { used: true, by: 'enrollment kelas', count };
   return { used: false };
+}
+
+/* ============================================================
+   PENUGASAN GURU (TEACHER_ASSIGN)
+   ============================================================ */
+
+/* Ambil semua penugasan dengan detail guru, mapel, kelas */
+async function getTeacherAssignments(schoolId) {
+  const client = initSupabase();
+  let query = client
+    .from('teacher_assign')
+    .select(`
+      id,
+      created_at,
+      teacher_id,
+      subject_id,
+      class_id,
+      profiles!teacher_assign_teacher_id_fkey (id, name, email),
+      subjects (id, name, code),
+      classes (id, name, grade)
+    `)
+    .order('created_at', { ascending: false });
+  if (schoolId) query = query.eq('school_id', schoolId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+/* Buat penugasan baru */
+async function createTeacherAssignment({ teacherId, subjectId, classId, schoolId }) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('teacher_assign')
+    .insert([{
+      teacher_id: teacherId,
+      subject_id: subjectId,
+      class_id: classId,
+      school_id: schoolId
+    }])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/* Hapus penugasan */
+async function deleteTeacherAssignment(id) {
+  const client = initSupabase();
+  const { error } = await client.from('teacher_assign').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* Cek duplikat: guru+mapel+kelas yang sama */
+async function isAssignmentDuplicate(teacherId, subjectId, classId) {
+  const client = initSupabase();
+  const { count, error } = await client
+    .from('teacher_assign')
+    .select('*', { count: 'exact', head: true })
+    .eq('teacher_id', teacherId)
+    .eq('subject_id', subjectId)
+    .eq('class_id', classId);
+  if (error) throw error;
+  return count > 0;
+}
+
+/* ============================================================
+   ENROLLMENT SISWA (ENROLLMENTS)
+   ============================================================ */
+
+/* Ambil semua enrollment dengan detail siswa & kelas */
+async function getEnrollments(schoolId) {
+  const client = initSupabase();
+  let query = client
+    .from('enrollments')
+    .select(`
+      id,
+      status,
+      enrolled_at,
+      student_id,
+      class_id,
+      profiles!enrollments_student_id_fkey (id, name, email),
+      classes (id, name, grade)
+    `)
+    .order('enrolled_at', { ascending: false });
+  if (schoolId) query = query.eq('school_id', schoolId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+/* Buat enrollment baru */
+async function createEnrollment({ studentId, classId, schoolId }) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('enrollments')
+    .insert([{
+      student_id: studentId,
+      class_id: classId,
+      school_id: schoolId,
+      status: 'active'
+    }])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/* Hapus enrollment */
+async function deleteEnrollment(id) {
+  const client = initSupabase();
+  const { error } = await client.from('enrollments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* Cek duplikat: siswa+kelas yang sama */
+async function isEnrollmentDuplicate(studentId, classId) {
+  const client = initSupabase();
+  const { count, error } = await client
+    .from('enrollments')
+    .select('*', { count: 'exact', head: true })
+    .eq('student_id', studentId)
+    .eq('class_id', classId);
+  if (error) throw error;
+  return count > 0;
+}
+
+/* Ambil kelas yang diikuti siswa (untuk dashboard siswa) */
+async function getStudentClasses(studentId) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('enrollments')
+    .select(`
+      id,
+      classes (id, name, grade, room)
+    `)
+    .eq('student_id', studentId)
+    .eq('status', 'active');
+  if (error) throw error;
+  return data || [];
+}
+
+/* Ambil guru+mapel yang mengajar di kelas tertentu (untuk dashboard siswa) */
+async function getClassSubjects(classId) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('teacher_assign')
+    .select(`
+      id,
+      subjects (id, name, code),
+      profiles!teacher_assign_teacher_id_fkey (id, name)
+    `)
+    .eq('class_id', classId);
+  if (error) throw error;
+  return data || [];
 }

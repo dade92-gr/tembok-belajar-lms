@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enrollment Siswa — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+    .search-input {
+      padding: 0.6rem 1rem; border: 1px solid var(--tb-border);
+      border-radius: 30px; font-size: 0.85rem; outline: none;
+      min-width: 220px; font-family: inherit;
+    }
+    .search-input:focus { border-color: var(--tb-primary); box-shadow: 0 0 0 3px rgba(46,204,113,0.15); }
+    .btn-sm { padding: 0.5rem 1rem; font-size: 0.8rem; }
+
+    .table-card {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1); overflow: hidden;
+      box-shadow: var(--tb-shadow-sm);
+    }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table thead { background: var(--tb-light); }
+    .data-table th {
+      padding: 0.9rem 1rem; text-align: left; font-weight: 600;
+      color: var(--tb-dark); border-bottom: 2px solid var(--tb-primary);
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .data-table td { padding: 0.8rem 1rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    .data-table tr:hover { background: #f8f9fa; }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    .nama-siswa { font-weight: 600; color: var(--tb-text); }
+    .email-teks { color: var(--tb-text-muted); font-size: 0.8rem; }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 8px;
+      font-weight: 600; font-size: 0.7rem;
+    }
+    .badge-kelas { background: #fef9e7; color: #b7791f; }
+    .badge-active { background: var(--tb-light); color: var(--tb-dark); }
+    .badge-inactive { background: #fadbd8; color: var(--tb-danger); }
+
+    .action-btns { display: flex; gap: 6px; }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--tb-border);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--tb-transition); font-size: 0.9rem;
+    }
+    .btn-icon:hover { background: var(--tb-light); border-color: var(--tb-primary); }
+    .btn-icon.danger:hover { background: #fadbd8; border-color: var(--tb-danger); }
+
+    .empty-row { text-align: center; padding: 3rem 1rem; color: var(--tb-text-muted); }
+    .empty-row .emoji { font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: white; border-radius: var(--tb-radius-lg);
+      padding: 2rem; width: 100%; max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: tbFadeInUp 0.3s ease;
+      margin: auto;
+    }
+    .modal-card h2 { font-size: 1.3rem; color: var(--tb-dark); margin-bottom: 1rem; font-weight: 700; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; }
+
+    .btn-secondary {
+      background: #6c757d; color: white; border: none;
+      padding: 0.6rem 1.2rem; border-radius: 30px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; transition: var(--tb-transition);
+    }
+    .btn-secondary:hover { background: #5a6268; }
+
+    .btn-danger {
+      background: var(--tb-danger); color: white; border: none;
+      padding: 0.6rem 1.2rem; border-radius: 30px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; transition: var(--tb-transition);
+    }
+    .btn-danger:hover { background: #c0392b; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--tb-dark); color: white;
+      padding: 1rem 1.4rem; border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease; z-index: 3000;
+      max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--tb-danger); }
+
+    .info-bar {
+      background: var(--tb-light); border-radius: 12px;
+      padding: 0.7rem 1rem; margin-bottom: 1rem;
+      font-size: 0.8rem; color: var(--tb-dark); font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    select.form-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 35px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Operator</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box">
+    <div class="spinner"></div>
+    <p>Memuat data enrollment...</p>
+  </div>
+
+  <div class="page-container hidden" id="pageContent">
+
+    <div class="page-toolbar">
+      <div>
+        <h1>📋 Enrollment Siswa
+          <small>Daftarkan siswa ke kelas yang akan diikuti</small>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Cari siswa/kelas..." oninput="renderTable()">
+        <button class="btn-primary btn-sm" onclick="openModal()">+ Daftarkan Siswa</button>
+      </div>
+    </div>
+
+    <div class="info-bar">
+      <span>ℹ️</span>
+      <span>Total: <strong id="totalCount">0</strong> enrollment ·
+            Menampilkan: <strong id="shownCount">0</strong></span>
+    </div>
+
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:50px;">No</th>
+            <th>Nama Siswa</th>
+            <th style="width:240px;">Email</th>
+            <th style="width:180px;">Kelas</th>
+            <th style="width:100px;">Status</th>
+            <th style="width:100px;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="6" class="empty-row">Memuat...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top: 1rem; text-align:center;">
+      <a href="dashboard.html" class="btn-secondary" style="text-decoration:none; display:inline-block;">
+        ← Kembali ke Dashboard
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Modal Form -->
+  <div class="modal-overlay" id="modalForm">
+    <div class="modal-card">
+      <h2>Daftarkan Siswa ke Kelas</h2>
+
+      <p style="font-size: 0.75rem; color: var(--tb-text-muted); margin-bottom: 1rem;">
+        Pilih siswa dan kelas yang akan diikuti. Satu siswa bisa terdaftar di beberapa kelas.
+      </p>
+
+      <label class="form-label" for="inputStudent">Siswa <span style="color:var(--tb-danger);">*</span></label>
+      <select id="inputStudent" class="form-input"></select>
+
+      <label class="form-label" for="inputClass">Kelas <span style="color:var(--tb-danger);">*</span></label>
+      <select id="inputClass" class="form-input"></select>
+
+      <div id="modalError" class="alert alert-error hidden" style="margin-top:0;"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Batal</button>
+        <button class="btn-primary" id="btnSave" onclick="saveEnrollment()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus -->
+  <div class="modal-overlay" id="modalDelete">
+    <div class="modal-card">
+      <h2>🗑️ Hapus Enrollment?</h2>
+      <p id="deleteMessage" style="color: var(--tb-text); margin-bottom: 0.8rem;"></p>
+      <p style="font-size: 0.75rem; color: var(--tb-text-muted); background: #fef9e7; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem;">
+        ℹ️ Menghapus enrollment tidak menghapus akun siswa. Hanya memutus relasi siswa dengan kelas ini. Akun login siswa tetap aktif.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let allEnrollments = [];
+    let allStudents = [];
+    let allClasses = [];
+    let deletingId = null;
+    let currentUser = null;
+    let currentSchoolId = 1;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('operator');
+      if (!currentUser) return;
+
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+      currentSchoolId = currentUser.school_id || 1;
+
+      await Promise.all([loadStudents(), loadClasses()]);
+      await loadEnrollments();
+    })();
+
+    async function loadStudents() {
+      allStudents = await getStudents(currentSchoolId);
+    }
+
+    async function loadClasses() {
+      allClasses = await getClasses(currentSchoolId);
+    }
+
+    async function loadEnrollments() {
+      try {
+        allEnrollments = await getEnrollments(currentSchoolId);
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('pageContent').classList.remove('hidden');
+        renderTable();
+      } catch (err) {
+        console.error('Gagal load enrollment:', err);
+        document.getElementById('loading').innerHTML =
+          '<p style="color:var(--tb-danger);">Gagal memuat enrollment: ' + err.message + '</p>';
+      }
+    }
+
+    function renderTable() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const filtered = allEnrollments.filter(e => {
+        const nama = (e.profiles?.name || '').toLowerCase();
+        const email = (e.profiles?.email || '').toLowerCase();
+        const kelas = (e.classes?.name || '').toLowerCase();
+        return nama.includes(keyword) || email.includes(keyword) || kelas.includes(keyword);
+      });
+
+      document.getElementById('totalCount').textContent = allEnrollments.length;
+      document.getElementById('shownCount').textContent = filtered.length;
+
+      const tbody = document.getElementById('tableBody');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="6" class="empty-row">
+            <span class="emoji">📋</span>
+            ${allEnrollments.length === 0
+              ? 'Belum ada enrollment. Klik "+ Daftarkan Siswa" untuk memulai.'
+              : 'Tidak ada enrollment yang cocok.'}
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((e, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td class="nama-siswa">${escapeHtml(e.profiles?.name || '-')}</td>
+          <td class="email-teks">${escapeHtml(e.profiles?.email || '-')}</td>
+          <td><span class="badge badge-kelas">🏫 ${escapeHtml(e.classes?.name || '-')}</span></td>
+          <td><span class="badge ${e.status === 'active' ? 'badge-active' : 'badge-inactive'}">
+            ${e.status === 'active' ? '✓ Aktif' : '✕ ' + escapeHtml(e.status || '-')}</span></td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-icon danger" title="Hapus" onclick="openDelete(${e.id})">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openModal() {
+      const errBox = document.getElementById('modalError');
+      const btnSave = document.getElementById('btnSave');
+      errBox.classList.add('hidden');
+      btnSave.disabled = false;
+      btnSave.textContent = 'Simpan';
+
+      const selStudent = document.getElementById('inputStudent');
+      selStudent.innerHTML = '<option value="">-- Pilih Siswa --</option>' +
+        allStudents.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.email)})</option>`).join('');
+
+      const selClass = document.getElementById('inputClass');
+      selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+        allClasses.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+
+      document.getElementById('modalForm').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modalForm').classList.remove('active');
+    }
+
+    async function saveEnrollment() {
+      const studentId = document.getElementById('inputStudent').value;
+      const classId = document.getElementById('inputClass').value;
+      const errBox = document.getElementById('modalError');
+      const btnSave = document.getElementById('btnSave');
+
+      if (!studentId || !classId) {
+        errBox.textContent = 'Siswa dan kelas wajib dipilih.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      errBox.classList.add('hidden');
+      btnSave.disabled = true;
+      btnSave.textContent = 'Menyimpan...';
+
+      try {
+        // Cek duplikat
+        const dup = await isEnrollmentDuplicate(studentId, classId);
+        if (dup) {
+          errBox.textContent = 'Siswa ini sudah terdaftar di kelas tersebut.';
+          errBox.classList.remove('hidden');
+          btnSave.disabled = false;
+          btnSave.textContent = 'Simpan';
+          return;
+        }
+
+        await createEnrollment({
+          studentId, classId, schoolId: currentSchoolId
+        });
+
+        showToast('✅ Siswa berhasil didaftarkan ke kelas');
+        closeModal();
+        await loadEnrollments();
+      } catch (err) {
+        console.error('Save error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + err.message;
+        errBox.classList.remove('hidden');
+        btnSave.disabled = false;
+        btnSave.textContent = 'Simpan';
+      }
+    }
+
+    function openDelete(id) {
+      deletingId = id;
+      const e = allEnrollments.find(x => x.id === id);
+      if (!e) return;
+
+      document.getElementById('deleteMessage').innerHTML =
+        'Hapus enrollment <strong>' + escapeHtml(e.profiles?.name || '-') + '</strong> dari kelas ' +
+        '<strong>' + escapeHtml(e.classes?.name || '-') + '</strong>?';
+
+      document.getElementById('modalDelete').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('modalDelete').classList.remove('active');
+      deletingId = null;
+    }
+
+    async function confirmDelete() {
+      if (!deletingId) return;
+      const btn = document.getElementById('btnConfirmDelete');
+      btn.disabled = true;
+      btn.textContent = 'Menghapus...';
+
+      try {
+        await deleteEnrollment(deletingId);
+        closeDeleteModal();
+        showToast('🗑️ Enrollment berhasil dihapus');
+        await loadEnrollments();
+      } catch (err) {
+        console.error('Delete error:', err);
+        showToast('Gagal menghapus: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus';
+      }
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : '');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeModal();
+        closeDeleteModal();
+      }
+    });
+  </script>
+</body>
+</html>
