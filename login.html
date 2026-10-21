@@ -4,15 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Masuk — Tembok Belajar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="login-body">
 
   <div class="login-card">
-    <div class="login-logo">🧱</div>
+    <div class="login-logo">
+      <img src="assets/img/logo.png" alt="Logo Tembok Belajar" onerror="this.style.display='none'">
+    </div>
     <h1 class="login-title">Tembok Belajar</h1>
-    <p class="login-sub">Sistem Pembelajaran Multi-Sekolah</p>
+    <p class="login-sub">Rumah Digital untuk Belajar Tanpa Batas</p>
 
     <form onsubmit="handleLogin(event)">
       <label class="form-label" for="email">Email</label>
@@ -50,19 +55,12 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
   <script>
-    // Inisialisasi Supabase saat halaman dimuat
     initSupabase();
-
-    // Cek jika user sudah login → langsung redirect ke dashboard
     (async () => {
       try {
         const profile = await getProfile();
-        if (profile) {
-          redirectByRole(profile.role);
-        }
-      } catch (e) {
-        // Abaikan error — user belum login
-      }
+        if (profile) redirectByRole(profile.role);
+      } catch (e) {}
     })();
   </script>
 </body>
