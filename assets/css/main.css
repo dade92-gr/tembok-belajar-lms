@@ -1,18 +1,19 @@
 /* ============================================
-   TEMBOK BELAJAR — GLOBAL STYLE v2
-   Tema: Biru Tua (#1a73e8) · Modern · Bersih
+   TEMBOK BELAJAR — GLOBAL STYLE v3
+   Tema: Navy Gelap (#2c3e50) + Netral + Aksen Ungu
    ============================================ */
 
 :root {
-  /* ==== WARNA UTAMA — BIRU TUA ==== */
-  --tb-primary: #1a73e8;
-  --tb-primary-dark: #1557b0;
-  --tb-primary-darker: #0d47a1;
-  --tb-primary-light: #e8f0fe;
-  --tb-primary-lighter: #f3f8ff;
+  /* ==== WARNA UTAMA — NAVY GELAP ==== */
+  --tb-primary: #2c3e50;
+  --tb-primary-dark: #1a252f;
+  --tb-primary-darker: #0f171e;
+  --tb-primary-light: #eef1f5;
+  --tb-primary-lighter: #f6f8fa;
 
-  /* ==== AKSEN ==== */
-  --tb-accent: #9334e6;
+  /* ==== AKSEN — UNGU (untuk tombol utama) ==== */
+  --tb-accent: #7c3aed;
+  --tb-accent-dark: #6d28d9;
   --tb-accent-light: #f3e8fd;
 
   /* ==== STATUS ==== */
@@ -22,30 +23,30 @@
   --tb-warning-light: #fef3c7;
   --tb-danger: #ef4444;
   --tb-danger-light: #fee2e2;
-  --tb-info: #3b82f6;
-  --tb-info-light: #dbeafe;
+  --tb-info: #475569;
+  --tb-info-light: #e2e8f0;
 
   /* ==== NETRAL ==== */
-  --tb-bg: #f9fafb;
+  --tb-bg: #f8f9fb;
   --tb-surface: #ffffff;
-  --tb-surface-hover: #f3f4f6;
-  --tb-text: #111827;
-  --tb-text-secondary: #374151;
-  --tb-text-muted: #6b7280;
-  --tb-text-light: #9ca3af;
-  --tb-border: #e5e7eb;
-  --tb-border-dark: #d1d5db;
+  --tb-surface-hover: #f1f5f9;
+  --tb-text: #1e293b;
+  --tb-text-secondary: #334155;
+  --tb-text-muted: #64748b;
+  --tb-text-light: #94a3b8;
+  --tb-border: #e2e8f0;
+  --tb-border-dark: #cbd5e1;
 
   /* ==== HEADER / NAVBAR ==== */
-  --tb-navbar-bg: #1a73e8;
+  --tb-navbar-bg: #2c3e50;
   --tb-navbar-text: #ffffff;
-  --tb-navbar-hover: rgba(255, 255, 255, 0.15);
+  --tb-navbar-hover: rgba(255, 255, 255, 0.12);
 
   /* ==== SIDEBAR ==== */
   --tb-sidebar-bg: #ffffff;
   --tb-sidebar-width: 260px;
-  --tb-sidebar-item-hover: #f3f8ff;
-  --tb-sidebar-item-active: #e8f0fe;
+  --tb-sidebar-item-hover: #f1f5f9;
+  --tb-sidebar-item-active: #eef1f5;
 
   /* ==== RADIUS ==== */
   --tb-radius-xs: 6px;
@@ -61,7 +62,8 @@
   --tb-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
   --tb-shadow-md: 0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.04);
   --tb-shadow-lg: 0 20px 25px rgba(0, 0, 0, 0.08), 0 10px 10px rgba(0, 0, 0, 0.03);
-  --tb-shadow-primary: 0 4px 12px rgba(26, 115, 232, 0.25);
+  --tb-shadow-primary: 0 4px 12px rgba(44, 62, 80, 0.2);
+  --tb-shadow-accent: 0 4px 12px rgba(124, 58, 237, 0.25);
 
   /* ==== TRANSISI ==== */
   --tb-transition: all 0.2s ease;
@@ -90,11 +92,11 @@ body {
 .muted { color: var(--tb-text-muted); font-size: 0.9rem; }
 
 a {
-  color: var(--tb-primary);
+  color: var(--tb-accent);
   text-decoration: none;
   transition: var(--tb-transition);
 }
-a:hover { color: var(--tb-primary-dark); }
+a:hover { color: var(--tb-accent-dark); }
 
 /* ============================================
    LOGIN SCREEN
@@ -170,8 +172,8 @@ a:hover { color: var(--tb-primary-dark); }
 }
 
 .form-input:focus {
-  border-color: var(--tb-primary);
-  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+  border-color: var(--tb-accent);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
 .form-input::placeholder { color: var(--tb-text-light); }
@@ -182,7 +184,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
    BUTTONS
    ============================================ */
 .btn-primary {
-  background: var(--tb-primary);
+  background: var(--tb-accent);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -198,8 +200,8 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   font-family: inherit;
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--tb-primary-dark);
-  box-shadow: var(--tb-shadow-primary);
+  background: var(--tb-accent-dark);
+  box-shadow: var(--tb-shadow-accent);
   transform: translateY(-1px);
 }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
@@ -236,8 +238,8 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
 .btn-outline {
   background: transparent;
-  border: 1px solid var(--tb-primary);
-  color: var(--tb-primary);
+  border: 1px solid var(--tb-accent);
+  color: var(--tb-accent);
   padding: 0.5rem 1rem;
   border-radius: var(--tb-radius-sm);
   cursor: pointer;
@@ -249,7 +251,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   gap: 6px;
   font-family: inherit;
 }
-.btn-outline:hover { background: var(--tb-primary-light); }
+.btn-outline:hover { background: var(--tb-accent-light); }
 
 .btn-sm { padding: 0.5rem 1rem; font-size: 0.8rem; }
 .btn-block { width: 100%; padding: 0.85rem; margin-top: 0.5rem; }
@@ -293,8 +295,8 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 }
 .alert-info {
   background: var(--tb-info-light);
-  color: #1e40af;
-  border: 1px solid #bfdbfe;
+  color: #334155;
+  border: 1px solid #cbd5e1;
 }
 .alert-warning {
   background: var(--tb-warning-light);
@@ -313,7 +315,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 }
 
 /* ============================================
-   APP HEADER — BIRU TUA + LOGO
+   APP HEADER — NAVY GELAP + LOGO
    ============================================ */
 .app-header {
   background: var(--tb-navbar-bg);
@@ -322,7 +324,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -367,8 +369,8 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 }
 
 .btn-logout {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: white;
   padding: 0.4rem 1rem;
   border-radius: var(--tb-radius-full);
@@ -377,7 +379,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   font-weight: 600;
   transition: var(--tb-transition);
 }
-.btn-logout:hover { background: rgba(255, 255, 255, 0.25); }
+.btn-logout:hover { background: rgba(255, 255, 255, 0.22); }
 
 /* ============================================
    DASHBOARD
@@ -404,7 +406,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 }
 
 .dash-hero .muted {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 0.9rem;
 }
 
@@ -430,13 +432,13 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 .stat-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--tb-shadow);
-  border-color: var(--tb-primary);
+  border-color: var(--tb-accent);
 }
 
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--tb-primary);
+  color: var(--tb-accent);
   line-height: 1;
   margin-bottom: 0.3rem;
 }
@@ -495,9 +497,9 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   transition: var(--tb-transition);
 }
 .quick-item:hover {
-  background: var(--tb-primary-light);
-  border-color: var(--tb-primary);
-  color: var(--tb-primary);
+  background: var(--tb-accent-light);
+  border-color: var(--tb-accent);
+  color: var(--tb-accent-dark);
   transform: translateY(-2px);
 }
 
@@ -553,12 +555,12 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   font-weight: 600;
   font-size: 0.7rem;
 }
-.badge-primary { background: var(--tb-primary-light); color: var(--tb-primary-dark); }
+.badge-primary { background: var(--tb-primary-light); color: var(--tb-primary); }
+.badge-accent { background: var(--tb-accent-light); color: var(--tb-accent-dark); }
 .badge-success { background: var(--tb-success-light); color: #047857; }
 .badge-warning { background: var(--tb-warning-light); color: #92400e; }
 .badge-danger { background: var(--tb-danger-light); color: #b91c1c; }
-.badge-info { background: var(--tb-info-light); color: #1e40af; }
-.badge-accent { background: var(--tb-accent-light); color: #6b21a8; }
+.badge-info { background: var(--tb-info-light); color: #334155; }
 
 /* ============================================
    INFO BAR
@@ -569,7 +571,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   padding: 0.7rem 1rem;
   margin-bottom: 1rem;
   font-size: 0.8rem;
-  color: var(--tb-primary-dark);
+  color: var(--tb-primary);
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -582,7 +584,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(17, 24, 39, 0.6);
+  background: rgba(15, 23, 30, 0.65);
   display: none;
   align-items: center;
   justify-content: center;
@@ -625,7 +627,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: var(--tb-text);
+  background: var(--tb-primary);
   color: white;
   padding: 1rem 1.4rem;
   border-radius: var(--tb-radius);
@@ -660,7 +662,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   height: 40px;
   margin: 0 auto 1rem;
   border: 4px solid var(--tb-primary-light);
-  border-top-color: var(--tb-primary);
+  border-top-color: var(--tb-accent);
   border-radius: 50%;
   animation: tbSpin 0.8s linear infinite;
 }
@@ -681,7 +683,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 }
 
 /* ============================================
-   PAGE CONTAINER (untuk sub-halaman)
+   PAGE CONTAINER (sub-halaman)
    ============================================ */
 .page-container {
   max-width: 1100px;
@@ -730,8 +732,8 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   transition: var(--tb-transition);
 }
 .search-input:focus {
-  border-color: var(--tb-primary);
-  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+  border-color: var(--tb-accent);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
 /* ============================================
