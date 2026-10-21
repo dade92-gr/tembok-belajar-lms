@@ -251,3 +251,44 @@ async function deleteTeacher(id) {
     .eq('role', 'guru');
   if (error) throw error;
 }
+
+/* ============================================================
+   CRUD SISWA (PROFILES role=siswa)
+   ============================================================ */
+
+async function getStudents(schoolId) {
+  const client = initSupabase();
+  let query = client
+    .from('profiles')
+    .select('*')
+    .eq('role', 'siswa')
+    .order('name', { ascending: true });
+  if (schoolId) query = query.eq('school_id', schoolId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+async function updateStudent(id, { name, email }) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('profiles')
+    .update({ name, email })
+    .eq('id', id)
+    .eq('role', 'siswa')
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function isStudentUsed(studentId) {
+  const client = initSupabase();
+  const { count, error } = await client
+    .from('enrollments')
+    .select('*', { count: 'exact', head: true })
+    .eq('student_id', studentId);
+  if (error) throw error;
+  if (count > 0) return { used: true, by: 'enrollment kelas', count };
+  return { used: false };
+}
