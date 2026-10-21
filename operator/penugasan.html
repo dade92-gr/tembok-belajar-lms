@@ -6,6 +6,7 @@
   <title>Penugasan Guru — Tembok Belajar</title>
   <link rel="stylesheet" href="../assets/css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
     .page-toolbar {
@@ -22,6 +23,13 @@
     }
     .search-input:focus { border-color: var(--tb-primary); box-shadow: 0 0 0 3px rgba(46,204,113,0.15); }
     .btn-sm { padding: 0.5rem 1rem; font-size: 0.8rem; }
+    .btn-outline {
+      background: transparent; border: 1px solid var(--tb-primary);
+      color: var(--tb-primary); padding: 0.5rem 1rem; border-radius: 30px;
+      cursor: pointer; font-size: 0.8rem; font-weight: 600;
+      transition: var(--tb-transition); display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-outline:hover { background: var(--tb-light); }
 
     .table-card {
       background: white; border-radius: var(--tb-radius-lg);
@@ -68,7 +76,7 @@
     .modal-overlay.active { display: flex; }
     .modal-card {
       background: white; border-radius: var(--tb-radius-lg);
-      padding: 2rem; width: 100%; max-width: 500px;
+      padding: 2rem; width: 100%; max-width: 600px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       animation: tbFadeInUp 0.3s ease;
       margin: auto;
@@ -119,6 +127,103 @@
       padding-right: 35px;
       cursor: pointer;
     }
+
+    /* ===== MULTI-SELECT KELAS ===== */
+    .kelas-multiselect {
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid var(--tb-border);
+      border-radius: 12px;
+      padding: 0.6rem;
+      background: #f8f9fa;
+      margin-bottom: 0.8rem;
+    }
+    .kelas-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.5rem 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+    .kelas-checkbox:hover {
+      background: var(--tb-light);
+    }
+    .kelas-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--tb-primary);
+      flex-shrink: 0;
+    }
+    .kelas-checkbox.checked {
+      background: var(--tb-light);
+      font-weight: 600;
+    }
+    .kelas-checkbox-info {
+      flex: 1;
+    }
+    .kelas-checkbox-info .nama {
+      font-weight: 500;
+    }
+    .kelas-checkbox-info .sub {
+      font-size: 0.7rem;
+      color: var(--tb-text-muted);
+    }
+    .kelas-actions {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 0.5rem;
+    }
+    .btn-mini {
+      background: white;
+      border: 1px solid var(--tb-border);
+      color: var(--tb-dark);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--tb-transition);
+    }
+    .btn-mini:hover {
+      background: var(--tb-light);
+      border-color: var(--tb-primary);
+    }
+    .selected-count {
+      font-size: 0.75rem;
+      color: var(--tb-dark);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* ===== PROGRESS ===== */
+    .progress-box {
+      background: white; border-radius: 12px; padding: 1rem;
+      margin-top: 1rem; border: 1px solid var(--tb-border);
+    }
+    .progress-label {
+      font-size: 0.8rem; color: var(--tb-text); margin-bottom: 0.5rem;
+      display: flex; justify-content: space-between;
+    }
+    .progress-bar {
+      width: 100%; height: 12px; background: #f0f0f0;
+      border-radius: 20px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--tb-primary), var(--tb-secondary));
+      width: 0%; transition: width 0.3s ease;
+    }
+    .progress-detail {
+      font-size: 0.7rem; color: var(--tb-text-muted); margin-top: 0.5rem;
+      max-height: 150px; overflow-y: auto;
+    }
+    .progress-detail .item-ok { color: var(--tb-dark); }
+    .progress-detail .item-err { color: var(--tb-danger); }
+    .progress-detail .item-skip { color: #b7791f; }
   </style>
 </head>
 <body>
@@ -147,6 +252,9 @@
       </div>
       <div class="toolbar-actions">
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 Cari guru/mapel/kelas..." oninput="renderTable()">
+        <button class="btn-outline btn-sm" onclick="openImportModal()">
+          📥 Import Excel
+        </button>
         <button class="btn-primary btn-sm" onclick="openModal()">+ Tambah Penugasan</button>
       </div>
     </div>
@@ -182,13 +290,13 @@
 
   </div>
 
-  <!-- Modal Form -->
+  <!-- Modal Form (Multi-Select Kelas) -->
   <div class="modal-overlay" id="modalForm">
     <div class="modal-card">
       <h2>Tambah Penugasan</h2>
 
       <p style="font-size: 0.75rem; color: var(--tb-text-muted); margin-bottom: 1rem;">
-        Pilih guru, mapel, dan kelas. Satu guru bisa mengampu banyak mapel di banyak kelas.
+        Pilih guru dan mapel, lalu centang <strong>satu atau lebih kelas</strong> yang diampu sekaligus.
       </p>
 
       <label class="form-label" for="inputTeacher">Guru <span style="color:var(--tb-danger);">*</span></label>
@@ -197,14 +305,67 @@
       <label class="form-label" for="inputSubject">Mata Pelajaran <span style="color:var(--tb-danger);">*</span></label>
       <select id="inputSubject" class="form-input"></select>
 
-      <label class="form-label" for="inputClass">Kelas <span style="color:var(--tb-danger);">*</span></label>
-      <select id="inputClass" class="form-input"></select>
+      <label class="form-label">Kelas yang Diampu <span style="color:var(--tb-danger);">*</span></label>
+      <div class="kelas-actions">
+        <button type="button" class="btn-mini" onclick="selectAllKelas(true)">✓ Pilih Semua</button>
+        <button type="button" class="btn-mini" onclick="selectAllKelas(false)">✕ Hapus Semua</button>
+      </div>
+      <div class="kelas-multiselect" id="kelasMultiselect"></div>
+      <div class="selected-count" id="selectedCount">0 kelas dipilih</div>
 
-      <div id="modalError" class="alert alert-error hidden" style="margin-top:0;"></div>
+      <div id="modalError" class="alert alert-error hidden" style="margin-top:1rem;"></div>
 
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeModal()">Batal</button>
         <button class="btn-primary" id="btnSave" onclick="saveAssignment()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Import Excel -->
+  <div class="modal-overlay" id="modalImport">
+    <div class="modal-card" style="max-width: 650px;">
+      <h2>📥 Import Penugasan dari Excel</h2>
+
+      <div style="background: #e8f4fd; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; font-size: 0.8rem; line-height: 1.6;">
+        <strong>📋 Langkah:</strong>
+        <ol style="margin: 0.5rem 0 0 1rem; padding: 0;">
+          <li>Klik <strong>"Download Template"</strong> di bawah</li>
+          <li>Buka file Excel → isi kolom: <strong>Email Guru, Kode Mapel, Nama Kelas</strong></li>
+          <li>Simpan file</li>
+          <li>Klik <strong>"Pilih File Excel"</strong> → pilih file yang sudah diisi</li>
+          <li>Klik <strong>"Mulai Import"</strong> → tunggu proses selesai</li>
+        </ol>
+        <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem;">
+          💡 <strong>Contoh</strong>: satu guru mengampu satu mapel di 3 kelas → tulis 3 baris (guru & mapel sama, kelas berbeda).
+        </p>
+      </div>
+
+      <button class="btn-outline" style="width: 100%; justify-content: center; margin-bottom: 1rem;" onclick="downloadTemplate()">
+        ⬇️ Download Template Excel
+      </button>
+
+      <label class="form-label">Pilih File Excel (.xlsx)</label>
+      <input type="file" id="fileInput" accept=".xlsx, .xls" class="form-input" onchange="onFileSelected(event)">
+
+      <div id="fileInfo" style="font-size: 0.8rem; color: var(--tb-text-muted); margin-bottom: 0.8rem;"></div>
+
+      <div id="progressBox" class="progress-box hidden">
+        <div class="progress-label">
+          <span>Memproses...</span>
+          <span id="progressText">0 / 0</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-detail" id="progressDetail"></div>
+      </div>
+
+      <div id="importError" class="alert alert-error hidden" style="margin-top: 0.8rem;"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeImportModal()">Tutup</button>
+        <button class="btn-primary" id="btnImport" onclick="startImport()" disabled>
+          🚀 Mulai Import
+        </button>
       </div>
     </div>
   </div>
@@ -236,6 +397,7 @@
     let deletingId = null;
     let currentUser = null;
     let currentSchoolId = 1;
+    let selectedExcelData = null;
 
     (async () => {
       initSupabase();
@@ -250,17 +412,9 @@
       await loadAssignments();
     })();
 
-    async function loadTeachers() {
-      allTeachers = await getTeachers(currentSchoolId);
-    }
-
-    async function loadSubjects() {
-      allSubjects = await getSubjects(currentSchoolId);
-    }
-
-    async function loadClasses() {
-      allClasses = await getClasses(currentSchoolId);
-    }
+    async function loadTeachers() { allTeachers = await getTeachers(currentSchoolId); }
+    async function loadSubjects() { allSubjects = await getSubjects(currentSchoolId); }
+    async function loadClasses() { allClasses = await getClasses(currentSchoolId); }
 
     async function loadAssignments() {
       try {
@@ -294,7 +448,7 @@
           <tr><td colspan="5" class="empty-row">
             <span class="emoji">🔗</span>
             ${allAssignments.length === 0
-              ? 'Belum ada penugasan. Klik "+ Tambah Penugasan" untuk memulai.'
+              ? 'Belum ada penugasan. Klik "+ Tambah Penugasan" atau "Import Excel".'
               : 'Tidak ada penugasan yang cocok.'}
           </td></tr>`;
         return;
@@ -315,6 +469,9 @@
       `).join('');
     }
 
+    /* ============================================================
+       FORM TAMBAH (Multi-Select Kelas)
+       ============================================================ */
     function openModal() {
       const errBox = document.getElementById('modalError');
       const btnSave = document.getElementById('btnSave');
@@ -322,22 +479,57 @@
       btnSave.disabled = false;
       btnSave.textContent = 'Simpan';
 
-      // Isi dropdown guru
       const selTeacher = document.getElementById('inputTeacher');
       selTeacher.innerHTML = '<option value="">-- Pilih Guru --</option>' +
         allTeachers.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
 
-      // Isi dropdown mapel
       const selSubject = document.getElementById('inputSubject');
       selSubject.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
         allSubjects.map(s => `<option value="${s.id}">${escapeHtml(s.name)}${s.code ? ' (' + escapeHtml(s.code) + ')' : ''}</option>`).join('');
 
-      // Isi dropdown kelas
-      const selClass = document.getElementById('inputClass');
-      selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
-        allClasses.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+      renderKelasCheckboxes();
 
       document.getElementById('modalForm').classList.add('active');
+    }
+
+    function renderKelasCheckboxes() {
+      const container = document.getElementById('kelasMultiselect');
+      container.innerHTML = '';
+      allClasses.forEach(c => {
+        const label = document.createElement('label');
+        label.className = 'kelas-checkbox';
+        label.innerHTML = `
+          <input type="checkbox" value="${c.id}" onchange="onKelasChange(this)">
+          <div class="kelas-checkbox-info">
+            <div class="nama">${escapeHtml(c.name)}</div>
+            ${c.grade || c.room ? `<div class="sub">${escapeHtml(c.grade || '')}${c.grade && c.room ? ' · ' : ''}${escapeHtml(c.room || '')}</div>` : ''}
+          </div>
+        `;
+        container.appendChild(label);
+      });
+      updateSelectedCount();
+    }
+
+    function onKelasChange(checkbox) {
+      const label = checkbox.closest('.kelas-checkbox');
+      if (checkbox.checked) {
+        label.classList.add('checked');
+      } else {
+        label.classList.remove('checked');
+      }
+      updateSelectedCount();
+    }
+
+    function selectAllKelas(checked) {
+      document.querySelectorAll('#kelasMultiselect input[type="checkbox"]').forEach(cb => {
+        cb.checked = checked;
+        onKelasChange(cb);
+      });
+    }
+
+    function updateSelectedCount() {
+      const count = document.querySelectorAll('#kelasMultiselect input[type="checkbox"]:checked').length;
+      document.getElementById('selectedCount').textContent = count + ' kelas dipilih';
     }
 
     function closeModal() {
@@ -347,12 +539,20 @@
     async function saveAssignment() {
       const teacherId = document.getElementById('inputTeacher').value;
       const subjectId = document.getElementById('inputSubject').value;
-      const classId = document.getElementById('inputClass').value;
+      const selectedClassIds = Array.from(
+        document.querySelectorAll('#kelasMultiselect input[type="checkbox"]:checked')
+      ).map(cb => parseInt(cb.value));
+
       const errBox = document.getElementById('modalError');
       const btnSave = document.getElementById('btnSave');
 
-      if (!teacherId || !subjectId || !classId) {
-        errBox.textContent = 'Guru, mapel, dan kelas wajib dipilih.';
+      if (!teacherId || !subjectId) {
+        errBox.textContent = 'Guru dan mapel wajib dipilih.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (selectedClassIds.length === 0) {
+        errBox.textContent = 'Pilih minimal satu kelas.';
         errBox.classList.remove('hidden');
         return;
       }
@@ -361,33 +561,259 @@
       btnSave.disabled = true;
       btnSave.textContent = 'Menyimpan...';
 
-      try {
-        // Cek duplikat
-        const dup = await isAssignmentDuplicate(teacherId, subjectId, classId);
-        if (dup) {
-          errBox.textContent = 'Penugasan ini sudah ada (guru + mapel + kelas sama).';
-          errBox.classList.remove('hidden');
-          btnSave.disabled = false;
-          btnSave.textContent = 'Simpan';
-          return;
+      let success = 0;
+      let skipped = 0;
+      let failed = 0;
+      const failMessages = [];
+
+      for (const classId of selectedClassIds) {
+        try {
+          const dup = await isAssignmentDuplicate(teacherId, subjectId, classId);
+          if (dup) {
+            skipped++;
+            continue;
+          }
+          await createTeacherAssignment({
+            teacherId, subjectId, classId, schoolId: currentSchoolId
+          });
+          success++;
+        } catch (err) {
+          failed++;
+          failMessages.push(err.message);
         }
+      }
 
-        await createTeacherAssignment({
-          teacherId, subjectId, classId, schoolId: currentSchoolId
-        });
-
-        showToast('✅ Penugasan berhasil ditambahkan');
-        closeModal();
-        await loadAssignments();
-      } catch (err) {
-        console.error('Save error:', err);
-        errBox.textContent = 'Gagal menyimpan: ' + err.message;
+      if (success > 0 || skipped > 0) {
+        let msg = '✅ ' + success + ' penugasan ditambahkan';
+        if (skipped > 0) msg += ', ' + skipped + ' sudah ada (dilewati)';
+        if (failed > 0) msg += ', ' + failed + ' gagal';
+        showToast(msg, failed === 0 ? 'success' : 'error');
+      } else {
+        errBox.textContent = 'Tidak ada penugasan baru yang tersimpan. ' + (failMessages.join('; ') || '');
         errBox.classList.remove('hidden');
         btnSave.disabled = false;
         btnSave.textContent = 'Simpan';
+        return;
       }
+
+      closeModal();
+      await loadAssignments();
     }
 
+    /* ============================================================
+       IMPORT EXCEL
+       ============================================================ */
+    function openImportModal() {
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileInfo').textContent = '';
+      document.getElementById('progressBox').classList.add('hidden');
+      document.getElementById('importError').classList.add('hidden');
+      document.getElementById('btnImport').disabled = true;
+      selectedExcelData = null;
+      document.getElementById('modalImport').classList.add('active');
+    }
+
+    function closeImportModal() {
+      document.getElementById('modalImport').classList.remove('active');
+    }
+
+    function downloadTemplate() {
+      const ws = XLSX.utils.aoa_to_sheet([
+        ['Email Guru', 'Kode Mapel', 'Nama Kelas'],
+        ['budi@sekolah.sch.id', 'MAT', 'X IPA 1'],
+        ['budi@sekolah.sch.id', 'MAT', 'X IPA 2'],
+        ['budi@sekolah.sch.id', 'MAT', 'X IPA 3'],
+        ['siti@sekolah.sch.id', 'FIS', 'X IPA 1'],
+        ['siti@sekolah.sch.id', 'FIS', 'X IPA 2']
+      ]);
+      ws['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 25 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Penugasan');
+      XLSX.writeFile(wb, 'Template_Import_Penugasan.xlsx');
+      showToast('📥 Template berhasil diunduh');
+    }
+
+    function onFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        selectedExcelData = null;
+        document.getElementById('btnImport').disabled = true;
+        document.getElementById('fileInfo').textContent = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+          const valid = rows.filter(r =>
+            (r['Email Guru'] || r.email_guru || r.Email || '').toString().trim() &&
+            (r['Kode Mapel'] || r.kode_mapel || r.Kode || '').toString().trim() &&
+            (r['Nama Kelas'] || r.nama_kelas || r.Kelas || '').toString().trim()
+          );
+
+          if (valid.length === 0) {
+            document.getElementById('fileInfo').innerHTML =
+              '<span style="color:var(--tb-danger);">❌ File tidak berisi data valid. Pastikan kolom: Email Guru, Kode Mapel, Nama Kelas.</span>';
+            document.getElementById('btnImport').disabled = true;
+            selectedExcelData = null;
+            return;
+          }
+
+          selectedExcelData = valid.map(r => ({
+            emailGuru: (r['Email Guru'] || r.email_guru || r.Email || '').toString().trim().toLowerCase(),
+            kodeMapel: (r['Kode Mapel'] || r.kode_mapel || r.Kode || '').toString().trim().toUpperCase(),
+            namaKelas: (r['Nama Kelas'] || r.nama_kelas || r.Kelas || '').toString().trim()
+          }));
+
+          document.getElementById('fileInfo').innerHTML =
+            '<span style="color:var(--tb-dark);">✅ File valid: <strong>' + selectedExcelData.length +
+            ' baris penugasan</strong> siap diimport.</span>';
+          document.getElementById('btnImport').disabled = false;
+          document.getElementById('importError').classList.add('hidden');
+
+        } catch (err) {
+          console.error('Baca Excel error:', err);
+          document.getElementById('fileInfo').innerHTML =
+            '<span style="color:var(--tb-danger);">❌ Gagal membaca file: ' + err.message + '</span>';
+          document.getElementById('btnImport').disabled = true;
+          selectedExcelData = null;
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    async function startImport() {
+      if (!selectedExcelData || selectedExcelData.length === 0) return;
+
+      const btnImport = document.getElementById('btnImport');
+      btnImport.disabled = true;
+      btnImport.textContent = 'Memproses...';
+
+      const progressBox = document.getElementById('progressBox');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const progressDetail = document.getElementById('progressDetail');
+      const importError = document.getElementById('importError');
+
+      progressBox.classList.remove('hidden');
+      progressDetail.innerHTML = '';
+      importError.classList.add('hidden');
+
+      const total = selectedExcelData.length;
+      let success = 0;
+      let failed = 0;
+      const errors = [];
+
+      // Buat lookup: email guru → id, kode mapel → id, nama kelas → id
+      const teacherByEmail = {};
+      allTeachers.forEach(t => { teacherByEmail[(t.email || '').toLowerCase()] = t; });
+
+      const subjectByCode = {};
+      allSubjects.forEach(s => { if (s.code) subjectByCode[s.code.toUpperCase()] = s; });
+
+      const classByName = {};
+      allClasses.forEach(c => { classByName[(c.name || '').toLowerCase()] = c; });
+
+      for (let i = 0; i < total; i++) {
+        const row = selectedExcelData[i];
+        progressText.textContent = (i + 1) + ' / ' + total;
+        progressFill.style.width = (((i + 1) / total) * 100) + '%';
+
+        const label = row.emailGuru + ' · ' + row.kodeMapel + ' · ' + row.namaKelas;
+        const detailItem = document.createElement('div');
+        detailItem.textContent = '⏳ ' + label;
+        progressDetail.appendChild(detailItem);
+        progressDetail.scrollTop = progressDetail.scrollHeight;
+
+        // Cari guru, mapel, kelas
+        const teacher = teacherByEmail[row.emailGuru];
+        const subject = subjectByCode[row.kodeMapel];
+        const cls = classByName[row.namaKelas.toLowerCase()];
+
+        if (!teacher) {
+          failed++;
+          const msg = 'Guru dengan email ' + row.emailGuru + ' tidak ditemukan';
+          errors.push(label + ': ' + msg);
+          detailItem.textContent = '❌ ' + label + ' — ' + msg;
+          detailItem.className = 'item-err';
+          continue;
+        }
+        if (!subject) {
+          failed++;
+          const msg = 'Mapel dengan kode ' + row.kodeMapel + ' tidak ditemukan';
+          errors.push(label + ': ' + msg);
+          detailItem.textContent = '❌ ' + label + ' — ' + msg;
+          detailItem.className = 'item-err';
+          continue;
+        }
+        if (!cls) {
+          failed++;
+          const msg = 'Kelas "' + row.namaKelas + '" tidak ditemukan';
+          errors.push(label + ': ' + msg);
+          detailItem.textContent = '❌ ' + label + ' — ' + msg;
+          detailItem.className = 'item-err';
+          continue;
+        }
+
+        // Cek duplikat
+        try {
+          const dup = await isAssignmentDuplicate(teacher.id, subject.id, cls.id);
+          if (dup) {
+            failed++;
+            const msg = 'sudah ada (dilewati)';
+            errors.push(label + ': ' + msg);
+            detailItem.textContent = '⚠️ ' + label + ' — ' + msg;
+            detailItem.className = 'item-skip';
+            continue;
+          }
+
+          await createTeacherAssignment({
+            teacherId: teacher.id,
+            subjectId: subject.id,
+            classId: cls.id,
+            schoolId: currentSchoolId
+          });
+          success++;
+          detailItem.textContent = '✅ ' + label + ' — berhasil';
+          detailItem.className = 'item-ok';
+        } catch (err) {
+          failed++;
+          const msg = err.message || 'Unknown error';
+          errors.push(label + ': ' + msg);
+          detailItem.textContent = '❌ ' + label + ' — ' + msg;
+          detailItem.className = 'item-err';
+        }
+      }
+
+      progressText.textContent = total + ' / ' + total + ' selesai';
+
+      if (failed > 0) {
+        importError.innerHTML =
+          '<strong>⚠️ ' + failed + ' dari ' + total + ' gagal/dilewati:</strong><br>' +
+          errors.slice(0, 20).map(e => '• ' + e).join('<br>') +
+          (errors.length > 20 ? '<br>... dan ' + (errors.length - 20) + ' lainnya' : '');
+        importError.classList.remove('hidden');
+      }
+
+      btnImport.textContent = '🚀 Mulai Import';
+      btnImport.disabled = false;
+
+      showToast(
+        success + ' penugasan berhasil, ' + failed + ' gagal/dilewati.',
+        failed === 0 ? 'success' : 'error'
+      );
+
+      await loadAssignments();
+    }
+
+    /* ============================================================
+       HAPUS
+       ============================================================ */
     function openDelete(id) {
       deletingId = id;
       const a = allAssignments.find(x => x.id === id);
@@ -426,6 +852,9 @@
       }
     }
 
+    /* ============================================================
+       UTILS
+       ============================================================ */
     function escapeHtml(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');
@@ -444,6 +873,7 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         closeModal();
+        closeImportModal();
         closeDeleteModal();
       }
     });
