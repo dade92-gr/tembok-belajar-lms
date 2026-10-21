@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Materi & Page Builder — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .context-bar {
+      background: var(--tb-light); border-radius: 12px;
+      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
+      display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;
+      font-size: 0.85rem;
+    }
+    .context-bar strong { color: var(--tb-dark); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+
+    .panel {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1);
+      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+    }
+
+    .panel-title {
+      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--tb-light);
+    }
+
+    .page-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .page-item {
+      padding: 0.7rem 0.9rem; border-radius: 10px;
+      background: var(--tb-bg); cursor: pointer;
+      font-size: 0.85rem; transition: var(--tb-transition);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px;
+    }
+    .page-item:hover { background: var(--tb-light); }
+    .page-item.active { background: var(--tb-light); border-left: 3px solid var(--tb-primary); }
+    .page-item .title { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .page-item .actions { display: flex; gap: 4px; }
+    .icon-btn {
+      background: transparent; border: none; cursor: pointer;
+      padding: 4px 6px; border-radius: 6px; font-size: 0.85rem;
+      transition: var(--tb-transition);
+    }
+    .icon-btn:hover { background: white; }
+
+    .block-list { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1rem; }
+    .block-item {
+      background: var(--tb-bg); border-radius: 10px;
+      padding: 1rem; border-left: 4px solid var(--tb-primary);
+      position: relative;
+    }
+    .block-item .block-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.5rem; font-size: 0.75rem; color: var(--tb-text-muted);
+      font-weight: 600; text-transform: uppercase;
+    }
+    .block-item .block-body { font-size: 0.9rem; color: var(--tb-text); line-height: 1.6; }
+    .block-item .block-body iframe { width: 100%; height: 300px; border: none; border-radius: 8px; }
+    .block-item .block-body img { max-width: 100%; border-radius: 8px; }
+    .block-item .block-actions {
+      display: flex; gap: 4px;
+    }
+    .block-item .block-actions button {
+      background: white; border: 1px solid var(--tb-border);
+      width: 28px; height: 28px; border-radius: 6px;
+      cursor: pointer; font-size: 0.8rem; transition: var(--tb-transition);
+    }
+    .block-item .block-actions button:hover { background: var(--tb-primary); color: white; border-color: var(--tb-primary); }
+    .block-item .block-actions button.danger:hover { background: var(--tb-danger); border-color: var(--tb-danger); }
+
+    .block-type-selector {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;
+    }
+    .block-type-btn {
+      background: white; border: 2px solid var(--tb-border);
+      padding: 0.6rem 1rem; border-radius: 10px; cursor: pointer;
+      font-size: 0.8rem; font-weight: 600; color: var(--tb-text);
+      transition: var(--tb-transition); display: flex; align-items: center; gap: 6px;
+    }
+    .block-type-btn:hover { border-color: var(--tb-primary); background: var(--tb-light); }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: white; border-radius: var(--tb-radius-lg);
+      padding: 2rem; width: 100%; max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: tbFadeInUp 0.3s ease; margin: auto;
+    }
+    .modal-card h2 { font-size: 1.2rem; color: var(--tb-dark); margin-bottom: 1rem; font-weight: 700; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
+      color: white; border: none; padding: 0.6rem 1.4rem;
+      border-radius: 30px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      transition: var(--tb-transition);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(46,204,113,0.3); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: #6c757d; color: white; border: none;
+      padding: 0.6rem 1.4rem; border-radius: 30px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; transition: var(--tb-transition);
+    }
+    .btn-secondary:hover { background: #5a6268; }
+
+    .form-label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--tb-dark); }
+    .form-input {
+      width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--tb-border);
+      border-radius: 10px; font-size: 0.9rem; font-family: inherit;
+      margin-bottom: 1rem; outline: none;
+    }
+    .form-input:focus { border-color: var(--tb-primary); box-shadow: 0 0 0 3px rgba(46,204,113,0.15); }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--tb-dark); color: white;
+      padding: 1rem 1.4rem; border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem; font-weight: 500;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease; z-index: 3000; max-width: 400px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--tb-danger); }
+
+    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
+    .back-nav { text-align: center; margin-top: 2rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--tb-dark);
+      padding: 0.6rem 1.5rem; border-radius: 30px;
+      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+      font-size: 0.85rem;
+    }
+    .btn-back:hover { background: var(--tb-light); }
+
+    @media (max-width: 768px) {
+      .page-container { padding: 1.2rem 1rem; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat materi...</p></div>
+
+  <div class="page-container hidden" id="pageContent">
+    <div class="page-toolbar">
+      <h1>📄 Materi & Page Builder
+        <small>Buat halaman materi interaktif untuk siswa</small>
+      </h1>
+      <button class="btn-primary" onclick="openPageModal()">+ Halaman Baru</button>
+    </div>
+
+    <div class="context-bar" id="contextBar" style="display:none;">
+      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
+      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
+    </div>
+
+    <div class="two-col">
+      <div class="panel">
+        <h2 class="panel-title">📑 Daftar Halaman</h2>
+        <div class="page-list" id="pageList">
+          <div class="empty-msg">Memuat...</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="panel-title" id="editorTitle">✏️ Editor Halaman</h2>
+        <div id="editorContent">
+          <div class="empty-msg">Pilih halaman dari daftar untuk mengedit</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="back-nav">
+      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Modal: Halaman Baru -->
+  <div class="modal-overlay" id="modalPage">
+    <div class="modal-card">
+      <h2>Halaman Baru</h2>
+      <label class="form-label">Judul Halaman</label>
+      <input type="text" id="inputPageTitle" class="form-input" placeholder="Contoh: Pertemuan 1 - Pengenalan" maxlength="100">
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closePageModal()">Batal</button>
+        <button class="btn-primary" id="btnSavePage" onclick="savePage()">Buat Halaman</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Blok Baru -->
+  <div class="modal-overlay" id="modalBlock">
+    <div class="modal-card">
+      <h2 id="blockModalTitle">Tambah Blok</h2>
+      <div id="blockFormContainer"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeBlockModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveBlock" onclick="saveBlock()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let currentContext = null;
+    let allPages = [];
+    let currentPage = null;
+    let allBlocks = [];
+    let editingBlockId = null;
+    let addingBlockType = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
+      // Ambil konteks dari sessionStorage (dari kelas.html)
+      const ctx = sessionStorage.getItem('guru_context');
+      if (ctx) {
+        currentContext = JSON.parse(ctx);
+        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
+        document.getElementById('contextBar').style.display = 'flex';
+
+        // Ambil nama kelas
+        try {
+          const classes = await getClasses(currentUser.school_id);
+          const cls = classes.find(c => c.id === currentContext.classId);
+          if (cls) document.getElementById('ctxClass').textContent = cls.name;
+        } catch (e) {}
+
+        await loadPages();
+      }
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    async function loadPages() {
+      if (!currentContext) return;
+      try {
+        allPages = await getPages(currentContext.classId, currentContext.subjectId);
+        renderPageList();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('pageList').innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+      }
+    }
+
+    function renderPageList() {
+      const container = document.getElementById('pageList');
+      if (allPages.length === 0) {
+        container.innerHTML = '<div class="empty-msg">Belum ada halaman. Klik "+ Halaman Baru"</div>';
+        return;
+      }
+      container.innerHTML = allPages.map(p => `
+        <div class="page-item ${currentPage && currentPage.id === p.id ? 'active' : ''}"
+             onclick="selectPage(${p.id})">
+          <span class="title">${esc(p.title)}</span>
+          <div class="actions">
+            <button class="icon-btn" onclick="event.stopPropagation(); deletePageConfirm(${p.id})" title="Hapus">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function selectPage(pageId) {
+      currentPage = allPages.find(p => p.id === pageId);
+      if (!currentPage) return;
+      renderPageList();
+      await loadBlocks();
+    }
+
+    async function loadBlocks() {
+      if (!currentPage) return;
+      try {
+        allBlocks = await getBlocks(currentPage.id);
+        renderEditor();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderEditor() {
+      const container = document.getElementById('editorContent');
+      const title = document.getElementById('editorTitle');
+
+      if (!currentPage) {
+        title.textContent = '✏️ Editor Halaman';
+        container.innerHTML = '<div class="empty-msg">Pilih halaman dari daftar</div>';
+        return;
+      }
+
+      title.textContent = '✏️ ' + currentPage.title;
+
+      let html = '<div class="block-list">';
+      if (allBlocks.length === 0) {
+        html += '<div class="empty-msg">Belum ada blok. Tambahkan blok di bawah.</div>';
+      } else {
+        allBlocks.forEach(b => {
+          html += renderBlockPreview(b);
+        });
+      }
+      html += '</div>';
+
+      html += '<div class="block-type-selector">';
+      html += '<button class="block-type-btn" onclick="openBlockModal(\'text\')">📝 Teks</button>';
+      html += '<button class="block-type-btn" onclick="openBlockModal(\'image\')">🖼️ Gambar</button>';
+      html += '<button class="block-type-btn" onclick="openBlockModal(\'video\')">🎬 Video</button>';
+      html += '<button class="block-type-btn" onclick="openBlockModal(\'file\')">📎 File</button>';
+      html += '</div>';
+
+      container.innerHTML = html;
+    }
+
+    function renderBlockPreview(b) {
+      const d = b.data || {};
+      let bodyHtml = '';
+      if (b.type === 'text') {
+        bodyHtml = (d.content || '').replace(/\n/g, '<br>');
+      } else if (b.type === 'image') {
+        bodyHtml = d.url ? `<img src="${esc(d.url)}" alt="${esc(d.caption || '')}"><div style="font-size:0.75rem; color:#888; margin-top:4px;">${esc(d.caption || '')}</div>` : '<em style="color:#999;">(Belum ada gambar)</em>';
+      } else if (b.type === 'video') {
+        const yt = (d.url || '').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+        if (yt) {
+          bodyHtml = `<iframe src="https://www.youtube.com/embed/${yt[1]}" allowfullscreen></iframe>`;
+        } else {
+          bodyHtml = `<a href="${esc(d.url || '#')}" target="_blank">${esc(d.url || '')}</a>`;
+        }
+      } else if (b.type === 'file') {
+        bodyHtml = d.url ? `<a href="${esc(d.url)}" target="_blank">📎 ${esc(d.name || d.url)}</a>` : '<em style="color:#999;">(Belum ada file)</em>';
+      }
+      return `
+        <div class="block-item">
+          <div class="block-header">
+            <span>${b.type}</span>
+            <div class="block-actions">
+              <button onclick="editBlock(${b.id})" title="Edit">✏️</button>
+              <button class="danger" onclick="deleteBlockConfirm(${b.id})" title="Hapus">🗑️</button>
+            </div>
+          </div>
+          <div class="block-body">${bodyHtml}</div>
+        </div>`;
+    }
+
+    /* ===== PAGE ===== */
+    function openPageModal() {
+      if (!currentContext) {
+        alert('Pilih kelas dulu dari halaman "Mapel Saya" → kelas → Materi');
+        return;
+      }
+      document.getElementById('inputPageTitle').value = '';
+      document.getElementById('modalPage').classList.add('active');
+      setTimeout(() => document.getElementById('inputPageTitle').focus(), 100);
+    }
+    function closePageModal() { document.getElementById('modalPage').classList.remove('active'); }
+
+    async function savePage() {
+      const title = document.getElementById('inputPageTitle').value.trim();
+      if (!title) { alert('Judul wajib diisi'); return; }
+      const btn = document.getElementById('btnSavePage');
+      btn.disabled = true; btn.textContent = 'Menyimpan...';
+      try {
+        await createPage({
+          classId: currentContext.classId,
+          subjectId: currentContext.subjectId,
+          title,
+          authorId: currentUser.id
+        });
+        closePageModal();
+        showToast('✅ Halaman dibuat');
+        await loadPages();
+      } catch (err) {
+        alert('Gagal: ' + err.message);
+        btn.disabled = false; btn.textContent = 'Buat Halaman';
+      }
+    }
+
+    async function deletePageConfirm(pageId) {
+      if (!confirm('Hapus halaman ini beserta semua bloknya?')) return;
+      try {
+        await deletePage(pageId);
+        if (currentPage && currentPage.id === pageId) currentPage = null;
+        showToast('🗑️ Halaman dihapus');
+        await loadPages();
+        renderEditor();
+      } catch (err) {
+        alert('Gagal: ' + err.message);
+      }
+    }
+
+    /* ===== BLOCK ===== */
+    function openBlockModal(type) {
+      addingBlockType = type;
+      editingBlockId = null;
+      document.getElementById('blockModalTitle').textContent = 'Tambah Blok: ' + type;
+      renderBlockForm(type, {});
+      document.getElementById('modalBlock').classList.add('active');
+    }
+
+    function editBlock(blockId) {
+      const b = allBlocks.find(x => x.id === blockId);
+      if (!b) return;
+      editingBlockId = blockId;
+      addingBlockType = b.type;
+      document.getElementById('blockModalTitle').textContent = 'Edit Blok: ' + b.type;
+      renderBlockForm(b.type, b.data || {});
+      document.getElementById('modalBlock').classList.add('active');
+    }
+
+    function renderBlockForm(type, data) {
+      const c = document.getElementById('blockFormContainer');
+      let html = '';
+      if (type === 'text') {
+        html = `
+          <label class="form-label">Isi Teks</label>
+          <textarea id="blockContent" class="form-input" rows="6" placeholder="Tulis materi...">${esc(data.content || '')}</textarea>`;
+      } else if (type === 'image') {
+        html = `
+          <label class="form-label">URL Gambar</label>
+          <input type="text" id="blockUrl" class="form-input" placeholder="https://..." value="${esc(data.url || '')}">
+          <label class="form-label">Caption (opsional)</label>
+          <input type="text" id="blockCaption" class="form-input" placeholder="Deskripsi gambar" value="${esc(data.caption || '')}">`;
+      } else if (type === 'video') {
+        html = `
+          <label class="form-label">URL Video (YouTube / Drive)</label>
+          <input type="text" id="blockUrl" class="form-input" placeholder="https://youtube.com/watch?v=..." value="${esc(data.url || '')}">`;
+      } else if (type === 'file') {
+        html = `
+          <label class="form-label">URL File (Drive / dll)</label>
+          <input type="text" id="blockUrl" class="form-input" placeholder="https://drive.google.com/..." value="${esc(data.url || '')}">
+          <label class="form-label">Nama File</label>
+          <input type="text" id="blockName" class="form-input" placeholder="Modul Bab 1.pdf" value="${esc(data.name || '')}">`;
+      }
+      c.innerHTML = html;
+    }
+
+    function closeBlockModal() { document.getElementById('modalBlock').classList.remove('active'); }
+
+    async function saveBlock() {
+      if (!currentPage) return;
+      const btn = document.getElementById('btnSaveBlock');
+      btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+      try {
+        let data = {};
+        if (addingBlockType === 'text') {
+          data = { content: document.getElementById('blockContent').value };
+        } else if (addingBlockType === 'image') {
+          data = {
+            url: document.getElementById('blockUrl').value.trim(),
+            caption: document.getElementById('blockCaption').value.trim()
+          };
+        } else if (addingBlockType === 'video') {
+          data = { url: document.getElementById('blockUrl').value.trim() };
+        } else if (addingBlockType === 'file') {
+          data = {
+            url: document.getElementById('blockUrl').value.trim(),
+            name: document.getElementById('blockName').value.trim()
+          };
+        }
+
+        if (editingBlockId) {
+          await updateBlock(editingBlockId, { data });
+        } else {
+          const order = allBlocks.length;
+          await createBlock({
+            pageId: currentPage.id,
+            type: addingBlockType,
+            data,
+            order
+          });
+        }
+        closeBlockModal();
+        showToast('✅ Blok disimpan');
+        await loadBlocks();
+      } catch (err) {
+        alert('Gagal: ' + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Simpan';
+      }
+    }
+
+    async function deleteBlockConfirm(blockId) {
+      if (!confirm('Hapus blok ini?')) return;
+      try {
+        await deleteBlock(blockId);
+        showToast('🗑️ Blok dihapus');
+        await loadBlocks();
+      } catch (err) {
+        alert('Gagal: ' + err.message);
+      }
+    }
+
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : '');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closePageModal();
+        closeBlockModal();
+      }
+    });
+  </script>
+</body>
+</html>

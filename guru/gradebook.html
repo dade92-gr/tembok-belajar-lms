@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grade Book — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-toolbar { margin-bottom: 1.5rem; }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .context-bar {
+      background: var(--tb-light); border-radius: 12px;
+      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
+      display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;
+    }
+    .context-bar strong { color: var(--tb-dark); }
+
+    .panel {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1);
+      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+    }
+    .panel-title {
+      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--tb-light);
+    }
+
+    .table-wrapper {
+      overflow-x: auto; border-radius: 12px;
+      border: 1px solid #eee;
+    }
+    .grade-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.8rem; min-width: 600px;
+    }
+    .grade-table thead { background: var(--tb-light); }
+    .grade-table th {
+      padding: 0.7rem 0.6rem; text-align: center;
+      font-weight: 600; color: var(--tb-dark);
+      border-bottom: 2px solid var(--tb-primary);
+      font-size: 0.75rem;
+      position: sticky; top: 0; z-index: 5;
+    }
+    .grade-table th.col-name {
+      text-align: left; min-width: 180px;
+      position: sticky; left: 0; background: var(--tb-light); z-index: 6;
+    }
+    .grade-table td {
+      padding: 0.6rem; text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .grade-table td.col-name {
+      text-align: left; font-weight: 600; color: var(--tb-text);
+      position: sticky; left: 0; background: white;
+      white-space: nowrap;
+    }
+    .grade-table tr:hover { background: #f8f9fa; }
+    .grade-table tr:hover td.col-name { background: #f8f9fa; }
+
+    .cell-grade { font-weight: 700; }
+    .cell-grade.high { color: var(--tb-dark); }
+    .cell-grade.mid { color: var(--tb-warning); }
+    .cell-grade.low { color: var(--tb-danger); }
+    .cell-grade.empty { color: #ccc; font-weight: 400; }
+
+    .btn-export {
+      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
+      color: white; border: none; padding: 0.5rem 1.2rem;
+      border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .btn-export:hover { transform: translateY(-1px); }
+
+    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
+    .back-nav { text-align: center; margin-top: 2rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--tb-dark);
+      padding: 0.6rem 1.5rem; border-radius: 30px;
+      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+      font-size: 0.85rem;
+    }
+    .btn-back:hover { background: var(--tb-light); }
+
+    @media (max-width: 600px) { .page-container { padding: 1.2rem 1rem; } }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat grade book...</p></div>
+
+  <div class="page-container hidden" id="pageContent">
+    <div class="page-toolbar">
+      <h1>📊 Grade Book
+        <small>Rekap nilai lengkap per kelas</small>
+      </h1>
+    </div>
+
+    <div class="context-bar" id="contextBar" style="display:none;">
+      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
+      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">📋 Tabel Nilai</h2>
+      <button class="btn-export" onclick="exportCSV()">⬇️ Export CSV</button>
+      <div class="table-wrapper">
+        <table class="grade-table" id="gradeTable">
+          <thead id="gradeThead"></thead>
+          <tbody id="gradeTbody">
+            <tr><td class="empty-msg" colspan="2">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="back-nav">
+      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let currentContext = null;
+    let gradeData = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
+      const ctx = sessionStorage.getItem('guru_context');
+      if (ctx) {
+        currentContext = JSON.parse(ctx);
+        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
+        document.getElementById('contextBar').style.display = 'flex';
+        try {
+          const classes = await getClasses(currentUser.school_id);
+          const cls = classes.find(c => c.id === currentContext.classId);
+          if (cls) document.getElementById('ctxClass').textContent = cls.name;
+        } catch (e) {}
+
+        await loadGradeBook();
+      }
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    async function loadGradeBook() {
+      try {
+        gradeData = await getGradeBook(currentContext.classId);
+        renderTable();
+      } catch (err) {
+        document.getElementById('gradeTbody').innerHTML = '<tr><td class="empty-msg" colspan="2" style="color:red;">Error: ' + err.message + '</td></tr>';
+      }
+    }
+
+    function renderTable() {
+      const { activities, students, submissions, grades } = gradeData;
+
+      if (students.length === 0) {
+        document.getElementById('gradeThead').innerHTML = '';
+        document.getElementById('gradeTbody').innerHTML = '<tr><td class="empty-msg" colspan="2">Belum ada siswa</td></tr>';
+        return;
+      }
+      if (activities.length === 0) {
+        document.getElementById('gradeThead').innerHTML = '';
+        document.getElementById('gradeTbody').innerHTML = '<tr><td class="empty-msg" colspan="2">Belum ada aktivitas</td></tr>';
+        return;
+      }
+
+      // Map submission & grade per (student, activity)
+      const subMap = {};
+      submissions.forEach(s => { subMap[s.activity_id + ':' + s.student_id] = s; });
+      const gradeMap = {};
+      grades.forEach(g => { gradeMap[g.activity_id + ':' + g.student_id] = g; });
+
+      // Header
+      const thead = document.getElementById('gradeThead');
+      thead.innerHTML = `
+        <tr>
+          <th class="col-name">Siswa</th>
+          ${activities.map(a => `<th title="${esc(a.title)}">${esc(a.title.substring(0, 20))}${a.title.length > 20 ? '…' : ''}</th>`).join('')}
+          <th>Rata-rata</th>
+        </tr>
+      `;
+
+      // Rows
+      const tbody = document.getElementById('gradeTbody');
+      tbody.innerHTML = students.map(st => {
+        let totalScore = 0;
+        let countScored = 0;
+
+        const cells = activities.map(a => {
+          const g = gradeMap[a.id + ':' + st.id];
+          if (g && g.score !== null && g.score !== undefined) {
+            totalScore += parseFloat(g.score);
+            countScored++;
+            const pct = (g.score / a.max_score) * 100;
+            let cls = 'high';
+            if (pct < 60) cls = 'low';
+            else if (pct < 80) cls = 'mid';
+            return `<td><span class="cell-grade ${cls}">${g.score}</span></td>`;
+          }
+          const sub = subMap[a.id + ':' + st.id];
+          if (sub) return '<td><span class="cell-grade empty">⏳</span></td>';
+          return '<td><span class="cell-grade empty">-</span></td>';
+        }).join('');
+
+        const avg = countScored > 0 ? (totalScore / countScored).toFixed(1) : '-';
+
+        return `
+          <tr>
+            <td class="col-name">${esc(st.name)}</td>
+            ${cells}
+            <td><strong>${avg}</strong></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportCSV() {
+      if (!gradeData) return;
+      const { activities, students, grades } = gradeData;
+      const gradeMap = {};
+      grades.forEach(g => { gradeMap[g.activity_id + ':' + g.student_id] = g; });
+
+      let csv = 'Nama,' + activities.map(a => '"' + a.title.replace(/"/g, '""') + '"').join(',') + ',Rata-rata\n';
+
+      students.forEach(st => {
+        let total = 0, count = 0;
+        const row = [st.name];
+        activities.forEach(a => {
+          const g = gradeMap[a.id + ':' + st.id];
+          if (g && g.score !== null) {
+            row.push(g.score);
+            total += parseFloat(g.score);
+            count++;
+          } else {
+            row.push('');
+          }
+        });
+        row.push(count > 0 ? (total / count).toFixed(1) : '');
+        csv += row.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',') + '\n';
+      });
+
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'gradebook_' + Date.now() + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

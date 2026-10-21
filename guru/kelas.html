@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail Kelas — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-toolbar { margin-bottom: 1.5rem; }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.85rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .class-selector {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1);
+      padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+      box-shadow: var(--tb-shadow-sm);
+    }
+    .class-selector label { font-size: 0.8rem; font-weight: 600; color: var(--tb-dark); margin-bottom: 0.4rem; display: block; }
+    .class-selector select {
+      width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--tb-border);
+      border-radius: 12px; font-size: 0.9rem; font-family: inherit; cursor: pointer;
+    }
+
+    .tabs {
+      display: flex; gap: 4px; border-bottom: 2px solid var(--tb-light);
+      margin-bottom: 1.2rem; flex-wrap: wrap;
+    }
+    .tab {
+      padding: 0.7rem 1.2rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      color: var(--tb-text-muted); border-bottom: 3px solid transparent;
+      transition: var(--tb-transition);
+    }
+    .tab:hover { background: var(--tb-bg); }
+    .tab.active { color: var(--tb-primary); border-bottom-color: var(--tb-primary); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .panel {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1);
+      padding: 1.5rem; margin-bottom: 1.5rem;
+      box-shadow: var(--tb-shadow-sm);
+    }
+
+    .panel-title {
+      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--tb-light);
+    }
+
+    .student-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.6rem; }
+    .student-item {
+      background: var(--tb-bg); border-radius: 10px; padding: 0.7rem 1rem;
+      display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+    }
+    .student-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .student-info { flex: 1; }
+    .student-info strong { display: block; font-weight: 600; color: var(--tb-text); }
+    .student-info small { color: var(--tb-text-muted); font-size: 0.7rem; }
+
+    .action-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;
+    }
+    .action-card {
+      background: var(--tb-bg); border-radius: 12px; padding: 1.2rem;
+      text-align: center; cursor: pointer; transition: var(--tb-transition);
+      border: 1px solid transparent; text-decoration: none; color: inherit;
+      display: block;
+    }
+    .action-card:hover { background: var(--tb-light); border-color: var(--tb-primary); transform: translateY(-2px); }
+    .action-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+    .action-label { font-size: 0.85rem; font-weight: 600; color: var(--tb-dark); }
+
+    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
+
+    .back-nav { text-align: center; margin-top: 2rem; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--tb-dark);
+      padding: 0.6rem 1.5rem; border-radius: 30px;
+      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+      font-size: 0.85rem; transition: var(--tb-transition);
+    }
+    .btn-secondary:hover { background: var(--tb-light); }
+
+    @media (max-width: 600px) {
+      .page-container { padding: 1.2rem 1rem; }
+      .student-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat kelas...</p></div>
+
+  <div class="page-container hidden" id="pageContent">
+    <div class="page-toolbar">
+      <h1>🏫 Detail Kelas
+        <small id="mapelTitle">-</small>
+      </h1>
+    </div>
+
+    <div class="class-selector">
+      <label>Pilih Kelas</label>
+      <select id="selectKelas" onchange="onKelasChange()"></select>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this, 'tabSiswa')">👥 Siswa</div>
+      <div class="tab" onclick="switchTab(this, 'tabAksi')">⚙️ Aksi Cepat</div>
+    </div>
+
+    <div id="tabSiswa" class="tab-content active">
+      <div class="panel">
+        <h2 class="panel-title">Daftar Siswa</h2>
+        <div id="studentList" class="student-list">
+          <div class="empty-msg">Pilih kelas terlebih dahulu</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tabAksi" class="tab-content">
+      <div class="panel">
+        <h2 class="panel-title">Aksi Cepat</h2>
+        <div class="action-grid">
+          <a href="materi.html" class="action-card" onclick="saveContext()">
+            <span class="action-icon">📄</span>
+            <div class="action-label">Kelola Materi</div>
+          </a>
+          <a href="aktivitas.html" class="action-card" onclick="saveContext()">
+            <span class="action-icon">✏️</span>
+            <div class="action-label">Kelola Aktivitas</div>
+          </a>
+          <a href="penilaian.html" class="action-card" onclick="saveContext()">
+            <span class="action-icon">📝</span>
+            <div class="action-label">Nilai Submissions</div>
+          </a>
+          <a href="gradebook.html" class="action-card" onclick="saveContext()">
+            <span class="action-icon">📊</span>
+            <div class="action-label">Grade Book</div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="back-nav">
+      <a href="mapel.html" class="btn-secondary">← Kembali ke Mapel</a>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let allAssignments = [];
+    let currentSubjectId = null;
+    let currentClassId = null;
+    let currentSubjectName = '';
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
+      // Ambil subject dari URL param
+      const params = new URLSearchParams(window.location.search);
+      currentSubjectId = parseInt(params.get('subject')) || null;
+
+      // Ambil semua penugasan guru
+      allAssignments = await getMyTeachingAssignments(currentUser.id);
+
+      // Filter sesuai subject
+      let filtered = allAssignments.filter(a => a.subjects && a.subjects.id === currentSubjectId);
+      if (filtered.length === 0) filtered = allAssignments; // fallback semua
+
+      if (filtered.length > 0 && filtered[0].subjects) {
+        currentSubjectName = filtered[0].subjects.name;
+        document.getElementById('mapelTitle').textContent = '📚 ' + currentSubjectName;
+      }
+
+      // Isi dropdown kelas
+      const seen = new Set();
+      const classOptions = [];
+      filtered.forEach(a => {
+        if (a.classes && !seen.has(a.classes.id)) {
+          seen.add(a.classes.id);
+          classOptions.push(a.classes);
+        }
+      });
+
+      const sel = document.getElementById('selectKelas');
+      if (classOptions.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada kelas --</option>';
+      } else {
+        sel.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+          classOptions.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+      }
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    async function onKelasChange() {
+      const classId = parseInt(document.getElementById('selectKelas').value);
+      currentClassId = classId;
+      if (!classId) {
+        document.getElementById('studentList').innerHTML = '<div class="empty-msg">Pilih kelas terlebih dahulu</div>';
+        return;
+      }
+
+      document.getElementById('studentList').innerHTML = '<div class="empty-msg">Memuat siswa...</div>';
+      try {
+        const enrolls = await getStudentsInClass(classId);
+        if (enrolls.length === 0) {
+          document.getElementById('studentList').innerHTML = '<div class="empty-msg">Belum ada siswa di kelas ini</div>';
+          return;
+        }
+        document.getElementById('studentList').innerHTML = enrolls.map(e => {
+          const p = e.profiles;
+          if (!p) return '';
+          return `
+            <div class="student-item">
+              <div class="student-avatar">${esc(p.name.charAt(0).toUpperCase())}</div>
+              <div class="student-info">
+                <strong>${esc(p.name)}</strong>
+                <small>${esc(p.email)}</small>
+              </div>
+            </div>`;
+        }).join('');
+      } catch (err) {
+        console.error('Load siswa error:', err);
+        document.getElementById('studentList').innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+      }
+    }
+
+    function saveContext() {
+      // Simpan konteks ke sessionStorage untuk dipakai materi.html, aktivitas.html, dst.
+      if (currentSubjectId && currentClassId) {
+        sessionStorage.setItem('guru_context', JSON.stringify({
+          subjectId: currentSubjectId,
+          classId: currentClassId,
+          subjectName: currentSubjectName
+        }));
+      }
+    }
+
+    function switchTab(el, id) {
+      el.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

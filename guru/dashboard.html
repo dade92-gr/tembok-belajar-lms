@@ -40,9 +40,7 @@
 
     <div class="dash-panel">
       <h2 class="panel-title">ℹ️ Info</h2>
-      <p class="muted" id="roleInfo">
-        Panel Guru sedang dibangun. Fitur akan ditambahkan di Fase 5-6.
-      </p>
+      <p class="muted">Pilih "Mapel Saya" untuk melihat mapel dan kelas yang Anda ampu.</p>
     </div>
   </div>
 
@@ -62,7 +60,6 @@
       document.getElementById('greeting').textContent = 'Halo, ' + profile.name + '!';
       document.getElementById('subGreeting').textContent = 'Guru · ' + profile.email;
 
-      // Ambil nama sekolah
       try {
         const school = await getSchool(profile.school_id);
         if (school) {
@@ -70,17 +67,31 @@
           document.getElementById('schoolInfo').textContent =
             '🏫 ' + school.name + (school.academic_year ? ' · Tahun Ajaran ' + school.academic_year : '');
         }
-      } catch (err) {
-        console.warn('Gagal ambil data sekolah:', err);
-        document.getElementById('schoolName').textContent = '🏫 -';
-        document.getElementById('schoolInfo').textContent = '';
-      }
+      } catch (err) { console.warn('Gagal ambil sekolah:', err); }
+
+      // Statistik nyata
+      let totalMapel = 0, totalKelas = 0, totalSiswa = 0, totalAktivitas = 0;
+      try {
+        const assignments = await getMyTeachingAssignments(profile.id);
+        if (assignments && assignments.length > 0) {
+          const subjectSet = new Set();
+          const classSet = new Set();
+          assignments.forEach(a => {
+            if (a.subjects) subjectSet.add(a.subjects.id);
+            if (a.classes) classSet.add(a.classes.id);
+          });
+          totalMapel = subjectSet.size;
+          totalKelas = classSet.size;
+          const counts = await getClassStudentCounts(Array.from(classSet));
+          totalSiswa = Object.values(counts).reduce((s, n) => s + n, 0);
+        }
+      } catch (err) { console.warn('Statistik error:', err); }
 
       const stats = [
-        { label: 'Mapel Diampu', value: '-' },
-        { label: 'Kelas Diampu', value: '-' },
-        { label: 'Aktivitas Dibuat', value: '-' },
-        { label: 'Submission Masuk', value: '-' }
+        { label: 'Mapel Diampu', value: totalMapel },
+        { label: 'Kelas Diampu', value: totalKelas },
+        { label: 'Siswa Diajar', value: totalSiswa },
+        { label: 'Aktivitas Dibuat', value: totalAktivitas }
       ];
       document.getElementById('statsGrid').innerHTML = stats.map(s => `
         <div class="stat-card">
@@ -90,17 +101,19 @@
       `).join('');
 
       const menus = [
-        { icon: '📚', label: 'Mapel Saya' },
-        { icon: '📄', label: 'Materi (Page Builder)' },
-        { icon: '✏️', label: 'Aktivitas & Tugas' },
-        { icon: '📝', label: 'Penilaian' },
-        { icon: '📊', label: 'Grade Book' },
-        { icon: '💬', label: 'Forum Kelas' },
-        { icon: '📈', label: 'Progress Siswa' },
-        { icon: '🖨️', label: 'Cetak Rapor' }
+        { icon: '📚', label: 'Mapel Saya',            url: 'mapel.html' },
+        { icon: '📄', label: 'Materi & Page Builder', url: 'materi.html' },
+        { icon: '✏️', label: 'Aktivitas & Tugas',     url: 'aktivitas.html' },
+        { icon: '📝', label: 'Penilaian',             url: 'penilaian.html' },
+        { icon: '📊', label: 'Grade Book',            url: 'gradebook.html' },
+        { icon: '💬', label: 'Forum Kelas',           url: 'forum.html' },
+        { icon: '📈', label: 'Progress Siswa',        url: 'progress.html' },
+        { icon: '🖨️', label: 'Cetak Rapor',           url: 'cetak-rapor.html' }
       ];
       document.getElementById('quickMenu').innerHTML = menus.map(m => `
-        <div class="quick-item" onclick="alert('Fitur ${m.label} akan dibuat di Fase 5-6.')">
+        <div class="quick-item" onclick="${m.url === '#'
+          ? `alert('Fitur ${m.label} akan dibuat di fase berikutnya.')`
+          : `window.location.href='${m.url}'`}">
           <span class="quick-icon">${m.icon}</span>
           <span>${m.label}</span>
         </div>

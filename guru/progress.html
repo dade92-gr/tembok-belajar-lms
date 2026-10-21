@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress Siswa — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1300px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-toolbar { margin-bottom: 1.5rem; }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .context-bar {
+      background: var(--tb-light); border-radius: 12px;
+      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
+      display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;
+    }
+    .context-bar strong { color: var(--tb-dark); }
+
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: white; border-radius: var(--tb-radius); padding: 1.2rem;
+      text-align: center; border: 1px solid rgba(46,204,113,0.1);
+      box-shadow: var(--tb-shadow-sm);
+    }
+    .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--tb-primary); }
+    .stat-label { font-size: 0.75rem; color: var(--tb-text-muted); margin-top: 0.3rem; }
+
+    .panel {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1);
+      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+    }
+    .panel-title {
+      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--tb-light);
+    }
+
+    .table-wrapper {
+      overflow-x: auto; border-radius: 12px; border: 1px solid #eee;
+    }
+    .progress-table {
+      width: 100%; border-collapse: collapse; font-size: 0.85rem;
+    }
+    .progress-table thead { background: var(--tb-light); }
+    .progress-table th {
+      padding: 0.8rem 0.7rem; text-align: left;
+      font-weight: 600; color: var(--tb-dark); font-size: 0.75rem;
+      border-bottom: 2px solid var(--tb-primary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .progress-table td {
+      padding: 0.7rem; border-bottom: 1px solid #f0f0f0;
+    }
+    .progress-table tr:hover { background: #f8f9fa; }
+    .progress-table .name { font-weight: 600; color: var(--tb-text); }
+    .progress-table .email { font-size: 0.7rem; color: var(--tb-text-muted); }
+
+    .progress-bar-wrap {
+      background: #f0f0f0; border-radius: 10px; height: 18px; overflow: hidden;
+      position: relative; min-width: 100px;
+    }
+    .progress-bar-fill {
+      height: 100%; border-radius: 10px; transition: width 0.3s ease;
+    }
+    .progress-bar-text {
+      position: absolute; top: 0; left: 0; right: 0;
+      text-align: center; line-height: 18px; font-size: 0.65rem; font-weight: 700;
+      color: #333;
+    }
+
+    .badge {
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 600;
+      display: inline-block;
+    }
+    .badge-green { background: var(--tb-light); color: var(--tb-dark); }
+    .badge-yellow { background: #fff3cd; color: #856404; }
+    .badge-red { background: #fadbd8; color: #c0392b; }
+
+    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
+    .back-nav { text-align: center; margin-top: 2rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--tb-dark);
+      padding: 0.6rem 1.5rem; border-radius: 30px;
+      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+      font-size: 0.85rem;
+    }
+    .btn-back:hover { background: var(--tb-light); }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat progress...</p></div>
+
+  <div class="page-container hidden" id="pageContent">
+    <div class="page-toolbar">
+      <h1>📈 Progress Siswa
+        <small>Pantau siapa yang sudah/belum mengerjakan aktivitas</small>
+      </h1>
+    </div>
+
+    <div class="context-bar" id="contextBar" style="display:none;">
+      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
+      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
+    </div>
+
+    <div class="stat-grid" id="statsGrid"></div>
+
+    <div class="panel">
+      <h2 class="panel-title">📊 Progress per Siswa</h2>
+      <div class="table-wrapper">
+        <table class="progress-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">No</th>
+              <th>Siswa</th>
+              <th style="width:80px;">Aktivitas</th>
+              <th style="width:80px;">Dikumpul</th>
+              <th style="width:80px;">Belum</th>
+              <th style="width:180px;">Progress Kumpul</th>
+              <th style="width:80px;">Dinilai</th>
+              <th style="width:80px;">Rata-rata</th>
+            </tr>
+          </thead>
+          <tbody id="progressTbody">
+            <tr><td colspan="8" class="empty-msg">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="back-nav">
+      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let currentContext = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
+      const ctx = sessionStorage.getItem('guru_context');
+      if (ctx) {
+        currentContext = JSON.parse(ctx);
+        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
+        document.getElementById('contextBar').style.display = 'flex';
+        try {
+          const classes = await getClasses(currentUser.school_id);
+          const cls = classes.find(c => c.id === currentContext.classId);
+          if (cls) document.getElementById('ctxClass').textContent = cls.name;
+        } catch (e) {}
+        await loadProgress();
+      }
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    async function loadProgress() {
+      if (!currentContext) return;
+      try {
+        const data = await getStudentProgress(currentContext.classId, currentContext.subjectId);
+        renderStats(data);
+        renderTable(data);
+      } catch (err) {
+        document.getElementById('progressTbody').innerHTML = '<tr><td colspan="8" class="empty-msg" style="color:red;">Error: ' + err.message + '</td></tr>';
+      }
+    }
+
+    function renderStats(data) {
+      if (data.length === 0) {
+        document.getElementById('statsGrid').innerHTML = '';
+        return;
+      }
+      const totalStudents = data.length;
+      const totalActivities = data[0]?.totalActivities || 0;
+      const avgSubmit = (data.reduce((s, d) => s + parseInt(d.submitPercent || 0), 0) / data.length).toFixed(0);
+      const sudahSemua = data.filter(d => d.notSubmitted === 0 && d.totalActivities > 0).length;
+
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card"><div class="stat-value">${totalStudents}</div><div class="stat-label">Total Siswa</div></div>
+        <div class="stat-card"><div class="stat-value">${totalActivities}</div><div class="stat-label">Total Aktivitas</div></div>
+        <div class="stat-card"><div class="stat-value">${avgSubmit}%</div><div class="stat-label">Rata-rata Kumpul</div></div>
+        <div class="stat-card"><div class="stat-value">${sudahSemua}</div><div class="stat-label">Siswa Lengkap</div></div>
+      `;
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('progressTbody');
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Belum ada siswa atau aktivitas</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map((d, i) => {
+        const pct = parseInt(d.submitPercent);
+        let colorClass = 'badge-red';
+        let barColor = '#e74c3c';
+        if (pct >= 80) { colorClass = 'badge-green'; barColor = '#27ae60'; }
+        else if (pct >= 50) { colorClass = 'badge-yellow'; barColor = '#f39c12'; }
+
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td>
+              <div class="name">${esc(d.student.name)}</div>
+              <div class="email">${esc(d.student.email)}</div>
+            </td>
+            <td style="text-align:center;">${d.totalActivities}</td>
+            <td style="text-align:center; color:#27ae60; font-weight:700;">${d.submitted}</td>
+            <td style="text-align:center; color:#e74c3c; font-weight:700;">${d.notSubmitted}</td>
+            <td>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" style="width:${pct}%; background:${barColor};"></div>
+                <div class="progress-bar-text">${pct}%</div>
+              </div>
+            </td>
+            <td style="text-align:center;"><span class="badge ${colorClass}">${d.graded}/${d.totalActivities}</span></td>
+            <td style="text-align:center; font-weight:700;">${d.avg}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

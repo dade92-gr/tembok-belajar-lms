@@ -19,14 +19,8 @@ async function getProfile() {
   const { data: { user } } = await client.auth.getUser();
   if (!user) return null;
   const { data, error } = await client
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-  if (error) {
-    console.error('getProfile error:', error);
-    return null;
-  }
+    .from('profiles').select('*').eq('id', user.id).single();
+  if (error) { console.error('getProfile error:', error); return null; }
   return data;
 }
 
@@ -64,64 +58,50 @@ async function requireAuth(expectedRole) {
 }
 
 /* ============================================================
-   SEKOLAH (SCHOOLS)
+   SEKOLAH
    ============================================================ */
-
 async function getSchool(schoolId) {
   const client = initSupabase();
   const { data, error } = await client
-    .from('schools')
-    .select('*')
-    .eq('id', schoolId)
-    .single();
+    .from('schools').select('*').eq('id', schoolId).single();
   if (error) throw error;
   return data;
 }
 
 /* ============================================================
-   CRUD MAPEL (SUBJECTS)
+   MAPEL (SUBJECTS)
    ============================================================ */
-
 async function getSubjects(schoolId) {
   const client = initSupabase();
-  let query = client.from('subjects').select('*').order('name', { ascending: true });
-  if (schoolId) query = query.eq('school_id', schoolId);
-  const { data, error } = await query;
+  let q = client.from('subjects').select('*').order('name', { ascending: true });
+  if (schoolId) q = q.eq('school_id', schoolId);
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
 
 async function createSubject({ name, code, schoolId }) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('subjects')
-    .insert([{ name, code, school_id: schoolId }])
-    .select()
-    .single();
+  const { data, error } = await client.from('subjects')
+    .insert([{ name, code, school_id: schoolId }]).select().single();
   if (error) throw error;
   return data;
 }
 
 async function updateSubject(id, { name, code }) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('subjects')
-    .update({ name, code })
-    .eq('id', id)
-    .select()
-    .single();
+  const { data, error } = await client.from('subjects')
+    .update({ name, code }).eq('id', id).select().single();
   if (error) throw error;
   return data;
 }
 
 async function isSubjectUsed(subjectId) {
   const client = initSupabase();
-  const { count: assignCount, error: err1 } = await client
-    .from('teacher_assign')
-    .select('*', { count: 'exact', head: true })
-    .eq('subject_id', subjectId);
-  if (err1) throw err1;
-  if (assignCount > 0) return { used: true, by: 'penugasan guru', count: assignCount };
+  const { count, error } = await client.from('teacher_assign')
+    .select('*', { count: 'exact', head: true }).eq('subject_id', subjectId);
+  if (error) throw error;
+  if (count > 0) return { used: true, by: 'penugasan guru', count };
   return { used: false };
 }
 
@@ -132,58 +112,43 @@ async function deleteSubject(id) {
 }
 
 /* ============================================================
-   CRUD KELAS (CLASSES)
+   KELAS (CLASSES)
    ============================================================ */
-
 async function getClasses(schoolId) {
   const client = initSupabase();
-  let query = client.from('classes').select('*').order('name', { ascending: true });
-  if (schoolId) query = query.eq('school_id', schoolId);
-  const { data, error } = await query;
+  let q = client.from('classes').select('*').order('name', { ascending: true });
+  if (schoolId) q = q.eq('school_id', schoolId);
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
 
 async function createClass({ name, grade, room, schoolId }) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('classes')
-    .insert([{ name, grade, room, school_id: schoolId }])
-    .select()
-    .single();
+  const { data, error } = await client.from('classes')
+    .insert([{ name, grade, room, school_id: schoolId }]).select().single();
   if (error) throw error;
   return data;
 }
 
 async function updateClass(id, { name, grade, room }) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('classes')
-    .update({ name, grade, room })
-    .eq('id', id)
-    .select()
-    .single();
+  const { data, error } = await client.from('classes')
+    .update({ name, grade, room }).eq('id', id).select().single();
   if (error) throw error;
   return data;
 }
 
 async function isClassUsed(classId) {
   const client = initSupabase();
-
-  const { count: assignCount, error: err1 } = await client
-    .from('teacher_assign')
-    .select('*', { count: 'exact', head: true })
-    .eq('class_id', classId);
-  if (err1) throw err1;
-  if (assignCount > 0) return { used: true, by: 'penugasan guru', count: assignCount };
-
-  const { count: enrollCount, error: err2 } = await client
-    .from('enrollments')
-    .select('*', { count: 'exact', head: true })
-    .eq('class_id', classId);
-  if (err2) throw err2;
-  if (enrollCount > 0) return { used: true, by: 'enrollment siswa', count: enrollCount };
-
+  const { count: ac, error: e1 } = await client.from('teacher_assign')
+    .select('*', { count: 'exact', head: true }).eq('class_id', classId);
+  if (e1) throw e1;
+  if (ac > 0) return { used: true, by: 'penugasan guru', count: ac };
+  const { count: ec, error: e2 } = await client.from('enrollments')
+    .select('*', { count: 'exact', head: true }).eq('class_id', classId);
+  if (e2) throw e2;
+  if (ec > 0) return { used: true, by: 'enrollment siswa', count: ec };
   return { used: false };
 }
 
@@ -194,41 +159,29 @@ async function deleteClass(id) {
 }
 
 /* ============================================================
-   CRUD GURU (PROFILES role=guru)
+   GURU
    ============================================================ */
-
 async function getTeachers(schoolId) {
   const client = initSupabase();
-  let query = client
-    .from('profiles')
-    .select('*')
-    .eq('role', 'guru')
-    .order('name', { ascending: true });
-  if (schoolId) query = query.eq('school_id', schoolId);
-  const { data, error } = await query;
+  let q = client.from('profiles').select('*').eq('role', 'guru').order('name', { ascending: true });
+  if (schoolId) q = q.eq('school_id', schoolId);
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
 
 async function updateTeacher(id, { name, email }) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('profiles')
-    .update({ name, email })
-    .eq('id', id)
-    .eq('role', 'guru')
-    .select()
-    .single();
+  const { data, error } = await client.from('profiles')
+    .update({ name, email }).eq('id', id).eq('role', 'guru').select().single();
   if (error) throw error;
   return data;
 }
 
 async function isTeacherUsed(teacherId) {
   const client = initSupabase();
-  const { count, error } = await client
-    .from('teacher_assign')
-    .select('*', { count: 'exact', head: true })
-    .eq('teacher_id', teacherId);
+  const { count, error } = await client.from('teacher_assign')
+    .select('*', { count: 'exact', head: true }).eq('teacher_id', teacherId);
   if (error) throw error;
   if (count > 0) return { used: true, by: 'penugasan guru', count };
   return { used: false };
@@ -236,92 +189,62 @@ async function isTeacherUsed(teacherId) {
 
 async function deleteTeacher(id) {
   const client = initSupabase();
-  const { error } = await client
-    .from('profiles')
-    .delete()
-    .eq('id', id)
-    .eq('role', 'guru');
+  const { error } = await client.from('profiles')
+    .delete().eq('id', id).eq('role', 'guru');
   if (error) throw error;
 }
 
 /* ============================================================
-   CRUD SISWA (PROFILES role=siswa)
+   SISWA
    ============================================================ */
-
 async function getStudents(schoolId) {
   const client = initSupabase();
-  let query = client
-    .from('profiles')
-    .select('*')
-    .eq('role', 'siswa')
-    .order('name', { ascending: true });
-  if (schoolId) query = query.eq('school_id', schoolId);
-  const { data, error } = await query;
+  let q = client.from('profiles').select('*').eq('role', 'siswa').order('name', { ascending: true });
+  if (schoolId) q = q.eq('school_id', schoolId);
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
 
 async function updateStudent(id, { name, email }) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('profiles')
-    .update({ name, email })
-    .eq('id', id)
-    .eq('role', 'siswa')
-    .select()
-    .single();
+  const { data, error } = await client.from('profiles')
+    .update({ name, email }).eq('id', id).eq('role', 'siswa').select().single();
   if (error) throw error;
   return data;
 }
 
 async function isStudentUsed(studentId) {
   const client = initSupabase();
-  const { count, error } = await client
-    .from('enrollments')
-    .select('*', { count: 'exact', head: true })
-    .eq('student_id', studentId);
+  const { count, error } = await client.from('enrollments')
+    .select('*', { count: 'exact', head: true }).eq('student_id', studentId);
   if (error) throw error;
   if (count > 0) return { used: true, by: 'enrollment kelas', count };
   return { used: false };
 }
 
 /* ============================================================
-   PENUGASAN GURU (TEACHER_ASSIGN)
+   PENUGASAN GURU
    ============================================================ */
-
 async function getTeacherAssignments(schoolId) {
   const client = initSupabase();
-  let query = client
-    .from('teacher_assign')
-    .select(`
-      id,
-      created_at,
-      teacher_id,
-      subject_id,
-      class_id,
-      profiles!teacher_assign_teacher_id_fkey (id, name, email),
-      subjects (id, name, code),
-      classes (id, name, grade)
-    `)
-    .order('created_at', { ascending: false });
-  if (schoolId) query = query.eq('school_id', schoolId);
-  const { data, error } = await query;
+  let q = client.from('teacher_assign').select(`
+    id, created_at, teacher_id, subject_id, class_id,
+    profiles!teacher_assign_teacher_id_fkey (id, name, email),
+    subjects (id, name, code),
+    classes (id, name, grade)
+  `).order('created_at', { ascending: false });
+  if (schoolId) q = q.eq('school_id', schoolId);
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
 
 async function createTeacherAssignment({ teacherId, subjectId, classId, schoolId }) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('teacher_assign')
-    .insert([{
-      teacher_id: teacherId,
-      subject_id: subjectId,
-      class_id: classId,
-      school_id: schoolId
-    }])
-    .select()
-    .single();
+  const { data, error } = await client.from('teacher_assign')
+    .insert([{ teacher_id: teacherId, subject_id: subjectId, class_id: classId, school_id: schoolId }])
+    .select().single();
   if (error) throw error;
   return data;
 }
@@ -334,52 +257,34 @@ async function deleteTeacherAssignment(id) {
 
 async function isAssignmentDuplicate(teacherId, subjectId, classId) {
   const client = initSupabase();
-  const { count, error } = await client
-    .from('teacher_assign')
+  const { count, error } = await client.from('teacher_assign')
     .select('*', { count: 'exact', head: true })
-    .eq('teacher_id', teacherId)
-    .eq('subject_id', subjectId)
-    .eq('class_id', classId);
+    .eq('teacher_id', teacherId).eq('subject_id', subjectId).eq('class_id', classId);
   if (error) throw error;
   return count > 0;
 }
 
 /* ============================================================
-   ENROLLMENT SISWA (ENROLLMENTS)
+   ENROLLMENT
    ============================================================ */
-
 async function getEnrollments(schoolId) {
   const client = initSupabase();
-  let query = client
-    .from('enrollments')
-    .select(`
-      id,
-      status,
-      enrolled_at,
-      student_id,
-      class_id,
-      profiles!enrollments_student_id_fkey (id, name, email),
-      classes (id, name, grade)
-    `)
-    .order('enrolled_at', { ascending: false });
-  if (schoolId) query = query.eq('school_id', schoolId);
-  const { data, error } = await query;
+  let q = client.from('enrollments').select(`
+    id, status, enrolled_at, student_id, class_id,
+    profiles!enrollments_student_id_fkey (id, name, email),
+    classes (id, name, grade)
+  `).order('enrolled_at', { ascending: false });
+  if (schoolId) q = q.eq('school_id', schoolId);
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
 
 async function createEnrollment({ studentId, classId, schoolId }) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('enrollments')
-    .insert([{
-      student_id: studentId,
-      class_id: classId,
-      school_id: schoolId,
-      status: 'active'
-    }])
-    .select()
-    .single();
+  const { data, error } = await client.from('enrollments')
+    .insert([{ student_id: studentId, class_id: classId, school_id: schoolId, status: 'active' }])
+    .select().single();
   if (error) throw error;
   return data;
 }
@@ -392,56 +297,300 @@ async function deleteEnrollment(id) {
 
 async function isEnrollmentDuplicate(studentId, classId) {
   const client = initSupabase();
-  const { count, error } = await client
-    .from('enrollments')
+  const { count, error } = await client.from('enrollments')
     .select('*', { count: 'exact', head: true })
-    .eq('student_id', studentId)
-    .eq('class_id', classId);
+    .eq('student_id', studentId).eq('class_id', classId);
   if (error) throw error;
   return count > 0;
 }
 
 async function getStudentClasses(studentId) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('enrollments')
-    .select(`
-      id,
-      classes (id, name, grade, room)
-    `)
-    .eq('student_id', studentId)
-    .eq('status', 'active');
+  const { data, error } = await client.from('enrollments')
+    .select(`id, classes (id, name, grade, room)`)
+    .eq('student_id', studentId).eq('status', 'active');
   if (error) throw error;
   return data || [];
 }
 
 async function getClassSubjects(classId) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('teacher_assign')
-    .select(`
-      id,
-      subjects (id, name, code),
-      profiles!teacher_assign_teacher_id_fkey (id, name)
-    `)
+  const { data, error } = await client.from('teacher_assign')
+    .select(`id, subjects (id, name, code), profiles!teacher_assign_teacher_id_fkey (id, name)`)
     .eq('class_id', classId);
   if (error) throw error;
   return data || [];
 }
-/* ============================================================
-   LAPORAN MASTER (STATISTIK SEKOLAH)
-   ============================================================ */
 
+/* ============================================================
+   GURU: MAPEL & KELAS YANG DIAMPU
+   ============================================================ */
+async function getMyTeachingAssignments(teacherId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('teacher_assign')
+    .select(`id, subjects (id, name, code), classes (id, name, grade, room)`)
+    .eq('teacher_id', teacherId);
+  if (error) throw error;
+  return data || [];
+}
+
+async function getClassStudentCounts(classIds) {
+  if (!classIds || classIds.length === 0) return {};
+  const client = initSupabase();
+  const { data, error } = await client.from('enrollments')
+    .select('class_id').in('class_id', classIds).eq('status', 'active');
+  if (error) throw error;
+  const counts = {};
+  (data || []).forEach(row => {
+    counts[row.class_id] = (counts[row.class_id] || 0) + 1;
+  });
+  return counts;
+}
+
+/* Ambil siswa di kelas tertentu dengan detail profil */
+async function getStudentsInClass(classId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('enrollments')
+    .select(`id, student_id, status, profiles!enrollments_student_id_fkey (id, name, email)`)
+    .eq('class_id', classId).eq('status', 'active');
+  if (error) throw error;
+  return data || [];
+}
+
+/* ============================================================
+   MATERI / PAGES (Page Builder)
+   ============================================================ */
+async function getPages(classId, subjectId) {
+  const client = initSupabase();
+  let q = client.from('pages')
+    .select('*')
+    .eq('class_id', classId)
+    .eq('subject_id', subjectId)
+    .order('page_order', { ascending: true });
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+async function createPage({ classId, subjectId, title, authorId, theme }) {
+  const client = initSupabase();
+  // Ambil page_order terakhir
+  const { data: existing } = await client.from('pages')
+    .select('page_order').eq('class_id', classId).eq('subject_id', subjectId)
+    .order('page_order', { ascending: false }).limit(1);
+  const nextOrder = (existing && existing[0] ? existing[0].page_order : 0) + 1;
+
+  const { data, error } = await client.from('pages')
+    .insert([{
+      class_id: classId,
+      subject_id: subjectId,
+      title,
+      author_id: authorId,
+      status: 'published',
+      page_order: nextOrder,
+      theme: theme || {}
+    }])
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updatePage(id, { title, status }) {
+  const client = initSupabase();
+  const updates = {};
+  if (title !== undefined) updates.title = title;
+  if (status !== undefined) updates.status = status;
+  updates.updated_at = new Date().toISOString();
+  const { data, error } = await client.from('pages')
+    .update(updates).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deletePage(id) {
+  const client = initSupabase();
+  const { error } = await client.from('pages').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ============================================================
+   BLOCKS (Konten dalam Page Builder)
+   ============================================================ */
+async function getBlocks(pageId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('blocks')
+    .select('*').eq('page_id', pageId).order('block_order', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function createBlock({ pageId, type, data, order }) {
+  const client = initSupabase();
+  const { data: created, error } = await client.from('blocks')
+    .insert([{ page_id: pageId, type, data: data || {}, block_order: order || 0 }])
+    .select().single();
+  if (error) throw error;
+  return created;
+}
+
+async function updateBlock(id, { type, data, order }) {
+  const client = initSupabase();
+  const updates = {};
+  if (type !== undefined) updates.type = type;
+  if (data !== undefined) updates.data = data;
+  if (order !== undefined) updates.block_order = order;
+  const { data: updated, error } = await client.from('blocks')
+    .update(updates).eq('id', id).select().single();
+  if (error) throw error;
+  return updated;
+}
+
+async function deleteBlock(id) {
+  const client = initSupabase();
+  const { error } = await client.from('blocks').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ============================================================
+   AKTIVITAS (Tugas/Kuis)
+   ============================================================ */
+async function getActivities(classId, subjectId) {
+  const client = initSupabase();
+  let q = client.from('activities')
+    .select('*')
+    .eq('class_id', classId)
+    .eq('subject_id', subjectId)
+    .order('created_at', { ascending: false });
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+async function createActivity({ classId, subjectId, type, title, description, deadline, maxScore, authorId }) {
+  const client = initSupabase();
+  const { data, error } = await client.from('activities')
+    .insert([{
+      class_id: classId,
+      subject_id: subjectId,
+      type,
+      title,
+      description,
+      deadline,
+      max_score: maxScore || 100,
+      author_id: authorId
+    }])
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteActivity(id) {
+  const client = initSupabase();
+  const { error } = await client.from('activities').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ============================================================
+   SUBMISSIONS & GRADES
+   ============================================================ */
+async function getSubmissionsByActivity(activityId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('submissions')
+    .select(`id, content, file_url, submitted_at, status, student_id,
+      profiles!submissions_student_id_fkey (id, name, email)`)
+    .eq('activity_id', activityId)
+    .order('submitted_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getGradesByActivity(activityId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('grades')
+    .select('*').eq('activity_id', activityId);
+  if (error) throw error;
+  return data || [];
+}
+
+async function saveGrade({ submissionId, activityId, studentId, score, feedback, gradedBy }) {
+  const client = initSupabase();
+  // Cek apakah sudah ada
+  const { data: existing } = await client.from('grades')
+    .select('id').eq('submission_id', submissionId).maybeSingle();
+
+  if (existing) {
+    const { data, error } = await client.from('grades')
+      .update({ score, feedback, graded_by: gradedBy, graded_at: new Date().toISOString() })
+      .eq('id', existing.id).select().single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await client.from('grades')
+      .insert([{
+        submission_id: submissionId,
+        activity_id: activityId,
+        student_id: studentId,
+        score,
+        feedback,
+        graded_by: gradedBy
+      }])
+      .select().single();
+    if (error) throw error;
+    return data;
+  }
+}
+
+/* ============================================================
+   GRADE BOOK
+   ============================================================ */
+async function getGradeBook(classId) {
+  const client = initSupabase();
+  // Ambil semua aktivitas di kelas
+  const { data: activities, error: e1 } = await client.from('activities')
+    .select('id, title, type, max_score, deadline, subject_id')
+    .eq('class_id', classId)
+    .order('created_at', { ascending: true });
+  if (e1) throw e1;
+
+  // Ambil semua siswa di kelas
+  const { data: enrolls, error: e2 } = await client.from('enrollments')
+    .select(`student_id, profiles!enrollments_student_id_fkey (id, name, email)`)
+    .eq('class_id', classId).eq('status', 'active');
+  if (e2) throw e2;
+
+  // Ambil semua submission & grade untuk aktivitas ini
+  const activityIds = (activities || []).map(a => a.id);
+  let submissions = [];
+  let grades = [];
+
+  if (activityIds.length > 0) {
+    const { data: subs } = await client.from('submissions')
+      .select('id, activity_id, student_id, submitted_at, status')
+      .in('activity_id', activityIds);
+    submissions = subs || [];
+
+    const { data: grs } = await client.from('grades')
+      .select('submission_id, activity_id, student_id, score, feedback')
+      .in('activity_id', activityIds);
+    grades = grs || [];
+  }
+
+  return {
+    activities: activities || [],
+    students: (enrolls || []).map(e => e.profiles).filter(Boolean),
+    submissions,
+    grades
+  };
+}
+
+/* ============================================================
+   LAPORAN MASTER (Operator)
+   ============================================================ */
 async function getMasterReport(schoolId) {
   const client = initSupabase();
-
-  // Ambil semua data paralel
   const [
-    { data: profiles },
-    { data: subjects },
-    { data: classes },
-    { data: assigns },
-    { data: enrolls }
+    { data: profiles }, { data: subjects }, { data: classes },
+    { data: assigns }, { data: enrolls }
   ] = await Promise.all([
     client.from('profiles').select('id, name, role, status').eq('school_id', schoolId),
     client.from('subjects').select('id, name, code').eq('school_id', schoolId),
@@ -450,88 +599,231 @@ async function getMasterReport(schoolId) {
     client.from('enrollments').select('student_id, class_id, status').eq('school_id', schoolId)
   ]);
 
-  const allProfiles = profiles || [];
-  const allSubjects = subjects || [];
-  const allClasses = classes || [];
-  const allAssigns = assigns || [];
-  const allEnrolls = (enrolls || []).filter(e => e.status === 'active');
-
-  const teachers = allProfiles.filter(p => p.role === 'guru');
-  const students = allProfiles.filter(p => p.role === 'siswa');
-
-  // Statistik relasi
-  const enrolledStudentIds = new Set(allEnrolls.map(e => e.student_id));
-  const assignedTeacherIds = new Set(allAssigns.map(a => a.teacher_id));
-
-  // Siswa belum masuk kelas
-  const studentsWithoutClass = students.filter(s => !enrolledStudentIds.has(s.id));
-
-  // Guru belum punya penugasan
-  const teachersWithoutAssign = teachers.filter(t => !assignedTeacherIds.has(t.id));
-
-  // Hitung siswa per kelas
+  const allP = profiles || [], allS = subjects || [], allC = classes || [];
+  const allA = assigns || [];
+  const allE = (enrolls || []).filter(e => e.status === 'active');
+  const teachers = allP.filter(p => p.role === 'guru');
+  const students = allP.filter(p => p.role === 'siswa');
+  const enrolledIds = new Set(allE.map(e => e.student_id));
+  const assignedIds = new Set(allA.map(a => a.teacher_id));
   const studentsPerClass = {};
-  allEnrolls.forEach(e => {
-    studentsPerClass[e.class_id] = (studentsPerClass[e.class_id] || 0) + 1;
-  });
-
-  // Top 5 kelas dengan siswa terbanyak
-  const topClasses = allClasses
-    .map(c => ({ ...c, studentCount: studentsPerClass[c.id] || 0 }))
-    .sort((a, b) => b.studentCount - a.studentCount)
-    .slice(0, 5);
-
-  // Hitung penugasan per guru
+  allE.forEach(e => { studentsPerClass[e.class_id] = (studentsPerClass[e.class_id] || 0) + 1; });
   const assignPerTeacher = {};
-  allAssigns.forEach(a => {
-    assignPerTeacher[a.teacher_id] = (assignPerTeacher[a.teacher_id] || 0) + 1;
-  });
-
-  // Top 5 guru dengan penugasan terbanyak
-  const topTeachers = teachers
-    .map(t => ({ ...t, assignCount: assignPerTeacher[t.id] || 0 }))
-    .filter(t => t.assignCount > 0)
-    .sort((a, b) => b.assignCount - a.assignCount)
-    .slice(0, 5);
-
-  // Mapel populer (berapa kali mapel ini diampu)
+  allA.forEach(a => { assignPerTeacher[a.teacher_id] = (assignPerTeacher[a.teacher_id] || 0) + 1; });
   const subjectUsage = {};
-  allAssigns.forEach(a => {
-    subjectUsage[a.subject_id] = (subjectUsage[a.subject_id] || 0) + 1;
-  });
-
-  const popularSubjects = allSubjects
-    .map(s => ({ ...s, usageCount: subjectUsage[s.id] || 0 }))
-    .filter(s => s.usageCount > 0)
-    .sort((a, b) => b.usageCount - a.usageCount)
-    .slice(0, 5);
-
-  // Kelas tanpa siswa
-  const classesWithoutStudents = allClasses.filter(c => !studentsPerClass[c.id]);
+  allA.forEach(a => { subjectUsage[a.subject_id] = (subjectUsage[a.subject_id] || 0) + 1; });
 
   return {
-    // Statistik utama
     totalStudents: students.length,
     totalTeachers: teachers.length,
-    totalClasses: allClasses.length,
-    totalSubjects: allSubjects.length,
-    totalAssignments: allAssigns.length,
-    totalEnrollments: allEnrolls.length,
-
-    // Rasio
-    avgStudentsPerClass: allClasses.length > 0
-      ? (allEnrolls.length / allClasses.length).toFixed(1) : '0',
-    avgClassesPerTeacher: teachers.length > 0
-      ? (allAssigns.length / teachers.length).toFixed(1) : '0',
-
-    // Top lists
-    topTeachers,
-    topClasses,
-    popularSubjects,
-
-    // Status data
-    studentsWithoutClass: studentsWithoutClass.length,
-    teachersWithoutAssign: teachersWithoutAssign.length,
-    classesWithoutStudents: classesWithoutStudents.length
+    totalClasses: allC.length,
+    totalSubjects: allS.length,
+    totalAssignments: allA.length,
+    totalEnrollments: allE.length,
+    avgStudentsPerClass: allC.length > 0 ? (allE.length / allC.length).toFixed(1) : '0',
+    avgClassesPerTeacher: teachers.length > 0 ? (allA.length / teachers.length).toFixed(1) : '0',
+    topTeachers: teachers.map(t => ({ ...t, assignCount: assignPerTeacher[t.id] || 0 }))
+      .filter(t => t.assignCount > 0).sort((a, b) => b.assignCount - a.assignCount).slice(0, 5),
+    topClasses: allC.map(c => ({ ...c, studentCount: studentsPerClass[c.id] || 0 }))
+      .sort((a, b) => b.studentCount - a.studentCount).slice(0, 5),
+    popularSubjects: allS.map(s => ({ ...s, usageCount: subjectUsage[s.id] || 0 }))
+      .filter(s => s.usageCount > 0).sort((a, b) => b.usageCount - a.usageCount).slice(0, 5),
+    studentsWithoutClass: students.filter(s => !enrolledIds.has(s.id)).length,
+    teachersWithoutAssign: teachers.filter(t => !assignedIds.has(t.id)).length,
+    classesWithoutStudents: allC.filter(c => !studentsPerClass[c.id]).length
   };
+}
+
+/* ============================================================
+   FORUM
+   ============================================================ */
+async function getForumPosts(classId, subjectId) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('forum_posts')
+    .select(`
+      id, title, body, parent_id, created_at, author_id,
+      profiles!forum_posts_author_id_fkey (id, name, role)
+    `)
+    .eq('class_id', classId)
+    .eq('subject_id', subjectId)
+    .is('parent_id', null)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getForumReplies(parentId) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('forum_posts')
+    .select(`
+      id, title, body, created_at, author_id,
+      profiles!forum_posts_author_id_fkey (id, name, role)
+    `)
+    .eq('parent_id', parentId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function createForumPost({ classId, subjectId, authorId, title, body, parentId }) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('forum_posts')
+    .insert([{
+      class_id: classId,
+      subject_id: subjectId,
+      author_id: authorId,
+      title,
+      body,
+      parent_id: parentId || null
+    }])
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteForumPost(id) {
+  const client = initSupabase();
+  const { error } = await client.from('forum_posts').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ============================================================
+   PROGRESS SISWA
+   ============================================================ */
+async function getStudentProgress(classId, subjectId) {
+  const client = initSupabase();
+
+  // Ambil semua aktivitas di kelas+mapel
+  const { data: activities, error: e1 } = await client
+    .from('activities')
+    .select('id, title, max_score')
+    .eq('class_id', classId)
+    .eq('subject_id', subjectId);
+  if (e1) throw e1;
+
+  // Ambil semua siswa di kelas
+  const { data: enrolls, error: e2 } = await client
+    .from('enrollments')
+    .select(`student_id, profiles!enrollments_student_id_fkey (id, name, email)`)
+    .eq('class_id', classId)
+    .eq('status', 'active');
+  if (e2) throw e2;
+
+  const activityIds = (activities || []).map(a => a.id);
+  let submissions = [], grades = [];
+
+  if (activityIds.length > 0) {
+    const { data: subs } = await client.from('submissions')
+      .select('id, activity_id, student_id, submitted_at, status')
+      .in('activity_id', activityIds);
+    submissions = subs || [];
+
+    const { data: grs } = await client.from('grades')
+      .select('activity_id, student_id, score')
+      .in('activity_id', activityIds);
+    grades = grs || [];
+  }
+
+  // Bangun matrix per siswa
+  const subSet = new Set();
+  submissions.forEach(s => subSet.add(s.activity_id + ':' + s.student_id));
+
+  const gradeMap = {};
+  grades.forEach(g => {
+    gradeMap[g.activity_id + ':' + g.student_id] = parseFloat(g.score);
+  });
+
+  const students = (enrolls || []).map(e => e.profiles).filter(Boolean);
+
+  return students.map(st => {
+    let totalScore = 0, scored = 0, submitted = 0, notSubmitted = 0;
+    activities.forEach(a => {
+      const key = a.id + ':' + st.id;
+      if (subSet.has(key)) submitted++;
+      else notSubmitted++;
+      if (gradeMap[key] !== undefined) {
+        totalScore += gradeMap[key];
+        scored++;
+      }
+    });
+    const avg = scored > 0 ? (totalScore / scored).toFixed(1) : '-';
+    const submitPercent = activities.length > 0 ? ((submitted / activities.length) * 100).toFixed(0) : 0;
+    return {
+      student: st,
+      totalActivities: activities.length,
+      submitted,
+      notSubmitted,
+      graded: scored,
+      avg,
+      submitPercent
+    };
+  });
+}
+
+/* ============================================================
+   RAPOR (Rekap Nilai Per Siswa)
+   ============================================================ */
+async function getStudentReport(studentId, classId, subjectId) {
+  const client = initSupabase();
+
+  // Semua aktivitas di kelas+mapel
+  const { data: activities, error: e1 } = await client
+    .from('activities')
+    .select('id, title, type, max_score')
+    .eq('class_id', classId)
+    .eq('subject_id', subjectId)
+    .order('created_at', { ascending: true });
+  if (e1) throw e1;
+
+  const activityIds = (activities || []).map(a => a.id);
+  if (activityIds.length === 0) {
+    return { activities: [], grades: [], avg: '-', totalScore: 0, totalMax: 0 };
+  }
+
+  // Grades siswa
+  const { data: grades, error: e2 } = await client
+    .from('grades')
+    .select('activity_id, score, feedback')
+    .eq('student_id', studentId)
+    .in('activity_id', activityIds);
+  if (e2) throw e2;
+
+  const gradeMap = {};
+  (grades || []).forEach(g => { gradeMap[g.activity_id] = g; });
+
+  let totalScore = 0, totalMax = 0, scored = 0;
+  const activityDetails = activities.map(a => {
+    const g = gradeMap[a.id];
+    if (g && g.score !== null) {
+      totalScore += parseFloat(g.score);
+      totalMax += parseFloat(a.max_score);
+      scored++;
+    }
+    return { ...a, grade: g };
+  });
+
+  const avg = scored > 0 && totalMax > 0 ? ((totalScore / totalMax) * 100).toFixed(1) : '-';
+
+  return {
+    activities: activityDetails,
+    avg,
+    totalScore: totalScore.toFixed(1),
+    totalMax: totalMax.toFixed(1),
+    scored
+  };
+}
+
+/* Ambil semua siswa di kelas (untuk dropdown rapor) */
+async function getStudentsForReport(classId) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('enrollments')
+    .select(`student_id, profiles!enrollments_student_id_fkey (id, name, email)`)
+    .eq('class_id', classId)
+    .eq('status', 'active');
+  if (error) throw error;
+  return (data || []).map(e => e.profiles).filter(Boolean);
 }

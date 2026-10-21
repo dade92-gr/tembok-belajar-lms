@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cetak Rapor — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-toolbar { margin-bottom: 1.5rem; }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .context-bar {
+      background: var(--tb-light); border-radius: 12px;
+      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
+      display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;
+    }
+    .context-bar strong { color: var(--tb-dark); }
+
+    .selector-bar {
+      background: white; border-radius: var(--tb-radius-lg);
+      padding: 1rem 1.5rem; margin-bottom: 1.5rem;
+      box-shadow: var(--tb-shadow-sm);
+      display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;
+    }
+    .selector-bar > div { flex: 1; min-width: 200px; }
+    .selector-bar label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--tb-dark); margin-bottom: 0.4rem; }
+    .selector-bar select, .selector-bar input {
+      width: 100%; padding: 0.6rem 0.8rem;
+      border: 1px solid var(--tb-border); border-radius: 10px;
+      font-size: 0.85rem; font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
+      color: white; border: none; padding: 0.7rem 1.4rem;
+      border-radius: 30px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      transition: var(--tb-transition); white-space: nowrap;
+    }
+    .btn-primary:hover { transform: translateY(-2px); }
+
+    /* RAPOR */
+    .rapor-container {
+      background: white; border-radius: var(--tb-radius-lg);
+      padding: 2rem; box-shadow: var(--tb-shadow-sm);
+      border: 1px solid rgba(46,204,113,0.1);
+    }
+    .rapor-header {
+      text-align: center; border-bottom: 3px solid var(--tb-primary);
+      padding-bottom: 1rem; margin-bottom: 1.5rem;
+    }
+    .rapor-header h2 {
+      font-size: 1.4rem; font-weight: 700; color: var(--tb-dark); margin-bottom: 0.3rem;
+    }
+    .rapor-header p { font-size: 0.85rem; color: var(--tb-text-muted); }
+
+    .student-info {
+      display: grid; grid-template-columns: 140px 1fr; gap: 0.5rem 1rem;
+      font-size: 0.85rem; margin-bottom: 1.5rem;
+      background: var(--tb-bg); padding: 1rem 1.2rem; border-radius: 10px;
+    }
+    .student-info .label { color: var(--tb-text-muted); font-weight: 500; }
+    .student-info .value { color: var(--tb-text); font-weight: 600; }
+
+    table.nilai-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.85rem; margin-bottom: 1.5rem;
+    }
+    table.nilai-table thead { background: var(--tb-light); }
+    table.nilai-table th {
+      padding: 0.7rem 0.8rem; text-align: left;
+      font-weight: 600; color: var(--tb-dark);
+      border: 1px solid #ddd; font-size: 0.8rem;
+    }
+    table.nilai-table td {
+      padding: 0.6rem 0.8rem; border: 1px solid #ddd;
+    }
+    table.nilai-table td.center { text-align: center; }
+    table.nilai-table .feedback { font-size: 0.75rem; color: var(--tb-text-muted); font-style: italic; }
+
+    .summary-box {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .summary-item {
+      background: var(--tb-light); border-radius: 10px;
+      padding: 1rem; text-align: center;
+    }
+    .summary-item .val {
+      font-size: 1.5rem; font-weight: 700; color: var(--tb-dark);
+    }
+    .summary-item .lbl {
+      font-size: 0.7rem; color: var(--tb-text-muted); margin-top: 0.2rem;
+    }
+
+    .rapor-footer {
+      text-align: right; margin-top: 2rem; padding-top: 1rem;
+      border-top: 1px dashed #ccc; font-size: 0.8rem; color: var(--tb-text-muted);
+    }
+
+    .btn-print {
+      background: white; color: var(--tb-dark);
+      border: 2px solid var(--tb-primary); padding: 0.6rem 1.4rem;
+      border-radius: 30px; cursor: pointer; font-size: 0.85rem;
+      font-weight: 600; margin-top: 1rem;
+    }
+    .btn-print:hover { background: var(--tb-light); }
+
+    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 3rem; font-size: 0.85rem; }
+    .back-nav { text-align: center; margin-top: 2rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--tb-dark);
+      padding: 0.6rem 1.5rem; border-radius: 30px;
+      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+      font-size: 0.85rem;
+    }
+    .btn-back:hover { background: var(--tb-light); }
+
+    @media print {
+      .app-header, .page-toolbar, .context-bar, .selector-bar,
+      .back-nav, .btn-print, .no-print {
+        display: none !important;
+      }
+      body { background: white; }
+      .page-container { padding: 0; max-width: 100%; }
+      .rapor-container { box-shadow: none; border: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat rapor...</p></div>
+
+  <div class="page-container hidden" id="pageContent">
+    <div class="page-toolbar">
+      <h1>🖨️ Cetak Rapor
+        <small>Lihat & cetak rekap nilai per siswa</small>
+      </h1>
+    </div>
+
+    <div class="context-bar" id="contextBar" style="display:none;">
+      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
+      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
+    </div>
+
+    <div class="selector-bar no-print">
+      <div>
+        <label>Pilih Siswa</label>
+        <select id="selectStudent" onchange="loadReport()">
+          <option value="">-- Pilih Siswa --</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="window.print()">🖨️ Cetak</button>
+    </div>
+
+    <div class="rapor-container" id="raporContainer">
+      <div class="empty-msg">Pilih siswa untuk melihat rapor</div>
+    </div>
+
+    <div class="back-nav">
+      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let currentContext = null;
+    let allStudents = [];
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
+      const ctx = sessionStorage.getItem('guru_context');
+      if (ctx) {
+        currentContext = JSON.parse(ctx);
+        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
+        document.getElementById('contextBar').style.display = 'flex';
+        try {
+          const classes = await getClasses(currentUser.school_id);
+          const cls = classes.find(c => c.id === currentContext.classId);
+          if (cls) document.getElementById('ctxClass').textContent = cls.name;
+        } catch (e) {}
+
+        // Load siswa
+        try {
+          allStudents = await getStudentsForReport(currentContext.classId);
+          const sel = document.getElementById('selectStudent');
+          sel.innerHTML = '<option value="">-- Pilih Siswa --</option>' +
+            allStudents.map(s => `<option value="${s.id}">${esc(s.name)} (${esc(s.email)})</option>`).join('');
+        } catch (e) {}
+      }
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    async function loadReport() {
+      const studentId = document.getElementById('selectStudent').value;
+      const container = document.getElementById('raporContainer');
+
+      if (!studentId) {
+        container.innerHTML = '<div class="empty-msg">Pilih siswa untuk melihat rapor</div>';
+        return;
+      }
+
+      container.innerHTML = '<div class="empty-msg">Memuat...</div>';
+      try {
+        const data = await getStudentReport(studentId, currentContext.classId, currentContext.subjectId);
+        const student = allStudents.find(s => s.id === studentId);
+
+        if (!student) {
+          container.innerHTML = '<div class="empty-msg">Siswa tidak ditemukan</div>';
+          return;
+        }
+
+        if (data.activities.length === 0) {
+          container.innerHTML = '<div class="empty-msg">Belum ada aktivitas di kelas ini</div>';
+          return;
+        }
+
+        let html = `
+          <div class="rapor-header">
+            <h2>RAPOR NILAI SISWA</h2>
+            <p>Tembok Belajar · Mapel ${esc(currentContext.subjectName)}</p>
+          </div>
+
+          <div class="student-info">
+            <div class="label">Nama Siswa</div><div class="value">${esc(student.name)}</div>
+            <div class="label">Email</div><div class="value">${esc(student.email)}</div>
+            <div class="label">Kelas</div><div class="value" id="kelasName">-</div>
+            <div class="label">Tanggal Cetak</div><div class="value">${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+          </div>
+
+          <table class="nilai-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">No</th>
+                <th>Judul Aktivitas</th>
+                <th style="width:100px;">Tipe</th>
+                <th style="width:80px;">Nilai</th>
+                <th style="width:80px;">Max</th>
+                <th>Feedback</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        data.activities.forEach((a, i) => {
+          const g = a.grade;
+          const nilai = g ? g.score : '-';
+          const feedback = g && g.feedback ? esc(g.feedback) : '<em style="color:#ccc;">-</em>';
+          html += `
+            <tr>
+              <td class="center">${i + 1}</td>
+              <td>${esc(a.title)}</td>
+              <td class="center">${a.type === 'quiz' ? '🧪 Kuis' : '📝 Tugas'}</td>
+              <td class="center"><strong>${nilai}</strong></td>
+              <td class="center">${a.max_score}</td>
+              <td class="feedback">${feedback}</td>
+            </tr>
+          `;
+        });
+
+        html += `
+            </tbody>
+          </table>
+
+          <div class="summary-box">
+            <div class="summary-item">
+              <div class="val">${data.scored}</div>
+              <div class="lbl">Aktivitas Dinilai</div>
+            </div>
+            <div class="summary-item">
+              <div class="val">${data.totalScore}</div>
+              <div class="lbl">Total Skor</div>
+            </div>
+            <div class="summary-item">
+              <div class="val">${data.totalMax}</div>
+              <div class="lbl">Total Max</div>
+            </div>
+            <div class="summary-item">
+              <div class="val">${data.avg}</div>
+              <div class="lbl">Rata-rata (%)</div>
+            </div>
+          </div>
+
+          <div class="rapor-footer">
+            Dicetak dari Tembok Belajar — ${new Date().toLocaleString('id-ID')}
+          </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Set nama kelas
+        try {
+          const classes = await getClasses(currentUser.school_id);
+          const cls = classes.find(c => c.id === currentContext.classId);
+          if (cls && document.getElementById('kelasName')) {
+            document.getElementById('kelasName').textContent = cls.name;
+          }
+        } catch (e) {}
+      } catch (err) {
+        container.innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+      }
+    }
+
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

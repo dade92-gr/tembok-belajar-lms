@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Penilaian — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-toolbar { margin-bottom: 1.5rem; }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .context-bar {
+      background: var(--tb-light); border-radius: 12px;
+      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
+      display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;
+    }
+    .context-bar strong { color: var(--tb-dark); }
+
+    .selector-row {
+      display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .selector-row select {
+      flex: 1; min-width: 200px;
+      padding: 0.7rem 1rem; border: 1px solid var(--tb-border);
+      border-radius: 10px; font-size: 0.9rem; font-family: inherit;
+    }
+
+    .panel {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1);
+      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+    }
+    .panel-title {
+      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--tb-light);
+    }
+
+    .submission-list { display: flex; flex-direction: column; gap: 0.8rem; }
+    .submission-item {
+      background: var(--tb-bg); border-radius: 12px; padding: 1rem 1.2rem;
+      border-left: 4px solid var(--tb-primary);
+    }
+    .submission-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.6rem; gap: 1rem; flex-wrap: wrap;
+    }
+    .submission-student { font-weight: 700; color: var(--tb-dark); font-size: 0.9rem; }
+    .submission-meta { font-size: 0.75rem; color: var(--tb-text-muted); }
+    .submission-content {
+      background: white; border-radius: 8px; padding: 0.8rem;
+      font-size: 0.85rem; color: var(--tb-text);
+      margin-bottom: 0.6rem; word-break: break-word;
+      max-height: 150px; overflow-y: auto;
+    }
+    .submission-content a { color: var(--tb-primary); word-break: break-all; }
+    .grade-row {
+      display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
+    }
+    .grade-row input[type="number"] {
+      width: 90px; padding: 0.4rem 0.6rem;
+      border: 1px solid var(--tb-border); border-radius: 8px;
+      font-size: 0.85rem;
+    }
+    .grade-row input[type="text"] {
+      flex: 1; min-width: 150px;
+      padding: 0.4rem 0.6rem; border: 1px solid var(--tb-border);
+      border-radius: 8px; font-size: 0.85rem;
+    }
+    .btn-save-grade {
+      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
+      color: white; border: none; padding: 0.4rem 1rem;
+      border-radius: 20px; cursor: pointer; font-size: 0.75rem; font-weight: 600;
+      transition: var(--tb-transition);
+    }
+    .btn-save-grade:hover { transform: translateY(-1px); }
+    .btn-save-grade:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .badge-graded {
+      background: var(--tb-light); color: var(--tb-dark);
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 700;
+    }
+
+    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
+    .back-nav { text-align: center; margin-top: 2rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--tb-dark);
+      padding: 0.6rem 1.5rem; border-radius: 30px;
+      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+      font-size: 0.85rem;
+    }
+    .btn-back:hover { background: var(--tb-light); }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--tb-dark); color: white;
+      padding: 1rem 1.4rem; border-radius: 12px;
+      font-size: 0.85rem; font-weight: 500;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease; z-index: 3000;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--tb-danger); }
+
+    @media (max-width: 600px) { .page-container { padding: 1.2rem 1rem; } }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat penilaian...</p></div>
+
+  <div class="page-container hidden" id="pageContent">
+    <div class="page-toolbar">
+      <h1>📝 Penilaian
+        <small>Beri nilai untuk submission siswa</small>
+      </h1>
+    </div>
+
+    <div class="context-bar" id="contextBar" style="display:none;">
+      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
+      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
+    </div>
+
+    <div class="selector-row" id="selectorRow" style="display:none;">
+      <select id="selectActivity" onchange="loadSubmissions()">
+        <option value="">-- Pilih Aktivitas --</option>
+      </select>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">📥 Submission Siswa</h2>
+      <div class="submission-list" id="submissionList">
+        <div class="empty-msg">Pilih aktivitas untuk melihat submission</div>
+      </div>
+    </div>
+
+    <div class="back-nav">
+      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let currentContext = null;
+    let allActivities = [];
+    let currentActivity = null;
+    let currentSubmissions = [];
+    let currentGrades = {};
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
+      const ctx = sessionStorage.getItem('guru_context');
+      if (ctx) {
+        currentContext = JSON.parse(ctx);
+        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
+        document.getElementById('contextBar').style.display = 'flex';
+        try {
+          const classes = await getClasses(currentUser.school_id);
+          const cls = classes.find(c => c.id === currentContext.classId);
+          if (cls) document.getElementById('ctxClass').textContent = cls.name;
+        } catch (e) {}
+
+        // Load activities
+        try {
+          allActivities = await getActivities(currentContext.classId, currentContext.subjectId);
+          const sel = document.getElementById('selectActivity');
+          sel.innerHTML = '<option value="">-- Pilih Aktivitas --</option>' +
+            allActivities.map(a => `<option value="${a.id}">${esc(a.title)}</option>`).join('');
+          document.getElementById('selectorRow').style.display = 'flex';
+
+          // Jika ada activityId dari konteks, pre-select
+          if (currentContext.activityId) {
+            sel.value = currentContext.activityId;
+            await loadSubmissions();
+          }
+        } catch (e) {}
+      }
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    async function loadSubmissions() {
+      const activityId = parseInt(document.getElementById('selectActivity').value);
+      const c = document.getElementById('submissionList');
+      if (!activityId) {
+        c.innerHTML = '<div class="empty-msg">Pilih aktivitas</div>';
+        return;
+      }
+      currentActivity = allActivities.find(a => a.id === activityId);
+
+      c.innerHTML = '<div class="empty-msg">Memuat submission...</div>';
+      try {
+        currentSubmissions = await getSubmissionsByActivity(activityId);
+        const grades = await getGradesByActivity(activityId);
+        currentGrades = {};
+        grades.forEach(g => { currentGrades[g.submission_id] = g; });
+
+        renderSubmissions();
+      } catch (err) {
+        c.innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+      }
+    }
+
+    function renderSubmissions() {
+      const c = document.getElementById('submissionList');
+      if (currentSubmissions.length === 0) {
+        c.innerHTML = '<div class="empty-msg">Belum ada siswa yang mengumpulkan</div>';
+        return;
+      }
+
+      c.innerHTML = currentSubmissions.map(s => {
+        const p = s.profiles;
+        if (!p) return '';
+        const grade = currentGrades[s.id];
+        const isGraded = !!grade;
+        const submitted = s.submitted_at ? new Date(s.submitted_at).toLocaleString('id-ID') : '-';
+
+        let contentHtml = '';
+        if (s.content) {
+          contentHtml = esc(s.content).replace(/\n/g, '<br>');
+        }
+        if (s.file_url) {
+          contentHtml += `<div><a href="${esc(s.file_url)}" target="_blank">📎 ${esc(s.file_url)}</a></div>`;
+        }
+        if (!contentHtml) contentHtml = '<em style="color:#999;">(Tanpa konten)</em>';
+
+        return `
+          <div class="submission-item">
+            <div class="submission-header">
+              <div>
+                <div class="submission-student">${esc(p.name)}</div>
+                <div class="submission-meta">${esc(p.email)} · Dikumpul: ${submitted}</div>
+              </div>
+              ${isGraded ? `<span class="badge-graded">✅ Dinilai: ${grade.score}</span>` : '<span class="badge-graded" style="background:#fadbd8; color:#c0392b;">⏳ Belum dinilai</span>'}
+            </div>
+            <div class="submission-content">${contentHtml}</div>
+            <div class="grade-row">
+              <label style="font-size:0.75rem; color:#666;">Nilai:</label>
+              <input type="number" id="score-${s.id}" value="${grade ? grade.score : ''}" min="0" max="${currentActivity.max_score}" placeholder="0-${currentActivity.max_score}">
+              <input type="text" id="feedback-${s.id}" value="${grade ? esc(grade.feedback || '') : ''}" placeholder="Feedback (opsional)">
+              <button class="btn-save-grade" onclick="saveGrade(${s.id}, '${esc(p.id)}')">💾 Simpan</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function saveGrade(submissionId, studentId) {
+      if (!currentActivity) return;
+      const scoreInput = document.getElementById('score-' + submissionId);
+      const feedbackInput = document.getElementById('feedback-' + submissionId);
+      const score = parseFloat(scoreInput.value);
+      if (isNaN(score) || score < 0 || score > currentActivity.max_score) {
+        alert('Nilai harus antara 0 dan ' + currentActivity.max_score);
+        return;
+      }
+
+      try {
+        await saveGrade({
+          submissionId,
+          activityId: currentActivity.id,
+          studentId,
+          score,
+          feedback: feedbackInput.value,
+          gradedBy: currentUser.id
+        });
+        showToast('✅ Nilai disimpan');
+        await loadSubmissions();
+      } catch (err) {
+        alert('Gagal: ' + err.message);
+      }
+    }
+
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : '');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+  </script>
+</body>
+</html>
