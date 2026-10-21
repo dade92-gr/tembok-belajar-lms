@@ -428,3 +428,110 @@ async function getClassSubjects(classId) {
   if (error) throw error;
   return data || [];
 }
+/* ============================================================
+   LAPORAN MASTER (STATISTIK SEKOLAH)
+   ============================================================ */
+
+async function getMasterReport(schoolId) {
+  const client = initSupabase();
+
+  // Ambil semua data paralel
+  const [
+    { data: profiles },
+    { data: subjects },
+    { data: classes },
+    { data: assigns },
+    { data: enrolls }
+  ] = await Promise.all([
+    client.from('profiles').select('id, name, role, status').eq('school_id', schoolId),
+    client.from('subjects').select('id, name, code').eq('school_id', schoolId),
+    client.from('classes').select('id, name, grade').eq('school_id', schoolId),
+    client.from('teacher_assign').select('teacher_id, subject_id, class_id').eq('school_id', schoolId),
+    client.from('enrollments').select('student_id, class_id, status').eq('school_id', schoolId)
+  ]);
+
+  const allProfiles = profiles || [];
+  const allSubjects = subjects || [];
+  const allClasses = classes || [];
+  const allAssigns = assigns || [];
+  const allEnrolls = (enrolls || []).filter(e => e.status === 'active');
+
+  const teachers = allProfiles.filter(p => p.role === 'guru');
+  const students = allProfiles.filter(p => p.role === 'siswa');
+
+  // Statistik relasi
+  const enrolledStudentIds = new Set(allEnrolls.map(e => e.student_id));
+  const assignedTeacherIds = new Set(allAssigns.map(a => a.teacher_id));
+
+  // Siswa belum masuk kelas
+  const studentsWithoutClass = students.filter(s => !enrolledStudentIds.has(s.id));
+
+  // Guru belum punya penugasan
+  const teachersWithoutAssign = teachers.filter(t => !assignedTeacherIds.has(t.id));
+
+  // Hitung siswa per kelas
+  const studentsPerClass = {};
+  allEnrolls.forEach(e => {
+    studentsPerClass[e.class_id] = (studentsPerClass[e.class_id] || 0) + 1;
+  });
+
+  // Top 5 kelas dengan siswa terbanyak
+  const topClasses = allClasses
+    .map(c => ({ ...c, studentCount: studentsPerClass[c.id] || 0 }))
+    .sort((a, b) => b.studentCount - a.studentCount)
+    .slice(0, 5);
+
+  // Hitung penugasan per guru
+  const assignPerTeacher = {};
+  allAssigns.forEach(a => {
+    assignPerTeacher[a.teacher_id] = (assignPerTeacher[a.teacher_id] || 0) + 1;
+  });
+
+  // Top 5 guru dengan penugasan terbanyak
+  const topTeachers = teachers
+    .map(t => ({ ...t, assignCount: assignPerTeacher[t.id] || 0 }))
+    .filter(t => t.assignCount > 0)
+    .sort((a, b) => b.assignCount - a.assignCount)
+    .slice(0, 5);
+
+  // Mapel populer (berapa kali mapel ini diampu)
+  const subjectUsage = {};
+  allAssigns.forEach(a => {
+    subjectUsage[a.subject_id] = (subjectUsage[a.subject_id] || 0) + 1;
+  });
+
+  const popularSubjects = allSubjects
+    .map(s => ({ ...s, usageCount: subjectUsage[s.id] || 0 }))
+    .filter(s => s.usageCount > 0)
+    .sort((a, b) => b.usageCount - a.usageCount)
+    .slice(0, 5);
+
+  // Kelas tanpa siswa
+  const classesWithoutStudents = allClasses.filter(c => !studentsPerClass[c.id]);
+
+  return {
+    // Statistik utama
+    totalStudents: students.length,
+    totalTeachers: teachers.length,
+    totalClasses: allClasses.length,
+    totalSubjects: allSubjects.length,
+    totalAssignments: allAssigns.length,
+    totalEnrollments: allEnrolls.length,
+
+    // Rasio
+    avgStudentsPerClass: allClasses.length > 0
+      ? (allEnrolls.length / allClasses.length).toFixed(1) : '0',
+    avgClassesPerTeacher: teachers.length > 0
+      ? (allAssigns.length / teachers.length).toFixed(1) : '0',
+
+    // Top lists
+    topTeachers,
+    topClasses,
+    popularSubjects,
+
+    // Status data
+    studentsWithoutClass: studentsWithoutClass.length,
+    teachersWithoutAssign: teachersWithoutAssign.length,
+    classesWithoutStudents: classesWithoutStudents.length
+  };
+}

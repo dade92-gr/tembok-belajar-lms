@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laporan Master — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    /* STAT CARDS */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: white; border-radius: var(--tb-radius);
+      padding: 1.3rem 1rem; text-align: center;
+      border: 1px solid rgba(46,204,113,0.1);
+      box-shadow: var(--tb-shadow-sm);
+      transition: var(--tb-transition);
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--tb-shadow);
+    }
+    .stat-icon {
+      font-size: 1.8rem; margin-bottom: 0.5rem; display: block;
+    }
+    .stat-value {
+      font-size: 2rem; font-weight: 700;
+      color: var(--tb-primary); line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .stat-label {
+      font-size: 0.75rem; color: var(--tb-text-muted);
+      font-weight: 500; text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* PANEL */
+    .panel {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1);
+      box-shadow: var(--tb-shadow-sm);
+      padding: 1.5rem; margin-bottom: 1.5rem;
+    }
+    .panel-title {
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--tb-dark);
+      margin-bottom: 1rem; padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--tb-light);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* GRID 2 KOLOM */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem; margin-bottom: 1.5rem;
+    }
+
+    /* RASIO */
+    .ratio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .ratio-card {
+      background: var(--tb-light);
+      border-radius: var(--tb-radius-sm);
+      padding: 1.2rem; text-align: center;
+    }
+    .ratio-value {
+      font-size: 1.8rem; font-weight: 700;
+      color: var(--tb-dark); line-height: 1;
+    }
+    .ratio-label {
+      font-size: 0.75rem; color: var(--tb-text-muted);
+      margin-top: 0.3rem;
+    }
+
+    /* LIST */
+    .list-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.7rem 0.8rem;
+      border-radius: var(--tb-radius-sm);
+      transition: background 0.2s ease;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+    .list-row:hover { background: var(--tb-bg); }
+    .list-row .name { font-weight: 500; color: var(--tb-text); }
+    .list-row .name small { color: var(--tb-text-muted); font-weight: 400; font-size: 0.7rem; }
+    .list-row .count {
+      font-weight: 700; color: var(--tb-primary);
+      font-size: 0.9rem;
+    }
+    .list-row .count-badge {
+      background: var(--tb-light); color: var(--tb-dark);
+      padding: 2px 10px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 700;
+    }
+    .list-empty {
+      text-align: center; color: var(--tb-text-muted);
+      padding: 1.5rem; font-size: 0.85rem;
+    }
+
+    /* STATUS / ALERT */
+    .status-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .status-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 0.9rem 1.1rem;
+      border-radius: var(--tb-radius-sm);
+      font-size: 0.85rem;
+      background: var(--tb-bg);
+    }
+    .status-item.ok { background: #e8f8f0; }
+    .status-item.warning { background: #fff3cd; }
+    .status-item.danger { background: #fadbd8; }
+    .status-item .icon { font-size: 1.3rem; }
+    .status-item .content { flex: 1; }
+    .status-item .content strong { color: var(--tb-dark); }
+    .status-item .content small { color: var(--tb-text-muted); display: block; font-size: 0.75rem; margin-top: 2px; }
+    .status-item .btn-mini {
+      background: white; border: 1px solid var(--tb-border);
+      color: var(--tb-dark);
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 600;
+      cursor: pointer; transition: var(--tb-transition);
+      text-decoration: none; display: inline-block;
+    }
+    .status-item .btn-mini:hover {
+      background: var(--tb-primary); color: white; border-color: var(--tb-primary);
+    }
+
+    /* BACK */
+    .back-nav { text-align: center; margin-top: 2rem; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--tb-dark);
+      padding: 0.6rem 1.5rem; border-radius: 30px;
+      text-decoration: none; font-weight: 600;
+      border: 1px solid var(--tb-light);
+      transition: var(--tb-transition);
+      font-size: 0.85rem;
+    }
+    .btn-secondary:hover { background: var(--tb-light); }
+
+    @media (max-width: 768px) {
+      .page-container { padding: 1.2rem 1rem; }
+      .two-col { grid-template-columns: 1fr; }
+      .stat-value { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Operator</div>
+    <div class="app-user">
+      <span id="schoolName" style="font-size:0.75rem; opacity:0.85; margin-right:8px;"></span>
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box">
+    <div class="spinner"></div>
+    <p>Memuat laporan master...</p>
+  </div>
+
+  <div class="page-container hidden" id="pageContent">
+
+    <div class="page-toolbar">
+      <div>
+        <h1>📈 Laporan Master
+          <small>Ringkasan menyeluruh data sekolah Anda</small>
+        </h1>
+      </div>
+    </div>
+
+    <!-- STATISTIK UTAMA -->
+    <div class="stat-grid" id="statGrid"></div>
+
+    <!-- RASIO -->
+    <div class="panel">
+      <h2 class="panel-title">📊 Rasio & Rata-rata</h2>
+      <div class="ratio-grid" id="ratioGrid"></div>
+    </div>
+
+    <!-- DUA KOLOM: TOP GURU & TOP KELAS -->
+    <div class="two-col">
+      <div class="panel">
+        <h2 class="panel-title">🏆 Top 5 Guru (Penugasan Terbanyak)</h2>
+        <div id="topTeachers"></div>
+      </div>
+      <div class="panel">
+        <h2 class="panel-title">🏆 Top 5 Kelas (Siswa Terbanyak)</h2>
+        <div id="topClasses"></div>
+      </div>
+    </div>
+
+    <!-- MAPEL POPULER -->
+    <div class="panel">
+      <h2 class="panel-title">📚 Mapel Populer (Paling Banyak Diampu)</h2>
+      <div id="popularSubjects"></div>
+    </div>
+
+    <!-- STATUS DATA -->
+    <div class="panel">
+      <h2 class="panel-title">🔍 Status Kelengkapan Data</h2>
+      <div class="status-list" id="statusList"></div>
+    </div>
+
+    <div class="back-nav">
+      <a href="dashboard.html" class="btn-secondary">← Kembali ke Dashboard</a>
+    </div>
+
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('operator');
+      if (!currentUser) return;
+
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+      currentSchoolId = currentUser.school_id || 1;
+
+      // Nama sekolah di header
+      try {
+        const school = await getSchool(currentSchoolId);
+        if (school) {
+          document.getElementById('schoolName').textContent = '🏫 ' + school.name;
+        }
+      } catch (err) {
+        console.warn('Gagal ambil nama sekolah:', err);
+      }
+
+      await loadReport();
+    })();
+
+    let currentSchoolId = 1;
+
+    async function loadReport() {
+      try {
+        const report = await getMasterReport(currentSchoolId);
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('pageContent').classList.remove('hidden');
+
+        // 1. Statistik Utama
+        const stats = [
+          { icon: '👥', value: report.totalStudents, label: 'Total Siswa' },
+          { icon: '👨‍🏫', value: report.totalTeachers, label: 'Total Guru' },
+          { icon: '🏫', value: report.totalClasses, label: 'Total Kelas' },
+          { icon: '📚', value: report.totalSubjects, label: 'Total Mapel' },
+          { icon: '🔗', value: report.totalAssignments, label: 'Penugasan' },
+          { icon: '📋', value: report.totalEnrollments, label: 'Enrollment Aktif' }
+        ];
+        document.getElementById('statGrid').innerHTML = stats.map(s => `
+          <div class="stat-card">
+            <span class="stat-icon">${s.icon}</span>
+            <div class="stat-value">${s.value}</div>
+            <div class="stat-label">${s.label}</div>
+          </div>
+        `).join('');
+
+        // 2. Rasio
+        document.getElementById('ratioGrid').innerHTML = `
+          <div class="ratio-card">
+            <div class="ratio-value">${report.avgStudentsPerClass}</div>
+            <div class="ratio-label">Rata-rata Siswa / Kelas</div>
+          </div>
+          <div class="ratio-card">
+            <div class="ratio-value">${report.avgClassesPerTeacher}</div>
+            <div class="ratio-label">Rata-rata Penugasan / Guru</div>
+          </div>
+        `;
+
+        // 3. Top Teachers
+        const topTeachersHtml = report.topTeachers.length > 0
+          ? report.topTeachers.map(t => `
+              <div class="list-row">
+                <span class="name">${escapeHtml(t.name)} <small>(${escapeHtml(t.email || '')})</small></span>
+                <span class="count-badge">${t.assignCount} penugasan</span>
+              </div>
+            `).join('')
+          : '<div class="list-empty">Belum ada guru dengan penugasan</div>';
+        document.getElementById('topTeachers').innerHTML = topTeachersHtml;
+
+        // 4. Top Classes
+        const topClassesHtml = report.topClasses.length > 0
+          ? report.topClasses.map(c => `
+              <div class="list-row">
+                <span class="name">${escapeHtml(c.name)} <small>${c.grade ? '(' + escapeHtml(c.grade) + ')' : ''}</small></span>
+                <span class="count-badge">${c.studentCount} siswa</span>
+              </div>
+            `).join('')
+          : '<div class="list-empty">Belum ada kelas</div>';
+        document.getElementById('topClasses').innerHTML = topClassesHtml;
+
+        // 5. Popular Subjects
+        const popSubjectsHtml = report.popularSubjects.length > 0
+          ? report.popularSubjects.map(s => `
+              <div class="list-row">
+                <span class="name">📖 ${escapeHtml(s.name)} <small>${escapeHtml(s.code || '')}</small></span>
+                <span class="count-badge">${s.usageCount} kelas</span>
+              </div>
+            `).join('')
+          : '<div class="list-empty">Belum ada mapel dengan penugasan</div>';
+        document.getElementById('popularSubjects').innerHTML = popSubjectsHtml;
+
+        // 6. Status Data
+        const statuses = [];
+
+        if (report.studentsWithoutClass === 0) {
+          statuses.push({
+            type: 'ok', icon: '✅',
+            title: 'Semua siswa sudah masuk kelas',
+            desc: 'Tidak ada siswa yang belum di-enroll'
+          });
+        } else {
+          statuses.push({
+            type: 'warning', icon: '⚠️',
+            title: `${report.studentsWithoutClass} siswa belum masuk kelas`,
+            desc: 'Siswa ini belum di-enroll ke kelas manapun',
+            action: { label: 'Kelola', url: 'enrollment.html' }
+          });
+        }
+
+        if (report.teachersWithoutAssign === 0) {
+          statuses.push({
+            type: 'ok', icon: '✅',
+            title: 'Semua guru sudah punya penugasan',
+            desc: 'Tidak ada guru yang belum mengampu mapel'
+          });
+        } else {
+          statuses.push({
+            type: 'warning', icon: '⚠️',
+            title: `${report.teachersWithoutAssign} guru belum punya penugasan`,
+            desc: 'Guru ini belum ditugaskan mengampu mapel apapun',
+            action: { label: 'Kelola', url: 'penugasan.html' }
+          });
+        }
+
+        if (report.classesWithoutStudents === 0) {
+          statuses.push({
+            type: 'ok', icon: '✅',
+            title: 'Semua kelas punya siswa',
+            desc: 'Setiap kelas minimal memiliki 1 siswa'
+          });
+        } else {
+          statuses.push({
+            type: 'warning', icon: '⚠️',
+            title: `${report.classesWithoutStudents} kelas belum punya siswa`,
+            desc: 'Kelas ini kosong, belum ada siswa yang di-enroll',
+            action: { label: 'Kelola', url: 'enrollment.html' }
+          });
+        }
+
+        if (report.totalStudents === 0 || report.totalTeachers === 0) {
+          statuses.push({
+            type: 'danger', icon: '❌',
+            title: 'Data master belum lengkap',
+            desc: 'Tambahkan siswa dan guru terlebih dahulu',
+          });
+        }
+
+        document.getElementById('statusList').innerHTML = statuses.map(s => `
+          <div class="status-item ${s.type}">
+            <span class="icon">${s.icon}</span>
+            <div class="content">
+              <strong>${s.title}</strong>
+              <small>${s.desc}</small>
+            </div>
+            ${s.action ? `<a href="${s.action.url}" class="btn-mini">${s.action.label} →</a>` : ''}
+          </div>
+        `).join('');
+
+      } catch (err) {
+        console.error('Gagal load laporan:', err);
+        document.getElementById('loading').innerHTML =
+          '<p style="color:var(--tb-danger);">Gagal memuat laporan: ' + err.message + '</p>';
+      }
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>
