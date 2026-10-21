@@ -423,3 +423,18 @@ async function getClassSubjects(classId) {
   if (error) throw error;
   return data || [];
 }
+
+/* ============================================================
+   SEKOLAH (SCHOOLS)
+   ============================================================ */
+
+async function getSchool(schoolId) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('schools')
+    .select('*')
+    .eq('id', schoolId)
+    .single();
+  if (error) throw error;
+  return data;
+}

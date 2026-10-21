@@ -9,14 +9,15 @@
 </head>
 <body>
 
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Operator</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
+<header class="app-header">
+  <div class="app-brand">🧱 Tembok Belajar — Operator</div>
+  <div class="app-user">
+    <span id="schoolName" style="font-size:0.75rem; opacity:0.85; margin-right:8px;"></span>
+    <span id="userName">Memuat...</span>
+    <div class="avatar" id="userAvatar">?</div>
+    <button class="btn-logout" onclick="doLogout()">Keluar</button>
+  </div>
+</header>
 
   <div id="loading" class="loading-box">
     <div class="spinner"></div>
@@ -24,10 +25,11 @@
   </div>
 
   <div id="dashboard" class="dash-container hidden">
-    <div class="dash-hero">
-      <h1 id="greeting">Halo!</h1>
-      <p class="muted" id="subGreeting"></p>
-    </div>
+<div class="dash-hero">
+  <h1 id="greeting">Halo!</h1>
+  <p class="muted" id="subGreeting"></p>
+  <p class="muted" id="schoolInfo" style="margin-top:6px; font-size:0.85rem;"></p>
+</div>
 
     <div class="stat-grid" id="statsGrid"></div>
 
@@ -55,10 +57,24 @@
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('dashboard').classList.remove('hidden');
 
-      document.getElementById('userName').textContent = profile.name;
-      document.getElementById('userAvatar').textContent = profile.name.charAt(0).toUpperCase();
-      document.getElementById('greeting').textContent = 'Halo, ' + profile.name + '!';
-      document.getElementById('subGreeting').textContent = 'Operator · ' + profile.email;
+document.getElementById('userName').textContent = profile.name;
+document.getElementById('userAvatar').textContent = profile.name.charAt(0).toUpperCase();
+document.getElementById('greeting').textContent = 'Halo, ' + profile.name + '!';
+document.getElementById('subGreeting').textContent = 'Operator · ' + profile.email;
+
+// Ambil nama sekolah
+let schoolName = '-';
+try {
+  const school = await getSchool(profile.school_id);
+  if (school) {
+    schoolName = school.name;
+    document.getElementById('schoolName').textContent = '🏫 ' + school.name;
+    document.getElementById('schoolInfo').textContent = 
+      '🏫 ' + school.name + (school.academic_year ? ' · Tahun Ajaran ' + school.academic_year : '');
+  }
+} catch (err) {
+  console.warn('Gagal ambil data sekolah:', err);
+}
 
       const stats = [
         { label: 'Siswa', value: '-' },
