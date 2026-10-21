@@ -197,7 +197,7 @@
             <th>Nama Guru</th>
             <th style="width:240px;">Email</th>
             <th style="width:120px;">Status</th>
-            <th style="width:120px;">Aksi</th>
+            <th style="width:150px;">Aksi</th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -289,17 +289,41 @@
     </div>
   </div>
 
+  <!-- Modal Reset Password -->
+  <div class="modal-overlay" id="modalReset">
+    <div class="modal-card">
+      <h2>🔑 Reset Password Guru</h2>
+      <p style="font-size: 0.8rem; color: var(--tb-text-muted); margin-bottom: 1rem;">
+        Atur password baru untuk <strong id="resetTeacherName">-</strong>.
+        Guru akan bisa login dengan password baru ini.
+      </p>
+
+      <label class="form-label" for="inputNewPassword">Password Baru <span style="color:var(--tb-danger);">*</span></label>
+      <input type="password" id="inputNewPassword" class="form-input" placeholder="Minimal 6 karakter" maxlength="50">
+
+      <label class="form-label" for="inputConfirmPassword">Konfirmasi Password <span style="color:var(--tb-danger);">*</span></label>
+      <input type="password" id="inputConfirmPassword" class="form-input" placeholder="Ketik ulang password baru" maxlength="50">
+
+      <div id="resetError" class="alert alert-error hidden" style="margin-top:0;"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeResetModal()">Batal</button>
+        <button class="btn-primary" id="btnResetSave" onclick="saveNewPassword()">Simpan Password Baru</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Konfirmasi Hapus -->
   <div class="modal-overlay" id="modalDelete">
     <div class="modal-card">
-      <h2>🗑️ Hapus Guru?</h2>
+      <h2>🗑️ Hapus Guru Total?</h2>
       <p id="deleteMessage" style="color: var(--tb-text); margin-bottom: 0.8rem;"></p>
-      <p style="font-size: 0.75rem; color: var(--tb-text-muted); background: #fef9e7; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem;">
-        ⚠️ Profil akan dihapus dari daftar Tembok Belajar, tapi akun login guru masih ada di Supabase Auth. Untuk menghapus akun login sepenuhnya, hapus manual di <strong>Supabase → Authentication → Users</strong>.
+      <p style="font-size: 0.75rem; color: #856404; background: #fff3cd; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid var(--tb-warning);">
+        ⚠️ <strong>Perhatian:</strong> Akun login (Auth) dan profil guru akan dihapus permanen. Guru tidak akan bisa login lagi dengan email ini. Tindakan ini tidak dapat dibatalkan.
       </p>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
-        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
+        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus Total</button>
       </div>
     </div>
   </div>
@@ -312,6 +336,7 @@
     let allTeachers = [];
     let editingId = null;
     let deletingId = null;
+    let resettingId = null;
     let currentUser = null;
     let currentSchoolId = 1;
     let selectedExcelData = null;
@@ -374,7 +399,8 @@
           <td>
             <div class="action-btns">
               <button class="btn-icon" title="Edit" onclick="openModal('${t.id}')">✏️</button>
-              <button class="btn-icon danger" title="Hapus" onclick="openDelete('${t.id}')">🗑️</button>
+              <button class="btn-icon" title="Reset Password" onclick="openResetPassword('${t.id}')" style="color: var(--tb-warning);">🔑</button>
+              <button class="btn-icon danger" title="Hapus Total" onclick="openDelete('${t.id}')">🗑️</button>
             </div>
           </td>
         </tr>
@@ -644,7 +670,7 @@
     }
 
     /* ============================================================
-       HAPUS GURU
+       HAPUS GURU (Hapus Total via Edge Function)
        ============================================================ */
     function openDelete(id) {
       deletingId = id;
@@ -652,8 +678,7 @@
       if (!teacher) return;
 
       document.getElementById('deleteMessage').innerHTML =
-        'Anda yakin ingin menghapus guru <strong>' + escapeHtml(teacher.name) + '</strong>? ' +
-        'Profilnya akan hilang dari Tembok Belajar.';
+        'Anda yakin ingin menghapus <strong>' + escapeHtml(teacher.name) + '</strong> (' + escapeHtml(teacher.email) + ')?';
 
       document.getElementById('modalDelete').classList.add('active');
     }
@@ -670,24 +695,87 @@
       btn.textContent = 'Menghapus...';
 
       try {
-        const check = await isTeacherUsed(deletingId);
-        if (check.used) {
-          closeDeleteModal();
-          showToast('⚠️ Guru sedang dipakai (' + check.by + '), tidak bisa dihapus.', 'error');
-          btn.disabled = false;
-          btn.textContent = 'Ya, Hapus';
-          return;
-        }
-        await deleteTeacher(deletingId);
+        const { data, error } = await supabaseClient.functions.invoke('delete-teacher', {
+          body: { userId: deletingId }
+        });
+
+        if (error) throw error;
+        if (data && data.error) throw new Error(data.error);
+
         closeDeleteModal();
-        showToast('🗑️ Guru berhasil dihapus dari daftar Tembok Belajar');
+        showToast('🗑️ Guru berhasil dihapus total (Auth + Profil)');
         await loadTeachers();
       } catch (err) {
         console.error('Delete error:', err);
         showToast('Gagal menghapus: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Ya, Hapus';
+        btn.textContent = 'Ya, Hapus Total';
+      }
+    }
+
+    /* ============================================================
+       RESET PASSWORD
+       ============================================================ */
+    function openResetPassword(id) {
+      resettingId = id;
+      const teacher = allTeachers.find(t => t.id === id);
+      if (!teacher) return;
+
+      document.getElementById('resetTeacherName').textContent =
+        teacher.name + ' (' + teacher.email + ')';
+      document.getElementById('inputNewPassword').value = '';
+      document.getElementById('inputConfirmPassword').value = '';
+      document.getElementById('resetError').classList.add('hidden');
+      document.getElementById('btnResetSave').disabled = false;
+      document.getElementById('btnResetSave').textContent = 'Simpan Password Baru';
+
+      document.getElementById('modalReset').classList.add('active');
+      setTimeout(() => document.getElementById('inputNewPassword').focus(), 100);
+    }
+
+    function closeResetModal() {
+      document.getElementById('modalReset').classList.remove('active');
+      resettingId = null;
+    }
+
+    async function saveNewPassword() {
+      const pw1 = document.getElementById('inputNewPassword').value;
+      const pw2 = document.getElementById('inputConfirmPassword').value;
+      const errBox = document.getElementById('resetError');
+      const btn = document.getElementById('btnResetSave');
+
+      if (!pw1 || pw1.length < 6) {
+        errBox.textContent = 'Password minimal 6 karakter.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (pw1 !== pw2) {
+        errBox.textContent = 'Konfirmasi password tidak cocok.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      errBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan...';
+
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('reset-password', {
+          body: { userId: resettingId, newPassword: pw1 }
+        });
+
+        if (error) throw error;
+        if (data && data.error) throw new Error(data.error);
+
+        closeResetModal();
+        showToast('🔑 Password berhasil direset. Guru bisa login dengan password baru.');
+      } catch (err) {
+        console.error('Reset error:', err);
+        errBox.textContent = 'Gagal reset password: ' + err.message;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Simpan Password Baru';
       }
     }
 
@@ -717,6 +805,7 @@
         closeModal();
         closeImportModal();
         closeDeleteModal();
+        closeResetModal();
       }
     });
   </script>
