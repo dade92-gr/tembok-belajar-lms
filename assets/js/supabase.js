@@ -7,7 +7,7 @@ let supabaseClient = null;
 function initSupabase() {
   if (supabaseClient) return supabaseClient;
   if (typeof supabase === 'undefined') {
-    console.error('Supabase library belum dimuat! Pastikan CDN ada di HTML.');
+    console.error('Supabase library belum dimuat!');
     return null;
   }
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -69,7 +69,7 @@ async function getSchool(schoolId) {
 }
 
 /* ============================================================
-   MAPEL (SUBJECTS)
+   MAPEL
    ============================================================ */
 async function getSubjects(schoolId) {
   const client = initSupabase();
@@ -112,7 +112,7 @@ async function deleteSubject(id) {
 }
 
 /* ============================================================
-   KELAS (CLASSES)
+   KELAS
    ============================================================ */
 async function getClasses(schoolId) {
   const client = initSupabase();
@@ -323,7 +323,7 @@ async function getClassSubjects(classId) {
 }
 
 /* ============================================================
-   GURU: MAPEL & KELAS YANG DIAMPU
+   GURU: MAPEL & KELAS
    ============================================================ */
 async function getMyTeachingAssignments(teacherId) {
   const client = initSupabase();
@@ -347,7 +347,6 @@ async function getClassStudentCounts(classIds) {
   return counts;
 }
 
-/* Ambil siswa di kelas tertentu dengan detail profil */
 async function getStudentsInClass(classId) {
   const client = initSupabase();
   const { data, error } = await client.from('enrollments')
@@ -358,23 +357,19 @@ async function getStudentsInClass(classId) {
 }
 
 /* ============================================================
-   MATERI / PAGES (Page Builder)
+   PAGES & BLOCKS
    ============================================================ */
 async function getPages(classId, subjectId) {
   const client = initSupabase();
-  let q = client.from('pages')
-    .select('*')
-    .eq('class_id', classId)
-    .eq('subject_id', subjectId)
+  const { data, error } = await client.from('pages')
+    .select('*').eq('class_id', classId).eq('subject_id', subjectId)
     .order('page_order', { ascending: true });
-  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
 
 async function createPage({ classId, subjectId, title, authorId, theme }) {
   const client = initSupabase();
-  // Ambil page_order terakhir
   const { data: existing } = await client.from('pages')
     .select('page_order').eq('class_id', classId).eq('subject_id', subjectId)
     .order('page_order', { ascending: false }).limit(1);
@@ -382,15 +377,10 @@ async function createPage({ classId, subjectId, title, authorId, theme }) {
 
   const { data, error } = await client.from('pages')
     .insert([{
-      class_id: classId,
-      subject_id: subjectId,
-      title,
-      author_id: authorId,
-      status: 'published',
-      page_order: nextOrder,
-      theme: theme || {}
-    }])
-    .select().single();
+      class_id: classId, subject_id: subjectId, title,
+      author_id: authorId, status: 'published',
+      page_order: nextOrder, theme: theme || {}
+    }]).select().single();
   if (error) throw error;
   return data;
 }
@@ -413,9 +403,6 @@ async function deletePage(id) {
   if (error) throw error;
 }
 
-/* ============================================================
-   BLOCKS (Konten dalam Page Builder)
-   ============================================================ */
 async function getBlocks(pageId) {
   const client = initSupabase();
   const { data, error } = await client.from('blocks')
@@ -452,16 +439,13 @@ async function deleteBlock(id) {
 }
 
 /* ============================================================
-   AKTIVITAS (Tugas/Kuis)
+   AKTIVITAS
    ============================================================ */
 async function getActivities(classId, subjectId) {
   const client = initSupabase();
-  let q = client.from('activities')
-    .select('*')
-    .eq('class_id', classId)
-    .eq('subject_id', subjectId)
+  const { data, error } = await client.from('activities')
+    .select('*').eq('class_id', classId).eq('subject_id', subjectId)
     .order('created_at', { ascending: false });
-  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
@@ -470,16 +454,9 @@ async function createActivity({ classId, subjectId, type, title, description, de
   const client = initSupabase();
   const { data, error } = await client.from('activities')
     .insert([{
-      class_id: classId,
-      subject_id: subjectId,
-      type,
-      title,
-      description,
-      deadline,
-      max_score: maxScore || 100,
-      author_id: authorId
-    }])
-    .select().single();
+      class_id: classId, subject_id: subjectId, type, title,
+      description, deadline, max_score: maxScore || 100, author_id: authorId
+    }]).select().single();
   if (error) throw error;
   return data;
 }
@@ -514,7 +491,6 @@ async function getGradesByActivity(activityId) {
 
 async function saveGrade({ submissionId, activityId, studentId, score, feedback, gradedBy }) {
   const client = initSupabase();
-  // Cek apakah sudah ada
   const { data: existing } = await client.from('grades')
     .select('id').eq('submission_id', submissionId).maybeSingle();
 
@@ -526,14 +502,7 @@ async function saveGrade({ submissionId, activityId, studentId, score, feedback,
     return data;
   } else {
     const { data, error } = await client.from('grades')
-      .insert([{
-        submission_id: submissionId,
-        activity_id: activityId,
-        student_id: studentId,
-        score,
-        feedback,
-        graded_by: gradedBy
-      }])
+      .insert([{ submission_id: submissionId, activity_id: activityId, student_id: studentId, score, feedback, graded_by: gradedBy }])
       .select().single();
     if (error) throw error;
     return data;
@@ -545,30 +514,23 @@ async function saveGrade({ submissionId, activityId, studentId, score, feedback,
    ============================================================ */
 async function getGradeBook(classId) {
   const client = initSupabase();
-  // Ambil semua aktivitas di kelas
   const { data: activities, error: e1 } = await client.from('activities')
     .select('id, title, type, max_score, deadline, subject_id')
-    .eq('class_id', classId)
-    .order('created_at', { ascending: true });
+    .eq('class_id', classId).order('created_at', { ascending: true });
   if (e1) throw e1;
 
-  // Ambil semua siswa di kelas
   const { data: enrolls, error: e2 } = await client.from('enrollments')
     .select(`student_id, profiles!enrollments_student_id_fkey (id, name, email)`)
     .eq('class_id', classId).eq('status', 'active');
   if (e2) throw e2;
 
-  // Ambil semua submission & grade untuk aktivitas ini
   const activityIds = (activities || []).map(a => a.id);
-  let submissions = [];
-  let grades = [];
-
+  let submissions = [], grades = [];
   if (activityIds.length > 0) {
     const { data: subs } = await client.from('submissions')
       .select('id, activity_id, student_id, submitted_at, status')
       .in('activity_id', activityIds);
     submissions = subs || [];
-
     const { data: grs } = await client.from('grades')
       .select('submission_id, activity_id, student_id, score, feedback')
       .in('activity_id', activityIds);
@@ -578,9 +540,136 @@ async function getGradeBook(classId) {
   return {
     activities: activities || [],
     students: (enrolls || []).map(e => e.profiles).filter(Boolean),
-    submissions,
-    grades
+    submissions, grades
   };
+}
+
+/* ============================================================
+   FORUM
+   ============================================================ */
+async function getForumPosts(classId, subjectId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('forum_posts')
+    .select(`id, title, body, parent_id, created_at, author_id,
+      profiles!forum_posts_author_id_fkey (id, name, role)`)
+    .eq('class_id', classId).eq('subject_id', subjectId)
+    .is('parent_id', null)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getForumReplies(parentId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('forum_posts')
+    .select(`id, title, body, created_at, author_id,
+      profiles!forum_posts_author_id_fkey (id, name, role)`)
+    .eq('parent_id', parentId).order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function createForumPost({ classId, subjectId, authorId, title, body, parentId }) {
+  const client = initSupabase();
+  const { data, error } = await client.from('forum_posts')
+    .insert([{ class_id: classId, subject_id: subjectId, author_id: authorId, title, body, parent_id: parentId || null }])
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteForumPost(id) {
+  const client = initSupabase();
+  const { error } = await client.from('forum_posts').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ============================================================
+   PROGRESS SISWA (Guru)
+   ============================================================ */
+async function getStudentProgress(classId, subjectId) {
+  const client = initSupabase();
+  const { data: activities, error: e1 } = await client.from('activities')
+    .select('id, title, max_score').eq('class_id', classId).eq('subject_id', subjectId);
+  if (e1) throw e1;
+
+  const { data: enrolls, error: e2 } = await client.from('enrollments')
+    .select(`student_id, profiles!enrollments_student_id_fkey (id, name, email)`)
+    .eq('class_id', classId).eq('status', 'active');
+  if (e2) throw e2;
+
+  const activityIds = (activities || []).map(a => a.id);
+  let submissions = [], grades = [];
+  if (activityIds.length > 0) {
+    const { data: subs } = await client.from('submissions')
+      .select('id, activity_id, student_id').in('activity_id', activityIds);
+    submissions = subs || [];
+    const { data: grs } = await client.from('grades')
+      .select('activity_id, student_id, score').in('activity_id', activityIds);
+    grades = grs || [];
+  }
+
+  const subSet = new Set();
+  submissions.forEach(s => subSet.add(s.activity_id + ':' + s.student_id));
+  const gradeMap = {};
+  grades.forEach(g => { gradeMap[g.activity_id + ':' + g.student_id] = parseFloat(g.score); });
+
+  const students = (enrolls || []).map(e => e.profiles).filter(Boolean);
+  return students.map(st => {
+    let totalScore = 0, scored = 0, submitted = 0, notSubmitted = 0;
+    activities.forEach(a => {
+      const key = a.id + ':' + st.id;
+      if (subSet.has(key)) submitted++; else notSubmitted++;
+      if (gradeMap[key] !== undefined) { totalScore += gradeMap[key]; scored++; }
+    });
+    const avg = scored > 0 ? (totalScore / scored).toFixed(1) : '-';
+    const submitPercent = activities.length > 0 ? ((submitted / activities.length) * 100).toFixed(0) : 0;
+    return { student: st, totalActivities: activities.length, submitted, notSubmitted, graded: scored, avg, submitPercent };
+  });
+}
+
+/* ============================================================
+   RAPOR
+   ============================================================ */
+async function getStudentReport(studentId, classId, subjectId) {
+  const client = initSupabase();
+  const { data: activities, error: e1 } = await client.from('activities')
+    .select('id, title, type, max_score').eq('class_id', classId).eq('subject_id', subjectId)
+    .order('created_at', { ascending: true });
+  if (e1) throw e1;
+
+  const activityIds = (activities || []).map(a => a.id);
+  if (activityIds.length === 0) return { activities: [], avg: '-', totalScore: 0, totalMax: 0, scored: 0 };
+
+  const { data: grades, error: e2 } = await client.from('grades')
+    .select('activity_id, score, feedback').eq('student_id', studentId).in('activity_id', activityIds);
+  if (e2) throw e2;
+
+  const gradeMap = {};
+  (grades || []).forEach(g => { gradeMap[g.activity_id] = g; });
+
+  let totalScore = 0, totalMax = 0, scored = 0;
+  const activityDetails = activities.map(a => {
+    const g = gradeMap[a.id];
+    if (g && g.score !== null) {
+      totalScore += parseFloat(g.score);
+      totalMax += parseFloat(a.max_score);
+      scored++;
+    }
+    return { ...a, grade: g };
+  });
+
+  const avg = scored > 0 && totalMax > 0 ? ((totalScore / totalMax) * 100).toFixed(1) : '-';
+  return { activities: activityDetails, avg, totalScore: totalScore.toFixed(1), totalMax: totalMax.toFixed(1), scored };
+}
+
+async function getStudentsForReport(classId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('enrollments')
+    .select(`student_id, profiles!enrollments_student_id_fkey (id, name, email)`)
+    .eq('class_id', classId).eq('status', 'active');
+  if (error) throw error;
+  return (data || []).map(e => e.profiles).filter(Boolean);
 }
 
 /* ============================================================
@@ -600,8 +689,7 @@ async function getMasterReport(schoolId) {
   ]);
 
   const allP = profiles || [], allS = subjects || [], allC = classes || [];
-  const allA = assigns || [];
-  const allE = (enrolls || []).filter(e => e.status === 'active');
+  const allA = assigns || [], allE = (enrolls || []).filter(e => e.status === 'active');
   const teachers = allP.filter(p => p.role === 'guru');
   const students = allP.filter(p => p.role === 'siswa');
   const enrolledIds = new Set(allE.map(e => e.student_id));
@@ -614,12 +702,9 @@ async function getMasterReport(schoolId) {
   allA.forEach(a => { subjectUsage[a.subject_id] = (subjectUsage[a.subject_id] || 0) + 1; });
 
   return {
-    totalStudents: students.length,
-    totalTeachers: teachers.length,
-    totalClasses: allC.length,
-    totalSubjects: allS.length,
-    totalAssignments: allA.length,
-    totalEnrollments: allE.length,
+    totalStudents: students.length, totalTeachers: teachers.length,
+    totalClasses: allC.length, totalSubjects: allS.length,
+    totalAssignments: allA.length, totalEnrollments: allE.length,
     avgStudentsPerClass: allC.length > 0 ? (allE.length / allC.length).toFixed(1) : '0',
     avgClassesPerTeacher: teachers.length > 0 ? (allA.length / teachers.length).toFixed(1) : '0',
     topTeachers: teachers.map(t => ({ ...t, assignCount: assignPerTeacher[t.id] || 0 }))
@@ -635,195 +720,160 @@ async function getMasterReport(schoolId) {
 }
 
 /* ============================================================
-   FORUM
+   SISWA-SPECIFIC HELPERS
    ============================================================ */
-async function getForumPosts(classId, subjectId) {
-  const client = initSupabase();
-  const { data, error } = await client
-    .from('forum_posts')
-    .select(`
-      id, title, body, parent_id, created_at, author_id,
-      profiles!forum_posts_author_id_fkey (id, name, role)
-    `)
-    .eq('class_id', classId)
-    .eq('subject_id', subjectId)
-    .is('parent_id', null)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data || [];
-}
 
-async function getForumReplies(parentId) {
+/* Ambil mapel & kelas yang diikuti siswa (dari enrollment + teacher_assign) */
+async function getMyEnrolledSubjects(studentId) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('forum_posts')
-    .select(`
-      id, title, body, created_at, author_id,
-      profiles!forum_posts_author_id_fkey (id, name, role)
-    `)
-    .eq('parent_id', parentId)
-    .order('created_at', { ascending: true });
-  if (error) throw error;
-  return data || [];
-}
-
-async function createForumPost({ classId, subjectId, authorId, title, body, parentId }) {
-  const client = initSupabase();
-  const { data, error } = await client
-    .from('forum_posts')
-    .insert([{
-      class_id: classId,
-      subject_id: subjectId,
-      author_id: authorId,
-      title,
-      body,
-      parent_id: parentId || null
-    }])
-    .select().single();
-  if (error) throw error;
-  return data;
-}
-
-async function deleteForumPost(id) {
-  const client = initSupabase();
-  const { error } = await client.from('forum_posts').delete().eq('id', id);
-  if (error) throw error;
-}
-
-/* ============================================================
-   PROGRESS SISWA
-   ============================================================ */
-async function getStudentProgress(classId, subjectId) {
-  const client = initSupabase();
-
-  // Ambil semua aktivitas di kelas+mapel
-  const { data: activities, error: e1 } = await client
-    .from('activities')
-    .select('id, title, max_score')
-    .eq('class_id', classId)
-    .eq('subject_id', subjectId);
+  // Ambil kelas yang diikuti
+  const { data: enrolls, error: e1 } = await client.from('enrollments')
+    .select(`class_id, classes (id, name, grade, room)`)
+    .eq('student_id', studentId).eq('status', 'active');
   if (e1) throw e1;
 
-  // Ambil semua siswa di kelas
-  const { data: enrolls, error: e2 } = await client
-    .from('enrollments')
-    .select(`student_id, profiles!enrollments_student_id_fkey (id, name, email)`)
-    .eq('class_id', classId)
-    .eq('status', 'active');
+  if (!enrolls || enrolls.length === 0) return [];
+
+  const classIds = enrolls.map(e => e.class_id);
+
+  // Ambil semua teacher_assign untuk kelas tersebut
+  const { data: assigns, error: e2 } = await client.from('teacher_assign')
+    .select(`
+      subject_id,
+      class_id,
+      subjects (id, name, code),
+      profiles!teacher_assign_teacher_id_fkey (id, name),
+      classes (id, name, grade)
+    `)
+    .in('class_id', classIds);
   if (e2) throw e2;
 
-  const activityIds = (activities || []).map(a => a.id);
-  let submissions = [], grades = [];
-
-  if (activityIds.length > 0) {
-    const { data: subs } = await client.from('submissions')
-      .select('id, activity_id, student_id, submitted_at, status')
-      .in('activity_id', activityIds);
-    submissions = subs || [];
-
-    const { data: grs } = await client.from('grades')
-      .select('activity_id, student_id, score')
-      .in('activity_id', activityIds);
-    grades = grs || [];
-  }
-
-  // Bangun matrix per siswa
-  const subSet = new Set();
-  submissions.forEach(s => subSet.add(s.activity_id + ':' + s.student_id));
-
-  const gradeMap = {};
-  grades.forEach(g => {
-    gradeMap[g.activity_id + ':' + g.student_id] = parseFloat(g.score);
-  });
-
-  const students = (enrolls || []).map(e => e.profiles).filter(Boolean);
-
-  return students.map(st => {
-    let totalScore = 0, scored = 0, submitted = 0, notSubmitted = 0;
-    activities.forEach(a => {
-      const key = a.id + ':' + st.id;
-      if (subSet.has(key)) submitted++;
-      else notSubmitted++;
-      if (gradeMap[key] !== undefined) {
-        totalScore += gradeMap[key];
-        scored++;
-      }
-    });
-    const avg = scored > 0 ? (totalScore / scored).toFixed(1) : '-';
-    const submitPercent = activities.length > 0 ? ((submitted / activities.length) * 100).toFixed(0) : 0;
-    return {
-      student: st,
-      totalActivities: activities.length,
-      submitted,
-      notSubmitted,
-      graded: scored,
-      avg,
-      submitPercent
-    };
-  });
+  return assigns || [];
 }
 
-/* ============================================================
-   RAPOR (Rekap Nilai Per Siswa)
-   ============================================================ */
-async function getStudentReport(studentId, classId, subjectId) {
+/* Ambil aktivitas di kelas+mapel yang diikuti siswa + status submission-nya */
+async function getMyActivities(studentId, classId, subjectId) {
   const client = initSupabase();
 
-  // Semua aktivitas di kelas+mapel
-  const { data: activities, error: e1 } = await client
-    .from('activities')
-    .select('id, title, type, max_score')
-    .eq('class_id', classId)
-    .eq('subject_id', subjectId)
-    .order('created_at', { ascending: true });
+  // Ambil semua aktivitas
+  const { data: activities, error: e1 } = await client.from('activities')
+    .select('*').eq('class_id', classId).eq('subject_id', subjectId)
+    .order('deadline', { ascending: true });
   if (e1) throw e1;
 
-  const activityIds = (activities || []).map(a => a.id);
-  if (activityIds.length === 0) {
-    return { activities: [], grades: [], avg: '-', totalScore: 0, totalMax: 0 };
-  }
+  if (!activities || activities.length === 0) return [];
 
-  // Grades siswa
-  const { data: grades, error: e2 } = await client
-    .from('grades')
-    .select('activity_id, score, feedback')
+  const activityIds = activities.map(a => a.id);
+
+  // Ambil submission siswa ini untuk aktivitas tersebut
+  const { data: mySubs, error: e2 } = await client.from('submissions')
+    .select('*').eq('student_id', studentId).in('activity_id', activityIds);
+  if (e2) throw e2;
+
+  const { data: myGrades, error: e3 } = await client.from('grades')
+    .select('*').eq('student_id', studentId).in('activity_id', activityIds);
+  if (e3) throw e3;
+
+  const subMap = {};
+  (mySubs || []).forEach(s => { subMap[s.activity_id] = s; });
+  const gradeMap = {};
+  (myGrades || []).forEach(g => { gradeMap[g.activity_id] = g; });
+
+  return activities.map(a => ({
+    ...a,
+    submission: subMap[a.id] || null,
+    grade: gradeMap[a.id] || null
+  }));
+}
+
+/* Ambil nilai siswa (semua mapel) */
+async function getMyGrades(studentId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('grades')
+    .select(`
+      id, score, feedback, graded_at,
+      activities (id, title, type, max_score, subject_id, class_id,
+        subjects (id, name, code),
+        classes (id, name)
+      )
+    `)
     .eq('student_id', studentId)
-    .in('activity_id', activityIds);
-  if (e2) throw e2;
-
-  const gradeMap = {};
-  (grades || []).forEach(g => { gradeMap[g.activity_id] = g; });
-
-  let totalScore = 0, totalMax = 0, scored = 0;
-  const activityDetails = activities.map(a => {
-    const g = gradeMap[a.id];
-    if (g && g.score !== null) {
-      totalScore += parseFloat(g.score);
-      totalMax += parseFloat(a.max_score);
-      scored++;
-    }
-    return { ...a, grade: g };
-  });
-
-  const avg = scored > 0 && totalMax > 0 ? ((totalScore / totalMax) * 100).toFixed(1) : '-';
-
-  return {
-    activities: activityDetails,
-    avg,
-    totalScore: totalScore.toFixed(1),
-    totalMax: totalMax.toFixed(1),
-    scored
-  };
+    .order('graded_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
 }
 
-/* Ambil semua siswa di kelas (untuk dropdown rapor) */
-async function getStudentsForReport(classId) {
+/* Submit tugas/kuis */
+async function submitActivity({ activityId, studentId, content, fileUrl }) {
   const client = initSupabase();
-  const { data, error } = await client
-    .from('enrollments')
-    .select(`student_id, profiles!enrollments_student_id_fkey (id, name, email)`)
-    .eq('class_id', classId)
-    .eq('status', 'active');
-  if (error) throw error;
-  return (data || []).map(e => e.profiles).filter(Boolean);
+  // Cek apakah sudah ada submission
+  const { data: existing } = await client.from('submissions')
+    .select('id').eq('activity_id', activityId).eq('student_id', studentId).maybeSingle();
+
+  if (existing) {
+    const { data, error } = await client.from('submissions')
+      .update({ content, file_url: fileUrl, submitted_at: new Date().toISOString(), status: 'submitted' })
+      .eq('id', existing.id).select().single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await client.from('submissions')
+      .insert([{ activity_id: activityId, student_id: studentId, content, file_url: fileUrl, status: 'submitted' }])
+      .select().single();
+    if (error) throw error;
+    return data;
+  }
+}
+
+/* Progress belajar siswa per mapel */
+async function getMyProgress(studentId) {
+  const client = initSupabase();
+
+  // Kelas yang diikuti
+  const enrolls = await getStudentClasses(studentId);
+  if (!enrolls || enrolls.length === 0) return [];
+
+  const classIds = enrolls.map(e => e.classes.id);
+
+  // Semua teacher_assign di kelas tersebut
+  const { data: assigns, error: e1 } = await client.from('teacher_assign')
+    .select(`subject_id, class_id, subjects (id, name, code), classes (id, name)`)
+    .in('class_id', classIds);
+  if (e1) throw e1;
+
+  const result = [];
+  for (const a of (assigns || [])) {
+    if (!a.subjects || !a.classes) continue;
+
+    // Aktivitas di mapel+kelas
+    const { data: acts } = await client.from('activities')
+      .select('id').eq('class_id', a.class_id).eq('subject_id', a.subject_id);
+    const actIds = (acts || []).map(x => x.id);
+
+    if (actIds.length === 0) {
+      result.push({
+        subject: a.subjects, classInfo: a.classes,
+        totalActivities: 0, submitted: 0, graded: 0, percent: 0, avgScore: '-'
+      });
+      continue;
+    }
+
+    // Submission siswa ini
+    const { data: subs } = await client.from('submissions')
+      .select('id, activity_id').eq('student_id', studentId).in('activity_id', actIds);
+    const { data: grs } = await client.from('grades')
+      .select('score').eq('student_id', studentId).in('activity_id', actIds);
+
+    const submitted = (subs || []).length;
+    const graded = (grs || []).length;
+    const totalScore = (grs || []).reduce((s, g) => s + parseFloat(g.score || 0), 0);
+    const avgScore = graded > 0 ? (totalScore / graded).toFixed(1) : '-';
+    const percent = Math.round((submitted / actIds.length) * 100);
+
+    result.push({
+      subject: a.subjects, classInfo: a.classes,
+      totalActivities: actIds.length, submitted, graded, percent, avgScore
+    });
+  }
+  return result;
 }

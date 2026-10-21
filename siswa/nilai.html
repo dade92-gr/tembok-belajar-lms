@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nilai Saya — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-toolbar { margin-bottom: 1.5rem; }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: white; border-radius: var(--tb-radius); padding: 1.2rem;
+      text-align: center; border: 1px solid rgba(46,204,113,0.1);
+      box-shadow: var(--tb-shadow-sm);
+    }
+    .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--tb-primary); }
+    .stat-label { font-size: 0.75rem; color: var(--tb-text-muted); margin-top: 0.3rem; }
+
+    .panel {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1);
+      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+    }
+    .panel-title {
+      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--tb-light);
+    }
+
+    .nilai-list { display: flex; flex-direction: column; gap: 0.8rem; }
+    .nilai-item {
+      background: var(--tb-bg); border-radius: 12px;
+      padding: 1rem 1.2rem; border-left: 4px solid var(--tb-primary);
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .nilai-info { flex: 1; min-width: 200px; }
+    .nilai-title { font-weight: 700; color: var(--tb-dark); font-size: 0.95rem; margin-bottom: 0.3rem; }
+    .nilai-meta { font-size: 0.75rem; color: var(--tb-text-muted); display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    .nilai-feedback { font-size: 0.8rem; color: var(--tb-text); background: white; padding: 0.6rem 0.8rem; border-radius: 8px; margin-top: 0.5rem; line-height: 1.5; }
+    .nilai-feedback strong { color: var(--tb-dark); }
+
+    .nilai-score {
+      text-align: center; min-width: 100px;
+    }
+    .score-big { font-size: 2rem; font-weight: 700; color: var(--tb-primary); line-height: 1; }
+    .score-small { font-size: 0.75rem; color: var(--tb-text-muted); margin-top: 0.3rem; }
+
+    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
+
+    .back-nav { text-align: center; margin-top: 2rem; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--tb-dark);
+      padding: 0.6rem 1.5rem; border-radius: 30px;
+      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+      font-size: 0.85rem;
+    }
+    .btn-secondary:hover { background: var(--tb-light); }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Siswa</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat nilai...</p></div>
+
+  <div class="page-container hidden" id="pageContent">
+    <div class="page-toolbar">
+      <h1>📊 Nilai Saya
+        <small>Nilai dan feedback dari guru</small>
+      </h1>
+    </div>
+
+    <div class="stat-grid" id="statsGrid"></div>
+
+    <div class="panel">
+      <h2 class="panel-title">📋 Daftar Nilai</h2>
+      <div class="nilai-list" id="nilaiList">
+        <div class="empty-msg">Memuat...</div>
+      </div>
+    </div>
+
+    <div class="back-nav">
+      <a href="dashboard.html" class="btn-secondary">← Kembali ke Dashboard</a>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('siswa');
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+      await loadData();
+    })();
+
+    async function loadData() {
+      try {
+        const grades = await getMyGrades(currentUser.id);
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('pageContent').classList.remove('hidden');
+
+        const total = grades.length;
+        let avg = 0;
+        if (total > 0) {
+          const sumPct = grades.reduce((s, g) => {
+            const max = g.activities?.max_score || 100;
+            return s + (parseFloat(g.score) / max) * 100;
+          }, 0);
+          avg = (sumPct / total).toFixed(1);
+        }
+        const highest = total > 0 ? Math.max(...grades.map(g => {
+          const max = g.activities?.max_score || 100;
+          return ((parseFloat(g.score) / max) * 100);
+        })).toFixed(1) : '-';
+
+        document.getElementById('statsGrid').innerHTML = `
+          <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Nilai Diterima</div></div>
+          <div class="stat-card"><div class="stat-value">${avg}</div><div class="stat-label">Rata-rata (%)</div></div>
+          <div class="stat-card"><div class="stat-value">${highest}</div><div class="stat-label">Nilai Tertinggi (%)</div></div>
+        `;
+
+        const list = document.getElementById('nilaiList');
+        if (total === 0) {
+          list.innerHTML = '<div class="empty-msg">Belum ada nilai. Kerjakan tugas dan tunggu guru menilai.</div>';
+          return;
+        }
+
+        list.innerHTML = grades.map(g => {
+          const act = g.activities;
+          const subject = act?.subjects;
+          const kelas = act?.classes;
+          const max = act?.max_score || 100;
+          const pct = ((parseFloat(g.score) / max) * 100).toFixed(0);
+
+          return `
+            <div class="nilai-item">
+              <div class="nilai-info">
+                <div class="nilai-title">${esc(act?.title || '-')} ${act?.type === 'quiz' ? '🧪' : '📝'}</div>
+                <div class="nilai-meta">
+                  <span>📚 ${esc(subject?.name || '-')}</span>
+                  <span>🏫 ${esc(kelas?.name || '-')}</span>
+                  <span>📅 ${g.graded_at ? new Date(g.graded_at).toLocaleDateString('id-ID') : '-'}</span>
+                </div>
+                ${g.feedback ? `<div class="nilai-feedback"><strong>💬 Feedback guru:</strong> ${esc(g.feedback)}</div>` : ''}
+              </div>
+              <div class="nilai-score">
+                <div class="score-big">${g.score}</div>
+                <div class="score-small">dari ${max} (${pct}%)</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        document.getElementById('loading').innerHTML = '<p style="color:red;">Error: ' + err.message + '</p>';
+      }
+    }
+
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

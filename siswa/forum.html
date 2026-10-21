@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forum Diskusi — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-toolbar { margin-bottom: 1.5rem; }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .selector-row {
+      background: white; border-radius: var(--tb-radius-lg);
+      padding: 1rem 1.5rem; margin-bottom: 1.5rem;
+      box-shadow: var(--tb-shadow-sm);
+      display: flex; gap: 1rem; flex-wrap: wrap;
+    }
+    .selector-row > div { flex: 1; min-width: 200px; }
+    .selector-row label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--tb-dark); margin-bottom: 0.4rem; }
+    .selector-row select {
+      width: 100%; padding: 0.6rem 0.8rem;
+      border: 1px solid var(--tb-border); border-radius: 10px;
+      font-size: 0.85rem; font-family: inherit; cursor: pointer;
+    }
+
+    .panel {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1);
+      padding: 1.5rem; box-shadow: var(--tb-shadow-sm); margin-bottom: 1.2rem;
+    }
+    .panel-title {
+      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--tb-light);
+    }
+
+    .post-list { display: flex; flex-direction: column; gap: 1rem; }
+    .post {
+      background: var(--tb-bg); border-radius: 12px;
+      padding: 1rem 1.2rem; border-left: 4px solid var(--tb-primary);
+    }
+    .post-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.6rem; gap: 1rem; flex-wrap: wrap;
+    }
+    .post-author {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.85rem; font-weight: 600; color: var(--tb-dark);
+    }
+    .author-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.8rem;
+    }
+    .post-time { font-size: 0.7rem; color: var(--tb-text-muted); font-weight: 400; }
+    .post-title { font-weight: 700; color: var(--tb-text); font-size: 0.95rem; margin-bottom: 0.4rem; }
+    .post-body { font-size: 0.85rem; color: var(--tb-text); line-height: 1.6; margin-bottom: 0.7rem; white-space: pre-wrap; }
+
+    .reply-list {
+      margin-top: 0.8rem; padding-top: 0.8rem;
+      border-top: 1px dashed #ccc;
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .reply {
+      background: white; padding: 0.7rem 1rem;
+      border-radius: 8px; font-size: 0.8rem;
+    }
+    .reply-header { display: flex; gap: 8px; align-items: center; margin-bottom: 0.3rem; font-size: 0.75rem; }
+    .reply-header strong { color: var(--tb-dark); }
+    .reply-body { color: var(--tb-text); white-space: pre-wrap; }
+
+    .post-actions { display: flex; gap: 6px; margin-top: 0.5rem; }
+    .btn-sm-outline {
+      background: white; border: 1px solid var(--tb-border);
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-sm-outline:hover { background: var(--tb-light); border-color: var(--tb-primary); }
+
+    .form-label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--tb-dark); }
+    .form-input {
+      width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--tb-border);
+      border-radius: 10px; font-size: 0.9rem; font-family: inherit;
+      margin-bottom: 1rem; outline: none;
+    }
+    .form-input:focus { border-color: var(--tb-primary); box-shadow: 0 0 0 3px rgba(46,204,113,0.15); }
+    textarea.form-input { resize: vertical; min-height: 80px; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
+      color: white; border: none; padding: 0.6rem 1.4rem;
+      border-radius: 30px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+    }
+
+    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
+    .back-nav { text-align: center; margin-top: 2rem; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--tb-dark);
+      padding: 0.6rem 1.5rem; border-radius: 30px;
+      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+      font-size: 0.85rem;
+    }
+    .btn-secondary:hover { background: var(--tb-light); }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--tb-dark); color: white;
+      padding: 1rem 1.4rem; border-radius: 12px;
+      font-size: 0.85rem; font-weight: 500;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease; z-index: 3000;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Siswa</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat forum...</p></div>
+
+  <div class="page-container hidden" id="pageContent">
+    <div class="page-toolbar">
+      <h1>💬 Forum Diskusi
+        <small>Diskusi dengan guru dan teman sekelas</small>
+      </h1>
+    </div>
+
+    <div class="selector-row">
+      <div>
+        <label>Mata Pelajaran</label>
+        <select id="selSubject" onchange="onSubjectChange()"></select>
+      </div>
+      <div>
+        <label>Kelas</label>
+        <select id="selClass" onchange="loadPosts()"></select>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">✍️ Buat Topik Baru</h2>
+      <label class="form-label">Judul</label>
+      <input type="text" id="inputTitle" class="form-input" placeholder="Contoh: Pertanyaan tentang Bab 3" maxlength="200">
+      <label class="form-label">Isi</label>
+      <textarea id="inputBody" class="form-input" placeholder="Tulis pertanyaan atau topik..." rows="3"></textarea>
+      <button class="btn-primary" id="btnPost" onclick="submitPost()">📤 Posting</button>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">📋 Daftar Diskusi</h2>
+      <div class="post-list" id="postList">
+        <div class="empty-msg">Pilih mapel dan kelas</div>
+      </div>
+    </div>
+
+    <div class="back-nav">
+      <a href="dashboard.html" class="btn-secondary">← Kembali ke Dashboard</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let allAssigns = [];
+    let allPosts = [];
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('siswa');
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
+      try {
+        allAssigns = await getMyEnrolledSubjects(currentUser.id);
+        const subjectsMap = {};
+        allAssigns.forEach(a => { if (a.subjects) subjectsMap[a.subjects.id] = a.subjects; });
+        const sel = document.getElementById('selSubject');
+        sel.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
+          Object.values(subjectsMap).map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+      } catch (err) { console.error(err); }
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    function onSubjectChange() {
+      const sid = parseInt(document.getElementById('selSubject').value);
+      const selClass = document.getElementById('selClass');
+      if (!sid) { selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>'; return; }
+      const classes = allAssigns.filter(a => a.subjects && a.subjects.id === sid)
+        .map(a => a.classes).filter(Boolean)
+        .filter((v, i, self) => self.findIndex(x => x.id === v.id) === i);
+      selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+        classes.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+      if (classes.length === 1) { selClass.value = classes[0].id; loadPosts(); }
+    }
+
+    async function loadPosts() {
+      const sid = parseInt(document.getElementById('selSubject').value);
+      const cid = parseInt(document.getElementById('selClass').value);
+      if (!sid || !cid) {
+        document.getElementById('postList').innerHTML = '<div class="empty-msg">Pilih mapel dan kelas</div>';
+        return;
+      }
+      document.getElementById('postList').innerHTML = '<div class="empty-msg">Memuat...</div>';
+      try {
+        allPosts = await getForumPosts(cid, sid);
+        await renderPosts();
+      } catch (err) {
+        document.getElementById('postList').innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+      }
+    }
+
+    async function renderPosts() {
+      const c = document.getElementById('postList');
+      if (allPosts.length === 0) {
+        c.innerHTML = '<div class="empty-msg">Belum ada topik diskusi. Buat topik pertama!</div>';
+        return;
+      }
+
+      let html = '';
+      for (const p of allPosts) {
+        const author = p.profiles;
+        const replies = await getForumReplies(p.id);
+        const isGuru = author && author.role === 'guru';
+        const isMine = author && author.id === currentUser.id;
+
+        html += `
+          <div class="post">
+            <div class="post-header">
+              <div class="post-author">
+                <div class="author-avatar">${esc((author?.name || '?').charAt(0).toUpperCase())}</div>
+                <div>
+                  ${esc(author?.name || '-')} ${isGuru ? '<span style="font-size:0.65rem; background:var(--tb-light); color:var(--tb-dark); padding:1px 6px; border-radius:6px; margin-left:4px;">GURU</span>' : ''}
+                  <div class="post-time">${new Date(p.created_at).toLocaleString('id-ID')}</div>
+                </div>
+              </div>
+            </div>
+            <div class="post-title">${esc(p.title)}</div>
+            <div class="post-body">${esc(p.body || '')}</div>
+
+            <div class="reply-list">
+              ${replies.length === 0 ? '<div style="font-size:0.75rem; color:#999; padding:0.3rem;">Belum ada balasan</div>' : replies.map(r => `
+                <div class="reply">
+                  <div class="reply-header">
+                    <strong>${esc(r.profiles?.name || '-')}</strong>
+                    ${r.profiles?.role === 'guru' ? '<span style="font-size:0.6rem; background:var(--tb-light); color:var(--tb-dark); padding:1px 6px; border-radius:6px;">GURU</span>' : ''}
+                    <span style="color:#999;">${new Date(r.created_at).toLocaleString('id-ID')}</span>
+                  </div>
+                  <div class="reply-body">${esc(r.body || '')}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="post-actions">
+              <button class="btn-sm-outline" onclick="showReplyForm(${p.id})">💬 Balas</button>
+              ${isMine ? `<button class="btn-sm-outline" onclick="deletePostConfirm(${p.id})" style="color:var(--tb-danger);">🗑️ Hapus</button>` : ''}
+            </div>
+
+            <div id="replyForm-${p.id}" style="display:none; margin-top:0.6rem;">
+              <textarea id="replyBody-${p.id}" class="form-input" placeholder="Tulis balasan..." rows="2" style="margin-bottom:0.5rem;"></textarea>
+              <button class="btn-primary" onclick="submitReply(${p.id})" style="font-size:0.75rem; padding:0.4rem 1rem;">Kirim Balasan</button>
+            </div>
+          </div>
+        `;
+      }
+      c.innerHTML = html;
+    }
+
+    function showReplyForm(postId) {
+      const el = document.getElementById('replyForm-' + postId);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function submitPost() {
+      const sid = parseInt(document.getElementById('selSubject').value);
+      const cid = parseInt(document.getElementById('selClass').value);
+      if (!sid || !cid) { alert('Pilih mapel dan kelas dulu'); return; }
+      const title = document.getElementById('inputTitle').value.trim();
+      const body = document.getElementById('inputBody').value.trim();
+      if (!title) { alert('Judul wajib diisi'); return; }
+
+      const btn = document.getElementById('btnPost');
+      btn.disabled = true; btn.textContent = 'Memposting...';
+      try {
+        await createForumPost({
+          classId: cid, subjectId: sid,
+          authorId: currentUser.id, title, body
+        });
+        document.getElementById('inputTitle').value = '';
+        document.getElementById('inputBody').value = '';
+        showToast('✅ Topik diposting');
+        await loadPosts();
+      } catch (err) {
+        alert('Gagal: ' + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = '📤 Posting';
+      }
+    }
+
+    async function submitReply(parentId) {
+      const body = document.getElementById('replyBody-' + parentId).value.trim();
+      if (!body) { alert('Balasan kosong'); return; }
+      const sid = parseInt(document.getElementById('selSubject').value);
+      const cid = parseInt(document.getElementById('selClass').value);
+      try {
+        await createForumPost({
+          classId: cid, subjectId: sid,
+          authorId: currentUser.id, title: 'Re:', body, parentId
+        });
+        showToast('✅ Balasan dikirim');
+        await renderPosts();
+      } catch (err) { alert('Gagal: ' + err.message); }
+    }
+
+    async function deletePostConfirm(id) {
+      if (!confirm('Hapus topik ini?')) return;
+      try {
+        await deleteForumPost(id);
+        showToast('🗑️ Topik dihapus');
+        await loadPosts();
+      } catch (err) { alert('Gagal: ' + err.message); }
+    }
+
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show';
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>

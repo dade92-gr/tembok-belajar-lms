@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress Belajar — Tembok Belajar</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-toolbar { margin-bottom: 1.5rem; }
+    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
+    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: white; border-radius: var(--tb-radius); padding: 1.2rem;
+      text-align: center; border: 1px solid rgba(46,204,113,0.1);
+      box-shadow: var(--tb-shadow-sm);
+    }
+    .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--tb-primary); }
+    .stat-label { font-size: 0.75rem; color: var(--tb-text-muted); margin-top: 0.3rem; }
+
+    .panel {
+      background: white; border-radius: var(--tb-radius-lg);
+      border: 1px solid rgba(46,204,113,0.1);
+      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+    }
+    .panel-title {
+      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--tb-light);
+    }
+
+    .progress-list { display: flex; flex-direction: column; gap: 1rem; }
+    .progress-item {
+      background: var(--tb-bg); border-radius: 12px;
+      padding: 1.2rem 1.4rem; border-left: 4px solid var(--tb-primary);
+    }
+    .progress-header {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 0.6rem; flex-wrap: wrap;
+    }
+    .progress-title { font-weight: 700; color: var(--tb-dark); font-size: 0.95rem; }
+    .progress-kelas { font-size: 0.75rem; color: var(--tb-text-muted); margin-top: 0.2rem; }
+    .progress-meta {
+      display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.75rem;
+      color: var(--tb-text-muted); margin-bottom: 0.6rem;
+    }
+    .progress-meta strong { color: var(--tb-dark); }
+
+    .bar-wrap {
+      background: #f0f0f0; border-radius: 20px; height: 24px; overflow: hidden;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%; border-radius: 20px; transition: width 0.3s ease;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 0.7rem; font-weight: 700;
+    }
+    .bar-green { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+    .bar-yellow { background: linear-gradient(90deg, #f39c12, #e67e22); }
+    .bar-red { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+
+    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 3rem; font-size: 0.85rem; }
+
+    .back-nav { text-align: center; margin-top: 2rem; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--tb-dark);
+      padding: 0.6rem 1.5rem; border-radius: 30px;
+      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+      font-size: 0.85rem;
+    }
+    .btn-secondary:hover { background: var(--tb-light); }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-brand">🧱 Tembok Belajar — Siswa</div>
+    <div class="app-user">
+      <span id="userName">Memuat...</span>
+      <div class="avatar" id="userAvatar">?</div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat progress...</p></div>
+
+  <div class="page-container hidden" id="pageContent">
+    <div class="page-toolbar">
+      <h1>📈 Progress Belajar
+        <small>Pantau kemajuan Anda di setiap mata pelajaran</small>
+      </h1>
+    </div>
+
+    <div class="stat-grid" id="statsGrid"></div>
+
+    <div class="panel">
+      <h2 class="panel-title">📊 Progress per Mapel</h2>
+      <div class="progress-list" id="progressList">
+        <div class="empty-msg">Memuat...</div>
+      </div>
+    </div>
+
+    <div class="back-nav">
+      <a href="dashboard.html" class="btn-secondary">← Kembali ke Dashboard</a>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('siswa');
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+      await loadData();
+    })();
+
+    async function loadData() {
+      try {
+        const progress = await getMyProgress(currentUser.id);
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('pageContent').classList.remove('hidden');
+
+        if (progress.length === 0) {
+          document.getElementById('statsGrid').innerHTML = '';
+          document.getElementById('progressList').innerHTML = '<div class="empty-msg">Anda belum terdaftar di kelas manapun.</div>';
+          return;
+        }
+
+        const totalMapel = progress.length;
+        const totalActivities = progress.reduce((s, p) => s + p.totalActivities, 0);
+        const totalSubmitted = progress.reduce((s, p) => s + p.submitted, 0);
+        const overallPercent = totalActivities > 0 ? Math.round((totalSubmitted / totalActivities) * 100) : 0;
+
+        document.getElementById('statsGrid').innerHTML = `
+          <div class="stat-card"><div class="stat-value">${totalMapel}</div><div class="stat-label">Mapel Diikuti</div></div>
+          <div class="stat-card"><div class="stat-value">${totalActivities}</div><div class="stat-label">Total Aktivitas</div></div>
+          <div class="stat-card"><div class="stat-value">${totalSubmitted}</div><div class="stat-label">Dikumpulkan</div></div>
+          <div class="stat-card"><div class="stat-value">${overallPercent}%</div><div class="stat-label">Overall</div></div>
+        `;
+
+        document.getElementById('progressList').innerHTML = progress.map(p => {
+          let barClass = 'bar-red';
+          if (p.percent >= 80) barClass = 'bar-green';
+          else if (p.percent >= 50) barClass = 'bar-yellow';
+
+          return `
+            <div class="progress-item">
+              <div class="progress-header">
+                <div>
+                  <div class="progress-title">${esc(p.subject.name)} ${p.subject.code ? '<span style="font-size:0.7rem; color:#888;">(' + esc(p.subject.code) + ')</span>' : ''}</div>
+                  <div class="progress-kelas">🏫 ${esc(p.classInfo.name)}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:1.4rem; font-weight:700; color:var(--tb-primary);">${p.percent}%</div>
+                </div>
+              </div>
+              <div class="progress-meta">
+                <span>📋 <strong>${p.totalActivities}</strong> aktivitas</span>
+                <span>✅ <strong>${p.submitted}</strong> dikumpul</span>
+                <span>💯 <strong>${p.graded}</strong> dinilai</span>
+                <span>📊 Rata-rata: <strong>${p.avgScore}</strong></span>
+              </div>
+              <div class="bar-wrap">
+                <div class="bar-fill ${barClass}" style="width:${p.percent}%;">
+                  ${p.percent > 15 ? p.percent + '%' : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        document.getElementById('loading').innerHTML = '<p style="color:red;">Error: ' + err.message + '</p>';
+      }
+    }
+
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

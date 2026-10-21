@@ -19,10 +19,7 @@
     </div>
   </header>
 
-  <div id="loading" class="loading-box">
-    <div class="spinner"></div>
-    <p>Memuat dashboard...</p>
-  </div>
+  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat dashboard...</p></div>
 
   <div id="dashboard" class="dash-container hidden">
     <div class="dash-hero">
@@ -40,9 +37,7 @@
 
     <div class="dash-panel">
       <h2 class="panel-title">ℹ️ Info</h2>
-      <p class="muted" id="roleInfo">
-        Panel Siswa sedang dibangun. Fitur akan ditambahkan di Fase 5-6.
-      </p>
+      <p class="muted">Pilih "Mapel Saya" untuk melihat mapel dan kelas yang Anda ikuti.</p>
     </div>
   </div>
 
@@ -62,7 +57,6 @@
       document.getElementById('greeting').textContent = 'Halo, ' + profile.name + '!';
       document.getElementById('subGreeting').textContent = 'Siswa · ' + profile.email;
 
-      // Ambil nama sekolah
       try {
         const school = await getSchool(profile.school_id);
         if (school) {
@@ -70,17 +64,35 @@
           document.getElementById('schoolInfo').textContent =
             '🏫 ' + school.name + (school.academic_year ? ' · Tahun Ajaran ' + school.academic_year : '');
         }
-      } catch (err) {
-        console.warn('Gagal ambil data sekolah:', err);
-        document.getElementById('schoolName').textContent = '🏫 -';
-        document.getElementById('schoolInfo').textContent = '';
-      }
+      } catch (err) { console.warn('Sekolah:', err); }
+
+      // Statistik
+      let totalKelas = 0, totalMapel = 0, totalTugas = 0, totalNilai = 0;
+      try {
+        const enrolls = await getStudentClasses(profile.id);
+        totalKelas = (enrolls || []).length;
+
+        const enrolledSubs = await getMyEnrolledSubjects(profile.id);
+        const subjectSet = new Set();
+        enrolledSubs.forEach(a => { if (a.subject_id) subjectSet.add(a.subject_id); });
+        totalMapel = subjectSet.size;
+
+        const myGrades = await getMyGrades(profile.id);
+        totalNilai = myGrades.length;
+
+        // Hitung tugas aktif
+        for (const a of enrolledSubs) {
+          if (!a.subjects || !a.classes) continue;
+          const acts = await getMyActivities(profile.id, a.classes.id, a.subjects.id);
+          totalTugas += acts.filter(x => !x.submission).length;
+        }
+      } catch (err) { console.warn('Statistik:', err); }
 
       const stats = [
-        { label: 'Kelas Diikuti', value: '-' },
-        { label: 'Tugas Aktif', value: '-' },
-        { label: 'Tugas Dikumpul', value: '-' },
-        { label: 'Nilai Diterima', value: '-' }
+        { label: 'Kelas Diikuti', value: totalKelas },
+        { label: 'Mapel', value: totalMapel },
+        { label: 'Tugas Belum Dikerjakan', value: totalTugas },
+        { label: 'Nilai Diterima', value: totalNilai }
       ];
       document.getElementById('statsGrid').innerHTML = stats.map(s => `
         <div class="stat-card">
@@ -90,17 +102,18 @@
       `).join('');
 
       const menus = [
-        { icon: '📚', label: 'Mapel Saya' },
-        { icon: '📄', label: 'Materi Belajar' },
-        { icon: '🎬', label: 'Video Pembelajaran' },
-        { icon: '✏️', label: 'Tugas & Kuis' },
-        { icon: '💬', label: 'Forum Diskusi' },
-        { icon: '📊', label: 'Nilai Saya' },
-        { icon: '📈', label: 'Progress Belajar' },
-        { icon: '🔔', label: 'Notifikasi' }
+        { icon: '📚', label: 'Mapel Saya',       url: 'mapel.html' },
+        { icon: '📄', label: 'Materi Belajar',   url: 'materi.html' },
+        { icon: '✏️', label: 'Tugas & Kuis',     url: 'tugas.html' },
+        { icon: '📊', label: 'Nilai Saya',       url: 'nilai.html' },
+        { icon: '💬', label: 'Forum Diskusi',    url: 'forum.html' },
+        { icon: '📈', label: 'Progress Belajar', url: 'progress.html' },
+        { icon: '🔔', label: 'Notifikasi',       url: '#' }
       ];
       document.getElementById('quickMenu').innerHTML = menus.map(m => `
-        <div class="quick-item" onclick="alert('Fitur ${m.label} akan dibuat di Fase 5-6.')">
+        <div class="quick-item" onclick="${m.url === '#'
+          ? `alert('Fitur ${m.label} akan dibuat di fase berikutnya.')`
+          : `window.location.href='${m.url}'`}">
           <span class="quick-icon">${m.icon}</span>
           <span>${m.label}</span>
         </div>
