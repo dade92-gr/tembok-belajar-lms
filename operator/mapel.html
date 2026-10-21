@@ -6,29 +6,31 @@
   <title>Manajemen Mapel — Tembok Belajar</title>
   <link rel="stylesheet" href="../assets/css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    /* Style tambahan khusus halaman ini */
     .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-    
     .page-toolbar {
       display: flex; justify-content: space-between; align-items: center;
       gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
     }
     .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
     .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
-    
     .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
-    
     .search-input {
       padding: 0.6rem 1rem; border: 1px solid var(--tb-border);
       border-radius: 30px; font-size: 0.85rem; outline: none;
       min-width: 220px; font-family: inherit;
     }
     .search-input:focus { border-color: var(--tb-primary); box-shadow: 0 0 0 3px rgba(46,204,113,0.15); }
-    
     .btn-sm { padding: 0.5rem 1rem; font-size: 0.8rem; }
-    
-    /* Tabel */
+    .btn-outline {
+      background: transparent; border: 1px solid var(--tb-primary);
+      color: var(--tb-primary); padding: 0.5rem 1rem; border-radius: 30px;
+      cursor: pointer; font-size: 0.8rem; font-weight: 600;
+      transition: var(--tb-transition); display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-outline:hover { background: var(--tb-light); }
+
     .table-card {
       background: white; border-radius: var(--tb-radius-lg);
       border: 1px solid rgba(46,204,113,0.1); overflow: hidden;
@@ -44,14 +46,12 @@
     .data-table td { padding: 0.8rem 1rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
     .data-table tr:hover { background: #f8f9fa; }
     .data-table tr:last-child td { border-bottom: none; }
-    
     .kode-badge {
       display: inline-block; background: var(--tb-light); color: var(--tb-dark);
       padding: 3px 10px; border-radius: 8px; font-weight: 700; font-size: 0.75rem;
       font-family: monospace;
     }
     .nama-mapel { font-weight: 600; color: var(--tb-text); }
-    
     .action-btns { display: flex; gap: 6px; }
     .btn-icon {
       background: transparent; border: 1px solid var(--tb-border);
@@ -61,41 +61,46 @@
     }
     .btn-icon:hover { background: var(--tb-light); border-color: var(--tb-primary); }
     .btn-icon.danger:hover { background: #fadbd8; border-color: var(--tb-danger); }
-    
-    /* Empty state */
+
     .empty-row { text-align: center; padding: 3rem 1rem; color: var(--tb-text-muted); }
     .empty-row .emoji { font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
-    
-    /* Modal */
+
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       display: none; align-items: center; justify-content: center;
-      z-index: 2000; padding: 1rem;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
     }
     .modal-overlay.active { display: flex; }
     .modal-card {
       background: white; border-radius: var(--tb-radius-lg);
-      padding: 2rem; width: 100%; max-width: 440px;
+      padding: 2rem; width: 100%; max-width: 500px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       animation: tbFadeInUp 0.3s ease;
+      margin: auto;
     }
-    .modal-card h2 { font-size: 1.3rem; color: var(--tb-dark); margin-bottom: 1.2rem; font-weight: 700; }
+    .modal-card h2 { font-size: 1.3rem; color: var(--tb-dark); margin-bottom: 1rem; font-weight: 700; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; }
-    
+
+    .form-hint {
+      font-size: 0.7rem; color: var(--tb-text-muted);
+      margin-top: -0.6rem; margin-bottom: 1rem;
+      padding-left: 4px; line-height: 1.5;
+    }
+
     .btn-secondary {
       background: #6c757d; color: white; border: none;
       padding: 0.6rem 1.2rem; border-radius: 30px; cursor: pointer;
       font-size: 0.85rem; font-weight: 600; transition: var(--tb-transition);
     }
     .btn-secondary:hover { background: #5a6268; }
-    
+
     .btn-danger {
       background: var(--tb-danger); color: white; border: none;
       padding: 0.6rem 1.2rem; border-radius: 30px; cursor: pointer;
       font-size: 0.85rem; font-weight: 600; transition: var(--tb-transition);
     }
     .btn-danger:hover { background: #c0392b; }
-    
+
     .toast {
       position: fixed; bottom: 24px; right: 24px;
       background: var(--tb-dark); color: white;
@@ -105,17 +110,40 @@
       display: flex; align-items: center; gap: 10px;
       opacity: 0; transform: translateY(20px);
       transition: all 0.3s ease; z-index: 3000;
-      max-width: 320px;
+      max-width: 400px; line-height: 1.5;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.error { background: var(--tb-danger); }
-    
+
     .info-bar {
       background: var(--tb-light); border-radius: 12px;
       padding: 0.7rem 1rem; margin-bottom: 1rem;
       font-size: 0.8rem; color: var(--tb-dark); font-weight: 500;
       display: flex; align-items: center; gap: 8px;
     }
+
+    .progress-box {
+      background: white; border-radius: 12px; padding: 1rem;
+      margin-top: 1rem; border: 1px solid var(--tb-border);
+    }
+    .progress-label {
+      font-size: 0.8rem; color: var(--tb-text); margin-bottom: 0.5rem;
+      display: flex; justify-content: space-between;
+    }
+    .progress-bar {
+      width: 100%; height: 12px; background: #f0f0f0;
+      border-radius: 20px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--tb-primary), var(--tb-secondary));
+      width: 0%; transition: width 0.3s ease;
+    }
+    .progress-detail {
+      font-size: 0.7rem; color: var(--tb-text-muted); margin-top: 0.5rem;
+      max-height: 150px; overflow-y: auto;
+    }
+    .progress-detail .item-ok { color: var(--tb-dark); }
+    .progress-detail .item-err { color: var(--tb-danger); }
   </style>
 </head>
 <body>
@@ -135,22 +163,25 @@
   </div>
 
   <div class="page-container hidden" id="pageContent">
-    
+
     <div class="page-toolbar">
       <div>
         <h1>📚 Manajemen Mapel
-          <small>Kelola daftar mata pelajaran di sekolah Anda</small>
+          <small>Kelola daftar mata pelajaran — tambah satu per satu atau import dari Excel</small>
         </h1>
       </div>
       <div class="toolbar-actions">
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 Cari mapel..." oninput="renderTable()">
+        <button class="btn-outline btn-sm" onclick="openImportModal()">
+          📥 Import Excel
+        </button>
         <button class="btn-primary btn-sm" onclick="openModal()">+ Tambah Mapel</button>
       </div>
     </div>
 
     <div class="info-bar">
       <span>ℹ️</span>
-      <span>Total: <strong id="totalCount">0</strong> mapel · 
+      <span>Total: <strong id="totalCount">0</strong> mapel ·
             Menampilkan: <strong id="shownCount">0</strong></span>
     </div>
 
@@ -182,18 +213,59 @@
   <div class="modal-overlay" id="modalForm">
     <div class="modal-card">
       <h2 id="modalTitle">Tambah Mapel</h2>
-      
       <label class="form-label" for="inputCode">Kode Mapel</label>
       <input type="text" id="inputCode" class="form-input" placeholder="Contoh: MAT, FIS, BIN" maxlength="10" style="text-transform:uppercase;">
-      
       <label class="form-label" for="inputName">Nama Mapel</label>
       <input type="text" id="inputName" class="form-input" placeholder="Contoh: Matematika Wajib">
-      
       <div id="modalError" class="alert alert-error hidden" style="margin-top:0;"></div>
-      
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeModal()">Batal</button>
         <button class="btn-primary" id="btnSave" onclick="saveSubject()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Import Excel -->
+  <div class="modal-overlay" id="modalImport">
+    <div class="modal-card" style="max-width: 600px;">
+      <h2>📥 Import Mapel dari Excel</h2>
+
+      <div style="background: #e8f4fd; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; font-size: 0.8rem; line-height: 1.6;">
+        <strong>📋 Langkah:</strong>
+        <ol style="margin: 0.5rem 0 0 1rem; padding: 0;">
+          <li>Klik <strong>"Download Template"</strong> di bawah</li>
+          <li>Buka file Excel → isi kolom: <strong>Kode, Nama</strong></li>
+          <li>Simpan file</li>
+          <li>Klik <strong>"Pilih File Excel"</strong> → pilih file yang sudah diisi</li>
+          <li>Klik <strong>"Mulai Import"</strong> → tunggu proses selesai</li>
+        </ol>
+      </div>
+
+      <button class="btn-outline" style="width: 100%; justify-content: center; margin-bottom: 1rem;" onclick="downloadTemplate()">
+        ⬇️ Download Template Excel
+      </button>
+
+      <label class="form-label">Pilih File Excel (.xlsx)</label>
+      <input type="file" id="fileInput" accept=".xlsx, .xls" class="form-input" onchange="onFileSelected(event)">
+
+      <div id="fileInfo" style="font-size: 0.8rem; color: var(--tb-text-muted); margin-bottom: 0.8rem;"></div>
+
+      <div id="progressBox" class="progress-box hidden">
+        <div class="progress-label">
+          <span>Memproses...</span>
+          <span id="progressText">0 / 0</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-detail" id="progressDetail"></div>
+      </div>
+
+      <div id="importError" class="alert alert-error hidden" style="margin-top: 0.8rem;"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeImportModal()">Tutup</button>
+        <button class="btn-primary" id="btnImport" onclick="startImport()" disabled>
+          🚀 Mulai Import
+        </button>
       </div>
     </div>
   </div>
@@ -217,18 +289,13 @@
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
-    /* ============================================================
-       STATE
-       ============================================================ */
     let allSubjects = [];
     let editingId = null;
     let deletingId = null;
     let currentUser = null;
     let currentSchoolId = 1;
+    let selectedExcelData = null;
 
-    /* ============================================================
-       INIT
-       ============================================================ */
     (async () => {
       initSupabase();
       currentUser = await requireAuth('operator');
@@ -241,9 +308,6 @@
       await loadSubjects();
     })();
 
-    /* ============================================================
-       LOAD DATA
-       ============================================================ */
     async function loadSubjects() {
       try {
         allSubjects = await getSubjects(currentSchoolId);
@@ -257,9 +321,6 @@
       }
     }
 
-    /* ============================================================
-       RENDER TABEL
-       ============================================================ */
     function renderTable() {
       const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
       const filtered = allSubjects.filter(s =>
@@ -276,8 +337,8 @@
         tbody.innerHTML = `
           <tr><td colspan="4" class="empty-row">
             <span class="emoji">📚</span>
-            ${allSubjects.length === 0 
-              ? 'Belum ada mapel. Klik "+ Tambah Mapel" untuk memulai.' 
+            ${allSubjects.length === 0
+              ? 'Belum ada mapel. Klik "+ Tambah Mapel" atau "Import Excel".'
               : 'Tidak ada mapel yang cocok dengan pencarian.'}
           </td></tr>`;
         return;
@@ -298,12 +359,8 @@
       `).join('');
     }
 
-    /* ============================================================
-       MODAL FORM
-       ============================================================ */
     function openModal(id = null) {
       editingId = id;
-      const modal = document.getElementById('modalForm');
       const title = document.getElementById('modalTitle');
       const inputCode = document.getElementById('inputCode');
       const inputName = document.getElementById('inputName');
@@ -326,7 +383,7 @@
         inputName.value = '';
       }
 
-      modal.classList.add('active');
+      document.getElementById('modalForm').classList.add('active');
       setTimeout(() => inputCode.focus(), 100);
     }
 
@@ -376,17 +433,169 @@
     }
 
     /* ============================================================
-       HAPUS MAPEL
+       IMPORT EXCEL MAPEL
+       ============================================================ */
+    function openImportModal() {
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileInfo').textContent = '';
+      document.getElementById('progressBox').classList.add('hidden');
+      document.getElementById('importError').classList.add('hidden');
+      document.getElementById('btnImport').disabled = true;
+      selectedExcelData = null;
+      document.getElementById('modalImport').classList.add('active');
+    }
+
+    function closeImportModal() {
+      document.getElementById('modalImport').classList.remove('active');
+    }
+
+    function downloadTemplate() {
+      const ws = XLSX.utils.aoa_to_sheet([
+        ['Kode', 'Nama'],
+        ['MAT', 'Matematika Wajib'],
+        ['FIS', 'Fisika'],
+        ['BIN', 'Bahasa Indonesia'],
+        ['BIG', 'Bahasa Inggris']
+      ]);
+      ws['!cols'] = [{ wch: 15 }, { wch: 40 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Mapel');
+      XLSX.writeFile(wb, 'Template_Import_Mapel.xlsx');
+      showToast('📥 Template berhasil diunduh');
+    }
+
+    function onFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        selectedExcelData = null;
+        document.getElementById('btnImport').disabled = true;
+        document.getElementById('fileInfo').textContent = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+          const valid = rows.filter(r =>
+            (r.Kode || r.kode || '').toString().trim() &&
+            (r.Nama || r.nama || '').toString().trim()
+          );
+
+          if (valid.length === 0) {
+            document.getElementById('fileInfo').innerHTML =
+              '<span style="color:var(--tb-danger);">❌ File tidak berisi data valid. Pastikan kolom: Kode, Nama.</span>';
+            document.getElementById('btnImport').disabled = true;
+            selectedExcelData = null;
+            return;
+          }
+
+          selectedExcelData = valid.map(r => ({
+            code: (r.Kode || r.kode || '').toString().trim().toUpperCase(),
+            name: (r.Nama || r.nama || '').toString().trim()
+          }));
+
+          document.getElementById('fileInfo').innerHTML =
+            '<span style="color:var(--tb-dark);">✅ File valid: <strong>' + selectedExcelData.length +
+            ' baris mapel</strong> siap diimport.</span>';
+          document.getElementById('btnImport').disabled = false;
+          document.getElementById('importError').classList.add('hidden');
+
+        } catch (err) {
+          console.error('Baca Excel error:', err);
+          document.getElementById('fileInfo').innerHTML =
+            '<span style="color:var(--tb-danger);">❌ Gagal membaca file: ' + err.message + '</span>';
+          document.getElementById('btnImport').disabled = true;
+          selectedExcelData = null;
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    async function startImport() {
+      if (!selectedExcelData || selectedExcelData.length === 0) return;
+
+      const btnImport = document.getElementById('btnImport');
+      btnImport.disabled = true;
+      btnImport.textContent = 'Memproses...';
+
+      const progressBox = document.getElementById('progressBox');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const progressDetail = document.getElementById('progressDetail');
+      const importError = document.getElementById('importError');
+
+      progressBox.classList.remove('hidden');
+      progressDetail.innerHTML = '';
+      importError.classList.add('hidden');
+
+      const total = selectedExcelData.length;
+      let success = 0;
+      let failed = 0;
+      const errors = [];
+
+      for (let i = 0; i < total; i++) {
+        const row = selectedExcelData[i];
+        progressText.textContent = (i + 1) + ' / ' + total;
+        progressFill.style.width = (((i + 1) / total) * 100) + '%';
+
+        const detailItem = document.createElement('div');
+        detailItem.textContent = '⏳ Memproses: ' + row.code + ' — ' + row.name;
+        progressDetail.appendChild(detailItem);
+        progressDetail.scrollTop = progressDetail.scrollHeight;
+
+        try {
+          await createSubject({
+            name: row.name,
+            code: row.code,
+            schoolId: currentSchoolId
+          });
+          success++;
+          detailItem.textContent = '✅ ' + row.code + ' — ' + row.name + ' berhasil';
+          detailItem.className = 'item-ok';
+        } catch (err) {
+          failed++;
+          const msg = err.message || 'Unknown error';
+          errors.push(row.code + ' ' + row.name + ': ' + msg);
+          detailItem.textContent = '❌ ' + row.code + ' — ' + row.name + ' gagal: ' + msg;
+          detailItem.className = 'item-err';
+        }
+      }
+
+      progressText.textContent = total + ' / ' + total + ' selesai';
+
+      if (failed > 0) {
+        importError.innerHTML =
+          '<strong>⚠️ ' + failed + ' dari ' + total + ' gagal:</strong><br>' +
+          errors.map(e => '• ' + e).join('<br>');
+        importError.classList.remove('hidden');
+      }
+
+      btnImport.textContent = '🚀 Mulai Import';
+      btnImport.disabled = false;
+
+      showToast(
+        success + ' mapel berhasil, ' + failed + ' gagal.',
+        failed === 0 ? 'success' : 'error'
+      );
+
+      await loadSubjects();
+    }
+
+    /* ============================================================
+       HAPUS
        ============================================================ */
     function openDelete(id) {
       deletingId = id;
       const subject = allSubjects.find(s => s.id === id);
       if (!subject) return;
-
       document.getElementById('deleteMessage').innerHTML =
         'Anda yakin ingin menghapus mapel <strong>' + escapeHtml(subject.name) + '</strong>? ' +
         'Tindakan ini tidak dapat dibatalkan.';
-
       document.getElementById('modalDelete').classList.add('active');
     }
 
@@ -438,16 +647,16 @@
       t.textContent = msg;
       t.className = 'toast show ' + (type === 'error' ? 'error' : '');
       clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
     }
 
-    /* Enter untuk submit di modal */
     document.addEventListener('keydown', e => {
       if (e.key === 'Enter' && document.getElementById('modalForm').classList.contains('active')) {
         saveSubject();
       }
       if (e.key === 'Escape') {
         closeModal();
+        closeImportModal();
         closeDeleteModal();
       }
     });
