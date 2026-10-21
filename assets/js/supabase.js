@@ -64,6 +64,21 @@ async function requireAuth(expectedRole) {
 }
 
 /* ============================================================
+   SEKOLAH (SCHOOLS)
+   ============================================================ */
+
+async function getSchool(schoolId) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('schools')
+    .select('*')
+    .eq('id', schoolId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/* ============================================================
    CRUD MAPEL (SUBJECTS)
    ============================================================ */
 
@@ -274,7 +289,6 @@ async function isStudentUsed(studentId) {
    PENUGASAN GURU (TEACHER_ASSIGN)
    ============================================================ */
 
-/* Ambil semua penugasan dengan detail guru, mapel, kelas */
 async function getTeacherAssignments(schoolId) {
   const client = initSupabase();
   let query = client
@@ -296,7 +310,6 @@ async function getTeacherAssignments(schoolId) {
   return data || [];
 }
 
-/* Buat penugasan baru */
 async function createTeacherAssignment({ teacherId, subjectId, classId, schoolId }) {
   const client = initSupabase();
   const { data, error } = await client
@@ -313,14 +326,12 @@ async function createTeacherAssignment({ teacherId, subjectId, classId, schoolId
   return data;
 }
 
-/* Hapus penugasan */
 async function deleteTeacherAssignment(id) {
   const client = initSupabase();
   const { error } = await client.from('teacher_assign').delete().eq('id', id);
   if (error) throw error;
 }
 
-/* Cek duplikat: guru+mapel+kelas yang sama */
 async function isAssignmentDuplicate(teacherId, subjectId, classId) {
   const client = initSupabase();
   const { count, error } = await client
@@ -337,7 +348,6 @@ async function isAssignmentDuplicate(teacherId, subjectId, classId) {
    ENROLLMENT SISWA (ENROLLMENTS)
    ============================================================ */
 
-/* Ambil semua enrollment dengan detail siswa & kelas */
 async function getEnrollments(schoolId) {
   const client = initSupabase();
   let query = client
@@ -358,7 +368,6 @@ async function getEnrollments(schoolId) {
   return data || [];
 }
 
-/* Buat enrollment baru */
 async function createEnrollment({ studentId, classId, schoolId }) {
   const client = initSupabase();
   const { data, error } = await client
@@ -375,14 +384,12 @@ async function createEnrollment({ studentId, classId, schoolId }) {
   return data;
 }
 
-/* Hapus enrollment */
 async function deleteEnrollment(id) {
   const client = initSupabase();
   const { error } = await client.from('enrollments').delete().eq('id', id);
   if (error) throw error;
 }
 
-/* Cek duplikat: siswa+kelas yang sama */
 async function isEnrollmentDuplicate(studentId, classId) {
   const client = initSupabase();
   const { count, error } = await client
@@ -394,7 +401,6 @@ async function isEnrollmentDuplicate(studentId, classId) {
   return count > 0;
 }
 
-/* Ambil kelas yang diikuti siswa (untuk dashboard siswa) */
 async function getStudentClasses(studentId) {
   const client = initSupabase();
   const { data, error } = await client
@@ -409,7 +415,6 @@ async function getStudentClasses(studentId) {
   return data || [];
 }
 
-/* Ambil guru+mapel yang mengajar di kelas tertentu (untuk dashboard siswa) */
 async function getClassSubjects(classId) {
   const client = initSupabase();
   const { data, error } = await client
@@ -422,19 +427,4 @@ async function getClassSubjects(classId) {
     .eq('class_id', classId);
   if (error) throw error;
   return data || [];
-}
-
-/* ============================================================
-   SEKOLAH (SCHOOLS)
-   ============================================================ */
-
-async function getSchool(schoolId) {
-  const client = initSupabase();
-  const { data, error } = await client
-    .from('schools')
-    .select('*')
-    .eq('id', schoolId)
-    .single();
-  if (error) throw error;
-  return data;
 }

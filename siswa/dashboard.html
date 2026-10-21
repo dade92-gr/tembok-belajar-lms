@@ -12,6 +12,7 @@
   <header class="app-header">
     <div class="app-brand">🧱 Tembok Belajar — Siswa</div>
     <div class="app-user">
+      <span id="schoolName" style="font-size:0.75rem; opacity:0.85; margin-right:8px;"></span>
       <span id="userName">Memuat...</span>
       <div class="avatar" id="userAvatar">?</div>
       <button class="btn-logout" onclick="doLogout()">Keluar</button>
@@ -27,6 +28,7 @@
     <div class="dash-hero">
       <h1 id="greeting">Halo!</h1>
       <p class="muted" id="subGreeting"></p>
+      <p class="muted" id="schoolInfo" style="margin-top:6px; font-size:0.85rem;"></p>
     </div>
 
     <div class="stat-grid" id="statsGrid"></div>
@@ -59,6 +61,20 @@
       document.getElementById('userAvatar').textContent = profile.name.charAt(0).toUpperCase();
       document.getElementById('greeting').textContent = 'Halo, ' + profile.name + '!';
       document.getElementById('subGreeting').textContent = 'Siswa · ' + profile.email;
+
+      // Ambil nama sekolah
+      try {
+        const school = await getSchool(profile.school_id);
+        if (school) {
+          document.getElementById('schoolName').textContent = '🏫 ' + school.name;
+          document.getElementById('schoolInfo').textContent =
+            '🏫 ' + school.name + (school.academic_year ? ' · Tahun Ajaran ' + school.academic_year : '');
+        }
+      } catch (err) {
+        console.warn('Gagal ambil data sekolah:', err);
+        document.getElementById('schoolName').textContent = '🏫 -';
+        document.getElementById('schoolInfo').textContent = '';
+      }
 
       const stats = [
         { label: 'Kelas Diikuti', value: '-' },
