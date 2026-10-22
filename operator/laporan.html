@@ -4,69 +4,209 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Laporan Master — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    .page-toolbar {
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
     }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
 
-    /* STAT CARDS */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body.tb-embed .btn-back { display: none !important; }
+    body.tb-embed .page-toolbar-left { gap: 0.3rem; }
+
+    .page-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+
+    /* PAGE TOOLBAR */
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* STAT GRID */
     .stat-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1rem; margin-bottom: 1.5rem;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
     }
+
     .stat-card {
-      background: white; border-radius: var(--tb-radius);
-      padding: 1.3rem 1rem; text-align: center;
-      border: 1px solid rgba(46,204,113,0.1);
-      box-shadow: var(--tb-shadow-sm);
-      transition: var(--tb-transition);
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.3rem 1rem;
+      text-align: center;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-xs);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
     }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 4px;
+      background: var(--primary);
+      opacity: 0;
+      transition: var(--transition);
+    }
+
     .stat-card:hover {
       transform: translateY(-3px);
-      box-shadow: var(--tb-shadow);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
     }
-    .stat-icon {
-      font-size: 1.8rem; margin-bottom: 0.5rem; display: block;
-    }
+
+    .stat-card:hover::before { opacity: 1; }
+
+    .stat-icon { font-size: 1.8rem; margin-bottom: 0.5rem; display: block; }
+
     .stat-value {
-      font-size: 2rem; font-weight: 700;
-      color: var(--tb-primary); line-height: 1;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
       margin-bottom: 0.3rem;
     }
+
     .stat-label {
-      font-size: 0.75rem; color: var(--tb-text-muted);
-      font-weight: 500; text-transform: uppercase;
-      letter-spacing: 0.3px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     /* PANEL */
     .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      box-shadow: var(--tb-shadow-sm);
-      padding: 1.5rem; margin-bottom: 1.5rem;
-    }
-    .panel-title {
-      font-size: 1.05rem; font-weight: 700;
-      color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.6rem;
-      border-bottom: 2px solid var(--tb-light);
-      display: flex; align-items: center; gap: 8px;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-xs);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
     }
 
-    /* GRID 2 KOLOM */
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.7rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-title i { color: var(--primary); font-size: 1rem; }
+
+    /* 2-COL */
     .two-col {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1.5rem; margin-bottom: 1.5rem;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
 
     /* RASIO */
@@ -75,156 +215,250 @@
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
     }
+
     .ratio-card {
-      background: var(--tb-light);
-      border-radius: var(--tb-radius-sm);
-      padding: 1.2rem; text-align: center;
+      background: var(--primary-lighter);
+      border-radius: var(--radius);
+      padding: 1.3rem;
+      text-align: center;
+      border: 1px solid var(--primary-light);
     }
+
     .ratio-value {
-      font-size: 1.8rem; font-weight: 700;
-      color: var(--tb-dark); line-height: 1;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      line-height: 1;
     }
+
     .ratio-label {
-      font-size: 0.75rem; color: var(--tb-text-muted);
+      font-size: 0.75rem;
+      color: var(--text-muted);
       margin-top: 0.3rem;
+      font-weight: 500;
     }
 
     /* LIST */
     .list-row {
-      display: flex; justify-content: space-between; align-items: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       padding: 0.7rem 0.8rem;
-      border-radius: var(--tb-radius-sm);
+      border-radius: 8px;
       transition: background 0.2s ease;
       font-size: 0.85rem;
       margin-bottom: 4px;
     }
-    .list-row:hover { background: var(--tb-bg); }
-    .list-row .name { font-weight: 500; color: var(--tb-text); }
-    .list-row .name small { color: var(--tb-text-muted); font-weight: 400; font-size: 0.7rem; }
-    .list-row .count {
-      font-weight: 700; color: var(--tb-primary);
+
+    .list-row:hover { background: var(--bg-soft); }
+
+    .list-row .name {
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .list-row .name small {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-size: 0.7rem;
+    }
+
+    .list-row .count-badge {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .list-empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 1.5rem;
+      font-size: 0.85rem;
+    }
+
+    /* STATUS */
+    .status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0.9rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      background: var(--bg-soft);
+    }
+
+    .status-item.ok {
+      background: var(--success-light);
+      border-left: 3px solid var(--success);
+    }
+
+    .status-item.warning {
+      background: var(--warning-light);
+      border-left: 3px solid var(--warning);
+    }
+
+    .status-item.danger {
+      background: var(--danger-light);
+      border-left: 3px solid var(--danger);
+    }
+
+    .status-item .icon { font-size: 1.3rem; }
+
+    .status-item .content { flex: 1; }
+
+    .status-item .content strong {
+      color: var(--text);
+      display: block;
+      font-weight: 600;
+    }
+
+    .status-item .content small {
+      color: var(--text-muted);
+      display: block;
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+
+    .status-item .btn-mini {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .status-item .btn-mini:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
       font-size: 0.9rem;
     }
-    .list-row .count-badge {
-      background: var(--tb-light); color: var(--tb-dark);
-      padding: 2px 10px; border-radius: 20px;
-      font-size: 0.75rem; font-weight: 700;
-    }
-    .list-empty {
-      text-align: center; color: var(--tb-text-muted);
-      padding: 1.5rem; font-size: 0.85rem;
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
 
-    /* STATUS / ALERT */
-    .status-list { display: flex; flex-direction: column; gap: 0.6rem; }
-    .status-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 0.9rem 1.1rem;
-      border-radius: var(--tb-radius-sm);
-      font-size: 0.85rem;
-      background: var(--tb-bg);
-    }
-    .status-item.ok { background: #e8f8f0; }
-    .status-item.warning { background: #fff3cd; }
-    .status-item.danger { background: #fadbd8; }
-    .status-item .icon { font-size: 1.3rem; }
-    .status-item .content { flex: 1; }
-    .status-item .content strong { color: var(--tb-dark); }
-    .status-item .content small { color: var(--tb-text-muted); display: block; font-size: 0.75rem; margin-top: 2px; }
-    .status-item .btn-mini {
-      background: white; border: 1px solid var(--tb-border);
-      color: var(--tb-dark);
-      padding: 4px 12px; border-radius: 20px;
-      font-size: 0.7rem; font-weight: 600;
-      cursor: pointer; transition: var(--tb-transition);
-      text-decoration: none; display: inline-block;
-    }
-    .status-item .btn-mini:hover {
-      background: var(--tb-primary); color: white; border-color: var(--tb-primary);
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* BACK */
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600;
-      border: 1px solid var(--tb-light);
-      transition: var(--tb-transition);
-      font-size: 0.85rem;
-    }
-    .btn-secondary:hover { background: var(--tb-light); }
+    .hidden { display: none !important; }
 
+    /* RESPONSIVE */
     @media (max-width: 768px) {
-      .page-container { padding: 1.2rem 1rem; }
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
       .two-col { grid-template-columns: 1fr; }
       .stat-value { font-size: 1.5rem; }
+      .page-toolbar h1 { font-size: 1.25rem; }
     }
   </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else {
+          document.body.classList.add('tb-embed');
+        }
+      }
+    })();
+  </script>
 </head>
 <body>
 
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Operator</div>
-    <div class="app-user">
-      <span id="schoolName" style="font-size:0.75rem; opacity:0.85; margin-right:8px;"></span>
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
+  <div class="page-container">
 
-  <div id="loading" class="loading-box">
-    <div class="spinner"></div>
-    <p>Memuat laporan master...</p>
-  </div>
-
-  <div class="page-container hidden" id="pageContent">
-
+    <!-- PAGE TOOLBAR -->
     <div class="page-toolbar">
-      <div>
-        <h1>📈 Laporan Master
-          <small>Ringkasan menyeluruh data sekolah Anda</small>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-chart-line"></i>
+          <span>
+            Laporan Master
+            <small>Ringkasan menyeluruh data sekolah Anda</small>
+          </span>
         </h1>
       </div>
     </div>
 
-    <!-- STATISTIK UTAMA -->
-    <div class="stat-grid" id="statGrid"></div>
-
-    <!-- RASIO -->
-    <div class="panel">
-      <h2 class="panel-title">📊 Rasio & Rata-rata</h2>
-      <div class="ratio-grid" id="ratioGrid"></div>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat laporan master...</p>
     </div>
 
-    <!-- DUA KOLOM: TOP GURU & TOP KELAS -->
-    <div class="two-col">
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- STATISTIK UTAMA -->
+      <div class="stat-grid" id="statGrid"></div>
+
+      <!-- RASIO -->
       <div class="panel">
-        <h2 class="panel-title">🏆 Top 5 Guru (Penugasan Terbanyak)</h2>
-        <div id="topTeachers"></div>
+        <h2 class="panel-title"><i class="fas fa-chart-pie"></i> Rasio & Rata-rata</h2>
+        <div class="ratio-grid" id="ratioGrid"></div>
       </div>
+
+      <!-- TOP 5 GURU & KELAS -->
+      <div class="two-col">
+        <div class="panel">
+          <h2 class="panel-title"><i class="fas fa-trophy"></i> Top 5 Guru (Penugasan Terbanyak)</h2>
+          <div id="topTeachers"></div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title"><i class="fas fa-trophy"></i> Top 5 Kelas (Siswa Terbanyak)</h2>
+          <div id="topClasses"></div>
+        </div>
+      </div>
+
+      <!-- MAPEL POPULER -->
       <div class="panel">
-        <h2 class="panel-title">🏆 Top 5 Kelas (Siswa Terbanyak)</h2>
-        <div id="topClasses"></div>
+        <h2 class="panel-title"><i class="fas fa-book"></i> Mapel Populer (Paling Banyak Diampu)</h2>
+        <div id="popularSubjects"></div>
       </div>
-    </div>
 
-    <!-- MAPEL POPULER -->
-    <div class="panel">
-      <h2 class="panel-title">📚 Mapel Populer (Paling Banyak Diampu)</h2>
-      <div id="popularSubjects"></div>
-    </div>
+      <!-- STATUS DATA -->
+      <div class="panel">
+        <h2 class="panel-title"><i class="fas fa-clipboard-check"></i> Status Kelengkapan Data</h2>
+        <div class="status-list" id="statusList"></div>
+      </div>
 
-    <!-- STATUS DATA -->
-    <div class="panel">
-      <h2 class="panel-title">🔍 Status Kelengkapan Data</h2>
-      <div class="status-list" id="statusList"></div>
-    </div>
-
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-secondary">← Kembali ke Dashboard</a>
     </div>
 
   </div>
@@ -233,30 +467,16 @@
   <script src="../assets/js/supabase.js"></script>
   <script>
     let currentUser = null;
+    let currentSchoolId = 1;
 
     (async () => {
       initSupabase();
       currentUser = await requireAuth('operator');
       if (!currentUser) return;
 
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
       currentSchoolId = currentUser.school_id || 1;
-
-      // Nama sekolah di header
-      try {
-        const school = await getSchool(currentSchoolId);
-        if (school) {
-          document.getElementById('schoolName').textContent = '🏫 ' + school.name;
-        }
-      } catch (err) {
-        console.warn('Gagal ambil nama sekolah:', err);
-      }
-
       await loadReport();
     })();
-
-    let currentSchoolId = 1;
 
     async function loadReport() {
       try {
@@ -267,16 +487,16 @@
 
         // 1. Statistik Utama
         const stats = [
-          { icon: '👥', value: report.totalStudents, label: 'Total Siswa' },
-          { icon: '👨‍🏫', value: report.totalTeachers, label: 'Total Guru' },
-          { icon: '🏫', value: report.totalClasses, label: 'Total Kelas' },
-          { icon: '📚', value: report.totalSubjects, label: 'Total Mapel' },
-          { icon: '🔗', value: report.totalAssignments, label: 'Penugasan' },
-          { icon: '📋', value: report.totalEnrollments, label: 'Enrollment Aktif' }
+          { icon: 'fa-user-graduate', value: report.totalStudents, label: 'Total Siswa' },
+          { icon: 'fa-chalkboard-teacher', value: report.totalTeachers, label: 'Total Guru' },
+          { icon: 'fa-door-open', value: report.totalClasses, label: 'Total Kelas' },
+          { icon: 'fa-book', value: report.totalSubjects, label: 'Total Mapel' },
+          { icon: 'fa-link', value: report.totalAssignments, label: 'Penugasan' },
+          { icon: 'fa-clipboard-list', value: report.totalEnrollments, label: 'Enrollment Aktif' }
         ];
         document.getElementById('statGrid').innerHTML = stats.map(s => `
           <div class="stat-card">
-            <span class="stat-icon">${s.icon}</span>
+            <i class="fas ${s.icon} stat-icon" style="color: var(--primary);"></i>
             <div class="stat-value">${s.value}</div>
             <div class="stat-label">${s.label}</div>
           </div>
@@ -298,7 +518,11 @@
         const topTeachersHtml = report.topTeachers.length > 0
           ? report.topTeachers.map(t => `
               <div class="list-row">
-                <span class="name">${escapeHtml(t.name)} <small>(${escapeHtml(t.email || '')})</small></span>
+                <span class="name">
+                  <i class="fas fa-user-tie" style="color: var(--primary);"></i>
+                  ${escapeHtml(t.name)}
+                  <small>(${escapeHtml(t.email || '')})</small>
+                </span>
                 <span class="count-badge">${t.assignCount} penugasan</span>
               </div>
             `).join('')
@@ -309,7 +533,11 @@
         const topClassesHtml = report.topClasses.length > 0
           ? report.topClasses.map(c => `
               <div class="list-row">
-                <span class="name">${escapeHtml(c.name)} <small>${c.grade ? '(' + escapeHtml(c.grade) + ')' : ''}</small></span>
+                <span class="name">
+                  <i class="fas fa-school" style="color: var(--primary);"></i>
+                  ${escapeHtml(c.name)}
+                  <small>${c.grade ? '(' + escapeHtml(c.grade) + ')' : ''}</small>
+                </span>
                 <span class="count-badge">${c.studentCount} siswa</span>
               </div>
             `).join('')
@@ -320,7 +548,11 @@
         const popSubjectsHtml = report.popularSubjects.length > 0
           ? report.popularSubjects.map(s => `
               <div class="list-row">
-                <span class="name">📖 ${escapeHtml(s.name)} <small>${escapeHtml(s.code || '')}</small></span>
+                <span class="name">
+                  <i class="fas fa-book-open" style="color: var(--primary);"></i>
+                  ${escapeHtml(s.name)}
+                  <small>${escapeHtml(s.code || '')}</small>
+                </span>
                 <span class="count-badge">${s.usageCount} kelas</span>
               </div>
             `).join('')
@@ -332,13 +564,13 @@
 
         if (report.studentsWithoutClass === 0) {
           statuses.push({
-            type: 'ok', icon: '✅',
+            type: 'ok', icon: 'fa-circle-check',
             title: 'Semua siswa sudah masuk kelas',
             desc: 'Tidak ada siswa yang belum di-enroll'
           });
         } else {
           statuses.push({
-            type: 'warning', icon: '⚠️',
+            type: 'warning', icon: 'fa-triangle-exclamation',
             title: `${report.studentsWithoutClass} siswa belum masuk kelas`,
             desc: 'Siswa ini belum di-enroll ke kelas manapun',
             action: { label: 'Kelola', url: 'enrollment.html' }
@@ -347,13 +579,13 @@
 
         if (report.teachersWithoutAssign === 0) {
           statuses.push({
-            type: 'ok', icon: '✅',
+            type: 'ok', icon: 'fa-circle-check',
             title: 'Semua guru sudah punya penugasan',
             desc: 'Tidak ada guru yang belum mengampu mapel'
           });
         } else {
           statuses.push({
-            type: 'warning', icon: '⚠️',
+            type: 'warning', icon: 'fa-triangle-exclamation',
             title: `${report.teachersWithoutAssign} guru belum punya penugasan`,
             desc: 'Guru ini belum ditugaskan mengampu mapel apapun',
             action: { label: 'Kelola', url: 'penugasan.html' }
@@ -362,13 +594,13 @@
 
         if (report.classesWithoutStudents === 0) {
           statuses.push({
-            type: 'ok', icon: '✅',
+            type: 'ok', icon: 'fa-circle-check',
             title: 'Semua kelas punya siswa',
             desc: 'Setiap kelas minimal memiliki 1 siswa'
           });
         } else {
           statuses.push({
-            type: 'warning', icon: '⚠️',
+            type: 'warning', icon: 'fa-triangle-exclamation',
             title: `${report.classesWithoutStudents} kelas belum punya siswa`,
             desc: 'Kelas ini kosong, belum ada siswa yang di-enroll',
             action: { label: 'Kelola', url: 'enrollment.html' }
@@ -377,27 +609,27 @@
 
         if (report.totalStudents === 0 || report.totalTeachers === 0) {
           statuses.push({
-            type: 'danger', icon: '❌',
+            type: 'danger', icon: 'fa-circle-xmark',
             title: 'Data master belum lengkap',
-            desc: 'Tambahkan siswa dan guru terlebih dahulu',
+            desc: 'Tambahkan siswa dan guru terlebih dahulu'
           });
         }
 
         document.getElementById('statusList').innerHTML = statuses.map(s => `
           <div class="status-item ${s.type}">
-            <span class="icon">${s.icon}</span>
+            <i class="fas ${s.icon} icon"></i>
             <div class="content">
               <strong>${s.title}</strong>
               <small>${s.desc}</small>
             </div>
-            ${s.action ? `<a href="${s.action.url}" class="btn-mini">${s.action.label} →</a>` : ''}
+            ${s.action ? `<a href="${s.action.url}" class="btn-mini" onclick="if(window.self!==window.top && '${s.action.url}'.includes('.html')){window.top.location.href='${s.action.url}';return false;}">${s.action.label} →</a>` : ''}
           </div>
         `).join('');
 
       } catch (err) {
         console.error('Gagal load laporan:', err);
         document.getElementById('loading').innerHTML =
-          '<p style="color:var(--tb-danger);">Gagal memuat laporan: ' + err.message + '</p>';
+          '<p style="color:var(--danger);">Gagal memuat laporan: ' + err.message + '</p>';
       }
     }
 

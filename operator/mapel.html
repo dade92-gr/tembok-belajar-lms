@@ -4,207 +4,726 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manajemen Mapel — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body.tb-embed .btn-back { display: none !important; }
+    body.tb-embed .page-toolbar-left { gap: 0.3rem; }
+
+    .page-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+
+    /* PAGE TOOLBAR */
     .page-toolbar {
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
     }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
     .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
-    .search-input {
-      padding: 0.6rem 1rem; border: 1px solid var(--tb-border);
-      border-radius: 30px; font-size: 0.85rem; outline: none;
-      min-width: 220px; font-family: inherit;
+
+    /* BUTTONS */
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
-    .search-input:focus { border-color: var(--tb-primary); box-shadow: 0 0 0 3px rgba(46,204,113,0.15); }
-    .btn-sm { padding: 0.5rem 1rem; font-size: 0.8rem; }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
     .btn-outline {
-      background: transparent; border: 1px solid var(--tb-primary);
-      color: var(--tb-primary); padding: 0.5rem 1rem; border-radius: 30px;
-      cursor: pointer; font-size: 0.8rem; font-weight: 600;
-      transition: var(--tb-transition); display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface);
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
-    .btn-outline:hover { background: var(--tb-light); }
 
-    .table-card {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1); overflow: hidden;
-      box-shadow: var(--tb-shadow-sm);
-    }
-    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .data-table thead { background: var(--tb-light); }
-    .data-table th {
-      padding: 0.9rem 1rem; text-align: left; font-weight: 600;
-      color: var(--tb-dark); border-bottom: 2px solid var(--tb-primary);
-      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .data-table td { padding: 0.8rem 1rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-    .data-table tr:hover { background: #f8f9fa; }
-    .data-table tr:last-child td { border-bottom: none; }
-    .kode-badge {
-      display: inline-block; background: var(--tb-light); color: var(--tb-dark);
-      padding: 3px 10px; border-radius: 8px; font-weight: 700; font-size: 0.75rem;
-      font-family: monospace;
-    }
-    .nama-mapel { font-weight: 600; color: var(--tb-text); }
-    .action-btns { display: flex; gap: 6px; }
-    .btn-icon {
-      background: transparent; border: 1px solid var(--tb-border);
-      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center;
-      transition: var(--tb-transition); font-size: 0.9rem;
-    }
-    .btn-icon:hover { background: var(--tb-light); border-color: var(--tb-primary); }
-    .btn-icon.danger:hover { background: #fadbd8; border-color: var(--tb-danger); }
-
-    .empty-row { text-align: center; padding: 3rem 1rem; color: var(--tb-text-muted); }
-    .empty-row .emoji { font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
-
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      display: none; align-items: center; justify-content: center;
-      z-index: 2000; padding: 1rem; overflow-y: auto;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal-card {
-      background: white; border-radius: var(--tb-radius-lg);
-      padding: 2rem; width: 100%; max-width: 500px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-      animation: tbFadeInUp 0.3s ease;
-      margin: auto;
-    }
-    .modal-card h2 { font-size: 1.3rem; color: var(--tb-dark); margin-bottom: 1rem; font-weight: 700; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; }
-
-    .form-hint {
-      font-size: 0.7rem; color: var(--tb-text-muted);
-      margin-top: -0.6rem; margin-bottom: 1rem;
-      padding-left: 4px; line-height: 1.5;
-    }
+    .btn-outline:hover { background: var(--primary-light); }
 
     .btn-secondary {
-      background: #6c757d; color: white; border: none;
-      padding: 0.6rem 1.2rem; border-radius: 30px; cursor: pointer;
-      font-size: 0.85rem; font-weight: 600; transition: var(--tb-transition);
+      background: #64748b;
+      color: white;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
     }
-    .btn-secondary:hover { background: #5a6268; }
+
+    .btn-secondary:hover { background: #475569; }
 
     .btn-danger {
-      background: var(--tb-danger); color: white; border: none;
-      padding: 0.6rem 1.2rem; border-radius: 30px; cursor: pointer;
-      font-size: 0.85rem; font-weight: 600; transition: var(--tb-transition);
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
     }
-    .btn-danger:hover { background: #c0392b; }
 
-    .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--tb-dark); color: white;
-      padding: 1rem 1.4rem; border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      font-size: 0.85rem; font-weight: 500;
-      display: flex; align-items: center; gap: 10px;
-      opacity: 0; transform: translateY(20px);
-      transition: all 0.3s ease; z-index: 3000;
-      max-width: 400px; line-height: 1.5;
+    .btn-danger:hover { background: #dc2626; }
+
+    /* FILTER BAR */
+    .filter-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow-sm);
     }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.error { background: var(--tb-danger); }
 
+    .filter-row {
+      display: grid;
+      grid-template-columns: 2fr auto;
+      gap: 0.7rem;
+      align-items: end;
+    }
+
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+
+    .filter-group label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .filter-input {
+      width: 100%;
+      padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .filter-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+
+    .btn-reset {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.55rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn-reset:hover {
+      background: #fee2e2;
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* INFO BAR */
     .info-bar {
-      background: var(--tb-light); border-radius: 12px;
-      padding: 0.7rem 1rem; margin-bottom: 1rem;
-      font-size: 0.8rem; color: var(--tb-dark); font-weight: 500;
-      display: flex; align-items: center; gap: 8px;
+      background: var(--primary-light);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.82rem;
+      color: var(--primary-dark);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(59,130,246,0.2);
+      flex-wrap: wrap;
     }
 
+    .info-bar i { color: var(--primary); }
+    .info-bar strong { color: var(--navy); }
+
+    /* TABLE */
+    .table-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .table-wrapper { overflow-x: auto; }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .data-table thead { background: #f8fafc; }
+
+    .data-table th {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .data-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--text);
+    }
+
+    .data-table tbody tr:hover { background: #f8fafc; }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    .kode-badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      font-family: 'Courier New', monospace;
+    }
+
+    .nama-mapel { font-weight: 600; color: var(--text); }
+
+    .action-btns { display: flex; gap: 6px; }
+
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .btn-icon:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-icon.danger:hover {
+      background: #fee2e2;
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .empty-row {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .empty-row .emoji {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 0.8rem;
+      opacity: 0.5;
+    }
+
+    /* PAGINATION */
+    .pagination-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .pagination-info { font-size: 0.8rem; color: var(--text-muted); }
+    .pagination-info strong { color: var(--text); font-weight: 600; }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .page-size-select {
+      padding: 0.4rem 2rem 0.4rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+
+    .page-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+    }
+
+    .page-btn:hover:not(:disabled) {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .page-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .page-numbers { display: flex; gap: 0.3rem; align-items: center; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 1rem;
+      overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease;
+      margin: auto;
+    }
+
+    .modal-card h2 {
+      font-size: 1.2rem;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-card h2 i { color: var(--primary); }
+
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; }
+
+    .form-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 0.45rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      margin-bottom: 0.8rem;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+
+    .form-hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: -0.6rem;
+      margin-bottom: 1rem;
+      padding-left: 4px;
+      line-height: 1.5;
+    }
+
+    .alert {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.83rem;
+      line-height: 1.5;
+    }
+
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-success { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+
+    /* PROGRESS */
     .progress-box {
-      background: white; border-radius: 12px; padding: 1rem;
-      margin-top: 1rem; border: 1px solid var(--tb-border);
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1rem;
+      border: 1px solid var(--border);
     }
+
     .progress-label {
-      font-size: 0.8rem; color: var(--tb-text); margin-bottom: 0.5rem;
-      display: flex; justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
     }
+
     .progress-bar {
-      width: 100%; height: 12px; background: #f0f0f0;
-      border-radius: 20px; overflow: hidden;
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 20px;
+      overflow: hidden;
     }
+
     .progress-fill {
-      height: 100%; background: linear-gradient(90deg, var(--tb-primary), var(--tb-secondary));
-      width: 0%; transition: width 0.3s ease;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+      width: 0%;
+      transition: width 0.3s ease;
     }
+
     .progress-detail {
-      font-size: 0.7rem; color: var(--tb-text-muted); margin-top: 0.5rem;
-      max-height: 150px; overflow-y: auto;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      max-height: 150px;
+      overflow-y: auto;
     }
-    .progress-detail .item-ok { color: var(--tb-dark); }
-    .progress-detail .item-err { color: var(--tb-danger); }
+
+    .progress-detail .item-ok { color: var(--success); }
+    .progress-detail .item-err { color: var(--danger); }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--navy);
+      color: white;
+      padding: 1rem 1.4rem;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000;
+      max-width: 400px;
+      line-height: 1.5;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .filter-row .btn-reset { grid-column: 1 / -1; }
+      .pagination-bar { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+      .pagination-controls { justify-content: center; }
+      .data-table th, .data-table td { padding: 0.55rem 0.5rem; font-size: 0.78rem; }
+    }
   </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else {
+          document.body.classList.add('tb-embed');
+        }
+      }
+    })();
+  </script>
 </head>
 <body>
 
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Operator</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
+  <div class="page-container">
 
-  <div id="loading" class="loading-box">
-    <div class="spinner"></div>
-    <p>Memuat data mapel...</p>
-  </div>
-
-  <div class="page-container hidden" id="pageContent">
-
+    <!-- PAGE TOOLBAR -->
     <div class="page-toolbar">
-      <div>
-        <h1>📚 Manajemen Mapel
-          <small>Kelola daftar mata pelajaran — tambah satu per satu atau import dari Excel</small>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-book"></i>
+          <span>
+            Manajemen Mapel
+            <small>Kelola daftar mata pelajaran — tambah satu per satu atau import dari Excel</small>
+          </span>
         </h1>
       </div>
       <div class="toolbar-actions">
-        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Cari mapel..." oninput="renderTable()">
-        <button class="btn-outline btn-sm" onclick="openImportModal()">
-          📥 Import Excel
+        <button class="btn-outline" onclick="openImportModal()">
+          <i class="fas fa-file-excel"></i> Import Excel
         </button>
-        <button class="btn-primary btn-sm" onclick="openModal()">+ Tambah Mapel</button>
+        <button class="btn-primary" onclick="openModal()">
+          <i class="fas fa-plus"></i> Tambah Mapel
+        </button>
       </div>
     </div>
 
+    <!-- FILTER BAR -->
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="searchInput"><i class="fas fa-search"></i> Cari</label>
+          <input type="text" id="searchInput" class="filter-input" placeholder="Cari kode atau nama mapel..." oninput="applyFilter()">
+        </div>
+        <div class="filter-group">
+          <button class="btn-reset" onclick="resetFilter()">
+            <i class="fas fa-rotate-left"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INFO BAR -->
     <div class="info-bar">
-      <span>ℹ️</span>
+      <i class="fas fa-info-circle"></i>
       <span>Total: <strong id="totalCount">0</strong> mapel ·
-            Menampilkan: <strong id="shownCount">0</strong></span>
+            Menampilkan: <strong id="shownCount">0</strong> ·
+            Halaman: <strong id="currentPageInfo">1</strong> dari <strong id="totalPagesInfo">1</strong></span>
     </div>
 
+    <!-- TABLE -->
     <div class="table-card">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th style="width:50px;">No</th>
-            <th style="width:120px;">Kode</th>
-            <th>Nama Mapel</th>
-            <th style="width:120px;">Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <tr><td colspan="4" class="empty-row">Memuat...</td></tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:50px;">No</th>
+              <th style="width:120px;">Kode</th>
+              <th>Nama Mapel</th>
+              <th style="width:120px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="4" class="empty-row">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-    <div style="margin-top: 1rem; text-align:center;">
-      <a href="dashboard.html" class="btn-secondary" style="text-decoration:none; display:inline-block;">
-        ← Kembali ke Dashboard
-      </a>
+      <div class="pagination-bar">
+        <div class="pagination-info">
+          Menampilkan <strong id="pageStart">0</strong>-<strong id="pageEnd">0</strong> dari <strong id="pageTotal">0</strong> data
+        </div>
+        <div class="pagination-controls">
+          <label style="font-size:0.75rem; color:var(--text-muted);">Baris:</label>
+          <select id="pageSize" class="page-size-select" onchange="changePageSize()">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="9999">Semua</option>
+          </select>
+          <button class="page-btn" id="btnPrev" onclick="prevPage()" title="Sebelumnya">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="page-numbers" id="pageNumbers"></div>
+          <button class="page-btn" id="btnNext" onclick="nextPage()" title="Berikutnya">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -212,12 +731,16 @@
   <!-- Modal Form -->
   <div class="modal-overlay" id="modalForm">
     <div class="modal-card">
-      <h2 id="modalTitle">Tambah Mapel</h2>
-      <label class="form-label" for="inputCode">Kode Mapel</label>
+      <h2 id="modalTitle"><i class="fas fa-book"></i> Tambah Mapel</h2>
+
+      <label class="form-label" for="inputCode">Kode Mapel <span style="color:var(--danger);">*</span></label>
       <input type="text" id="inputCode" class="form-input" placeholder="Contoh: MAT, FIS, BIN" maxlength="10" style="text-transform:uppercase;">
-      <label class="form-label" for="inputName">Nama Mapel</label>
-      <input type="text" id="inputName" class="form-input" placeholder="Contoh: Matematika Wajib">
-      <div id="modalError" class="alert alert-error hidden" style="margin-top:0;"></div>
+
+      <label class="form-label" for="inputName">Nama Mapel <span style="color:var(--danger);">*</span></label>
+      <input type="text" id="inputName" class="form-input" placeholder="Contoh: Matematika Wajib" maxlength="100">
+
+      <div id="modalError" class="alert alert-error hidden"></div>
+
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeModal()">Batal</button>
         <button class="btn-primary" id="btnSave" onclick="saveSubject()">Simpan</button>
@@ -227,10 +750,10 @@
 
   <!-- Modal Import Excel -->
   <div class="modal-overlay" id="modalImport">
-    <div class="modal-card" style="max-width: 600px;">
-      <h2>📥 Import Mapel dari Excel</h2>
+    <div class="modal-card" style="max-width: 650px;">
+      <h2><i class="fas fa-file-excel"></i> Import Mapel dari Excel</h2>
 
-      <div style="background: #e8f4fd; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; font-size: 0.8rem; line-height: 1.6;">
+      <div style="background: var(--primary-light); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; font-size: 0.8rem; line-height: 1.6; border-left: 3px solid var(--primary);">
         <strong>📋 Langkah:</strong>
         <ol style="margin: 0.5rem 0 0 1rem; padding: 0;">
           <li>Klik <strong>"Download Template"</strong> di bawah</li>
@@ -242,13 +765,13 @@
       </div>
 
       <button class="btn-outline" style="width: 100%; justify-content: center; margin-bottom: 1rem;" onclick="downloadTemplate()">
-        ⬇️ Download Template Excel
+        <i class="fas fa-download"></i> Download Template Excel
       </button>
 
       <label class="form-label">Pilih File Excel (.xlsx)</label>
       <input type="file" id="fileInput" accept=".xlsx, .xls" class="form-input" onchange="onFileSelected(event)">
 
-      <div id="fileInfo" style="font-size: 0.8rem; color: var(--tb-text-muted); margin-bottom: 0.8rem;"></div>
+      <div id="fileInfo" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.8rem;"></div>
 
       <div id="progressBox" class="progress-box hidden">
         <div class="progress-label">
@@ -259,12 +782,12 @@
         <div class="progress-detail" id="progressDetail"></div>
       </div>
 
-      <div id="importError" class="alert alert-error hidden" style="margin-top: 0.8rem;"></div>
+      <div id="importError" class="alert alert-error hidden"></div>
 
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeImportModal()">Tutup</button>
         <button class="btn-primary" id="btnImport" onclick="startImport()" disabled>
-          🚀 Mulai Import
+          <i class="fas fa-rocket"></i> Mulai Import
         </button>
       </div>
     </div>
@@ -273,9 +796,10 @@
   <!-- Modal Konfirmasi Hapus -->
   <div class="modal-overlay" id="modalDelete">
     <div class="modal-card">
-      <h2>🗑️ Hapus Mapel?</h2>
-      <p id="deleteMessage" style="color: var(--tb-text); margin-bottom: 1rem;">
-        Anda yakin ingin menghapus mapel ini?
+      <h2 style="color: var(--danger);"><i class="fas fa-trash"></i> Hapus Mapel?</h2>
+      <p id="deleteMessage" style="color: var(--text); margin-bottom: 0.8rem;"></p>
+      <p style="font-size: 0.75rem; color: #92400e; background: #fef3c7; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid var(--warning);">
+        ℹ️ Mapel yang sedang dipakai di penugasan guru tidak bisa dihapus.
       </p>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
@@ -290,75 +814,182 @@
   <script src="../assets/js/supabase.js"></script>
   <script>
     let allSubjects = [];
+    let filteredSubjects = [];
     let editingId = null;
     let deletingId = null;
     let currentUser = null;
     let currentSchoolId = 1;
     let selectedExcelData = null;
+    let currentPage = 1;
+    let pageSize = 25;
 
     (async () => {
       initSupabase();
       currentUser = await requireAuth('operator');
       if (!currentUser) return;
 
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
       currentSchoolId = currentUser.school_id || 1;
-
       await loadSubjects();
     })();
 
     async function loadSubjects() {
       try {
         allSubjects = await getSubjects(currentSchoolId);
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('pageContent').classList.remove('hidden');
-        renderTable();
+        applyFilter();
       } catch (err) {
         console.error('Gagal load mapel:', err);
-        document.getElementById('loading').innerHTML =
-          '<p style="color:var(--tb-danger);">Gagal memuat mapel: ' + err.message + '</p>';
+        document.getElementById('tableBody').innerHTML =
+          '<tr><td colspan="4" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + err.message + '</td></tr>';
       }
     }
 
-    function renderTable() {
+    function applyFilter() {
       const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-      const filtered = allSubjects.filter(s =>
-        (s.name || '').toLowerCase().includes(keyword) ||
-        (s.code || '').toLowerCase().includes(keyword)
-      );
 
+      filteredSubjects = allSubjects.filter(s => {
+        const name = (s.name || '').toLowerCase();
+        const code = (s.code || '').toLowerCase();
+        return !keyword || name.includes(keyword) || code.includes(keyword);
+      });
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    function resetFilter() {
+      document.getElementById('searchInput').value = '';
+      applyFilter();
+    }
+
+    function renderTable() {
       document.getElementById('totalCount').textContent = allSubjects.length;
-      document.getElementById('shownCount').textContent = filtered.length;
+      document.getElementById('shownCount').textContent = filteredSubjects.length;
 
       const tbody = document.getElementById('tableBody');
 
-      if (filtered.length === 0) {
+      if (filteredSubjects.length === 0) {
         tbody.innerHTML = `
           <tr><td colspan="4" class="empty-row">
             <span class="emoji">📚</span>
             ${allSubjects.length === 0
               ? 'Belum ada mapel. Klik "+ Tambah Mapel" atau "Import Excel".'
-              : 'Tidak ada mapel yang cocok dengan pencarian.'}
+              : 'Tidak ada mapel yang cocok dengan filter.'}
           </td></tr>`;
         return;
       }
 
-      tbody.innerHTML = filtered.map((s, i) => `
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredSubjects.length);
+      const pageData = filteredSubjects.slice(startIdx, endIdx);
+
+      tbody.innerHTML = pageData.map((s, i) => `
         <tr>
-          <td>${i + 1}</td>
+          <td>${startIdx + i + 1}</td>
           <td><span class="kode-badge">${escapeHtml(s.code || '-')}</span></td>
           <td class="nama-mapel">${escapeHtml(s.name)}</td>
           <td>
             <div class="action-btns">
-              <button class="btn-icon" title="Edit" onclick="openModal(${s.id})">✏️</button>
-              <button class="btn-icon danger" title="Hapus" onclick="openDelete(${s.id})">🗑️</button>
+              <button class="btn-icon" title="Edit" onclick="openModal(${s.id})">
+                <i class="fas fa-pen"></i>
+              </button>
+              <button class="btn-icon danger" title="Hapus" onclick="openDelete(${s.id})">
+                <i class="fas fa-trash"></i>
+              </button>
             </div>
           </td>
         </tr>
       `).join('');
     }
 
+    function renderPagination() {
+      const total = filteredSubjects.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIdx = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const endIdx = Math.min(currentPage * pageSize, total);
+
+      document.getElementById('pageStart').textContent = startIdx;
+      document.getElementById('pageEnd').textContent = endIdx;
+      document.getElementById('pageTotal').textContent = total;
+      document.getElementById('currentPageInfo').textContent = currentPage;
+      document.getElementById('totalPagesInfo').textContent = totalPages;
+
+      document.getElementById('btnPrev').disabled = currentPage <= 1;
+      document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+      const numbersDiv = document.getElementById('pageNumbers');
+      numbersDiv.innerHTML = '';
+
+      const maxButtons = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+      if (endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+
+      if (startPage > 1) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = '1';
+        btn.onclick = () => goToPage(1);
+        numbersDiv.appendChild(btn);
+        if (startPage > 2) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => goToPage(i);
+        numbersDiv.appendChild(btn);
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = totalPages;
+        btn.onclick = () => goToPage(totalPages);
+        numbersDiv.appendChild(btn);
+      }
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderTable();
+      renderPagination();
+    }
+
+    function prevPage() { if (currentPage > 1) goToPage(currentPage - 1); }
+
+    function nextPage() {
+      const totalPages = Math.ceil(filteredSubjects.length / pageSize);
+      if (currentPage < totalPages) goToPage(currentPage + 1);
+    }
+
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('pageSize').value);
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    /* ============================================
+       MODAL TAMBAH/EDIT
+       ============================================ */
     function openModal(id = null) {
       editingId = id;
       const title = document.getElementById('modalTitle');
@@ -374,11 +1005,11 @@
       if (id) {
         const subject = allSubjects.find(s => s.id === id);
         if (!subject) return;
-        title.textContent = 'Edit Mapel';
+        title.innerHTML = '<i class="fas fa-pen"></i> Edit Mapel';
         inputCode.value = subject.code || '';
         inputName.value = subject.name || '';
       } else {
-        title.textContent = 'Tambah Mapel';
+        title.innerHTML = '<i class="fas fa-book"></i> Tambah Mapel';
         inputCode.value = '';
         inputName.value = '';
       }
@@ -432,9 +1063,9 @@
       }
     }
 
-    /* ============================================================
-       IMPORT EXCEL MAPEL
-       ============================================================ */
+    /* ============================================
+       IMPORT EXCEL
+       ============================================ */
     function openImportModal() {
       document.getElementById('fileInput').value = '';
       document.getElementById('fileInfo').textContent = '';
@@ -488,7 +1119,7 @@
 
           if (valid.length === 0) {
             document.getElementById('fileInfo').innerHTML =
-              '<span style="color:var(--tb-danger);">❌ File tidak berisi data valid. Pastikan kolom: Kode, Nama.</span>';
+              '<span style="color:var(--danger);">❌ File tidak berisi data valid. Pastikan kolom: Kode, Nama.</span>';
             document.getElementById('btnImport').disabled = true;
             selectedExcelData = null;
             return;
@@ -500,15 +1131,14 @@
           }));
 
           document.getElementById('fileInfo').innerHTML =
-            '<span style="color:var(--tb-dark);">✅ File valid: <strong>' + selectedExcelData.length +
+            '<span style="color:var(--success);">✅ File valid: <strong>' + selectedExcelData.length +
             ' baris mapel</strong> siap diimport.</span>';
           document.getElementById('btnImport').disabled = false;
           document.getElementById('importError').classList.add('hidden');
-
         } catch (err) {
           console.error('Baca Excel error:', err);
           document.getElementById('fileInfo').innerHTML =
-            '<span style="color:var(--tb-danger);">❌ Gagal membaca file: ' + err.message + '</span>';
+            '<span style="color:var(--danger);">❌ Gagal membaca file: ' + err.message + '</span>';
           document.getElementById('btnImport').disabled = true;
           selectedExcelData = null;
         }
@@ -521,7 +1151,7 @@
 
       const btnImport = document.getElementById('btnImport');
       btnImport.disabled = true;
-      btnImport.textContent = 'Memproses...';
+      btnImport.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
 
       const progressBox = document.getElementById('progressBox');
       const progressFill = document.getElementById('progressFill');
@@ -534,8 +1164,7 @@
       importError.classList.add('hidden');
 
       const total = selectedExcelData.length;
-      let success = 0;
-      let failed = 0;
+      let success = 0, failed = 0;
       const errors = [];
 
       for (let i = 0; i < total; i++) {
@@ -549,11 +1178,7 @@
         progressDetail.scrollTop = progressDetail.scrollHeight;
 
         try {
-          await createSubject({
-            name: row.name,
-            code: row.code,
-            schoolId: currentSchoolId
-          });
+          await createSubject({ name: row.name, code: row.code, schoolId: currentSchoolId });
           success++;
           detailItem.textContent = '✅ ' + row.code + ' — ' + row.name + ' berhasil';
           detailItem.className = 'item-ok';
@@ -575,7 +1200,7 @@
         importError.classList.remove('hidden');
       }
 
-      btnImport.textContent = '🚀 Mulai Import';
+      btnImport.innerHTML = '<i class="fas fa-rocket"></i> Mulai Import';
       btnImport.disabled = false;
 
       showToast(
@@ -586,16 +1211,15 @@
       await loadSubjects();
     }
 
-    /* ============================================================
+    /* ============================================
        HAPUS
-       ============================================================ */
+       ============================================ */
     function openDelete(id) {
       deletingId = id;
       const subject = allSubjects.find(s => s.id === id);
       if (!subject) return;
       document.getElementById('deleteMessage').innerHTML =
-        'Anda yakin ingin menghapus mapel <strong>' + escapeHtml(subject.name) + '</strong>? ' +
-        'Tindakan ini tidak dapat dibatalkan.';
+        'Anda yakin ingin menghapus mapel <strong>' + escapeHtml(subject.name) + '</strong>?';
       document.getElementById('modalDelete').classList.add('active');
     }
 
@@ -632,9 +1256,7 @@
       }
     }
 
-    /* ============================================================
-       UTILS
-       ============================================================ */
+    /* UTILS */
     function escapeHtml(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');
@@ -645,15 +1267,12 @@
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg;
-      t.className = 'toast show ' + (type === 'error' ? 'error' : '');
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
       clearTimeout(window._toastTimer);
       window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
     }
 
     document.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && document.getElementById('modalForm').classList.contains('active')) {
-        saveSubject();
-      }
       if (e.key === 'Escape') {
         closeModal();
         closeImportModal();
