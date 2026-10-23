@@ -1,5 +1,6 @@
 // ============================================
 // LOGIC LOGIN — TEMBOK BELAJAR
+// Multi-Role Support
 // ============================================
 
 async function handleLogin(event) {
@@ -35,7 +36,7 @@ async function handleLogin(event) {
   }
 
   showMessage('Login berhasil! Mengalihkan...', 'success');
-  setTimeout(() => redirectByRole(profile.role), 600);
+  setTimeout(() => redirectByRole(profile), 600);
 }
 
 function showMessage(text, type) {

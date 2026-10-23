@@ -1150,20 +1150,28 @@
           const { data, error } = await supabaseClient.functions.invoke('create-teacher', {
             body: { email, password, name, schoolId: currentSchoolId }
           });
-          if (error) throw error;
+
+          // ✅ Ambil detail error dari body response
+          if (error) {
+            let detail = error.message;
+            try {
+              const errBody = await error.context?.json();
+              detail = errBody?.error || errBody?.message || detail;
+            } catch (e) { /* ignore */ }
+            throw new Error(detail);
+          }
+
           if (data && data.error) throw new Error(data.error);
-          showToast('✅ Guru berhasil dibuat. Sekarang bisa login.');
+
+          // ✅ Pesan sukses dinamis (baru vs existing multi-role)
+          showToast('✅ ' + (data?.message || 'Guru berhasil dibuat. Sekarang bisa login.'));
         }
 
         closeModal();
         await loadTeachers();
       } catch (err) {
         console.error('Save error:', err);
-        let msg = err.message;
-        if (msg.includes('duplicate') || msg.includes('already')) {
-          msg = 'Email sudah terdaftar. Gunakan email lain.';
-        }
-        errBox.textContent = 'Gagal menyimpan: ' + msg;
+        errBox.textContent = 'Gagal menyimpan: ' + (err.message || 'Unknown error');
         errBox.classList.remove('hidden');
         btnSave.disabled = false;
         btnSave.textContent = 'Simpan';
@@ -1290,7 +1298,16 @@
             body: { email: row.email, password: row.password, name: row.name, schoolId: currentSchoolId }
           });
 
-          if (error) throw new Error(error.message);
+          // ✅ Ambil detail error dari body response
+          if (error) {
+            let detail = error.message;
+            try {
+              const errBody = await error.context?.json();
+              detail = errBody?.error || errBody?.message || detail;
+            } catch (e) { /* ignore */ }
+            throw new Error(detail);
+          }
+
           if (data && data.error) throw new Error(data.error);
 
           success++;

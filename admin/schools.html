@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Sekolah — Tembok Belajar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
+
+    :root {
+      --purple: #8b5cf6;
+      --purple-dark: #6d28d9;
+      --purple-light: #ede9fe;
+      --purple-lighter: #f3e8ff;
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--purple-lighter);
+      border-color: var(--purple);
+      color: var(--purple-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--purple); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+    /* BUTTONS */
+    .btn-primary {
+      background: var(--purple);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--purple-dark);
+      box-shadow: 0 4px 12px rgba(139,92,246,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: #64748b;
+      color: white;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* FILTER BAR */
+    .filter-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid;
+      grid-template-columns: 2fr auto;
+      gap: 0.7rem;
+      align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .filter-group label i { color: var(--purple); }
+    .filter-input {
+      width: 100%;
+      padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+    }
+    .filter-input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+    }
+    .btn-reset {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.55rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-reset:hover {
+      background: var(--danger-light);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* INFO BAR */
+    .info-bar {
+      background: var(--purple-lighter);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.82rem;
+      color: var(--purple-dark);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(139,92,246,0.2);
+      flex-wrap: wrap;
+    }
+    .info-bar i { color: var(--purple); }
+    .info-bar strong { color: var(--navy); }
+
+    /* TABLE */
+    .table-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-wrapper { overflow-x: auto; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .data-table thead { background: var(--bg-soft); }
+    .data-table th {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--text);
+    }
+    .data-table tbody tr:hover { background: var(--purple-lighter); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    .nama-sekolah {
+      font-weight: 700;
+      color: var(--navy);
+      font-size: 0.9rem;
+    }
+    .alamat-teks {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      margin-top: 2px;
+    }
+    .tahun-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .stats-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .stat-badge.guru { background: #d1fae5; color: #047857; }
+    .stat-badge.siswa { background: #dbeafe; color: #1e40af; }
+    .stat-badge.kelas { background: #fef3c7; color: #92400e; }
+
+    .action-btns { display: flex; gap: 6px; }
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover {
+      background: var(--purple-lighter);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+    .btn-icon.danger:hover {
+      background: var(--danger-light);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .empty-row {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-row .emoji {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 0.8rem;
+      opacity: 0.5;
+    }
+    .empty-row strong { color: var(--text); }
+
+    /* PAGINATION */
+    .pagination-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .pagination-info { font-size: 0.8rem; color: var(--text-muted); }
+    .pagination-info strong { color: var(--text); font-weight: 600; }
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .page-size-select {
+      padding: 0.4rem 2rem 0.4rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+    .page-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+    }
+    .page-btn:hover:not(:disabled) {
+      background: var(--purple-lighter);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+    .page-btn.active { background: var(--purple); border-color: var(--purple); color: white; }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-numbers { display: flex; gap: 0.3rem; align-items: center; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 1rem;
+      overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease;
+      margin: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-card h2 i { color: var(--purple); }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 0.45rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      margin-bottom: 0.9rem;
+    }
+    .form-input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+    }
+    textarea.form-input {
+      resize: vertical;
+      min-height: 70px;
+      line-height: 1.6;
+    }
+    .form-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: -0.6rem;
+      margin-bottom: 0.9rem;
+      padding-left: 4px;
+      line-height: 1.5;
+    }
+
+    .alert {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.83rem;
+      line-height: 1.5;
+    }
+    .alert-error { background: var(--danger-light); color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-warning { background: var(--warning-light); color: #92400e; border: 1px solid #fde68a; }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--navy);
+      color: white;
+      padding: 1rem 1.4rem;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000;
+      max-width: 400px;
+      line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
+
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--purple-light);
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--purple-lighter);
+      border-color: var(--purple);
+      color: var(--purple-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .pagination-bar { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+      .pagination-controls { justify-content: center; }
+      .data-table th, .data-table td { padding: 0.6rem 0.5rem; font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-container">
+
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#schools';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-school"></i>
+          <span>
+            Manajemen Sekolah
+            <small>Kelola daftar semua sekolah di Tembok Belajar</small>
+          </span>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-primary" onclick="openModal()">
+          <i class="fas fa-plus"></i> Tambah Sekolah
+        </button>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat sekolah...</p>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Filter -->
+      <div class="filter-card">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="searchInput"><i class="fas fa-search"></i> Cari</label>
+            <input type="text" id="searchInput" class="filter-input" placeholder="Cari nama sekolah, alamat, atau tahun ajaran..." oninput="applyFilter()">
+          </div>
+          <div class="filter-group">
+            <button class="btn-reset" onclick="resetFilter()">
+              <i class="fas fa-rotate-left"></i> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Bar -->
+      <div class="info-bar">
+        <i class="fas fa-info-circle"></i>
+        <span>Total: <strong id="totalCount">0</strong> sekolah ·
+              Menampilkan: <strong id="shownCount">0</strong> ·
+              Halaman: <strong id="currentPageInfo">1</strong> dari <strong id="totalPagesInfo">1</strong></span>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">No</th>
+                <th>Nama Sekolah</th>
+                <th style="width:140px;">Tahun Ajaran</th>
+                <th style="width:240px;">Statistik</th>
+                <th style="width:120px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="5" class="empty-row">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination-bar">
+          <div class="pagination-info">
+            Menampilkan <strong id="pageStart">0</strong>-<strong id="pageEnd">0</strong> dari <strong id="pageTotal">0</strong> data
+          </div>
+          <div class="pagination-controls">
+            <label style="font-size:0.75rem; color:var(--text-muted);">Baris:</label>
+            <select id="pageSize" class="page-size-select" onchange="changePageSize()">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="9999">Semua</option>
+            </select>
+            <button class="page-btn" id="btnPrev" onclick="prevPage()" title="Sebelumnya">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="page-numbers" id="pageNumbers"></div>
+            <button class="page-btn" id="btnNext" onclick="nextPage()" title="Berikutnya">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#schools';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal Form (Tambah/Edit) -->
+  <div class="modal-overlay" id="modalForm">
+    <div class="modal-card">
+      <h2 id="modalTitle"><i class="fas fa-plus-circle"></i> Tambah Sekolah</h2>
+
+      <label class="form-label" for="inputName">Nama Sekolah <span style="color:var(--danger);">*</span></label>
+      <input type="text" id="inputName" class="form-input" placeholder="Contoh: SMKN 1 Terisi" maxlength="150">
+
+      <label class="form-label" for="inputAddress">Alamat <span style="color:var(--text-muted); font-weight:400;">(opsional)</span></label>
+      <textarea id="inputAddress" class="form-input" placeholder="Contoh: Jl. Raya Terisi No. 1, Indramayu" maxlength="300"></textarea>
+
+      <label class="form-label" for="inputYear">Tahun Ajaran <span style="color:var(--text-muted); font-weight:400;">(opsional)</span></label>
+      <input type="text" id="inputYear" class="form-input" placeholder="Contoh: 2025/2026" maxlength="20">
+      <p class="form-hint">Format: <code>2025/2026</code> atau <code>2025-2026</code></p>
+
+      <div id="modalError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Batal</button>
+        <button class="btn-primary" id="btnSave" onclick="saveSchool()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus -->
+  <div class="modal-overlay" id="modalDelete">
+    <div class="modal-card">
+      <h2 style="color: var(--danger);"><i class="fas fa-trash"></i> Hapus Sekolah?</h2>
+      <p id="deleteMessage" style="color: var(--text); margin-bottom: 0.8rem;"></p>
+      <p style="font-size: 0.78rem; color: #92400e; background: #fef3c7; padding: 0.7rem 0.9rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid var(--warning); line-height: 1.5;">
+        ⚠️ <strong>Perhatian:</strong> Sekolah <strong>tidak bisa dihapus</strong> jika masih memiliki data terkait (guru, siswa, kelas, mapel, atau operator). Hapus atau pindahkan data tersebut terlebih dahulu.
+      </p>
+      <div id="deleteWarning" class="alert alert-warning hidden" style="margin-bottom: 1rem;"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let allSchools = [];
+    let filteredSchools = [];
+    let schoolStatsMap = {}; // { school_id: { guru, siswa, kelas } }
+    let editingId = null;
+    let deletingId = null;
+    let currentPage = 1;
+    let pageSize = 25;
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      const client = initSupabase();
+
+      // Auth check
+      const { data: { session } } = await client.auth.getSession();
+      if (!session || !session.user) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      const { data: profile } = await client
+        .from('profiles').select('role').eq('id', session.user.id).maybeSingle();
+
+      if (!profile || profile.role !== 'admin') {
+        alert('Anda tidak punya akses ke halaman ini.');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      await loadSchools();
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    // ============================================
+    // LOAD DATA
+    // ============================================
+    async function loadSchools() {
+      const client = initSupabase();
+
+      try {
+        const { data: schools, error } = await client
+          .from('schools')
+          .select('*')
+          .order('name', { ascending: true });
+
+        if (error) throw error;
+        allSchools = schools || [];
+
+        // Hitung statistik per sekolah (batch)
+        await loadSchoolStats();
+
+        applyFilter();
+      } catch (err) {
+        console.error('loadSchools error:', err);
+        document.getElementById('tableBody').innerHTML =
+          `<tr><td colspan="5" class="empty-row" style="color:var(--danger);">Gagal memuat: ${esc(err.message)}</td></tr>`;
+      }
+    }
+
+    async function loadSchoolStats() {
+      const client = initSupabase();
+      schoolStatsMap = {};
+
+      if (allSchools.length === 0) return;
+
+      const schoolIds = allSchools.map(s => s.id);
+
+      try {
+        // Query parallel: guru, siswa, kelas per sekolah
+        const [teachersRes, studentsRes, classesRes] = await Promise.all([
+          client.from('profiles').select('school_id').eq('role', 'guru').in('school_id', schoolIds),
+          client.from('profiles').select('school_id').eq('role', 'siswa').in('school_id', schoolIds),
+          client.from('classes').select('school_id').in('school_id', schoolIds)
+        ]);
+
+        schoolIds.forEach(id => {
+          schoolStatsMap[id] = { guru: 0, siswa: 0, kelas: 0 };
+        });
+
+        (teachersRes.data || []).forEach(t => {
+          if (schoolStatsMap[t.school_id]) schoolStatsMap[t.school_id].guru++;
+        });
+        (studentsRes.data || []).forEach(s => {
+          if (schoolStatsMap[s.school_id]) schoolStatsMap[s.school_id].siswa++;
+        });
+        (classesRes.data || []).forEach(c => {
+          if (schoolStatsMap[c.school_id]) schoolStatsMap[c.school_id].kelas++;
+        });
+      } catch (err) {
+        console.warn('loadSchoolStats error:', err);
+      }
+    }
+
+    // ============================================
+    // FILTER & PAGINATION
+    // ============================================
+    function applyFilter() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+
+      filteredSchools = allSchools.filter(s => {
+        if (!keyword) return true;
+        const name = (s.name || '').toLowerCase();
+        const address = (s.address || '').toLowerCase();
+        const year = (s.academic_year || '').toLowerCase();
+        return name.includes(keyword) || address.includes(keyword) || year.includes(keyword);
+      });
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    function resetFilter() {
+      document.getElementById('searchInput').value = '';
+      applyFilter();
+    }
+
+    function renderTable() {
+      document.getElementById('totalCount').textContent = allSchools.length;
+      document.getElementById('shownCount').textContent = filteredSchools.length;
+
+      const tbody = document.getElementById('tableBody');
+
+      if (filteredSchools.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="5" class="empty-row">
+            <span class="emoji">🏫</span>
+            ${allSchools.length === 0
+              ? '<strong>Belum ada sekolah.</strong><br>Klik "+ Tambah Sekolah" untuk memulai.'
+              : 'Tidak ada sekolah yang cocok dengan pencarian.'}
+          </td></tr>`;
+        return;
+      }
+
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredSchools.length);
+      const pageData = filteredSchools.slice(startIdx, endIdx);
+
+      tbody.innerHTML = pageData.map((s, i) => {
+        const stats = schoolStatsMap[s.id] || { guru: 0, siswa: 0, kelas: 0 };
+
+        return `
+          <tr>
+            <td>${startIdx + i + 1}</td>
+            <td>
+              <div class="nama-sekolah">${esc(s.name)}</div>
+              ${s.address ? `<div class="alamat-teks"><i class="fas fa-map-marker-alt"></i> ${esc(s.address)}</div>` : ''}
+            </td>
+            <td>
+              ${s.academic_year
+                ? `<span class="tahun-badge"><i class="fas fa-calendar"></i> ${esc(s.academic_year)}</span>`
+                : '<span style="color:var(--text-muted);">-</span>'}
+            </td>
+            <td>
+              <div class="stats-badges">
+                <span class="stat-badge guru"><i class="fas fa-chalkboard-teacher"></i> ${stats.guru} guru</span>
+                <span class="stat-badge siswa"><i class="fas fa-user-graduate"></i> ${stats.siswa} siswa</span>
+                <span class="stat-badge kelas"><i class="fas fa-school"></i> ${stats.kelas} kelas</span>
+              </div>
+            </td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-icon" title="Edit" onclick="openModal(${s.id})">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn-icon danger" title="Hapus" onclick="openDelete(${s.id})">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPagination() {
+      const total = filteredSchools.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIdx = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const endIdx = Math.min(currentPage * pageSize, total);
+
+      document.getElementById('pageStart').textContent = startIdx;
+      document.getElementById('pageEnd').textContent = endIdx;
+      document.getElementById('pageTotal').textContent = total;
+      document.getElementById('currentPageInfo').textContent = currentPage;
+      document.getElementById('totalPagesInfo').textContent = totalPages;
+
+      document.getElementById('btnPrev').disabled = currentPage <= 1;
+      document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+      const numbersDiv = document.getElementById('pageNumbers');
+      numbersDiv.innerHTML = '';
+
+      const maxButtons = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+      if (endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+
+      if (startPage > 1) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = '1';
+        btn.onclick = () => goToPage(1);
+        numbersDiv.appendChild(btn);
+        if (startPage > 2) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => goToPage(i);
+        numbersDiv.appendChild(btn);
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = totalPages;
+        btn.onclick = () => goToPage(totalPages);
+        numbersDiv.appendChild(btn);
+      }
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderTable();
+      renderPagination();
+    }
+
+    function prevPage() { if (currentPage > 1) goToPage(currentPage - 1); }
+    function nextPage() {
+      const totalPages = Math.ceil(filteredSchools.length / pageSize);
+      if (currentPage < totalPages) goToPage(currentPage + 1);
+    }
+
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('pageSize').value);
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    // ============================================
+    // MODAL TAMBAH/EDIT
+    // ============================================
+    function openModal(id = null) {
+      editingId = id;
+      const title = document.getElementById('modalTitle');
+      const inputName = document.getElementById('inputName');
+      const inputAddress = document.getElementById('inputAddress');
+      const inputYear = document.getElementById('inputYear');
+      const errBox = document.getElementById('modalError');
+      const btnSave = document.getElementById('btnSave');
+
+      errBox.classList.add('hidden');
+      btnSave.disabled = false;
+      btnSave.textContent = 'Simpan';
+
+      if (id) {
+        const school = allSchools.find(s => s.id === id);
+        if (!school) return;
+        title.innerHTML = '<i class="fas fa-pen"></i> Edit Sekolah';
+        inputName.value = school.name || '';
+        inputAddress.value = school.address || '';
+        inputYear.value = school.academic_year || '';
+      } else {
+        title.innerHTML = '<i class="fas fa-plus-circle"></i> Tambah Sekolah';
+        inputName.value = '';
+        inputAddress.value = '';
+        inputYear.value = '';
+      }
+
+      document.getElementById('modalForm').classList.add('active');
+      setTimeout(() => inputName.focus(), 100);
+    }
+
+    function closeModal() {
+      document.getElementById('modalForm').classList.remove('active');
+      editingId = null;
+    }
+
+    async function saveSchool() {
+      const name = document.getElementById('inputName').value.trim();
+      const address = document.getElementById('inputAddress').value.trim();
+      const year = document.getElementById('inputYear').value.trim();
+      const errBox = document.getElementById('modalError');
+      const btnSave = document.getElementById('btnSave');
+
+      if (!name) {
+        errBox.textContent = 'Nama sekolah wajib diisi.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (name.length < 3) {
+        errBox.textContent = 'Nama sekolah minimal 3 karakter.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      errBox.classList.add('hidden');
+      btnSave.disabled = true;
+      btnSave.textContent = 'Menyimpan...';
+
+      try {
+        const client = initSupabase();
+
+        if (editingId) {
+          const { error } = await client.from('schools')
+            .update({ name, address: address || null, academic_year: year || null })
+            .eq('id', editingId);
+          if (error) throw error;
+          showToast('✅ Sekolah berhasil diperbarui');
+        } else {
+          const { error } = await client.from('schools')
+            .insert([{ name, address: address || null, academic_year: year || null }]);
+          if (error) throw error;
+          showToast('✅ Sekolah berhasil ditambahkan');
+        }
+
+        closeModal();
+        await loadSchools();
+      } catch (err) {
+        console.error('saveSchool error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + err.message;
+        errBox.classList.remove('hidden');
+        btnSave.disabled = false;
+        btnSave.textContent = 'Simpan';
+      }
+    }
+
+    // ============================================
+    // HAPUS SEKOLAH
+    // ============================================
+    async function openDelete(id) {
+      deletingId = id;
+      const school = allSchools.find(s => s.id === id);
+      if (!school) return;
+
+      document.getElementById('deleteMessage').innerHTML =
+        'Anda yakin ingin menghapus sekolah <strong>' + esc(school.name) + '</strong>?';
+
+      // Cek dulu apakah ada data terkait
+      const warnEl = document.getElementById('deleteWarning');
+      const btnConfirm = document.getElementById('btnConfirmDelete');
+      warnEl.classList.add('hidden');
+      btnConfirm.disabled = false;
+      btnConfirm.textContent = 'Ya, Hapus';
+
+      document.getElementById('modalDelete').classList.add('active');
+
+      // Validasi data terkait
+      try {
+        const client = initSupabase();
+        const [teachersRes, studentsRes, classesRes, subjectsRes] = await Promise.all([
+          client.from('profiles').select('id', { count: 'exact', head: true }).eq('school_id', id).eq('role', 'guru'),
+          client.from('profiles').select('id', { count: 'exact', head: true }).eq('school_id', id).eq('role', 'siswa'),
+          client.from('classes').select('id', { count: 'exact', head: true }).eq('school_id', id),
+          client.from('subjects').select('id', { count: 'exact', head: true }).eq('school_id', id)
+        ]);
+
+        const gurus = teachersRes.count || 0;
+        const siswas = studentsRes.count || 0;
+        const kelass = classesRes.count || 0;
+        const mapels = subjectsRes.count || 0;
+
+        const blockers = [];
+        if (gurus > 0) blockers.push(gurus + ' guru');
+        if (siswas > 0) blockers.push(siswas + ' siswa');
+        if (kelass > 0) blockers.push(kelass + ' kelas');
+        if (mapels > 0) blockers.push(mapels + ' mapel');
+
+        if (blockers.length > 0) {
+          warnEl.innerHTML = `
+            <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>
+            <strong>Tidak bisa dihapus!</strong><br>
+            Sekolah ini masih memiliki: ${blockers.join(', ')}.
+          `;
+          warnEl.classList.remove('hidden');
+          btnConfirm.disabled = true;
+          btnConfirm.textContent = 'Tidak Bisa Dihapus';
+        }
+      } catch (err) {
+        console.warn('Validasi error:', err);
+      }
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('modalDelete').classList.remove('active');
+      deletingId = null;
+    }
+
+    async function confirmDelete() {
+      if (!deletingId) return;
+      const btn = document.getElementById('btnConfirmDelete');
+      btn.disabled = true;
+      btn.textContent = 'Menghapus...';
+
+      try {
+        const client = initSupabase();
+        const { error } = await client.from('schools').delete().eq('id', deletingId);
+        if (error) throw error;
+
+        closeDeleteModal();
+        showToast('🗑️ Sekolah berhasil dihapus');
+        await loadSchools();
+      } catch (err) {
+        console.error('confirmDelete error:', err);
+        showToast('Gagal menghapus: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus';
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeModal();
+        closeDeleteModal();
+      }
+    });
+  </script>
+</body>
+</html>

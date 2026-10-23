@@ -14,34 +14,243 @@ function initSupabase() {
   return supabaseClient;
 }
 
+// ============================================
+// AUTH — Multi-Role Support
+// ============================================
+
+/**
+ * Ambil semua role user dari user_roles
+ * Return: array of { role, school_id, status, school_name }
+ */
+async function getUserRoles(userId) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('user_roles')
+    .select(`
+      id, role, school_id, status,
+      schools (id, name)
+    `)
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .order('role', { ascending: true });
+
+  if (error) {
+    console.error('getUserRoles error:', error);
+    return [];
+  }
+
+  return (data || []).map(r => ({
+    id: r.id,
+    role: r.role,
+    school_id: r.school_id,
+    status: r.status,
+    school_name: r.schools?.name || null
+  }));
+}
+
+/**
+ * Ambil profil user + semua role + role aktif
+ * Role aktif: dari sessionStorage['active_role'] (kalau valid) 
+ *            atau role pertama dari user_roles
+ * Properti `role` dan `school_id` di-override sesuai active role
+ * → kode lama yang pakai `profile.role` TETAP JALAN
+ */
 async function getProfile() {
   const client = initSupabase();
   const { data: { user } } = await client.auth.getUser();
   if (!user) return null;
-  const { data, error } = await client
+
+  // Ambil profil dasar
+  const { data: profile, error } = await client
     .from('profiles').select('*').eq('id', user.id).single();
   if (error) { console.error('getProfile error:', error); return null; }
-  return data;
+
+  // Ambil semua role dari user_roles
+  const roles = await getUserRoles(user.id);
+
+  // Tentukan role aktif
+  let activeRole = null;
+  try {
+    const stored = sessionStorage.getItem('active_role');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && roles.find(r =>
+        r.role === parsed.role &&
+        String(r.school_id) === String(parsed.school_id)
+      )) {
+        activeRole = parsed;
+      }
+    }
+  } catch (e) { /* ignore */ }
+
+  if (!activeRole && roles.length > 0) {
+    activeRole = { role: roles[0].role, school_id: roles[0].school_id };
+  }
+
+  // Fallback ke profiles.role kalau user_roles kosong (data lama belum migrasi)
+  if (roles.length === 0 && profile.role) {
+    activeRole = { role: profile.role, school_id: profile.school_id };
+  }
+
+  return {
+    ...profile,
+    roles: roles.length > 0 ? roles : [{ role: profile.role, school_id: profile.school_id }],
+    activeRole,
+    // Override `role` dan `school_id` sesuai role aktif
+    role: activeRole?.role || profile.role,
+    school_id: activeRole?.school_id ?? profile.school_id
+  };
 }
 
 async function doLogout() {
   const client = initSupabase();
   await client.auth.signOut();
-  sessionStorage.clear();
+  sessionStorage.clear(); // include active_role
   window.location.href = '../login.html';
 }
 
-function redirectByRole(role) {
+/**
+ * Redirect user berdasarkan role
+ * Kalau >1 role → tampil modal pilih role
+ * Kalau 1 role → redirect langsung
+ */
+function redirectByRole(roleOrProfile) {
+  const profile = typeof roleOrProfile === 'string'
+    ? { role: roleOrProfile, roles: [{ role: roleOrProfile, school_id: null, school_name: null }] }
+    : roleOrProfile;
+
   const base = window.location.pathname.includes('/operator/')
     || window.location.pathname.includes('/guru/')
     || window.location.pathname.includes('/siswa/')
+    || window.location.pathname.includes('/admin/')
     ? '../' : '';
-  if (role === 'operator') window.location.href = base + 'operator/dashboard.html';
+
+  // Kalau user punya >1 role → tampil modal
+  if (profile.roles && profile.roles.length > 1) {
+    showRolePicker(profile.roles, base);
+    return;
+  }
+
+  const role = profile.role;
+  if (role === 'admin') window.location.href = base + 'admin/dashboard.html';
+  else if (role === 'operator') window.location.href = base + 'operator/dashboard.html';
   else if (role === 'guru') window.location.href = base + 'guru/dashboard.html';
   else if (role === 'siswa') window.location.href = base + 'siswa/dashboard.html';
   else window.location.href = base + 'login.html';
 }
 
+/**
+ * Modal pilih role (muncul kalau user punya >1 role)
+ */
+function showRolePicker(roles, base) {
+  const old = document.getElementById('rolePickerModal');
+  if (old) old.remove();
+
+  const roleLabels = {
+    admin: { label: 'Super Admin', icon: 'fa-crown', color: '#8b5cf6', desc: 'Kelola semua sekolah' },
+    operator: { label: 'Operator', icon: 'fa-user-shield', color: '#3b82f6', desc: 'Kelola guru, siswa, kelas, mapel' },
+    guru: { label: 'Guru', icon: 'fa-chalkboard-teacher', color: '#10b981', desc: 'Kelola materi, aktivitas, nilai' },
+    siswa: { label: 'Siswa', icon: 'fa-user-graduate', color: '#f59e0b', desc: 'Belajar, kerjakan tugas, lihat nilai' }
+  };
+
+  const modal = document.createElement('div');
+  modal.id = 'rolePickerModal';
+  modal.style.cssText = `
+    position: fixed; inset: 0; z-index: 99999;
+    background: rgba(15,23,42,0.85);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem; backdrop-filter: blur(4px);
+    font-family: 'Inter', -apple-system, sans-serif;
+  `;
+
+  const cards = roles.map(r => {
+    const info = roleLabels[r.role] || { label: r.role, icon: 'fa-user', color: '#64748b', desc: '' };
+    return `
+      <div class="role-card" data-role="${r.role}" data-school="${r.school_id || ''}"
+           style="
+             background: white; border-radius: 12px; padding: 1.5rem 1.2rem;
+             cursor: pointer; transition: all 0.2s;
+             border: 2px solid transparent; text-align: center;
+           "
+           onmouseover="this.style.borderColor='${info.color}'; this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
+           onmouseout="this.style.borderColor='transparent'; this.style.transform='none'; this.style.boxShadow='none'"
+      >
+        <div style="
+          width: 60px; height: 60px; border-radius: 16px;
+          background: ${info.color}20; color: ${info.color};
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 0.8rem; font-size: 1.8rem;
+        ">
+          <i class="fas ${info.icon}"></i>
+        </div>
+        <div style="font-weight: 700; color: #0f172a; margin-bottom: 0.3rem; font-size: 0.95rem;">
+          ${info.label}
+        </div>
+        <div style="font-size: 0.72rem; color: #64748b; margin-bottom: 0.5rem; line-height: 1.4;">
+          ${info.desc}
+        </div>
+        ${r.school_name ? `<div style="
+          font-size: 0.7rem; color: ${info.color}; font-weight: 600;
+          padding: 3px 10px; background: ${info.color}15; border-radius: 8px;
+          display: inline-block;
+        "><i class="fas fa-school"></i> ${r.school_name}</div>` : '<div style="height: 22px;"></div>'}
+      </div>
+    `;
+  }).join('');
+
+  modal.innerHTML = `
+    <div style="
+      background: #f8fafc; border-radius: 20px; padding: 2rem;
+      max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    ">
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="
+          width: 60px; height: 60px; border-radius: 50%;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          color: white; display: inline-flex; align-items: center; justify-content: center;
+          font-size: 1.5rem; margin-bottom: 0.8rem;
+        ">
+          <i class="fas fa-users"></i>
+        </div>
+        <h2 style="font-size: 1.3rem; color: #0f172a; margin-bottom: 0.3rem; font-weight: 800;">
+          Pilih Peran
+        </h2>
+        <p style="font-size: 0.85rem; color: #64748b; margin: 0;">
+          Anda punya akses ke beberapa panel. Pilih salah satu untuk melanjutkan.
+        </p>
+      </div>
+      <div style="
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.8rem;
+      ">
+        ${cards}
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelectorAll('.role-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const role = card.dataset.role;
+      const schoolId = card.dataset.school ? parseInt(card.dataset.school) : null;
+
+      sessionStorage.setItem('active_role', JSON.stringify({ role, school_id: schoolId }));
+
+      if (role === 'admin') window.location.href = base + 'admin/dashboard.html';
+      else if (role === 'operator') window.location.href = base + 'operator/dashboard.html';
+      else if (role === 'guru') window.location.href = base + 'guru/dashboard.html';
+      else if (role === 'siswa') window.location.href = base + 'siswa/dashboard.html';
+    });
+  });
+}
+
+/**
+ * Cek auth + role
+ * Kalau user punya role yang diharapkan (di user_roles), tapi bukan active role
+ * → otomatis set active role ke role yang match
+ */
 async function requireAuth(expectedRole) {
   const profile = await getProfile();
   if (!profile) {
@@ -49,12 +258,45 @@ async function requireAuth(expectedRole) {
     window.location.href = '../login.html';
     return null;
   }
-  if (expectedRole && profile.role !== expectedRole) {
+
+  // Cek apakah user punya role yang diharapkan
+  const hasRole = profile.roles && profile.roles.some(r => r.role === expectedRole);
+
+  if (expectedRole && !hasRole) {
     alert('Anda tidak punya akses ke halaman ini.');
-    redirectByRole(profile.role);
+    redirectByRole(profile);
     return null;
   }
+
+  // Kalau punya role tapi bukan active → set active
+  if (expectedRole && profile.role !== expectedRole) {
+    const matchingRole = profile.roles.find(r => r.role === expectedRole);
+    if (matchingRole) {
+      sessionStorage.setItem('active_role', JSON.stringify({
+        role: matchingRole.role,
+        school_id: matchingRole.school_id
+      }));
+      profile.role = matchingRole.role;
+      profile.school_id = matchingRole.school_id;
+      profile.activeRole = matchingRole;
+    }
+  }
+
   return profile;
+}
+
+/**
+ * Ganti role aktif (dipanggil dari tombol "Ganti Peran" di topbar)
+ * Hapus active_role → tampil modal picker
+ */
+async function switchRole() {
+  const profile = await getProfile();
+  if (!profile || !profile.roles || profile.roles.length <= 1) {
+    alert('Anda hanya punya 1 role.');
+    return;
+  }
+  sessionStorage.removeItem('active_role');
+  redirectByRole(profile);
 }
 
 /* ============================================================
@@ -159,21 +401,62 @@ async function deleteClass(id) {
 }
 
 /* ============================================================
-   GURU
+   GURU — Multi-Role Aware (PATCHED)
+   ============================================================
+   Sumber guru = gabungan:
+   1) user_roles.role = 'guru' (multi-role, data baru)
+   2) profiles.role = 'guru'  (legacy, data lama)
+   → guru lama tidak hilang, guru baru (via create-teacher multi-role) muncul
    ============================================================ */
 async function getTeachers(schoolId) {
   const client = initSupabase();
-  let q = client.from('profiles').select('*').eq('role', 'guru').order('name', { ascending: true });
-  if (schoolId) q = q.eq('school_id', schoolId);
-  const { data, error } = await q;
-  if (error) throw error;
-  return data || [];
+
+  // 1) Dari user_roles (multi-role)
+  let roleQuery = client
+    .from('user_roles')
+    .select('user_id')
+    .eq('role', 'guru')
+    .eq('status', 'active');
+  if (schoolId) roleQuery = roleQuery.eq('school_id', schoolId);
+
+  const { data: roleRows, error: roleErr } = await roleQuery;
+  if (roleErr) throw roleErr;
+
+  const roleUserIds = new Set((roleRows || []).map(r => r.user_id));
+
+  // 2) Dari profiles.role (legacy)
+  let profQuery = client.from('profiles').select('*').eq('role', 'guru');
+  if (schoolId) profQuery = profQuery.eq('school_id', schoolId);
+  const { data: legacyProfiles, error: profErr } = await profQuery;
+  if (profErr) throw profErr;
+
+  const legacyIds = new Set((legacyProfiles || []).map(p => p.id));
+
+  // 3) Ambil profil user dari user_roles yang belum ada di legacyProfiles
+  const missingIds = [...roleUserIds].filter(id => !legacyIds.has(id));
+  let extraProfiles = [];
+  if (missingIds.length > 0) {
+    const { data: extra, error: e2 } = await client
+      .from('profiles')
+      .select('*')
+      .in('id', missingIds);
+    if (e2) throw e2;
+    extraProfiles = extra || [];
+  }
+
+  // 4) Gabung + dedupe by id + urut nama
+  const all = [...(legacyProfiles || []), ...extraProfiles];
+  const map = new Map();
+  all.forEach(p => map.set(p.id, p));
+  return [...map.values()].sort((a, b) =>
+    (a.name || '').localeCompare(b.name || '')
+  );
 }
 
 async function updateTeacher(id, { name, email }) {
   const client = initSupabase();
   const { data, error } = await client.from('profiles')
-    .update({ name, email }).eq('id', id).eq('role', 'guru').select().single();
+    .update({ name, email }).eq('id', id).select().single();
   if (error) throw error;
   return data;
 }
@@ -483,7 +766,6 @@ async function getSubmissionsByActivity(activityId) {
 
 async function getGradesByActivity(activityId) {
   const client = initSupabase();
-  // Join grades → submissions, filter by submissions.activity_id
   const { data, error } = await client
     .from('grades')
     .select(`
@@ -507,8 +789,6 @@ async function saveGrade({ submissionId, activityId, studentId, score, feedback,
     if (error) throw error;
     return data;
   } else {
-    // CATATAN: kolom activity_id TIDAK ADA di tabel grades
-    // Informasi aktivitas diturunkan dari submissions.activity_id
     const { data, error } = await client.from('grades')
       .insert([{
         submission_id: submissionId,
@@ -769,7 +1049,6 @@ async function getMasterReport(schoolId) {
    SISWA-SPECIFIC HELPERS
    ============================================================ */
 
-/* Ambil mapel & kelas yang diikuti siswa (dari enrollment + teacher_assign) */
 async function getMyEnrolledSubjects(studentId) {
   const client = initSupabase();
   const { data: enrolls, error: e1 } = await client.from('enrollments')
@@ -795,12 +1074,9 @@ async function getMyEnrolledSubjects(studentId) {
   return assigns || [];
 }
 
-/* Ambil aktivitas di kelas+mapel yang diikuti siswa + status submission-nya */
-/* FIXED: tidak lagi pakai grades.activity_id — ambil dari submissions.activity_id */
 async function getMyActivities(studentId, classId, subjectId) {
   const client = initSupabase();
 
-  // Ambil semua aktivitas
   const { data: activities, error: e1 } = await client.from('activities')
     .select('*').eq('class_id', classId).eq('subject_id', subjectId)
     .order('deadline', { ascending: true });
@@ -810,12 +1086,10 @@ async function getMyActivities(studentId, classId, subjectId) {
 
   const activityIds = activities.map(a => a.id);
 
-  // Ambil submission siswa ini
   const { data: mySubs, error: e2 } = await client.from('submissions')
     .select('*').eq('student_id', studentId).in('activity_id', activityIds);
   if (e2) throw e2;
 
-  // Ambil grades via JOIN ke submissions
   const { data: rawGrades, error: e3 } = await client.from('grades')
     .select(`
       id, submission_id, student_id, score, feedback, graded_at,
@@ -851,12 +1125,9 @@ async function getMyActivities(studentId, classId, subjectId) {
   }));
 }
 
-/* Ambil nilai siswa (semua mapel) */
-/* FIXED: tidak lagi join ke activities (tidak ada FK), ambil info activities terpisah */
 async function getMyGrades(studentId) {
   const client = initSupabase();
 
-  // Ambil semua grades siswa ini + submissions (untuk dapat activity_id)
   const { data: rawGrades, error: e1 } = await client.from('grades')
     .select(`
       id, score, feedback, graded_at, submission_id,
@@ -877,11 +1148,9 @@ async function getMyGrades(studentId) {
 
   if (grades.length === 0) return [];
 
-  // Kumpulkan activity_id unik
   const activityIds = [...new Set(grades.map(g => g.activity_id).filter(id => id != null))];
   if (activityIds.length === 0) return grades.map(g => ({ ...g, activities: null }));
 
-  // Ambil detail activities + subjects + classes terpisah
   const { data: activities, error: e2 } = await client.from('activities')
     .select(`
       id, title, type, max_score, subject_id, class_id,
@@ -900,7 +1169,6 @@ async function getMyGrades(studentId) {
   }));
 }
 
-/* Submit tugas/kuis */
 async function submitActivity({ activityId, studentId, content, fileUrl }) {
   const client = initSupabase();
   const { data: existing } = await client.from('submissions')
@@ -921,7 +1189,6 @@ async function submitActivity({ activityId, studentId, content, fileUrl }) {
   }
 }
 
-/* Progress belajar siswa per mapel */
 async function getMyProgress(studentId) {
   const client = initSupabase();
 
@@ -955,7 +1222,6 @@ async function getMyProgress(studentId) {
       .select('id, activity_id').eq('student_id', studentId).in('activity_id', actIds);
     const submitted = (subs || []).length;
 
-    // Ambil grades via JOIN submissions
     const { data: rawGrs, error: e2 } = await client.from('grades')
       .select(`
         score,

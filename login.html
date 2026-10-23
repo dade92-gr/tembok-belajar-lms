@@ -22,9 +22,6 @@
       background: #e2e8f0;
     }
 
-    /* ============================================
-       BACKGROUND IMAGE FULL SCREEN
-       ============================================ */
     .login-bg {
       position: fixed;
       inset: 0;
@@ -42,9 +39,6 @@
       background: rgba(15, 23, 42, 0.1);
     }
 
-    /* ============================================
-       SPLIT LAYOUT — STRETCH (tinggi sama)
-       ============================================ */
     .login-split {
       display: flex;
       min-height: 100vh;
@@ -57,9 +51,6 @@
       justify-content: center;
     }
 
-    /* ============================================
-       PANEL KIRI — FORM (GLASSMORPHISM)
-       ============================================ */
     .login-left {
       flex: 0 0 420px;
       max-width: 460px;
@@ -84,9 +75,6 @@
       margin-bottom: 1.8rem;
     }
 
-    /* ============================================
-       LOGO & TEKS BRAND — LEBIH BESAR
-       ============================================ */
     .login-logo-wrap {
       display: flex;
       align-items: center;
@@ -95,14 +83,14 @@
     }
 
     .login-logo-wrap img {
-      height: 64px;              /* ← logo lebih besar */
+      height: 64px;
       width: auto;
       object-fit: contain;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
     }
 
     .login-logo-text {
-      font-size: 1.5rem;          /* ← teks utama lebih besar */
+      font-size: 1.5rem;
       font-weight: 700;
       color: #0f172a;
       letter-spacing: -0.5px;
@@ -111,7 +99,7 @@
     }
     .login-logo-text small {
       display: block;
-      font-size: 0.88rem;         /* ← sub-teks lebih besar */
+      font-size: 0.88rem;
       font-weight: 400;
       color: #334155;
       letter-spacing: 0;
@@ -132,7 +120,6 @@
       color: #334155;
     }
 
-    /* ==== FORM ==== */
     .login-form {
       flex: 1;
       display: flex;
@@ -157,7 +144,6 @@
       position: relative;
     }
 
-    /* ==== ICON DI DALAM INPUT — SELALU TERLIHAT ==== */
     .form-input-wrap i {
       position: absolute;
       left: 1rem;
@@ -166,10 +152,9 @@
       color: #475569;
       font-size: 1rem;
       pointer-events: none;
-      z-index: 2;                 /* ← icon di atas input */
+      z-index: 2;
     }
 
-    /* ==== INPUT — PUTIH SOLID (BUKAN TRANSPARAN) ==== */
     .form-input {
       width: 100%;
       padding: 0.9rem 1rem 0.9rem 2.85rem;
@@ -177,7 +162,7 @@
       border-radius: 10px;
       font-size: 0.92rem;
       font-family: inherit;
-      background: #ffffff;        /* ← putih solid */
+      background: #ffffff;
       color: #1e293b;
       outline: none;
       transition: all 0.2s ease;
@@ -253,9 +238,6 @@
       text-align: center;
     }
 
-    /* ============================================
-       PANEL KANAN — TAGLINE (GLASSMORPHISM)
-       ============================================ */
     .login-right {
       flex: 1;
       max-width: 620px;
@@ -362,9 +344,6 @@
       box-shadow: 0 2px 6px rgba(30, 136, 229, 0.3);
     }
 
-    /* ============================================
-       RESPONSIVE
-       ============================================ */
     @media (max-width: 1024px) {
       .login-split {
         flex-direction: column;
@@ -400,7 +379,6 @@
       .feature-item { font-size: 0.8rem; }
     }
 
-    /* ==== ANIMASI ==== */
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -417,9 +395,6 @@
 
   <div class="login-split">
 
-    <!-- ============================================
-         PANEL KIRI — FORM LOGIN
-         ============================================ -->
     <div class="login-left">
       <div class="login-left-header">
         <div class="login-logo-wrap">
@@ -474,9 +449,6 @@
       </div>
     </div>
 
-    <!-- ============================================
-         PANEL KANAN — TAGLINE
-         ============================================ -->
     <div class="login-right">
       <div class="login-right-content">
         <span class="tagline-eyebrow">Platform Pembelajaran</span>
@@ -522,8 +494,10 @@
     (async () => {
       try {
         const profile = await getProfile();
-        if (profile) redirectByRole(profile.role);
-      } catch (e) {}
+        if (profile) redirectByRole(profile);
+      } catch (e) {
+        console.warn('Auto-redirect check failed:', e);
+      }
     })();
   </script>
 </body>

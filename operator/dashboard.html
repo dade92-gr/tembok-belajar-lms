@@ -159,7 +159,6 @@
       box-shadow: 4px 0 20px rgba(0,0,0,0.2);
     }
 
-    /* Scrollbar tipis — muncul saat hover */
     .app-sidebar::-webkit-scrollbar { width: 4px; }
     .app-sidebar::-webkit-scrollbar-track { background: transparent; }
     .app-sidebar::-webkit-scrollbar-thumb {
@@ -754,7 +753,7 @@
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
-    // ==== VIEW URLS — 8 modul (termasuk profil) ====
+    // ==== VIEW URLS ====
     const VIEW_URLS = {
       siswa: 'siswa.html?embed=1',
       guru: 'guru.html?embed=1',
@@ -771,74 +770,58 @@
     sidebar.addEventListener('mouseleave', () => document.body.classList.remove('sidebar-hover'));
 
     // ============================================
-    // INIT — pakai getSession
+    // INIT — MULTI-ROLE via requireAuth
     // ============================================
     (async () => {
       initSupabase();
-      const client = initSupabase();
 
-      // Cek session dulu
-      const { data: { session } } = await client.auth.getSession();
-      if (!session || !session.user) {
-        window.location.href = '../login.html';
-        return;
-      }
+      // ✅ Gunakan requireAuth — otomatis cek user_roles & set active role
+      const profile = await requireAuth('operator');
+      if (!profile) return;
 
-      // Ambil profil dari session.user.id
-      const { data: profile, error } = await client
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (error || !profile) {
-        console.error('getProfile error:', error);
-        document.getElementById('loading').innerHTML =
-          '<p style="color:var(--danger);">Gagal memuat profil. Coba refresh halaman.</p>';
-        return;
-      }
-
-      if (profile.role !== 'operator') {
-        window.location.href = '../login.html';
-        return;
-      }
+      // ── Setelah ini: profile.role = 'operator', profile.school_id = 1
+      // ── karena requireAuth set active role ke operator
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('contentHome').classList.remove('hidden');
 
       document.getElementById('userName').textContent = profile.name;
       document.getElementById('userEmail').textContent = profile.email;
-      document.getElementById('userAvatar').textContent = profile.name.charAt(0).toUpperCase();
+      document.getElementById('userAvatar').textContent = (profile.name || '?').charAt(0).toUpperCase();
       document.getElementById('greeting').textContent = 'Halo, ' + profile.name + '! 👋';
       document.getElementById('subGreeting').textContent = 'Selamat datang kembali di panel operator Tembok Belajar.';
 
-      // Ambil sekolah
+      // Ambil sekolah — pakai profile.school_id (dari active role operator)
       let school = null;
       try {
-        school = await getSchool(profile.school_id);
-        if (school) {
-          document.getElementById('schoolName').textContent = school.name;
-          const schoolInfo = document.getElementById('schoolInfo');
-          schoolInfo.style.display = 'inline-flex';
-          schoolInfo.querySelector('span').textContent =
-            school.name + (school.academic_year ? ' · Tahun Ajaran ' + school.academic_year : '');
+        if (profile.school_id) {
+          school = await getSchool(profile.school_id);
+          if (school) {
+            document.getElementById('schoolName').textContent = school.name;
+            const schoolInfo = document.getElementById('schoolInfo');
+            schoolInfo.style.display = 'inline-flex';
+            schoolInfo.querySelector('span').textContent =
+              school.name + (school.academic_year ? ' · Tahun Ajaran ' + school.academic_year : '');
+          }
         }
       } catch (err) { console.warn('Gagal ambil sekolah:', err); }
 
-      // Statistik
+      // Statistik — pakai profile.school_id
       let totalSiswa = 0, totalGuru = 0, totalKelas = 0, totalMapel = 0;
-      try {
-        const [students, teachers, classes, subjects] = await Promise.all([
-          getStudents(profile.school_id),
-          getTeachers(profile.school_id),
-          getClasses(profile.school_id),
-          getSubjects(profile.school_id)
-        ]);
-        totalSiswa = students.length;
-        totalGuru = teachers.length;
-        totalKelas = classes.length;
-        totalMapel = subjects.length;
-      } catch (err) { console.warn('Gagal hitung statistik:', err); }
+      if (profile.school_id) {
+        try {
+          const [students, teachers, classes, subjects] = await Promise.all([
+            getStudents(profile.school_id),
+            getTeachers(profile.school_id),
+            getClasses(profile.school_id),
+            getSubjects(profile.school_id)
+          ]);
+          totalSiswa = students.length;
+          totalGuru = teachers.length;
+          totalKelas = classes.length;
+          totalMapel = subjects.length;
+        } catch (err) { console.warn('Gagal hitung statistik:', err); }
+      }
 
       // Render stat cards
       const stats = [
@@ -857,7 +840,7 @@
         </div>
       `).join('');
 
-      // Render quick menu (termasuk Profil)
+      // Render quick menu
       const menus = [
         { icon: 'fa-users', label: 'Manajemen Siswa', view: 'siswa' },
         { icon: 'fa-chalkboard-teacher', label: 'Manajemen Guru', view: 'guru' },

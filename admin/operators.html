@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Operator — Tembok Belajar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
+
+    :root {
+      --purple: #8b5cf6;
+      --purple-dark: #6d28d9;
+      --purple-light: #ede9fe;
+      --purple-lighter: #f3e8ff;
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--purple-lighter);
+      border-color: var(--purple);
+      color: var(--purple-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--purple); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+    .btn-primary {
+      background: var(--purple);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--purple-dark);
+      box-shadow: 0 4px 12px rgba(139,92,246,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: #64748b;
+      color: white;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-danger:hover { background: #dc2626; }
+
+    .filter-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr auto;
+      gap: 0.7rem;
+      align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .filter-group label i { color: var(--purple); }
+    .filter-input,
+    .filter-select {
+      width: 100%;
+      padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+    .filter-input:focus,
+    .filter-select:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+    }
+    .btn-reset {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.55rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-reset:hover {
+      background: var(--danger-light);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .info-bar {
+      background: var(--purple-lighter);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.82rem;
+      color: var(--purple-dark);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(139,92,246,0.2);
+      flex-wrap: wrap;
+    }
+    .info-bar i { color: var(--purple); }
+    .info-bar strong { color: var(--navy); }
+
+    .table-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-wrapper { overflow-x: auto; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .data-table thead { background: var(--bg-soft); }
+    .data-table th {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--text);
+    }
+    .data-table tbody tr:hover { background: var(--purple-lighter); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    .nama-operator {
+      font-weight: 700;
+      color: var(--navy);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .avatar-mini {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.78rem;
+      flex-shrink: 0;
+    }
+    .email-teks {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      margin-top: 2px;
+      padding-left: 40px;
+    }
+
+    .sekolah-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin: 2px 2px 2px 0;
+    }
+    .sekolah-badge i { font-size: 0.7rem; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.72rem;
+      white-space: nowrap;
+    }
+    .status-active { background: var(--success-light); color: #047857; }
+    .status-inactive { background: var(--danger-light); color: #b91c1c; }
+
+    .action-btns { display: flex; gap: 6px; }
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover {
+      background: var(--purple-lighter);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+    .btn-icon.warning:hover {
+      background: var(--warning-light);
+      border-color: var(--warning);
+      color: #92400e;
+    }
+    .btn-icon.danger:hover {
+      background: var(--danger-light);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .empty-row {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-row .emoji {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 0.8rem;
+      opacity: 0.5;
+    }
+    .empty-row strong { color: var(--text); }
+
+    .pagination-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .pagination-info { font-size: 0.8rem; color: var(--text-muted); }
+    .pagination-info strong { color: var(--text); font-weight: 600; }
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .page-size-select {
+      padding: 0.4rem 2rem 0.4rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+    .page-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+    }
+    .page-btn:hover:not(:disabled) {
+      background: var(--purple-lighter);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+    .page-btn.active { background: var(--purple); border-color: var(--purple); color: white; }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-numbers { display: flex; gap: 0.3rem; align-items: center; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 1rem;
+      overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease;
+      margin: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-card h2 i { color: var(--purple); }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 0.45rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      margin-bottom: 0.9rem;
+    }
+    .form-input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+    }
+    .form-input:disabled {
+      background: var(--bg-soft);
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    select.form-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 35px;
+      cursor: pointer;
+    }
+    .form-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: -0.6rem;
+      margin-bottom: 0.9rem;
+      padding-left: 4px;
+      line-height: 1.5;
+    }
+
+    .alert {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.83rem;
+      line-height: 1.5;
+    }
+    .alert-error { background: var(--danger-light); color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-success { background: var(--success-light); color: #047857; border: 1px solid #a7f3d0; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--navy);
+      color: white;
+      padding: 1rem 1.4rem;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000;
+      max-width: 400px;
+      line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
+
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--purple-light);
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--purple-lighter);
+      border-color: var(--purple);
+      color: var(--purple-dark);
+    }
+
+    @media (max-width: 900px) {
+      .filter-row { grid-template-columns: 1fr 1fr; }
+      .filter-row .btn-reset { grid-column: 1 / -1; }
+    }
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .pagination-bar { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+      .pagination-controls { justify-content: center; }
+      .data-table th, .data-table td { padding: 0.6rem 0.5rem; font-size: 0.78rem; }
+      .email-teks { padding-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-container">
+
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#operators';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-user-shield"></i>
+          <span>
+            Manajemen Operator
+            <small>Kelola akun operator untuk setiap sekolah</small>
+          </span>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-primary" onclick="openAddModal()">
+          <i class="fas fa-plus"></i> Tambah Operator
+        </button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat operator...</p>
+    </div>
+
+    <div id="pageContent" class="hidden">
+
+      <div class="filter-card">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="searchInput"><i class="fas fa-search"></i> Cari</label>
+            <input type="text" id="searchInput" class="filter-input" placeholder="Cari nama atau email operator..." oninput="applyFilter()">
+          </div>
+          <div class="filter-group">
+            <label for="filterSekolah"><i class="fas fa-school"></i> Sekolah</label>
+            <select id="filterSekolah" class="filter-select" onchange="applyFilter()">
+              <option value="">Semua Sekolah</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <button class="btn-reset" onclick="resetFilter()">
+              <i class="fas fa-rotate-left"></i> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-bar">
+        <i class="fas fa-info-circle"></i>
+        <span>Total: <strong id="totalCount">0</strong> operator ·
+              Menampilkan: <strong id="shownCount">0</strong> ·
+              Halaman: <strong id="currentPageInfo">1</strong> dari <strong id="totalPagesInfo">1</strong></span>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">No</th>
+                <th>Operator</th>
+                <th style="width:240px;">Sekolah</th>
+                <th style="width:100px;">Status</th>
+                <th style="width:150px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="5" class="empty-row">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination-bar">
+          <div class="pagination-info">
+            Menampilkan <strong id="pageStart">0</strong>-<strong id="pageEnd">0</strong> dari <strong id="pageTotal">0</strong> data
+          </div>
+          <div class="pagination-controls">
+            <label style="font-size:0.75rem; color:var(--text-muted);">Baris:</label>
+            <select id="pageSize" class="page-size-select" onchange="changePageSize()">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="9999">Semua</option>
+            </select>
+            <button class="page-btn" id="btnPrev" onclick="prevPage()" title="Sebelumnya">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="page-numbers" id="pageNumbers"></div>
+            <button class="page-btn" id="btnNext" onclick="nextPage()" title="Berikutnya">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#operators';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal Tambah Operator -->
+  <div class="modal-overlay" id="modalAdd">
+    <div class="modal-card">
+      <h2><i class="fas fa-user-plus"></i> Tambah Operator Baru</h2>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Akun login + profil operator akan dibuat otomatis untuk sekolah yang dipilih.
+        <strong>Jika email sudah terdaftar</strong> (misal guru), role operator akan ditambahkan ke akun tersebut.
+      </p>
+
+      <label class="form-label" for="inputName">Nama Lengkap <span style="color:var(--danger);">*</span></label>
+      <input type="text" id="inputName" class="form-input" placeholder="Contoh: Budi Operator" maxlength="100">
+
+      <label class="form-label" for="inputEmail">Email <span style="color:var(--danger);">*</span></label>
+      <input type="email" id="inputEmail" class="form-input" placeholder="Contoh: operator@sman1.sch.id" maxlength="100">
+
+      <label class="form-label" for="inputPassword">Password Awal <span style="color:var(--danger);">*</span></label>
+      <input type="password" id="inputPassword" class="form-input" placeholder="Minimal 6 karakter" maxlength="50">
+      <p class="form-hint">Jika email sudah terdaftar, password diabaikan (pakai password lama).</p>
+
+      <label class="form-label" for="inputSchool">Sekolah <span style="color:var(--danger);">*</span></label>
+      <select id="inputSchool" class="form-input"></select>
+
+      <div id="addError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeAddModal()">Batal</button>
+        <button class="btn-primary" id="btnAddSave" onclick="saveOperator()">Buat Operator</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Operator -->
+  <div class="modal-overlay" id="modalEdit">
+    <div class="modal-card">
+      <h2><i class="fas fa-user-edit"></i> Edit Operator</h2>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Ubah nama operator. Email tidak bisa diubah dari sini.
+      </p>
+
+      <label class="form-label" for="editName">Nama Lengkap <span style="color:var(--danger);">*</span></label>
+      <input type="text" id="editName" class="form-input" maxlength="100">
+
+      <label class="form-label">Email</label>
+      <input type="email" id="editEmail" class="form-input" disabled>
+
+      <label class="form-label">Sekolah</label>
+      <input type="text" id="editSchool" class="form-input" disabled>
+
+      <div id="editError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeEditModal()">Batal</button>
+        <button class="btn-primary" id="btnEditSave" onclick="saveEditOperator()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Reset Password -->
+  <div class="modal-overlay" id="modalReset">
+    <div class="modal-card">
+      <h2><i class="fas fa-key"></i> Reset Password Operator</h2>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Atur password baru untuk <strong id="resetOperatorName">-</strong>.
+      </p>
+
+      <label class="form-label" for="resetPassword">Password Baru <span style="color:var(--danger);">*</span></label>
+      <input type="password" id="resetPassword" class="form-input" placeholder="Minimal 6 karakter" maxlength="50">
+
+      <label class="form-label" for="resetPasswordConfirm">Konfirmasi Password <span style="color:var(--danger);">*</span></label>
+      <input type="password" id="resetPasswordConfirm" class="form-input" placeholder="Ketik ulang password baru" maxlength="50">
+
+      <div id="resetError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeResetModal()">Batal</button>
+        <button class="btn-primary" id="btnResetSave" onclick="saveResetPassword()">Simpan Password Baru</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus -->
+  <div class="modal-overlay" id="modalDelete">
+    <div class="modal-card">
+      <h2 style="color: var(--danger);"><i class="fas fa-trash"></i> Hapus Operator?</h2>
+      <p id="deleteMessage" style="color: var(--text); margin-bottom: 0.8rem;"></p>
+      <p style="font-size: 0.75rem; color: #92400e; background: #fef3c7; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid var(--warning);">
+        ⚠️ <strong>Perhatian:</strong> Akun login (Auth) dan profil operator akan dihapus permanen.
+        <br><br>
+        💡 <strong>Catatan multi-role:</strong> Jika user ini juga guru/siswa, menghapus total akan menghapus akun tersebut.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus Total</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let allOperators = [];
+    let filteredOperators = [];
+    let allSchools = [];
+    let schoolsMap = {};
+    let editingId = null;
+    let resettingId = null;
+    let deletingId = null;
+    let currentPage = 1;
+    let pageSize = 25;
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      const client = initSupabase();
+
+      const { data: { session } } = await client.auth.getSession();
+      if (!session || !session.user) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      // ✅ Cek role admin via user_roles
+      const { data: adminRoles } = await client
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .eq('status', 'active');
+
+      if (!adminRoles || adminRoles.length === 0) {
+        alert('Anda tidak punya akses ke halaman ini.');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      await loadSchools();
+      await loadOperators();
+
+      populateSchoolFilter();
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    // ============================================
+    // LOAD DATA
+    // ============================================
+    async function loadSchools() {
+      const client = initSupabase();
+      try {
+        const { data, error } = await client
+          .from('schools').select('*').order('name', { ascending: true });
+        if (error) throw error;
+        allSchools = data || [];
+        schoolsMap = {};
+        allSchools.forEach(s => { schoolsMap[s.id] = s; });
+      } catch (err) {
+        console.warn('loadSchools error:', err);
+      }
+    }
+
+    // ✅ Baca dari user_roles (sumber kebenaran multi-role)
+    async function loadOperators() {
+      const client = initSupabase();
+      try {
+        const { data: roleRows, error: roleErr } = await client
+          .from('user_roles')
+          .select(`
+            id, role, school_id, status, created_at,
+            profiles!user_roles_user_id_fkey (id, name, email, role, school_id, status),
+            schools (id, name)
+          `)
+          .eq('role', 'operator')
+          .eq('status', 'active')
+          .order('created_at', { ascending: true });
+        if (roleErr) throw roleErr;
+
+        // Group by user_id — 1 user bisa operator di >1 sekolah
+        const opMap = {};
+        (roleRows || []).forEach(r => {
+          const p = r.profiles;
+          if (!p) return;
+          if (!opMap[p.id]) {
+            opMap[p.id] = {
+              id: p.id,
+              name: p.name || '(tanpa nama)',
+              email: p.email || '-',
+              status: p.status || 'active',
+              role: 'operator',
+              schools: [],
+              role_row_ids: []
+            };
+          }
+          opMap[p.id].schools.push({
+            id: r.school_id,
+            name: r.schools?.name || null,
+            role_row_id: r.id
+          });
+          opMap[p.id].role_row_ids.push(r.id);
+        });
+
+        allOperators = Object.values(opMap).sort((a, b) =>
+          (a.name || '').localeCompare(b.name || '')
+        );
+
+        applyFilter();
+      } catch (err) {
+        console.error('loadOperators error:', err);
+        document.getElementById('tableBody').innerHTML =
+          `<tr><td colspan="5" class="empty-row" style="color:var(--danger);">Gagal memuat: ${esc(err.message)}</td></tr>`;
+      }
+    }
+
+    function populateSchoolFilter() {
+      const sel = document.getElementById('filterSekolah');
+      sel.innerHTML = '<option value="">Semua Sekolah</option>' +
+        allSchools.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    }
+
+    // ============================================
+    // FILTER & PAGINATION
+    // ============================================
+    function applyFilter() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const filterSchool = document.getElementById('filterSekolah').value;
+
+      filteredOperators = allOperators.filter(o => {
+        const name = (o.name || '').toLowerCase();
+        const email = (o.email || '').toLowerCase();
+        const matchKeyword = !keyword || name.includes(keyword) || email.includes(keyword);
+        const matchSchool = !filterSchool ||
+          (o.schools || []).some(s => String(s.id) === String(filterSchool));
+        return matchKeyword && matchSchool;
+      });
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    function resetFilter() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterSekolah').value = '';
+      applyFilter();
+    }
+
+    function renderTable() {
+      document.getElementById('totalCount').textContent = allOperators.length;
+      document.getElementById('shownCount').textContent = filteredOperators.length;
+
+      const tbody = document.getElementById('tableBody');
+
+      if (filteredOperators.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="5" class="empty-row">
+            <span class="emoji">👤</span>
+            ${allOperators.length === 0
+              ? '<strong>Belum ada operator.</strong><br>Klik "+ Tambah Operator" untuk memulai.'
+              : 'Tidak ada operator yang cocok dengan filter.'}
+          </td></tr>`;
+        return;
+      }
+
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredOperators.length);
+      const pageData = filteredOperators.slice(startIdx, endIdx);
+
+      tbody.innerHTML = pageData.map((o, i) => {
+        const isActive = o.status === 'active';
+        const schoolBadges = (o.schools || []).map(s =>
+          `<span class="sekolah-badge"><i class="fas fa-school"></i> ${esc(s.name || '-')}</span>`
+        ).join('');
+
+        return `
+          <tr>
+            <td>${startIdx + i + 1}</td>
+            <td>
+              <div class="nama-operator">
+                <div class="avatar-mini">${esc((o.name || '?').charAt(0).toUpperCase())}</div>
+                ${esc(o.name || '-')}
+              </div>
+              <div class="email-teks">${esc(o.email || '-')}</div>
+            </td>
+            <td>
+              ${schoolBadges || '<span style="color:var(--text-muted); font-size:0.8rem;">-</span>'}
+            </td>
+            <td>
+              <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+                ${isActive ? '✓ Aktif' : '✕ Nonaktif'}
+              </span>
+            </td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-icon" title="Edit" onclick="openEditModal('${o.id}')">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn-icon warning" title="Reset Password" onclick="openResetModal('${o.id}')">
+                  <i class="fas fa-key"></i>
+                </button>
+                <button class="btn-icon danger" title="Hapus Total" onclick="openDeleteModal('${o.id}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPagination() {
+      const total = filteredOperators.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIdx = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const endIdx = Math.min(currentPage * pageSize, total);
+
+      document.getElementById('pageStart').textContent = startIdx;
+      document.getElementById('pageEnd').textContent = endIdx;
+      document.getElementById('pageTotal').textContent = total;
+      document.getElementById('currentPageInfo').textContent = currentPage;
+      document.getElementById('totalPagesInfo').textContent = totalPages;
+
+      document.getElementById('btnPrev').disabled = currentPage <= 1;
+      document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+      const numbersDiv = document.getElementById('pageNumbers');
+      numbersDiv.innerHTML = '';
+
+      const maxButtons = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+      if (endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+
+      if (startPage > 1) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = '1';
+        btn.onclick = () => goToPage(1);
+        numbersDiv.appendChild(btn);
+        if (startPage > 2) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => goToPage(i);
+        numbersDiv.appendChild(btn);
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = totalPages;
+        btn.onclick = () => goToPage(totalPages);
+        numbersDiv.appendChild(btn);
+      }
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderTable();
+      renderPagination();
+    }
+
+    function prevPage() { if (currentPage > 1) goToPage(currentPage - 1); }
+    function nextPage() {
+      const totalPages = Math.ceil(filteredOperators.length / pageSize);
+      if (currentPage < totalPages) goToPage(currentPage + 1);
+    }
+
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('pageSize').value);
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    // ============================================
+    // TAMBAH OPERATOR
+    // ============================================
+    function openAddModal() {
+      document.getElementById('inputName').value = '';
+      document.getElementById('inputEmail').value = '';
+      document.getElementById('inputPassword').value = '';
+      document.getElementById('addError').classList.add('hidden');
+      document.getElementById('btnAddSave').disabled = false;
+      document.getElementById('btnAddSave').textContent = 'Buat Operator';
+
+      const selSchool = document.getElementById('inputSchool');
+      if (allSchools.length === 0) {
+        selSchool.innerHTML = '<option value="">-- Belum ada sekolah --</option>';
+        document.getElementById('addError').textContent =
+          'Belum ada sekolah di sistem. Tambahkan sekolah terlebih dahulu di menu "Manajemen Sekolah".';
+        document.getElementById('addError').classList.remove('hidden');
+      } else {
+        selSchool.innerHTML = '<option value="">-- Pilih Sekolah --</option>' +
+          allSchools.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+      }
+
+      document.getElementById('modalAdd').classList.add('active');
+      setTimeout(() => document.getElementById('inputName').focus(), 100);
+    }
+
+    function closeAddModal() {
+      document.getElementById('modalAdd').classList.remove('active');
+    }
+
+    async function saveOperator() {
+      const name = document.getElementById('inputName').value.trim();
+      const email = document.getElementById('inputEmail').value.trim().toLowerCase();
+      const password = document.getElementById('inputPassword').value;
+      const schoolId = parseInt(document.getElementById('inputSchool').value) || null;
+      const errBox = document.getElementById('addError');
+      const btn = document.getElementById('btnAddSave');
+
+      errBox.classList.add('hidden');
+
+      if (!name) { errBox.textContent = 'Nama wajib diisi.'; errBox.classList.remove('hidden'); return; }
+      if (!email) { errBox.textContent = 'Email wajib diisi.'; errBox.classList.remove('hidden'); return; }
+      if (!password || password.length < 6) {
+        errBox.textContent = 'Password minimal 6 karakter.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (!schoolId) { errBox.textContent = 'Pilih sekolah terlebih dahulu.'; errBox.classList.remove('hidden'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Membuat...';
+
+      try {
+        const client = initSupabase();
+        const { data, error } = await client.functions.invoke('create-operator', {
+          body: { email, password, name, schoolId }
+        });
+
+        // ✅ Ambil detail error dari body response
+        if (error) {
+          let detail = error.message;
+          try {
+            const errBody = await error.context?.json();
+            detail = errBody?.error || errBody?.message || detail;
+          } catch (e) { /* ignore */ }
+          throw new Error(detail);
+        }
+
+        if (data && data.error) throw new Error(data.error);
+
+        closeAddModal();
+        showToast(data?.message || '✅ Operator berhasil dibuat');
+        await loadOperators();
+      } catch (err) {
+        console.error('saveOperator error:', err);
+        let msg = err.message || 'Unknown error';
+        if (msg.includes('duplicate') || msg.includes('already') || msg.includes('sudah menjadi operator')) {
+          msg = 'User ini sudah menjadi operator di sekolah tersebut, atau email sudah terdaftar.';
+        }
+        errBox.textContent = 'Gagal membuat operator: ' + msg;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Buat Operator';
+      }
+    }
+
+    // ============================================
+    // EDIT OPERATOR
+    // ============================================
+    function openEditModal(userId) {
+      const op = allOperators.find(o => o.id === userId);
+      if (!op) return;
+
+      editingId = userId;
+      document.getElementById('editName').value = op.name || '';
+      document.getElementById('editEmail').value = op.email || '';
+      const schoolNames = (op.schools || []).map(s => s.name).filter(Boolean).join(', ');
+      document.getElementById('editSchool').value = schoolNames || '-';
+      document.getElementById('editError').classList.add('hidden');
+      document.getElementById('btnEditSave').disabled = false;
+      document.getElementById('btnEditSave').textContent = 'Simpan';
+
+      document.getElementById('modalEdit').classList.add('active');
+      setTimeout(() => document.getElementById('editName').focus(), 100);
+    }
+
+    function closeEditModal() {
+      document.getElementById('modalEdit').classList.remove('active');
+      editingId = null;
+    }
+
+    async function saveEditOperator() {
+      if (!editingId) return;
+      const name = document.getElementById('editName').value.trim();
+      const errBox = document.getElementById('editError');
+      const btn = document.getElementById('btnEditSave');
+
+      errBox.classList.add('hidden');
+
+      if (!name) {
+        errBox.textContent = 'Nama wajib diisi.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        const client = initSupabase();
+        // Update profil (tanpa filter role, karena user mungkin multi-role)
+        const { error } = await client.from('profiles')
+          .update({ name })
+          .eq('id', editingId);
+        if (error) throw error;
+
+        closeEditModal();
+        showToast('✅ Nama operator berhasil diperbarui');
+        await loadOperators();
+      } catch (err) {
+        console.error('saveEditOperator error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + err.message;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Simpan';
+      }
+    }
+
+    // ============================================
+    // RESET PASSWORD
+    // ============================================
+    function openResetModal(userId) {
+      const op = allOperators.find(o => o.id === userId);
+      if (!op) return;
+
+      resettingId = userId;
+      document.getElementById('resetOperatorName').textContent = op.name + ' (' + op.email + ')';
+      document.getElementById('resetPassword').value = '';
+      document.getElementById('resetPasswordConfirm').value = '';
+      document.getElementById('resetError').classList.add('hidden');
+      document.getElementById('btnResetSave').disabled = false;
+      document.getElementById('btnResetSave').textContent = 'Simpan Password Baru';
+
+      document.getElementById('modalReset').classList.add('active');
+      setTimeout(() => document.getElementById('resetPassword').focus(), 100);
+    }
+
+    function closeResetModal() {
+      document.getElementById('modalReset').classList.remove('active');
+      resettingId = null;
+    }
+
+    async function saveResetPassword() {
+      if (!resettingId) return;
+      const pw1 = document.getElementById('resetPassword').value;
+      const pw2 = document.getElementById('resetPasswordConfirm').value;
+      const errBox = document.getElementById('resetError');
+      const btn = document.getElementById('btnResetSave');
+
+      errBox.classList.add('hidden');
+
+      if (!pw1 || pw1.length < 6) {
+        errBox.textContent = 'Password minimal 6 karakter.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (pw1 !== pw2) {
+        errBox.textContent = 'Konfirmasi password tidak cocok.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        const client = initSupabase();
+        const { data, error } = await client.functions.invoke('reset-password', {
+          body: { userId: resettingId, newPassword: pw1 }
+        });
+        if (error) throw new Error(error.message);
+        if (data && data.error) throw new Error(data.error);
+
+        closeResetModal();
+        showToast('🔑 Password operator berhasil direset');
+      } catch (err) {
+        console.error('saveResetPassword error:', err);
+        errBox.textContent = 'Gagal reset password: ' + err.message;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Simpan Password Baru';
+      }
+    }
+
+    // ============================================
+    // HAPUS OPERATOR
+    // ============================================
+    function openDeleteModal(userId) {
+      const op = allOperators.find(o => o.id === userId);
+      if (!op) return;
+
+      deletingId = userId;
+      document.getElementById('deleteMessage').innerHTML =
+        'Anda yakin ingin menghapus <strong>' + esc(op.name) + '</strong> (' + esc(op.email) + ')?';
+      document.getElementById('btnConfirmDelete').disabled = false;
+      document.getElementById('btnConfirmDelete').textContent = 'Ya, Hapus Total';
+
+      document.getElementById('modalDelete').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('modalDelete').classList.remove('active');
+      deletingId = null;
+    }
+
+    async function confirmDelete() {
+      if (!deletingId) return;
+      const btn = document.getElementById('btnConfirmDelete');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+
+      try {
+        const client = initSupabase();
+        const { data, error } = await client.functions.invoke('delete-teacher', {
+          body: { userId: deletingId }
+        });
+        if (error) throw new Error(error.message);
+        if (data && data.error) throw new Error(data.error);
+
+        closeDeleteModal();
+        showToast('🗑️ Operator berhasil dihapus total');
+        await loadOperators();
+      } catch (err) {
+        console.error('confirmDelete error:', err);
+        showToast('Gagal menghapus: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus Total';
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function esc(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeAddModal();
+        closeEditModal();
+        closeResetModal();
+        closeDeleteModal();
+      }
+    });
+  </script>
+</body>
+</html>
