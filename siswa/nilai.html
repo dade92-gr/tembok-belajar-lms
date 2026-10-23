@@ -4,100 +4,494 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nilai Saya — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { margin-bottom: 1.5rem; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
 
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
+
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* STAT GRID */
     .stat-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1rem; margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.2rem;
     }
     .stat-card {
-      background: white; border-radius: var(--tb-radius); padding: 1.2rem;
-      text-align: center; border: 1px solid rgba(46,204,113,0.1);
-      box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-xs);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
     }
-    .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--tb-primary); }
-    .stat-label { font-size: 0.75rem; color: var(--tb-text-muted); margin-top: 0.3rem; }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: var(--primary);
+      opacity: 0;
+      transition: var(--transition);
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.green { background: #d1fae5; color: #059669; }
+    .stat-icon.orange { background: #fed7aa; color: #ea580c; }
+    .stat-info { flex: 1; min-width: 0; }
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
 
+    /* PANEL */
     .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
     }
+
     .panel-title {
-      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--tb-light);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title i { color: var(--primary); font-size: 0.9rem; }
+
+    .badge-count {
+      background: var(--primary);
+      color: white;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-left: auto;
     }
 
-    .nilai-list { display: flex; flex-direction: column; gap: 0.8rem; }
+    /* NILAI LIST */
+    .nilai-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
     .nilai-item {
-      background: var(--tb-bg); border-radius: 12px;
-      padding: 1rem 1.2rem; border-left: 4px solid var(--tb-primary);
-      display: flex; justify-content: space-between; align-items: start;
-      gap: 1rem; flex-wrap: wrap;
+      background: var(--bg-soft);
+      border-radius: 12px;
+      padding: 1.1rem 1.3rem;
+      border-left: 4px solid var(--primary);
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      flex-wrap: wrap;
+      transition: var(--transition);
     }
-    .nilai-info { flex: 1; min-width: 200px; }
-    .nilai-title { font-weight: 700; color: var(--tb-dark); font-size: 0.95rem; margin-bottom: 0.3rem; }
-    .nilai-meta { font-size: 0.75rem; color: var(--tb-text-muted); display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-    .nilai-feedback { font-size: 0.8rem; color: var(--tb-text); background: white; padding: 0.6rem 0.8rem; border-radius: 8px; margin-top: 0.5rem; line-height: 1.5; }
-    .nilai-feedback strong { color: var(--tb-dark); }
+    .nilai-item:hover {
+      box-shadow: var(--shadow-sm);
+      border-left-color: var(--primary-dark);
+    }
 
+    .nilai-item.high { border-left-color: var(--success); }
+    .nilai-item.mid { border-left-color: var(--warning); }
+    .nilai-item.low { border-left-color: var(--danger); }
+
+    .nilai-info { flex: 1; min-width: 240px; }
+
+    .nilai-title {
+      font-weight: 700;
+      color: var(--navy);
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .badge-type.quiz { background: #fef3c7; color: #92400e; }
+    .badge-type.task { background: var(--primary-light); color: var(--primary-dark); }
+
+    .nilai-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+    }
+    .nilai-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nilai-meta i { color: var(--primary); }
+
+    .nilai-feedback {
+      font-size: 0.8rem;
+      color: #78350f;
+      background: var(--warning-light);
+      padding: 0.6rem 0.9rem;
+      border-radius: 8px;
+      margin-top: 0.6rem;
+      line-height: 1.5;
+      border-left: 3px solid var(--warning);
+    }
+    .nilai-feedback strong {
+      color: var(--navy);
+      display: block;
+      margin-bottom: 3px;
+      font-size: 0.78rem;
+    }
+    .nilai-feedback em {
+      color: #78350f;
+      font-style: normal;
+    }
+
+    /* SCORE */
     .nilai-score {
-      text-align: center; min-width: 100px;
+      text-align: center;
+      min-width: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
-    .score-big { font-size: 2rem; font-weight: 700; color: var(--tb-primary); line-height: 1; }
-    .score-small { font-size: 0.75rem; color: var(--tb-text-muted); margin-top: 0.3rem; }
+    .score-big {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+    .score-big.high { color: var(--success); }
+    .score-big.mid { color: var(--warning); }
+    .score-big.low { color: var(--danger); }
+    .score-small {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+      font-weight: 500;
+    }
+    .score-pct {
+      display: inline-block;
+      margin-top: 0.4rem;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+    .score-pct.high { background: var(--success-light); color: #047857; }
+    .score-pct.mid { background: var(--warning-light); color: #92400e; }
+    .score-pct.low { background: var(--danger-light); color: #b91c1c; }
 
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
-
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+    /* EMPTY */
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2.5rem 1rem;
       font-size: 0.85rem;
     }
-    .btn-secondary:hover { background: var(--tb-light); }
+    .empty-msg .emoji {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+    .empty-msg strong { color: var(--text); }
+
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .nilai-item { flex-direction: column; }
+      .nilai-score { flex-direction: row; gap: 0.6rem; min-width: 0; width: 100%; justify-content: flex-start; }
+      .score-big { font-size: 1.8rem; }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+    }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Siswa</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat nilai...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
     <div class="page-toolbar">
-      <h1>📊 Nilai Saya
-        <small>Nilai dan feedback dari guru</small>
-      </h1>
-    </div>
-
-    <div class="stat-grid" id="statsGrid"></div>
-
-    <div class="panel">
-      <h2 class="panel-title">📋 Daftar Nilai</h2>
-      <div class="nilai-list" id="nilaiList">
-        <div class="empty-msg">Memuat...</div>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#nilai';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-star"></i>
+          <span>
+            Nilai Saya
+            <small>Nilai dan feedback dari guru</small>
+          </span>
+        </h1>
       </div>
     </div>
 
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-secondary">← Kembali ke Dashboard</a>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat nilai...</p>
     </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Stat Grid -->
+      <div class="stat-grid" id="statsGrid"></div>
+
+      <!-- Panel Nilai -->
+      <div class="panel">
+        <h2 class="panel-title">
+          <i class="fas fa-list"></i> Daftar Nilai
+          <span class="badge-count" id="nilaiCount" style="display:none;">0</span>
+        </h2>
+        <div class="nilai-list" id="nilaiList">
+          <div class="empty-msg">Memuat...</div>
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#nilai';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <script src="../assets/js/config.js"></script>
@@ -105,12 +499,13 @@
   <script>
     let currentUser = null;
 
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('siswa');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
       await loadData();
     })();
 
@@ -121,61 +516,119 @@
         document.getElementById('pageContent').classList.remove('hidden');
 
         const total = grades.length;
-        let avg = 0;
+        const list = document.getElementById('nilaiList');
+        const countEl = document.getElementById('nilaiCount');
+
+        // Hitung statistik
+        let avg = 0, highest = 0;
         if (total > 0) {
           const sumPct = grades.reduce((s, g) => {
             const max = g.activities?.max_score || 100;
             return s + (parseFloat(g.score) / max) * 100;
           }, 0);
           avg = (sumPct / total).toFixed(1);
+          highest = Math.max(...grades.map(g => {
+            const max = g.activities?.max_score || 100;
+            return (parseFloat(g.score) / max) * 100;
+          })).toFixed(1);
         }
-        const highest = total > 0 ? Math.max(...grades.map(g => {
-          const max = g.activities?.max_score || 100;
-          return ((parseFloat(g.score) / max) * 100);
-        })).toFixed(1) : '-';
 
-        document.getElementById('statsGrid').innerHTML = `
-          <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Nilai Diterima</div></div>
-          <div class="stat-card"><div class="stat-value">${avg}</div><div class="stat-label">Rata-rata (%)</div></div>
-          <div class="stat-card"><div class="stat-value">${highest}</div><div class="stat-label">Nilai Tertinggi (%)</div></div>
-        `;
+        // Render stat cards
+        const stats = [
+          { icon: 'fa-star', color: 'blue', value: total, label: 'Nilai Diterima' },
+          { icon: 'fa-chart-line', color: 'green', value: total > 0 ? avg + '%' : '-', label: 'Rata-rata' },
+          { icon: 'fa-trophy', color: 'orange', value: total > 0 ? highest + '%' : '-', label: 'Tertinggi' }
+        ];
+        document.getElementById('statsGrid').innerHTML = stats.map(s => `
+          <div class="stat-card">
+            <div class="stat-icon ${s.color}"><i class="fas ${s.icon}"></i></div>
+            <div class="stat-info">
+              <div class="stat-value">${s.value}</div>
+              <div class="stat-label">${s.label}</div>
+            </div>
+          </div>
+        `).join('');
 
-        const list = document.getElementById('nilaiList');
+        // Empty state
         if (total === 0) {
-          list.innerHTML = '<div class="empty-msg">Belum ada nilai. Kerjakan tugas dan tunggu guru menilai.</div>';
+          countEl.style.display = 'none';
+          list.innerHTML = `
+            <div class="empty-msg">
+              <span class="emoji">📊</span>
+              <strong>Belum ada nilai.</strong><br>
+              Kerjakan tugas atau kuis, lalu tunggu guru menilai.
+            </div>`;
           return;
         }
 
+        countEl.textContent = total;
+        countEl.style.display = 'inline-block';
+
+        // Render daftar nilai
         list.innerHTML = grades.map(g => {
           const act = g.activities;
           const subject = act?.subjects;
           const kelas = act?.classes;
           const max = act?.max_score || 100;
-          const pct = ((parseFloat(g.score) / max) * 100).toFixed(0);
+          const score = parseFloat(g.score);
+          const pct = ((score / max) * 100).toFixed(1);
+
+          // Klasifikasi warna
+          let cls = 'high';
+          if (pct < 60) cls = 'low';
+          else if (pct < 80) cls = 'mid';
+
+          const typeLabel = act?.type === 'quiz'
+            ? '<span class="badge-type quiz">🧪 Kuis</span>'
+            : '<span class="badge-type task">📝 Tugas</span>';
+
+          const gradedDate = g.graded_at
+            ? new Date(g.graded_at).toLocaleDateString('id-ID', {
+                day: 'numeric', month: 'short', year: 'numeric'
+              })
+            : '-';
 
           return `
-            <div class="nilai-item">
+            <div class="nilai-item ${cls}">
               <div class="nilai-info">
-                <div class="nilai-title">${esc(act?.title || '-')} ${act?.type === 'quiz' ? '🧪' : '📝'}</div>
-                <div class="nilai-meta">
-                  <span>📚 ${esc(subject?.name || '-')}</span>
-                  <span>🏫 ${esc(kelas?.name || '-')}</span>
-                  <span>📅 ${g.graded_at ? new Date(g.graded_at).toLocaleDateString('id-ID') : '-'}</span>
+                <div class="nilai-title">
+                  ${typeLabel}
+                  <span>${esc(act?.title || '(judul tidak tersedia)')}</span>
                 </div>
-                ${g.feedback ? `<div class="nilai-feedback"><strong>💬 Feedback guru:</strong> ${esc(g.feedback)}</div>` : ''}
+                <div class="nilai-meta">
+                  <span><i class="fas fa-book"></i> ${esc(subject?.name || '-')}</span>
+                  <span><i class="fas fa-school"></i> ${esc(kelas?.name || '-')}</span>
+                  <span><i class="fas fa-calendar"></i> ${gradedDate}</span>
+                </div>
+                ${g.feedback ? `
+                  <div class="nilai-feedback">
+                    <strong>💬 Feedback dari guru:</strong>
+                    <em>${esc(g.feedback)}</em>
+                  </div>
+                ` : ''}
               </div>
               <div class="nilai-score">
-                <div class="score-big">${g.score}</div>
-                <div class="score-small">dari ${max} (${pct}%)</div>
+                <div class="score-big ${cls}">${score}</div>
+                <div class="score-small">dari ${max}</div>
+                <span class="score-pct ${cls}">${pct}%</span>
               </div>
             </div>
           `;
         }).join('');
       } catch (err) {
-        document.getElementById('loading').innerHTML = '<p style="color:red;">Error: ' + err.message + '</p>';
+        console.error('loadData error:', err);
+        document.getElementById('loading').innerHTML = `
+          <div class="empty-msg" style="color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            <strong>Gagal memuat nilai</strong><br>
+            <small>${esc(err.message)}</small>
+          </div>`;
       }
     }
 
+    // ============================================
+    // UTILS
+    // ============================================
     function esc(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');

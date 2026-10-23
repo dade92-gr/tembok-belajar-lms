@@ -4,164 +4,592 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Detail Kelas — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1: Deteksi embed mode robust -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
   <style>
-    .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { margin-bottom: 1.5rem; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.85rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
 
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* PATCH 2: CSS embed — sembunyikan elemen parent */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+
+    html.tb-embed .page-toolbar-left,
+    body.tb-embed .page-toolbar-left { gap: 0.3rem; }
+
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    /* PAGE TOOLBAR */
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* SUBJECT BAR */
+    .subject-bar {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 1rem 1.4rem;
+      border-radius: var(--radius-lg);
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .subject-bar::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .subject-bar i {
+      font-size: 1.4rem;
+      background: rgba(255,255,255,0.2);
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .subject-bar-text { position: relative; z-index: 1; }
+    .subject-bar-title { font-size: 1.05rem; font-weight: 700; }
+    .subject-bar-sub { font-size: 0.8rem; opacity: 0.9; }
+
+    /* CLASS SELECTOR */
     .class-selector {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
-      box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
     }
-    .class-selector label { font-size: 0.8rem; font-weight: 600; color: var(--tb-dark); margin-bottom: 0.4rem; display: block; }
+    .class-selector label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
     .class-selector select {
-      width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--tb-border);
-      border-radius: 12px; font-size: 0.9rem; font-family: inherit; cursor: pointer;
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
+    }
+    .class-selector select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
     }
 
+    /* TABS */
     .tabs {
-      display: flex; gap: 4px; border-bottom: 2px solid var(--tb-light);
-      margin-bottom: 1.2rem; flex-wrap: wrap;
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
     }
     .tab {
-      padding: 0.7rem 1.2rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;
-      color: var(--tb-text-muted); border-bottom: 3px solid transparent;
-      transition: var(--tb-transition);
+      padding: 0.7rem 1.2rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 3px solid transparent;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .tab:hover { background: var(--tb-bg); }
-    .tab.active { color: var(--tb-primary); border-bottom-color: var(--tb-primary); }
+    .tab:hover { background: var(--bg-soft); color: var(--text-secondary); }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab i { font-size: 0.85rem; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    /* PANEL */
     .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.5rem; margin-bottom: 1.5rem;
-      box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
     }
 
     .panel-title {
-      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--tb-light);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title i { color: var(--primary); }
+
+    /* ============================================
+       TABEL SISWA
+       ============================================ */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
     }
 
-    .student-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.6rem; }
-    .student-item {
-      background: var(--tb-bg); border-radius: 10px; padding: 0.7rem 1rem;
-      display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+    .student-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      background: var(--surface);
     }
-    .student-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
-      color: white; display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
-    }
-    .student-info { flex: 1; }
-    .student-info strong { display: block; font-weight: 600; color: var(--tb-text); }
-    .student-info small { color: var(--tb-text-muted); font-size: 0.7rem; }
 
+    .student-table thead {
+      background: var(--bg-soft);
+    }
+
+    .student-table th {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .student-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--text);
+    }
+
+    .student-table tbody tr:hover {
+      background: var(--primary-lighter);
+    }
+
+    .student-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .student-table .avatar-cell { text-align: center; }
+
+    .student-table .student-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .student-table .student-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .student-table .student-email {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .student-table .empty-cell {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .student-table .empty-cell .emoji {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+
+    /* ACTION GRID */
     .action-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
     }
     .action-card {
-      background: var(--tb-bg); border-radius: 12px; padding: 1.2rem;
-      text-align: center; cursor: pointer; transition: var(--tb-transition);
-      border: 1px solid transparent; text-decoration: none; color: inherit;
+      background: var(--bg-soft);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
       display: block;
     }
-    .action-card:hover { background: var(--tb-light); border-color: var(--tb-primary); transform: translateY(-2px); }
-    .action-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
-    .action-label { font-size: 0.85rem; font-weight: 600; color: var(--tb-dark); }
-
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
-
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
-      font-size: 0.85rem; transition: var(--tb-transition);
+    .action-card:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
     }
-    .btn-secondary:hover { background: var(--tb-light); }
+    .action-icon-wrap {
+      width: 52px; height: 52px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin: 0 auto 0.7rem;
+    }
+    .action-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--navy);
+    }
 
-    @media (max-width: 600px) {
-      .page-container { padding: 1.2rem 1rem; }
-      .student-list { grid-template-columns: 1fr; }
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .subject-bar { padding: 0.9rem 1.1rem; }
+      .subject-bar-title { font-size: 1rem; }
+      .student-table th,
+      .student-table td {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.78rem;
+      }
+      .student-table .student-email {
+        font-size: 0.72rem;
+      }
     }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat kelas...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
+    <!-- PAGE TOOLBAR -->
     <div class="page-toolbar">
-      <h1>🏫 Detail Kelas
-        <small id="mapelTitle">-</small>
-      </h1>
-    </div>
-
-    <div class="class-selector">
-      <label>Pilih Kelas</label>
-      <select id="selectKelas" onchange="onKelasChange()"></select>
-    </div>
-
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab(this, 'tabSiswa')">👥 Siswa</div>
-      <div class="tab" onclick="switchTab(this, 'tabAksi')">⚙️ Aksi Cepat</div>
-    </div>
-
-    <div id="tabSiswa" class="tab-content active">
-      <div class="panel">
-        <h2 class="panel-title">Daftar Siswa</h2>
-        <div id="studentList" class="student-list">
-          <div class="empty-msg">Pilih kelas terlebih dahulu</div>
-        </div>
+      <div class="page-toolbar-left">
+        <a href="mapel.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#mapel';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Mapel
+        </a>
+        <h1>
+          <i class="fas fa-school"></i>
+          <span>
+            Detail Kelas
+            <small>Lihat siswa & akses modul pengajaran</small>
+          </span>
+        </h1>
       </div>
     </div>
 
-    <div id="tabAksi" class="tab-content">
-      <div class="panel">
-        <h2 class="panel-title">Aksi Cepat</h2>
-        <div class="action-grid">
-          <a href="materi.html" class="action-card" onclick="saveContext()">
-            <span class="action-icon">📄</span>
-            <div class="action-label">Kelola Materi</div>
-          </a>
-          <a href="aktivitas.html" class="action-card" onclick="saveContext()">
-            <span class="action-icon">✏️</span>
-            <div class="action-label">Kelola Aktivitas</div>
-          </a>
-          <a href="penilaian.html" class="action-card" onclick="saveContext()">
-            <span class="action-icon">📝</span>
-            <div class="action-label">Nilai Submissions</div>
-          </a>
-          <a href="gradebook.html" class="action-card" onclick="saveContext()">
-            <span class="action-icon">📊</span>
-            <div class="action-label">Grade Book</div>
-          </a>
-        </div>
-      </div>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat kelas...</p>
     </div>
 
-    <div class="back-nav">
-      <a href="mapel.html" class="btn-secondary">← Kembali ke Mapel</a>
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Subject Bar -->
+      <div class="subject-bar" id="subjectBar" style="display:none;">
+        <i class="fas fa-book"></i>
+        <div class="subject-bar-text">
+          <div class="subject-bar-title" id="subjectName">-</div>
+          <div class="subject-bar-sub" id="subjectSub">-</div>
+        </div>
+      </div>
+
+      <!-- Class Selector -->
+      <div class="class-selector">
+        <label><i class="fas fa-door-open"></i> Pilih Kelas</label>
+        <select id="selectKelas" onchange="onKelasChange()">
+          <option value="">-- Pilih Kelas --</option>
+        </select>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(this, 'tabSiswa')">
+          <i class="fas fa-users"></i> Siswa
+        </div>
+        <div class="tab" onclick="switchTab(this, 'tabAksi')">
+          <i class="fas fa-cog"></i> Aksi Cepat
+        </div>
+      </div>
+
+      <!-- TAB Siswa (TABEL) -->
+      <div id="tabSiswa" class="tab-content active">
+        <div class="panel">
+          <h2 class="panel-title">
+            <i class="fas fa-users"></i> Daftar Siswa
+          </h2>
+          <div class="table-wrapper">
+            <table class="student-table">
+              <thead>
+                <tr>
+                  <th style="width:50px;">No</th>
+                  <th style="width:60px; text-align:center;">Avatar</th>
+                  <th>Nama Siswa</th>
+                  <th style="width:280px;">Email</th>
+                </tr>
+              </thead>
+              <tbody id="studentList">
+                <tr>
+                  <td colspan="4" class="empty-cell">
+                    <span class="emoji">👥</span>
+                    Pilih kelas terlebih dahulu
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB Aksi -->
+      <div id="tabAksi" class="tab-content">
+        <div class="panel">
+          <h2 class="panel-title">
+            <i class="fas fa-bolt"></i> Aksi Cepat
+          </h2>
+          <div class="action-grid">
+            <a href="#" class="action-card" onclick="openModul('materi'); return false;">
+              <div class="action-icon-wrap"><i class="fas fa-file-alt"></i></div>
+              <div class="action-label">Kelola Materi</div>
+            </a>
+            <a href="#" class="action-card" onclick="openModul('aktivitas'); return false;">
+              <div class="action-icon-wrap"><i class="fas fa-tasks"></i></div>
+              <div class="action-label">Kelola Aktivitas</div>
+            </a>
+            <a href="#" class="action-card" onclick="openModul('penilaian'); return false;">
+              <div class="action-icon-wrap"><i class="fas fa-check-circle"></i></div>
+              <div class="action-label">Nilai Submissions</div>
+            </a>
+            <a href="#" class="action-card" onclick="openModul('gradebook'); return false;">
+              <div class="action-icon-wrap"><i class="fas fa-table"></i></div>
+              <div class="action-label">Grade Book</div>
+            </a>
+            <a href="#" class="action-card" onclick="openModul('progress'); return false;">
+              <div class="action-icon-wrap"><i class="fas fa-chart-line"></i></div>
+              <div class="action-label">Progress Siswa</div>
+            </a>
+            <a href="#" class="action-card" onclick="openModul('forum'); return false;">
+              <div class="action-icon-wrap"><i class="fas fa-comments"></i></div>
+              <div class="action-label">Forum Kelas</div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="mapel.html" class="btn-secondary" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#mapel';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Mapel
+        </a>
+      </div>
+
     </div>
   </div>
 
@@ -173,96 +601,191 @@
     let currentSubjectId = null;
     let currentClassId = null;
     let currentSubjectName = '';
+    let allClassOptions = [];
 
+    // ============================================
+    // INIT — pakai requireAuth (versi supabase.js yang sudah ada)
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('guru');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
-      // Ambil subject dari URL param
-      const params = new URLSearchParams(window.location.search);
-      currentSubjectId = parseInt(params.get('subject')) || null;
-
-      // Ambil semua penugasan guru
-      allAssignments = await getMyTeachingAssignments(currentUser.id);
-
-      // Filter sesuai subject
-      let filtered = allAssignments.filter(a => a.subjects && a.subjects.id === currentSubjectId);
-      if (filtered.length === 0) filtered = allAssignments; // fallback semua
-
-      if (filtered.length > 0 && filtered[0].subjects) {
-        currentSubjectName = filtered[0].subjects.name;
-        document.getElementById('mapelTitle').textContent = '📚 ' + currentSubjectName;
+      // Ambil subjectId — PRIORITAS: sessionStorage → URL param
+      const pending = sessionStorage.getItem('guru_pending_subject');
+      if (pending) {
+        currentSubjectId = parseInt(pending);
+        sessionStorage.removeItem('guru_pending_subject');
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        currentSubjectId = parseInt(params.get('subject')) || null;
       }
 
-      // Isi dropdown kelas
+      // Ambil semua penugasan guru
+      try {
+        allAssignments = await getMyTeachingAssignments(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load assignments:', err);
+        allAssignments = [];
+      }
+
+      if (!allAssignments || allAssignments.length === 0) {
+        document.getElementById('loading').innerHTML = `
+          <div class="empty-cell">
+            <span class="emoji">📚</span>
+            <strong>Belum ada mapel yang diampu.</strong><br>
+            Hubungi operator sekolah untuk ditugaskan.
+          </div>`;
+        return;
+      }
+
+      // Filter berdasarkan subjectId
+      let filtered = allAssignments;
+      if (currentSubjectId) {
+        const bySubject = allAssignments.filter(a => a.subjects && a.subjects.id === currentSubjectId);
+        if (bySubject.length > 0) filtered = bySubject;
+      }
+
+      // Set nama mapel
+      if (filtered.length > 0 && filtered[0].subjects) {
+        currentSubjectName = filtered[0].subjects.name;
+        document.getElementById('subjectBar').style.display = 'flex';
+        document.getElementById('subjectName').textContent = currentSubjectName;
+        document.getElementById('subjectSub').textContent =
+          (filtered[0].subjects.code || '') + ' · Pilih kelas di bawah';
+      }
+
+      // Kumpulkan kelas unik
       const seen = new Set();
-      const classOptions = [];
+      allClassOptions = [];
       filtered.forEach(a => {
         if (a.classes && !seen.has(a.classes.id)) {
           seen.add(a.classes.id);
-          classOptions.push(a.classes);
+          allClassOptions.push(a.classes);
         }
       });
 
       const sel = document.getElementById('selectKelas');
-      if (classOptions.length === 0) {
+      if (allClassOptions.length === 0) {
         sel.innerHTML = '<option value="">-- Tidak ada kelas --</option>';
       } else {
         sel.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
-          classOptions.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+          allClassOptions.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
       }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
     })();
 
+    // ============================================
+    // ON KELAS CHANGE — render tabel
+    // ============================================
     async function onKelasChange() {
       const classId = parseInt(document.getElementById('selectKelas').value);
       currentClassId = classId;
+      const tbody = document.getElementById('studentList');
+
       if (!classId) {
-        document.getElementById('studentList').innerHTML = '<div class="empty-msg">Pilih kelas terlebih dahulu</div>';
+        tbody.innerHTML = `
+          <tr><td colspan="4" class="empty-cell">
+            <span class="emoji">👥</span>
+            Pilih kelas terlebih dahulu
+          </td></tr>`;
         return;
       }
 
-      document.getElementById('studentList').innerHTML = '<div class="empty-msg">Memuat siswa...</div>';
+      // Update subject bar untuk mapel yang sesuai kelas ini
+      const assign = allAssignments.find(a => a.classes && a.classes.id === classId &&
+        (!currentSubjectId || (a.subjects && a.subjects.id === currentSubjectId)));
+      if (assign && assign.subjects) {
+        currentSubjectName = assign.subjects.name;
+        currentSubjectId = assign.subjects.id;
+        document.getElementById('subjectName').textContent = currentSubjectName;
+        document.getElementById('subjectSub').textContent =
+          (assign.subjects.code || '') + ' · ' + (assign.classes?.name || '');
+      }
+
+      tbody.innerHTML = `
+        <tr><td colspan="4" class="empty-cell">Memuat siswa...</td></tr>`;
+
       try {
         const enrolls = await getStudentsInClass(classId);
-        if (enrolls.length === 0) {
-          document.getElementById('studentList').innerHTML = '<div class="empty-msg">Belum ada siswa di kelas ini</div>';
+
+        if (!enrolls || enrolls.length === 0) {
+          tbody.innerHTML = `
+            <tr><td colspan="4" class="empty-cell">
+              <span class="emoji">👥</span>
+              Belum ada siswa di kelas ini.
+            </td></tr>`;
           return;
         }
-        document.getElementById('studentList').innerHTML = enrolls.map(e => {
+
+        // Render baris — skip yang profiles-nya null
+        const rows = enrolls.map((e, i) => {
           const p = e.profiles;
           if (!p) return '';
           return `
-            <div class="student-item">
-              <div class="student-avatar">${esc(p.name.charAt(0).toUpperCase())}</div>
-              <div class="student-info">
-                <strong>${esc(p.name)}</strong>
-                <small>${esc(p.email)}</small>
-              </div>
-            </div>`;
+            <tr>
+              <td>${i + 1}</td>
+              <td class="avatar-cell">
+                <div class="student-avatar">${esc((p.name || '?').charAt(0).toUpperCase())}</div>
+              </td>
+              <td class="student-name">${esc(p.name || '-')}</td>
+              <td class="student-email">${esc(p.email || '-')}</td>
+            </tr>`;
         }).join('');
+
+        if (!rows.trim()) {
+          tbody.innerHTML = `
+            <tr><td colspan="4" class="empty-cell" style="color:var(--danger);">
+              <span class="emoji">⚠️</span>
+              Ada ${enrolls.length} siswa terdaftar, tapi data profil tidak terbaca.
+            </td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = rows;
       } catch (err) {
         console.error('Load siswa error:', err);
-        document.getElementById('studentList').innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+        tbody.innerHTML = `
+          <tr><td colspan="4" class="empty-cell" style="color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            Gagal memuat: ${esc(err.message)}
+          </td></tr>`;
       }
     }
 
-    function saveContext() {
-      // Simpan konteks ke sessionStorage untuk dipakai materi.html, aktivitas.html, dst.
-      if (currentSubjectId && currentClassId) {
-        sessionStorage.setItem('guru_context', JSON.stringify({
-          subjectId: currentSubjectId,
-          classId: currentClassId,
-          subjectName: currentSubjectName
-        }));
+    // ============================================
+    // OPEN MODUL (via parent dashboard)
+    // ============================================
+    function openModul(view) {
+      if (!currentClassId || !currentSubjectId) {
+        alert('Pilih kelas terlebih dahulu.');
+        return;
       }
+
+      // Simpan konteks ke sessionStorage
+      sessionStorage.setItem('guru_context', JSON.stringify({
+        subjectId: currentSubjectId,
+        classId: currentClassId,
+        subjectName: currentSubjectName
+      }));
+
+      // Kalau di iframe → minta parent navigasi
+      if (window.self !== window.top) {
+        try {
+          window.top.postMessage({ type: 'GURU_NAVIGATE', view }, '*');
+          return;
+        } catch (e) { /* fallback */ }
+      }
+
+      // Fallback
+      window.location.href = view + '.html?embed=1';
     }
 
+    // ============================================
+    // TABS
+    // ============================================
     function switchTab(el, id) {
       el.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       el.classList.add('active');

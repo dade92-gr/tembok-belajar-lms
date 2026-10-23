@@ -4,111 +4,495 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Progress Belajar — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { margin-bottom: 1.5rem; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
 
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
+
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* STAT GRID */
     .stat-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1rem; margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.2rem;
     }
     .stat-card {
-      background: white; border-radius: var(--tb-radius); padding: 1.2rem;
-      text-align: center; border: 1px solid rgba(46,204,113,0.1);
-      box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-xs);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
     }
-    .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--tb-primary); }
-    .stat-label { font-size: 0.75rem; color: var(--tb-text-muted); margin-top: 0.3rem; }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: var(--primary);
+      opacity: 0;
+      transition: var(--transition);
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+    .stat-icon.green { background: #d1fae5; color: #059669; }
+    .stat-icon.orange { background: #fed7aa; color: #ea580c; }
+    .stat-info { flex: 1; min-width: 0; }
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
 
+    /* PANEL */
     .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
     }
+
     .panel-title {
-      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--tb-light);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title i { color: var(--primary); font-size: 0.9rem; }
+
+    .badge-count {
+      background: var(--primary);
+      color: white;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-left: auto;
     }
 
-    .progress-list { display: flex; flex-direction: column; gap: 1rem; }
+    /* PROGRESS LIST */
+    .progress-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
     .progress-item {
-      background: var(--tb-bg); border-radius: 12px;
-      padding: 1.2rem 1.4rem; border-left: 4px solid var(--tb-primary);
+      background: var(--bg-soft);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+      border-left: 4px solid var(--primary);
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
     }
-    .progress-header {
-      display: flex; justify-content: space-between; align-items: start;
-      gap: 1rem; margin-bottom: 0.6rem; flex-wrap: wrap;
+    .progress-item:hover {
+      box-shadow: var(--shadow-sm);
+      border-left-color: var(--primary-dark);
     }
-    .progress-title { font-weight: 700; color: var(--tb-dark); font-size: 0.95rem; }
-    .progress-kelas { font-size: 0.75rem; color: var(--tb-text-muted); margin-top: 0.2rem; }
-    .progress-meta {
-      display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.75rem;
-      color: var(--tb-text-muted); margin-bottom: 0.6rem;
-    }
-    .progress-meta strong { color: var(--tb-dark); }
 
+    .progress-item.high { border-left-color: var(--success); }
+    .progress-item.mid { border-left-color: var(--warning); }
+    .progress-item.low { border-left-color: var(--danger); }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 0.7rem;
+      flex-wrap: wrap;
+    }
+
+    .progress-title {
+      font-weight: 700;
+      color: var(--navy);
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .subject-code {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      background: var(--surface);
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .progress-kelas {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .progress-kelas i { color: var(--primary); }
+
+    .progress-percent {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .percent-big {
+      font-size: 1.8rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+    .percent-big.high { color: var(--success); }
+    .percent-big.mid { color: var(--warning); }
+    .percent-big.low { color: var(--danger); }
+    .percent-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    .progress-meta {
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 0.7rem;
+    }
+    .progress-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .progress-meta i { color: var(--primary); }
+    .progress-meta strong {
+      color: var(--navy);
+      font-weight: 700;
+    }
+
+    /* PROGRESS BAR */
     .bar-wrap {
-      background: #f0f0f0; border-radius: 20px; height: 24px; overflow: hidden;
+      background: var(--border);
+      border-radius: 999px;
+      height: 24px;
+      overflow: hidden;
       position: relative;
     }
     .bar-fill {
-      height: 100%; border-radius: 20px; transition: width 0.3s ease;
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 0.7rem; font-weight: 700;
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.4s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
     }
-    .bar-green { background: linear-gradient(90deg, #27ae60, #2ecc71); }
-    .bar-yellow { background: linear-gradient(90deg, #f39c12, #e67e22); }
-    .bar-red { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+    .bar-fill.high { background: linear-gradient(90deg, #059669, #10b981); }
+    .bar-fill.mid { background: linear-gradient(90deg, #d97706, #f59e0b); }
+    .bar-fill.low { background: linear-gradient(90deg, #dc2626, #ef4444); }
 
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 3rem; font-size: 0.85rem; }
-
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+    /* EMPTY */
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 3rem 1rem;
       font-size: 0.85rem;
     }
-    .btn-secondary:hover { background: var(--tb-light); }
+    .empty-msg .emoji {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+    .empty-msg strong { color: var(--text); }
+
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .progress-header { flex-direction: column; }
+      .progress-percent { align-items: flex-start; text-align: left; }
+      .percent-big { font-size: 1.5rem; }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+    }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Siswa</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat progress...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
     <div class="page-toolbar">
-      <h1>📈 Progress Belajar
-        <small>Pantau kemajuan Anda di setiap mata pelajaran</small>
-      </h1>
-    </div>
-
-    <div class="stat-grid" id="statsGrid"></div>
-
-    <div class="panel">
-      <h2 class="panel-title">📊 Progress per Mapel</h2>
-      <div class="progress-list" id="progressList">
-        <div class="empty-msg">Memuat...</div>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#progress';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-chart-line"></i>
+          <span>
+            Progress Belajar
+            <small>Pantau kemajuan Anda di setiap mata pelajaran</small>
+          </span>
+        </h1>
       </div>
     </div>
 
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-secondary">← Kembali ke Dashboard</a>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat progress...</p>
     </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Stat Grid -->
+      <div class="stat-grid" id="statsGrid"></div>
+
+      <!-- Panel Progress -->
+      <div class="panel">
+        <h2 class="panel-title">
+          <i class="fas fa-chart-bar"></i> Progress per Mapel
+          <span class="badge-count" id="mapelCount" style="display:none;">0</span>
+        </h2>
+        <div class="progress-list" id="progressList">
+          <div class="empty-msg">Memuat...</div>
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#progress';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <script src="../assets/js/config.js"></script>
@@ -116,12 +500,13 @@
   <script>
     let currentUser = null;
 
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('siswa');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
       await loadData();
     })();
 
@@ -131,59 +516,104 @@
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('pageContent').classList.remove('hidden');
 
-        if (progress.length === 0) {
+        if (!progress || progress.length === 0) {
           document.getElementById('statsGrid').innerHTML = '';
-          document.getElementById('progressList').innerHTML = '<div class="empty-msg">Anda belum terdaftar di kelas manapun.</div>';
+          document.getElementById('mapelCount').style.display = 'none';
+          document.getElementById('progressList').innerHTML = `
+            <div class="empty-msg">
+              <span class="emoji">📊</span>
+              <strong>Belum ada data progress.</strong><br>
+              Anda belum terdaftar di kelas manapun.
+            </div>`;
           return;
         }
 
+        // Hitung statistik
         const totalMapel = progress.length;
-        const totalActivities = progress.reduce((s, p) => s + p.totalActivities, 0);
-        const totalSubmitted = progress.reduce((s, p) => s + p.submitted, 0);
+        const totalActivities = progress.reduce((s, p) => s + (p.totalActivities || 0), 0);
+        const totalSubmitted = progress.reduce((s, p) => s + (p.submitted || 0), 0);
         const overallPercent = totalActivities > 0 ? Math.round((totalSubmitted / totalActivities) * 100) : 0;
 
-        document.getElementById('statsGrid').innerHTML = `
-          <div class="stat-card"><div class="stat-value">${totalMapel}</div><div class="stat-label">Mapel Diikuti</div></div>
-          <div class="stat-card"><div class="stat-value">${totalActivities}</div><div class="stat-label">Total Aktivitas</div></div>
-          <div class="stat-card"><div class="stat-value">${totalSubmitted}</div><div class="stat-label">Dikumpulkan</div></div>
-          <div class="stat-card"><div class="stat-value">${overallPercent}%</div><div class="stat-label">Overall</div></div>
-        `;
+        const stats = [
+          { icon: 'fa-book', color: 'blue', value: totalMapel, label: 'Mapel Diikuti' },
+          { icon: 'fa-tasks', color: 'purple', value: totalActivities, label: 'Total Aktivitas' },
+          { icon: 'fa-paper-plane', color: 'green', value: totalSubmitted, label: 'Dikumpulkan' },
+          { icon: 'fa-chart-line', color: 'orange', value: overallPercent + '%', label: 'Overall' }
+        ];
+        document.getElementById('statsGrid').innerHTML = stats.map(s => `
+          <div class="stat-card">
+            <div class="stat-icon ${s.color}"><i class="fas ${s.icon}"></i></div>
+            <div class="stat-info">
+              <div class="stat-value">${s.value}</div>
+              <div class="stat-label">${s.label}</div>
+            </div>
+          </div>
+        `).join('');
 
+        // Badge count
+        const countEl = document.getElementById('mapelCount');
+        countEl.textContent = totalMapel;
+        countEl.style.display = 'inline-block';
+
+        // Render progress per mapel
         document.getElementById('progressList').innerHTML = progress.map(p => {
-          let barClass = 'bar-red';
-          if (p.percent >= 80) barClass = 'bar-green';
-          else if (p.percent >= 50) barClass = 'bar-yellow';
+          const percent = p.percent || 0;
+
+          let cls = 'low';
+          if (percent >= 80) cls = 'high';
+          else if (percent >= 50) cls = 'mid';
+
+          // Untuk bar fill — hanya tampil persentase di dalam bar kalau > 15%
+          const barText = percent > 15 ? percent + '%' : '';
 
           return `
-            <div class="progress-item">
+            <div class="progress-item ${cls}">
               <div class="progress-header">
                 <div>
-                  <div class="progress-title">${esc(p.subject.name)} ${p.subject.code ? '<span style="font-size:0.7rem; color:#888;">(' + esc(p.subject.code) + ')</span>' : ''}</div>
-                  <div class="progress-kelas">🏫 ${esc(p.classInfo.name)}</div>
+                  <div class="progress-title">
+                    <i class="fas fa-book-open" style="color:var(--primary); font-size:0.9rem;"></i>
+                    ${esc(p.subject?.name || '-')}
+                    ${p.subject?.code ? `<span class="subject-code">${esc(p.subject.code)}</span>` : ''}
+                  </div>
+                  <div class="progress-kelas">
+                    <i class="fas fa-school"></i> ${esc(p.classInfo?.name || '-')}
+                  </div>
                 </div>
-                <div style="text-align:right;">
-                  <div style="font-size:1.4rem; font-weight:700; color:var(--tb-primary);">${p.percent}%</div>
+                <div class="progress-percent">
+                  <div class="percent-big ${cls}">${percent}%</div>
+                  <div class="percent-label">Progress</div>
                 </div>
               </div>
+
               <div class="progress-meta">
-                <span>📋 <strong>${p.totalActivities}</strong> aktivitas</span>
-                <span>✅ <strong>${p.submitted}</strong> dikumpul</span>
-                <span>💯 <strong>${p.graded}</strong> dinilai</span>
-                <span>📊 Rata-rata: <strong>${p.avgScore}</strong></span>
+                <span><i class="fas fa-list-check"></i> <strong>${p.totalActivities || 0}</strong> aktivitas</span>
+                <span><i class="fas fa-check-circle"></i> <strong>${p.submitted || 0}</strong> dikumpul</span>
+                <span><i class="fas fa-star"></i> <strong>${p.graded || 0}</strong> dinilai</span>
+                <span><i class="fas fa-percent"></i> Rata-rata: <strong>${p.avgScore || '-'}</strong></span>
               </div>
+
               <div class="bar-wrap">
-                <div class="bar-fill ${barClass}" style="width:${p.percent}%;">
-                  ${p.percent > 15 ? p.percent + '%' : ''}
+                <div class="bar-fill ${cls}" style="width:${percent}%;">
+                  ${barText}
                 </div>
               </div>
             </div>
           `;
         }).join('');
       } catch (err) {
-        document.getElementById('loading').innerHTML = '<p style="color:red;">Error: ' + err.message + '</p>';
+        console.error('loadData error:', err);
+        document.getElementById('loading').innerHTML = `
+          <div class="empty-msg" style="color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            <strong>Gagal memuat progress</strong><br>
+            <small>${esc(err.message)}</small>
+          </div>`;
       }
     }
 
+    // ============================================
+    // UTILS
+    // ============================================
     function esc(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');

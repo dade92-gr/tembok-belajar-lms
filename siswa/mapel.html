@@ -4,105 +4,381 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mapel Saya — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { margin-bottom: 1.5rem; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
 
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
+
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* MAPEL GRID */
     .mapel-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 1.2rem;
     }
+
     .mapel-card {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      box-shadow: var(--tb-shadow-sm); overflow: hidden;
-      transition: var(--tb-transition); cursor: pointer;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
     }
     .mapel-card:hover {
-      transform: translateY(-4px); box-shadow: var(--tb-shadow); border-color: var(--tb-primary);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
     }
+
     .mapel-header {
       padding: 1.2rem 1.4rem;
-      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
+      position: relative;
+      overflow: hidden;
     }
-    .mapel-header h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.2rem; }
-    .mapel-header .kode { font-size: 0.75rem; opacity: 0.9; font-family: monospace; }
-    .mapel-body { padding: 1.2rem 1.4rem; }
-    .mapel-info { font-size: 0.8rem; color: var(--tb-text-muted); }
-    .mapel-info .kelas-name { color: var(--tb-dark); font-weight: 600; }
+    .mapel-header::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .mapel-header h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      line-height: 1.3;
+      position: relative;
+      z-index: 1;
+    }
+    .mapel-header .kode {
+      font-size: 0.72rem;
+      opacity: 0.95;
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      background: rgba(255,255,255,0.18);
+      padding: 2px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      position: relative;
+      z-index: 1;
+    }
 
+    .mapel-body { padding: 1.1rem 1.4rem 1.3rem; }
+
+    .teacher-info {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 0.8rem;
+      font-weight: 500;
+    }
+    .teacher-info i { color: var(--primary); }
+
+    .kelas-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .kelas-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--primary-lighter);
+      color: var(--primary-dark);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: 1px solid var(--primary-light);
+    }
+    .kelas-badge i { font-size: 0.65rem; }
+
+    /* EMPTY */
     .empty-state {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1); padding: 3rem 2rem;
-      text-align: center; box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 3rem 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      grid-column: 1 / -1;
     }
-    .empty-state .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
-    .empty-state h3 { font-size: 1.1rem; color: var(--tb-dark); margin-bottom: 0.5rem; }
-    .empty-state p { color: var(--tb-text-muted); font-size: 0.85rem; }
-
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+    .empty-state .emoji {
+      font-size: 3.5rem;
+      display: block;
+      margin-bottom: 1rem;
+      opacity: 0.4;
+    }
+    .empty-state h3 {
+      font-size: 1.1rem;
+      color: var(--navy);
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    .empty-state p {
+      color: var(--text-muted);
       font-size: 0.85rem;
+      max-width: 400px;
+      margin: 0 auto;
     }
-    .btn-secondary:hover { background: var(--tb-light); }
+
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .mapel-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Siswa</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat mapel...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
     <div class="page-toolbar">
-      <h1>📚 Mapel Saya
-        <small>Mata pelajaran dan kelas yang Anda ikuti</small>
-      </h1>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#mapel';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-book"></i>
+          <span>
+            Mapel Saya
+            <small>Mata pelajaran dan kelas yang Anda ikuti</small>
+          </span>
+        </h1>
+      </div>
     </div>
-    <div id="mapelGrid" class="mapel-grid"></div>
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-secondary">← Kembali ke Dashboard</a>
+
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat mapel...</p>
     </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+      <div id="mapelGrid" class="mapel-grid"></div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#mapel';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
     let currentUser = null;
+    let allAssigns = [];
+    let groupedMapel = {};
 
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('siswa');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
       await loadData();
     })();
 
     async function loadData() {
       try {
-        const assigns = await getMyEnrolledSubjects(currentUser.id);
+        allAssigns = await getMyEnrolledSubjects(currentUser.id);
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('pageContent').classList.remove('hidden');
 
-        if (!assigns || assigns.length === 0) {
+        if (!allAssigns || allAssigns.length === 0) {
           document.getElementById('mapelGrid').innerHTML = `
-            <div class="empty-state" style="grid-column: 1/-1;">
+            <div class="empty-state">
               <span class="emoji">📚</span>
               <h3>Belum Terdaftar di Kelas</h3>
               <p>Hubungi operator sekolah Anda untuk didaftarkan ke kelas.</p>
@@ -110,48 +386,85 @@
           return;
         }
 
-        // Grouping per subject (unique by subject id)
-        const grouped = {};
-        assigns.forEach(a => {
+        // Grouping per subject
+        groupedMapel = {};
+        allAssigns.forEach(a => {
           if (!a.subjects) return;
           const sid = a.subjects.id;
-          if (!grouped[sid]) {
-            grouped[sid] = { subject: a.subjects, classes: [], teachers: new Set() };
+          if (!groupedMapel[sid]) {
+            groupedMapel[sid] = { subject: a.subjects, classes: [], teachers: new Set() };
           }
-          if (a.classes && !grouped[sid].classes.find(c => c.id === a.classes.id)) {
-            grouped[sid].classes.push(a.classes);
+          if (a.classes && !groupedMapel[sid].classes.find(c => c.id === a.classes.id)) {
+            groupedMapel[sid].classes.push(a.classes);
           }
-          if (a.profiles?.name) grouped[sid].teachers.add(a.profiles.name);
+          if (a.profiles?.name) {
+            groupedMapel[sid].teachers.add(a.profiles.name);
+          }
         });
 
-        document.getElementById('mapelGrid').innerHTML = Object.values(grouped).map(g => {
-          const kelasBadges = g.classes.map(c => 
-            `<span style="display:inline-block; background:#fef9e7; color:#b7791f; padding:2px 8px; border-radius:8px; font-size:0.7rem; font-weight:600; margin:2px;">🏫 ${esc(c.name)}</span>`
+        document.getElementById('mapelGrid').innerHTML = Object.values(groupedMapel).map(g => {
+          const kelasBadges = g.classes.map(c =>
+            `<span class="kelas-badge">
+              <i class="fas fa-school"></i> ${esc(c.name)}
+            </span>`
           ).join('');
           const teacherText = Array.from(g.teachers).join(', ');
           return `
             <div class="mapel-card" onclick="openMapel(${g.subject.id})">
               <div class="mapel-header">
                 <h3>${esc(g.subject.name)}</h3>
-                <div class="kode">${esc(g.subject.code || '')}</div>
+                ${g.subject.code ? `<span class="kode">${esc(g.subject.code)}</span>` : ''}
               </div>
               <div class="mapel-body">
-                <div class="mapel-info">
-                  <div style="margin-bottom:0.5rem;">👨‍🏫 ${esc(teacherText || '-')}</div>
-                  <div>${kelasBadges}</div>
+                <div class="teacher-info">
+                  <i class="fas fa-chalkboard-teacher"></i>
+                  ${esc(teacherText || 'Guru belum ditentukan')}
                 </div>
+                <div class="kelas-badges">${kelasBadges}</div>
               </div>
             </div>`;
         }).join('');
       } catch (err) {
-        console.error(err);
-        document.getElementById('loading').innerHTML = '<p style="color:red;">Error: ' + err.message + '</p>';
+        console.error('Load error:', err);
+        document.getElementById('loading').innerHTML =
+          '<p style="color:var(--danger);">Error: ' + err.message + '</p>';
       }
     }
 
+    // ============================================
+    // OPEN MAPEL — navigasi ke materi via parent
+    // ============================================
     function openMapel(subjectId) {
-      sessionStorage.setItem('siswa_subject', subjectId);
-      window.location.href = 'materi.html?subject=' + subjectId;
+      // Ambil data subject dari grouping
+      const group = Object.values(groupedMapel).find(g => g.subject.id === subjectId);
+      if (!group) return;
+
+      // Simpan konteks ke sessionStorage
+      const context = {
+        subjectId: subjectId,
+        subjectName: group.subject.name,
+        subjectCode: group.subject.code || '',
+        classes: group.classes,
+        // Auto-pilih kelas pertama kalau cuma 1, kalau lebih dari 1 guru bisa pilih di materi.html
+        classId: group.classes.length === 1 ? group.classes[0].id : null,
+        className: group.classes.length === 1 ? group.classes[0].name : ''
+      };
+      sessionStorage.setItem('siswa_context', JSON.stringify(context));
+
+      // Kalau di iframe → kirim pesan ke parent
+      if (window.self !== window.top) {
+        try {
+          window.top.postMessage({
+            type: 'SISWA_NAVIGATE',
+            view: 'materi',
+            context: context
+          }, '*');
+          return;
+        } catch (e) { /* fallback */ }
+      }
+
+      // Fallback
+      window.location.href = 'materi.html?embed=1';
     }
 
     function esc(t) {

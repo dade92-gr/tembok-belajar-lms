@@ -483,8 +483,14 @@ async function getSubmissionsByActivity(activityId) {
 
 async function getGradesByActivity(activityId) {
   const client = initSupabase();
-  const { data, error } = await client.from('grades')
-    .select('*').eq('activity_id', activityId);
+  // Join grades → submissions, filter by submissions.activity_id
+  const { data, error } = await client
+    .from('grades')
+    .select(`
+      id, submission_id, student_id, score, feedback, graded_by, graded_at,
+      submissions!inner (activity_id)
+    `)
+    .eq('submissions.activity_id', activityId);
   if (error) throw error;
   return data || [];
 }
@@ -501,8 +507,16 @@ async function saveGrade({ submissionId, activityId, studentId, score, feedback,
     if (error) throw error;
     return data;
   } else {
+    // CATATAN: kolom activity_id TIDAK ADA di tabel grades
+    // Informasi aktivitas diturunkan dari submissions.activity_id
     const { data, error } = await client.from('grades')
-      .insert([{ submission_id: submissionId, activity_id: activityId, student_id: studentId, score, feedback, graded_by: gradedBy }])
+      .insert([{
+        submission_id: submissionId,
+        student_id: studentId,
+        score,
+        feedback,
+        graded_by: gradedBy
+      }])
       .select().single();
     if (error) throw error;
     return data;
@@ -531,10 +545,21 @@ async function getGradeBook(classId) {
       .select('id, activity_id, student_id, submitted_at, status')
       .in('activity_id', activityIds);
     submissions = subs || [];
+
     const { data: grs } = await client.from('grades')
-      .select('submission_id, activity_id, student_id, score, feedback')
-      .in('activity_id', activityIds);
-    grades = grs || [];
+      .select(`
+        submission_id, student_id, score, feedback,
+        submissions!inner (activity_id)
+      `)
+      .in('submissions.activity_id', activityIds);
+
+    grades = (grs || []).map(g => ({
+      submission_id: g.submission_id,
+      student_id: g.student_id,
+      score: g.score,
+      feedback: g.feedback,
+      activity_id: g.submissions?.activity_id
+    }));
   }
 
   return {
@@ -604,9 +629,19 @@ async function getStudentProgress(classId, subjectId) {
     const { data: subs } = await client.from('submissions')
       .select('id, activity_id, student_id').in('activity_id', activityIds);
     submissions = subs || [];
+
     const { data: grs } = await client.from('grades')
-      .select('activity_id, student_id, score').in('activity_id', activityIds);
-    grades = grs || [];
+      .select(`
+        student_id, score,
+        submissions!inner (activity_id)
+      `)
+      .in('submissions.activity_id', activityIds);
+
+    grades = (grs || []).map(g => ({
+      student_id: g.student_id,
+      score: g.score,
+      activity_id: g.submissions?.activity_id
+    }));
   }
 
   const subSet = new Set();
@@ -641,9 +676,20 @@ async function getStudentReport(studentId, classId, subjectId) {
   const activityIds = (activities || []).map(a => a.id);
   if (activityIds.length === 0) return { activities: [], avg: '-', totalScore: 0, totalMax: 0, scored: 0 };
 
-  const { data: grades, error: e2 } = await client.from('grades')
-    .select('activity_id, score, feedback').eq('student_id', studentId).in('activity_id', activityIds);
+  const { data: rawGrades, error: e2 } = await client.from('grades')
+    .select(`
+      score, feedback,
+      submissions!inner (activity_id)
+    `)
+    .eq('student_id', studentId)
+    .in('submissions.activity_id', activityIds);
   if (e2) throw e2;
+
+  const grades = (rawGrades || []).map(g => ({
+    score: g.score,
+    feedback: g.feedback,
+    activity_id: g.submissions?.activity_id
+  }));
 
   const gradeMap = {};
   (grades || []).forEach(g => { gradeMap[g.activity_id] = g; });
@@ -726,7 +772,6 @@ async function getMasterReport(schoolId) {
 /* Ambil mapel & kelas yang diikuti siswa (dari enrollment + teacher_assign) */
 async function getMyEnrolledSubjects(studentId) {
   const client = initSupabase();
-  // Ambil kelas yang diikuti
   const { data: enrolls, error: e1 } = await client.from('enrollments')
     .select(`class_id, classes (id, name, grade, room)`)
     .eq('student_id', studentId).eq('status', 'active');
@@ -736,7 +781,6 @@ async function getMyEnrolledSubjects(studentId) {
 
   const classIds = enrolls.map(e => e.class_id);
 
-  // Ambil semua teacher_assign untuk kelas tersebut
   const { data: assigns, error: e2 } = await client.from('teacher_assign')
     .select(`
       subject_id,
@@ -752,6 +796,7 @@ async function getMyEnrolledSubjects(studentId) {
 }
 
 /* Ambil aktivitas di kelas+mapel yang diikuti siswa + status submission-nya */
+/* FIXED: tidak lagi pakai grades.activity_id — ambil dari submissions.activity_id */
 async function getMyActivities(studentId, classId, subjectId) {
   const client = initSupabase();
 
@@ -765,19 +810,39 @@ async function getMyActivities(studentId, classId, subjectId) {
 
   const activityIds = activities.map(a => a.id);
 
-  // Ambil submission siswa ini untuk aktivitas tersebut
+  // Ambil submission siswa ini
   const { data: mySubs, error: e2 } = await client.from('submissions')
     .select('*').eq('student_id', studentId).in('activity_id', activityIds);
   if (e2) throw e2;
 
-  const { data: myGrades, error: e3 } = await client.from('grades')
-    .select('*').eq('student_id', studentId).in('activity_id', activityIds);
+  // Ambil grades via JOIN ke submissions
+  const { data: rawGrades, error: e3 } = await client.from('grades')
+    .select(`
+      id, submission_id, student_id, score, feedback, graded_at,
+      submissions!inner (activity_id)
+    `)
+    .eq('student_id', studentId)
+    .in('submissions.activity_id', activityIds);
   if (e3) throw e3;
+
+  const myGrades = (rawGrades || []).map(g => ({
+    id: g.id,
+    submission_id: g.submission_id,
+    student_id: g.student_id,
+    score: g.score,
+    feedback: g.feedback,
+    graded_at: g.graded_at,
+    activity_id: g.submissions?.activity_id
+  }));
 
   const subMap = {};
   (mySubs || []).forEach(s => { subMap[s.activity_id] = s; });
   const gradeMap = {};
-  (myGrades || []).forEach(g => { gradeMap[g.activity_id] = g; });
+  myGrades.forEach(g => {
+    if (g.activity_id !== undefined && g.activity_id !== null) {
+      gradeMap[g.activity_id] = g;
+    }
+  });
 
   return activities.map(a => ({
     ...a,
@@ -787,26 +852,57 @@ async function getMyActivities(studentId, classId, subjectId) {
 }
 
 /* Ambil nilai siswa (semua mapel) */
+/* FIXED: tidak lagi join ke activities (tidak ada FK), ambil info activities terpisah */
 async function getMyGrades(studentId) {
   const client = initSupabase();
-  const { data, error } = await client.from('grades')
+
+  // Ambil semua grades siswa ini + submissions (untuk dapat activity_id)
+  const { data: rawGrades, error: e1 } = await client.from('grades')
     .select(`
-      id, score, feedback, graded_at,
-      activities (id, title, type, max_score, subject_id, class_id,
-        subjects (id, name, code),
-        classes (id, name)
-      )
+      id, score, feedback, graded_at, submission_id,
+      submissions!inner (activity_id)
     `)
     .eq('student_id', studentId)
     .order('graded_at', { ascending: false });
-  if (error) throw error;
-  return data || [];
+  if (e1) throw e1;
+
+  const grades = (rawGrades || []).map(g => ({
+    id: g.id,
+    score: g.score,
+    feedback: g.feedback,
+    graded_at: g.graded_at,
+    submission_id: g.submission_id,
+    activity_id: g.submissions?.activity_id
+  }));
+
+  if (grades.length === 0) return [];
+
+  // Kumpulkan activity_id unik
+  const activityIds = [...new Set(grades.map(g => g.activity_id).filter(id => id != null))];
+  if (activityIds.length === 0) return grades.map(g => ({ ...g, activities: null }));
+
+  // Ambil detail activities + subjects + classes terpisah
+  const { data: activities, error: e2 } = await client.from('activities')
+    .select(`
+      id, title, type, max_score, subject_id, class_id,
+      subjects (id, name, code),
+      classes (id, name)
+    `)
+    .in('id', activityIds);
+  if (e2) throw e2;
+
+  const actMap = {};
+  (activities || []).forEach(a => { actMap[a.id] = a; });
+
+  return grades.map(g => ({
+    ...g,
+    activities: actMap[g.activity_id] || null
+  }));
 }
 
 /* Submit tugas/kuis */
 async function submitActivity({ activityId, studentId, content, fileUrl }) {
   const client = initSupabase();
-  // Cek apakah sudah ada submission
   const { data: existing } = await client.from('submissions')
     .select('id').eq('activity_id', activityId).eq('student_id', studentId).maybeSingle();
 
@@ -829,13 +925,11 @@ async function submitActivity({ activityId, studentId, content, fileUrl }) {
 async function getMyProgress(studentId) {
   const client = initSupabase();
 
-  // Kelas yang diikuti
   const enrolls = await getStudentClasses(studentId);
   if (!enrolls || enrolls.length === 0) return [];
 
   const classIds = enrolls.map(e => e.classes.id);
 
-  // Semua teacher_assign di kelas tersebut
   const { data: assigns, error: e1 } = await client.from('teacher_assign')
     .select(`subject_id, class_id, subjects (id, name, code), classes (id, name)`)
     .in('class_id', classIds);
@@ -845,7 +939,6 @@ async function getMyProgress(studentId) {
   for (const a of (assigns || [])) {
     if (!a.subjects || !a.classes) continue;
 
-    // Aktivitas di mapel+kelas
     const { data: acts } = await client.from('activities')
       .select('id').eq('class_id', a.class_id).eq('subject_id', a.subject_id);
     const actIds = (acts || []).map(x => x.id);
@@ -858,15 +951,23 @@ async function getMyProgress(studentId) {
       continue;
     }
 
-    // Submission siswa ini
     const { data: subs } = await client.from('submissions')
       .select('id, activity_id').eq('student_id', studentId).in('activity_id', actIds);
-    const { data: grs } = await client.from('grades')
-      .select('score').eq('student_id', studentId).in('activity_id', actIds);
-
     const submitted = (subs || []).length;
-    const graded = (grs || []).length;
-    const totalScore = (grs || []).reduce((s, g) => s + parseFloat(g.score || 0), 0);
+
+    // Ambil grades via JOIN submissions
+    const { data: rawGrs, error: e2 } = await client.from('grades')
+      .select(`
+        score,
+        submissions!inner (activity_id)
+      `)
+      .eq('student_id', studentId)
+      .in('submissions.activity_id', actIds);
+    if (e2) throw e2;
+
+    const grs = (rawGrs || []).map(g => ({ score: g.score }));
+    const graded = grs.length;
+    const totalScore = grs.reduce((s, g) => s + parseFloat(g.score || 0), 0);
     const avgScore = graded > 0 ? (totalScore / graded).toFixed(1) : '-';
     const percent = Math.round((submitted / actIds.length) * 100);
 

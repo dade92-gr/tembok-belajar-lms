@@ -147,7 +147,7 @@
       background: var(--header-bg-dark);
       display: flex;
       flex-direction: column;
-      padding: 0.8rem 0;
+      padding: 0.5rem 0;
       z-index: 110;
       border-right: 1px solid rgba(255,255,255,0.05);
       overflow-y: auto;
@@ -158,16 +158,40 @@
       width: var(--sidebar-width-expanded);
       box-shadow: 4px 0 20px rgba(0,0,0,0.2);
     }
-    .app-sidebar::-webkit-scrollbar { width: 0; }
-    .app-sidebar { scrollbar-width: none; }
+
+    /* Scrollbar tipis — muncul saat hover */
+    .app-sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .app-sidebar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .app-sidebar::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 4px;
+    }
+    .app-sidebar:hover::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.25);
+    }
+    .app-sidebar:hover::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.4);
+    }
+    /* Firefox */
+    .app-sidebar {
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+    }
+    .app-sidebar:hover {
+      scrollbar-color: rgba(255,255,255,0.25) transparent;
+    }
 
     .sidebar-item {
       position: relative;
       display: flex;
       align-items: center;
       gap: 14px;
-      height: 44px;
-      margin: 2px 10px;
+      height: 40px;
+      margin: 1px 10px;
       padding: 0 12px;
       border-radius: 8px;
       color: #94a3b8;
@@ -188,7 +212,7 @@
       top: 50%;
       transform: translateY(-50%);
       width: 3px;
-      height: 20px;
+      height: 18px;
       background: #60a5fa;
       border-radius: 0 3px 3px 0;
     }
@@ -213,7 +237,7 @@
     .sidebar-divider {
       height: 1px;
       background: rgba(255,255,255,0.1);
-      margin: 0.5rem 10px;
+      margin: 0.4rem 10px;
       flex-shrink: 0;
     }
     .sidebar-item.logout { margin-top: auto; }
@@ -567,7 +591,7 @@
       .app-school { display: none; }
       .app-user-email { display: none; }
       .btn-logout span { display: none; }
-      .sidebar-item { height: 40px; margin: 2px 6px; padding: 0 8px; }
+      .sidebar-item { height: 38px; margin: 1px 6px; padding: 0 8px; }
       .sidebar-item i { font-size: 1rem; }
       .content-home { padding: 0.8rem 1rem 2rem; }
       .dash-hero { padding: 1.3rem; }
@@ -741,7 +765,7 @@
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
-    // ===== VIEW URLS — 9 modul + profil =====
+    // ===== VIEW URLS — 10 modul =====
     const VIEW_URLS = {
       mapel: 'mapel.html?embed=1',
       kelas: 'kelas.html?embed=1',
@@ -760,7 +784,7 @@
     sidebar.addEventListener('mouseleave', () => document.body.classList.remove('sidebar-hover'));
 
     // ============================================
-    // INIT — pakai getSession (tidak 403)
+    // INIT
     // ============================================
     (async () => {
       initSupabase();
@@ -833,7 +857,7 @@
             const counts = await getClassStudentCounts(Array.from(classSet));
             totalSiswa = Object.values(counts).reduce((s, n) => s + n, 0);
           } catch (e) {
-            console.warn('getClassStudentCounts gagal (mungkin RLS):', e.message);
+            console.warn('getClassStudentCounts gagal:', e.message);
           }
 
           const pairSet = new Set();
@@ -906,12 +930,10 @@
 
     // ============================================
     // LISTENER PESAN DARI IFRAME MODUL
-    // (misal mapel.html minta buka Detail Kelas)
     // ============================================
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
 
-      // Modul minta buka Detail Kelas dengan subjectId tertentu
       if (e.data.type === 'GURU_OPEN_KELAS') {
         const subjectId = e.data.subjectId;
         if (subjectId) {
@@ -921,7 +943,6 @@
         return;
       }
 
-      // Placeholder pesan lain di masa depan
       if (e.data.type === 'GURU_NAVIGATE' && e.data.view) {
         navigateTo(e.data.view);
       }
@@ -956,7 +977,6 @@
 
         frameEl.src = url;
 
-        // Patch 4: fallback embed param
         frameEl.onload = function() {
           loadingEl.classList.remove('active');
           frameEl.classList.remove('hidden');
@@ -965,7 +985,7 @@
             if (loc.pathname.endsWith('.html') && !loc.search.includes('embed=1')) {
               frameEl.contentWindow.location.replace(url);
             }
-          } catch (e) { /* cross-origin, abaikan */ }
+          } catch (e) { /* cross-origin */ }
         };
 
         setTimeout(() => {

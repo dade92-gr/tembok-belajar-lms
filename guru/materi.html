@@ -4,213 +4,973 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Materi & Page Builder — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1: Deteksi embed mode robust -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
   <style>
-    .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
+
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* PATCH 2: CSS embed */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    /* PAGE TOOLBAR */
     .page-toolbar {
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
     }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
 
-    .context-bar {
-      background: var(--tb-light); border-radius: 12px;
-      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
-      display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* BUTTONS */
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
       font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
-    .context-bar strong { color: var(--tb-dark); }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    .two-col { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+    .btn-secondary {
+      background: #64748b;
+      color: white;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-secondary:hover { background: #475569; }
 
+    /* CONTEXT SELECTOR */
+    .context-selector {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 1.2rem;
+      align-items: start;
+    }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      position: relative;
+    }
+
+    .context-selector label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .context-selector label i { color: var(--primary); }
+
+    .context-selector select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+    }
+    .context-selector select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .context-selector select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: var(--bg-soft);
+    }
+
+    /* MULTI-KELAS */
+    .multikelas-wrapper { position: relative; }
+
+    .multikelas-trigger {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      outline: none;
+      transition: var(--transition);
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+    }
+    .multikelas-trigger:hover:not(:disabled) { border-color: var(--primary); }
+    .multikelas-trigger:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: var(--bg-soft);
+    }
+    .multikelas-trigger.open {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .multikelas-trigger .trigger-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .multikelas-trigger .trigger-text.placeholder { color: var(--text-muted); }
+    .multikelas-trigger .trigger-badge {
+      background: var(--primary);
+      color: white;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .multikelas-trigger .chevron {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .multikelas-trigger.open .chevron { transform: rotate(180deg); }
+
+    .multikelas-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: var(--shadow-md);
+      z-index: 100;
+      max-height: 320px;
+      overflow-y: auto;
+      display: none;
+      animation: fadeInUp 0.15s ease;
+    }
+    .multikelas-dropdown.open { display: block; }
+
+    .multikelas-actions {
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 0.4rem;
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      z-index: 1;
+    }
+
+    .btn-mini {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-mini:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .kelas-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.6rem 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      font-size: 0.83rem;
+      border-bottom: 1px solid var(--bg-soft);
+    }
+    .kelas-option:last-child { border-bottom: none; }
+    .kelas-option:hover { background: var(--primary-lighter); }
+    .kelas-option.checked { background: var(--primary-lighter); font-weight: 600; }
+    .kelas-option input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+      flex-shrink: 0;
+    }
+    .kelas-option .kelas-name { flex: 1; color: var(--text); }
+    .kelas-option .kelas-extra { font-size: 0.7rem; color: var(--text-muted); }
+
+    .selected-kelas-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 0.5rem;
+    }
+    .kelas-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 3px 8px 3px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .kelas-chip .chip-remove {
+      background: transparent;
+      border: none;
+      color: var(--primary-dark);
+      cursor: pointer;
+      padding: 0;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.15s;
+      font-size: 0.65rem;
+    }
+    .kelas-chip .chip-remove:hover {
+      background: var(--primary-dark);
+      color: white;
+    }
+
+    /* TWO COL LAYOUT */
+    .two-col {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 1.5rem;
+    }
+
+    /* PANEL */
     .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
     }
 
     .panel-title {
-      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--tb-light);
-    }
-
-    .page-list { display: flex; flex-direction: column; gap: 0.5rem; }
-    .page-item {
-      padding: 0.7rem 0.9rem; border-radius: 10px;
-      background: var(--tb-bg); cursor: pointer;
-      font-size: 0.85rem; transition: var(--tb-transition);
-      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
       gap: 8px;
     }
-    .page-item:hover { background: var(--tb-light); }
-    .page-item.active { background: var(--tb-light); border-left: 3px solid var(--tb-primary); }
-    .page-item .title { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .page-item .actions { display: flex; gap: 4px; }
-    .icon-btn {
-      background: transparent; border: none; cursor: pointer;
-      padding: 4px 6px; border-radius: 6px; font-size: 0.85rem;
-      transition: var(--tb-transition);
-    }
-    .icon-btn:hover { background: white; }
+    .panel-title i { color: var(--primary); font-size: 0.9rem; }
 
-    .block-list { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1rem; }
+    /* PAGE LIST */
+    .page-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .page-item {
+      padding: 0.7rem 0.9rem;
+      border-radius: 10px;
+      background: var(--bg-soft);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid var(--border);
+    }
+    .page-item:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+    }
+    .page-item.active {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      border-left: 4px solid var(--primary);
+      padding-left: calc(0.9rem - 3px);
+    }
+    .page-item .title {
+      flex: 1;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .page-item.active .title { color: var(--primary-dark); }
+
+    .page-item .actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      transition: var(--transition);
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-btn.dup:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    .icon-btn.del:hover {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: white;
+    }
+
+    /* BLOCK LIST */
+    .block-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+    }
+
     .block-item {
-      background: var(--tb-bg); border-radius: 10px;
-      padding: 1rem; border-left: 4px solid var(--tb-primary);
+      background: var(--bg-soft);
+      border-radius: 10px;
+      padding: 1rem;
+      border-left: 4px solid var(--primary);
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
       position: relative;
     }
+
     .block-item .block-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 0.5rem; font-size: 0.75rem; color: var(--tb-text-muted);
-      font-weight: 600; text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    .block-item .block-body { font-size: 0.9rem; color: var(--tb-text); line-height: 1.6; }
-    .block-item .block-body iframe { width: 100%; height: 300px; border: none; border-radius: 8px; }
-    .block-item .block-body img { max-width: 100%; border-radius: 8px; }
+
+    .block-item .block-header .type-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.65rem;
+    }
+
+    .block-item .block-body {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .block-item .block-body iframe {
+      width: 100%;
+      height: 300px;
+      border: none;
+      border-radius: 8px;
+    }
+    .block-item .block-body img {
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .block-item .block-body a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .block-item .block-body a:hover { text-decoration: underline; }
+
     .block-item .block-actions {
-      display: flex; gap: 4px;
+      display: flex;
+      gap: 4px;
     }
     .block-item .block-actions button {
-      background: white; border: 1px solid var(--tb-border);
-      width: 28px; height: 28px; border-radius: 6px;
-      cursor: pointer; font-size: 0.8rem; transition: var(--tb-transition);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: var(--transition);
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
-    .block-item .block-actions button:hover { background: var(--tb-primary); color: white; border-color: var(--tb-primary); }
-    .block-item .block-actions button.danger:hover { background: var(--tb-danger); border-color: var(--tb-danger); }
+    .block-item .block-actions button:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .block-item .block-actions button.danger:hover {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
 
+    /* BLOCK TYPE SELECTOR */
     .block-type-selector {
-      display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
     }
-    .block-type-btn {
-      background: white; border: 2px solid var(--tb-border);
-      padding: 0.6rem 1rem; border-radius: 10px; cursor: pointer;
-      font-size: 0.8rem; font-weight: 600; color: var(--tb-text);
-      transition: var(--tb-transition); display: flex; align-items: center; gap: 6px;
-    }
-    .block-type-btn:hover { border-color: var(--tb-primary); background: var(--tb-light); }
 
+    .block-type-btn {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      padding: 0.7rem 1.1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+    .block-type-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-lighter);
+      color: var(--primary-dark);
+    }
+    .block-type-btn i { font-size: 1rem; color: var(--primary); }
+
+    /* MODAL */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      display: none; align-items: center; justify-content: center;
-      z-index: 2000; padding: 1rem; overflow-y: auto;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 1rem;
+      overflow-y: auto;
+      backdrop-filter: blur(2px);
     }
     .modal-overlay.active { display: flex; }
+
     .modal-card {
-      background: white; border-radius: var(--tb-radius-lg);
-      padding: 2rem; width: 100%; max-width: 600px;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem;
+      width: 100%;
+      max-width: 560px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-      animation: tbFadeInUp 0.3s ease; margin: auto;
+      animation: fadeInUp 0.25s ease;
+      margin: auto;
     }
-    .modal-card h2 { font-size: 1.2rem; color: var(--tb-dark); margin-bottom: 1rem; font-weight: 700; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; }
+    .modal-card h2 {
+      font-size: 1.15rem;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-card h2 i { color: var(--primary); }
 
-    .btn-primary {
-      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
-      color: white; border: none; padding: 0.6rem 1.4rem;
-      border-radius: 30px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
-      transition: var(--tb-transition);
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      margin-top: 1rem;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(46,204,113,0.3); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .btn-secondary {
-      background: #6c757d; color: white; border: none;
-      padding: 0.6rem 1.4rem; border-radius: 30px; cursor: pointer;
-      font-size: 0.85rem; font-weight: 600; transition: var(--tb-transition);
-    }
-    .btn-secondary:hover { background: #5a6268; }
 
-    .form-label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--tb-dark); }
+    /* FORM */
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
     .form-input {
-      width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--tb-border);
-      border-radius: 10px; font-size: 0.9rem; font-family: inherit;
-      margin-bottom: 1rem; outline: none;
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      margin-bottom: 0.9rem;
     }
-    .form-input:focus { border-color: var(--tb-primary); box-shadow: 0 0 0 3px rgba(46,204,113,0.15); }
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    textarea.form-input {
+      resize: vertical;
+      min-height: 100px;
+      line-height: 1.6;
+    }
 
+    /* INFO BOX */
+    .info-box {
+      background: var(--primary-lighter);
+      border: 1px solid var(--primary-light);
+      border-left: 3px solid var(--primary);
+      border-radius: 8px;
+      padding: 0.7rem 0.9rem;
+      font-size: 0.78rem;
+      color: var(--primary-dark);
+      margin-bottom: 0.9rem;
+      line-height: 1.5;
+    }
+    .info-box i { margin-right: 4px; }
+    .info-box strong { color: var(--navy); }
+
+    .info-box.warning {
+      background: #fef3c7;
+      border-color: #fde68a;
+      border-left-color: var(--warning);
+      color: #92400e;
+    }
+
+    /* DUPLICATE KELAS LIST */
+    .dup-kelas-list {
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.4rem;
+      background: var(--bg-soft);
+      margin-bottom: 0.8rem;
+    }
+
+    /* TOAST */
     .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--tb-dark); color: white;
-      padding: 1rem 1.4rem; border-radius: 12px;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--navy);
+      color: white;
+      padding: 1rem 1.4rem;
+      border-radius: 10px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      font-size: 0.85rem; font-weight: 500;
-      opacity: 0; transform: translateY(20px);
-      transition: all 0.3s ease; z-index: 3000; max-width: 400px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000;
+      max-width: 400px;
+      line-height: 1.5;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.error { background: var(--tb-danger); }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
 
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-back {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+    /* EMPTY */
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2rem 1rem;
       font-size: 0.85rem;
     }
-    .btn-back:hover { background: var(--tb-light); }
+    .empty-msg .emoji {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+    .empty-msg strong { color: var(--text); }
+
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .two-col { grid-template-columns: 1fr; }
+      .context-selector { grid-template-columns: 1fr; }
+    }
 
     @media (max-width: 768px) {
-      .page-container { padding: 1.2rem 1rem; }
-      .two-col { grid-template-columns: 1fr; }
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .block-type-btn { padding: 0.6rem 0.9rem; font-size: 0.78rem; }
     }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat materi...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
+    <!-- PAGE TOOLBAR -->
     <div class="page-toolbar">
-      <h1>📄 Materi & Page Builder
-        <small>Buat halaman materi interaktif untuk siswa</small>
-      </h1>
-      <button class="btn-primary" onclick="openPageModal()">+ Halaman Baru</button>
-    </div>
-
-    <div class="context-bar" id="contextBar" style="display:none;">
-      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
-      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
-    </div>
-
-    <div class="two-col">
-      <div class="panel">
-        <h2 class="panel-title">📑 Daftar Halaman</h2>
-        <div class="page-list" id="pageList">
-          <div class="empty-msg">Memuat...</div>
-        </div>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#materi';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-file-alt"></i>
+          <span>
+            Materi & Page Builder
+            <small>Buat halaman materi interaktif untuk siswa</small>
+          </span>
+        </h1>
       </div>
-
-      <div class="panel">
-        <h2 class="panel-title" id="editorTitle">✏️ Editor Halaman</h2>
-        <div id="editorContent">
-          <div class="empty-msg">Pilih halaman dari daftar untuk mengedit</div>
-        </div>
+      <div>
+        <button class="btn-primary" id="btnNewPage" onclick="openPageModal()" disabled>
+          <i class="fas fa-plus"></i> Halaman Baru
+        </button>
       </div>
     </div>
 
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat materi...</p>
     </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Context Selector -->
+      <div class="context-selector">
+        <div class="selector-group">
+          <label for="selectMapel">
+            <i class="fas fa-book"></i> Mapel
+          </label>
+          <select id="selectMapel" onchange="onMapelChange()" disabled>
+            <option value="">-- Memuat... --</option>
+          </select>
+        </div>
+
+        <div class="selector-group">
+          <label>
+            <i class="fas fa-school"></i> Kelas (bisa pilih lebih dari 1)
+          </label>
+          <div class="multikelas-wrapper">
+            <button type="button" id="multikelasTrigger" class="multikelas-trigger" onclick="toggleKelasDropdown()" disabled>
+              <span class="trigger-text placeholder" id="triggerText">Pilih Mapel dulu</span>
+              <span class="trigger-badge" id="triggerBadge" style="display:none;">0</span>
+              <i class="fas fa-chevron-down chevron"></i>
+            </button>
+            <div class="multikelas-dropdown" id="kelasDropdown">
+              <div class="multikelas-actions">
+                <button type="button" class="btn-mini" onclick="selectAllKelas(true)">
+                  <i class="fas fa-check-double"></i> Pilih Semua
+                </button>
+                <button type="button" class="btn-mini" onclick="selectAllKelas(false)">
+                  <i class="fas fa-times"></i> Kosongkan
+                </button>
+              </div>
+              <div id="kelasOptionsList"></div>
+            </div>
+          </div>
+          <div class="selected-kelas-chips" id="selectedChips"></div>
+        </div>
+      </div>
+
+      <!-- Two Column -->
+      <div class="two-col">
+
+        <!-- LEFT: Daftar Halaman -->
+        <div class="panel">
+          <h2 class="panel-title">
+            <i class="fas fa-list"></i> Daftar Halaman
+          </h2>
+          <div class="page-list" id="pageList">
+            <div class="empty-msg">
+              <span class="emoji">📚</span>
+              Pilih Mapel & Kelas di atas
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Editor -->
+        <div class="panel">
+          <h2 class="panel-title" id="editorTitle">
+            <i class="fas fa-pen"></i> Editor Halaman
+          </h2>
+          <div id="editorContent">
+            <div class="empty-msg">
+              <span class="emoji">📄</span>
+              Pilih halaman dari daftar untuk mengedit
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#materi';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <!-- Modal: Halaman Baru -->
   <div class="modal-overlay" id="modalPage">
     <div class="modal-card">
-      <h2>Halaman Baru</h2>
+      <h2><i class="fas fa-plus-circle"></i> Halaman Baru</h2>
+
+      <div class="info-box" id="infoBoxKelas">
+        <i class="fas fa-info-circle"></i>
+        Akan dibuat di <strong id="infoKelasCount">0</strong> kelas terpilih.
+      </div>
+
       <label class="form-label">Judul Halaman</label>
       <input type="text" id="inputPageTitle" class="form-input" placeholder="Contoh: Pertemuan 1 - Pengenalan" maxlength="100">
+
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closePageModal()">Batal</button>
         <button class="btn-primary" id="btnSavePage" onclick="savePage()">Buat Halaman</button>
@@ -218,14 +978,45 @@
     </div>
   </div>
 
-  <!-- Modal: Blok Baru -->
+  <!-- Modal: Blok Baru / Edit -->
   <div class="modal-overlay" id="modalBlock">
     <div class="modal-card">
-      <h2 id="blockModalTitle">Tambah Blok</h2>
+      <h2 id="blockModalTitle"><i class="fas fa-cube"></i> Tambah Blok</h2>
       <div id="blockFormContainer"></div>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeBlockModal()">Batal</button>
         <button class="btn-primary" id="btnSaveBlock" onclick="saveBlock()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: DUPLIKAT HALAMAN ke kelas lain -->
+  <div class="modal-overlay" id="modalDuplicate">
+    <div class="modal-card">
+      <h2><i class="fas fa-copy"></i> Duplikat Halaman</h2>
+
+      <div class="info-box">
+        <i class="fas fa-info-circle"></i>
+        Halaman <strong id="dupPageTitle">-</strong> akan disalin beserta semua bloknya ke kelas tujuan.
+      </div>
+
+      <label class="form-label"><i class="fas fa-school"></i> Pilih Kelas Tujuan</label>
+      <div class="dup-kelas-list" id="dupKelasList">
+        <div class="empty-msg" style="padding:1rem;">Memuat...</div>
+      </div>
+
+      <div class="selected-kelas-chips" id="dupChips" style="margin-top:0.6rem;"></div>
+
+      <div class="info-box warning" style="margin-top:0.6rem; margin-bottom:0;">
+        <i class="fas fa-info-circle"></i>
+        Halaman dengan judul sama di kelas tujuan akan <strong>dilewati</strong>.
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDuplicateModal()">Batal</button>
+        <button class="btn-primary" id="btnDoDuplicate" onclick="doDuplicate()">
+          <i class="fas fa-copy"></i> Duplikat
+        </button>
       </div>
     </div>
   </div>
@@ -236,56 +1027,343 @@
   <script src="../assets/js/supabase.js"></script>
   <script>
     let currentUser = null;
-    let currentContext = null;
+    let allAssignments = [];
+    let currentSubjectId = null;
+    let currentSubjectName = '';
+
+    // Multi-kelas untuk buat halaman baru
+    let selectedClassIds = [];
+    let activeClassId = null;
+    let activeClassName = '';
+
     let allPages = [];
     let currentPage = null;
     let allBlocks = [];
     let editingBlockId = null;
     let addingBlockType = null;
+    let allKelasForCurrentMapel = [];
 
+    // Duplikat state
+    let dupSourcePageId = null;
+    let dupSelectedClassIds = [];
+
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('guru');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
-      // Ambil konteks dari sessionStorage (dari kelas.html)
+      try {
+        allAssignments = await getMyTeachingAssignments(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load assignments:', err);
+        allAssignments = [];
+      }
+
+      if (!allAssignments || allAssignments.length === 0) {
+        document.getElementById('loading').innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📚</span>
+            <strong>Belum ada mapel yang diampu.</strong><br>
+            Hubungi operator sekolah untuk ditugaskan.
+          </div>`;
+        return;
+      }
+
       const ctx = sessionStorage.getItem('guru_context');
+      let prefillSubjectId = null;
+      let prefillClassIds = [];
+
       if (ctx) {
-        currentContext = JSON.parse(ctx);
-        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
-        document.getElementById('contextBar').style.display = 'flex';
-
-        // Ambil nama kelas
         try {
-          const classes = await getClasses(currentUser.school_id);
-          const cls = classes.find(c => c.id === currentContext.classId);
-          if (cls) document.getElementById('ctxClass').textContent = cls.name;
-        } catch (e) {}
+          const parsed = JSON.parse(ctx);
+          prefillSubjectId = parsed.subjectId;
+          if (parsed.classId) prefillClassIds = [parsed.classId];
+        } catch (e) {
+          console.warn('Context parse error:', e);
+        }
+      }
 
-        await loadPages();
+      populateMapelDropdown(prefillSubjectId);
+
+      if (prefillSubjectId) {
+        populateKelasList(prefillSubjectId);
+        if (prefillClassIds.length > 0) {
+          prefillClassIds.forEach(cid => {
+            if (allKelasForCurrentMapel.find(c => c.id === cid)) {
+              selectedClassIds.push(cid);
+            }
+          });
+          renderKelasCheckboxes();
+          updateTriggerText();
+          updateSelectedChips();
+          updateActiveFromSelection();
+          document.getElementById('btnNewPage').disabled = false;
+          await loadPagesForActiveClass();
+        }
       }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
     })();
 
-    async function loadPages() {
-      if (!currentContext) return;
-      try {
-        allPages = await getPages(currentContext.classId, currentContext.subjectId);
+    // ============================================
+    // DROPDOWN MAPEL
+    // ============================================
+    function populateMapelDropdown(selectedSubjectId) {
+      const sel = document.getElementById('selectMapel');
+      const subjectMap = {};
+      allAssignments.forEach(a => {
+        if (a.subjects) subjectMap[a.subjects.id] = a.subjects;
+      });
+      const subjects = Object.values(subjectMap);
+
+      if (subjects.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada mapel --</option>';
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
+        subjects.map(s => `<option value="${s.id}">${esc(s.name)}${s.code ? ' (' + esc(s.code) + ')' : ''}</option>`).join('');
+
+      sel.disabled = false;
+      if (selectedSubjectId && subjectMap[selectedSubjectId]) {
+        sel.value = String(selectedSubjectId);
+      }
+    }
+
+    function onMapelChange() {
+      const subjectId = parseInt(document.getElementById('selectMapel').value) || null;
+      currentSubjectId = subjectId;
+
+      selectedClassIds = [];
+      activeClassId = null;
+      activeClassName = '';
+      updateTriggerText();
+      updateSelectedChips();
+      document.getElementById('btnNewPage').disabled = true;
+      document.getElementById('kelasOptionsList').innerHTML = '';
+      document.getElementById('kelasDropdown').classList.remove('open');
+      document.getElementById('multikelasTrigger').classList.remove('open');
+
+      document.getElementById('pageList').innerHTML = `
+        <div class="empty-msg">
+          <span class="emoji">📚</span>
+          Pilih Kelas untuk melihat halaman
+        </div>`;
+      resetEditor();
+
+      if (!subjectId) {
+        allKelasForCurrentMapel = [];
+        document.getElementById('multikelasTrigger').disabled = true;
+        document.getElementById('triggerText').textContent = 'Pilih Mapel dulu';
+        document.getElementById('triggerText').className = 'trigger-text placeholder';
+        return;
+      }
+      populateKelasList(subjectId);
+    }
+
+    function populateKelasList(subjectId) {
+      const filtered = allAssignments.filter(a => a.subjects && a.subjects.id === subjectId);
+      const classMap = {};
+      filtered.forEach(a => {
+        if (a.classes) classMap[a.classes.id] = a.classes;
+      });
+      allKelasForCurrentMapel = Object.values(classMap);
+
+      if (allKelasForCurrentMapel.length === 0) {
+        document.getElementById('multikelasTrigger').disabled = true;
+        document.getElementById('triggerText').textContent = 'Tidak ada kelas';
+        document.getElementById('triggerText').className = 'trigger-text placeholder';
+        return;
+      }
+
+      document.getElementById('multikelasTrigger').disabled = false;
+      document.getElementById('triggerText').textContent = 'Pilih Kelas...';
+      document.getElementById('triggerText').className = 'trigger-text placeholder';
+      renderKelasCheckboxes();
+    }
+
+    function renderKelasCheckboxes() {
+      const container = document.getElementById('kelasOptionsList');
+      if (allKelasForCurrentMapel.length === 0) {
+        container.innerHTML = '<div class="empty-msg" style="padding:1rem;">Tidak ada kelas</div>';
+        return;
+      }
+      container.innerHTML = allKelasForCurrentMapel.map(c => {
+        const checked = selectedClassIds.includes(c.id);
+        return `
+          <label class="kelas-option ${checked ? 'checked' : ''}" data-class-id="${c.id}">
+            <input type="checkbox" value="${c.id}" ${checked ? 'checked' : ''} onchange="onKelasToggle(${c.id}, this.checked)">
+            <span class="kelas-name">${esc(c.name)}</span>
+            ${c.grade ? `<span class="kelas-extra">${esc(c.grade)}</span>` : ''}
+          </label>
+        `;
+      }).join('');
+    }
+
+    function onKelasToggle(classId, checked) {
+      if (checked) {
+        if (!selectedClassIds.includes(classId)) selectedClassIds.push(classId);
+      } else {
+        selectedClassIds = selectedClassIds.filter(id => id !== classId);
+      }
+      const label = document.querySelector(`.kelas-option[data-class-id="${classId}"]`);
+      if (label) label.classList.toggle('checked', checked);
+
+      updateTriggerText();
+      updateSelectedChips();
+      updateActiveFromSelection();
+      loadPagesForActiveClass();
+    }
+
+    function toggleKelasDropdown() {
+      const dd = document.getElementById('kelasDropdown');
+      const trigger = document.getElementById('multikelasTrigger');
+      const isOpen = dd.classList.contains('open');
+      dd.classList.toggle('open', !isOpen);
+      trigger.classList.toggle('open', !isOpen);
+    }
+
+    document.addEventListener('click', (e) => {
+      const wrapper = e.target.closest('.multikelas-wrapper');
+      if (!wrapper) {
+        document.getElementById('kelasDropdown').classList.remove('open');
+        document.getElementById('multikelasTrigger').classList.remove('open');
+      }
+    });
+
+    function selectAllKelas(selectAll) {
+      if (selectAll) {
+        selectedClassIds = allKelasForCurrentMapel.map(c => c.id);
+      } else {
+        selectedClassIds = [];
+      }
+      renderKelasCheckboxes();
+      updateTriggerText();
+      updateSelectedChips();
+      updateActiveFromSelection();
+      loadPagesForActiveClass();
+    }
+
+    function updateTriggerText() {
+      const triggerText = document.getElementById('triggerText');
+      const triggerBadge = document.getElementById('triggerBadge');
+
+      if (selectedClassIds.length === 0) {
+        triggerText.textContent = 'Pilih Kelas...';
+        triggerText.className = 'trigger-text placeholder';
+        triggerBadge.style.display = 'none';
+      } else if (selectedClassIds.length === 1) {
+        const c = allKelasForCurrentMapel.find(x => x.id === selectedClassIds[0]);
+        triggerText.textContent = c ? c.name : '1 kelas';
+        triggerText.className = 'trigger-text';
+        triggerBadge.style.display = 'none';
+      } else {
+        triggerText.textContent = selectedClassIds.length + ' kelas terpilih';
+        triggerText.className = 'trigger-text';
+        triggerBadge.style.display = 'inline-block';
+        triggerBadge.textContent = selectedClassIds.length;
+      }
+    }
+
+    function updateSelectedChips() {
+      const container = document.getElementById('selectedChips');
+      if (selectedClassIds.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = selectedClassIds.map(id => {
+        const c = allKelasForCurrentMapel.find(x => x.id === id);
+        if (!c) return '';
+        return `
+          <span class="kelas-chip">
+            ${esc(c.name)}
+            <button type="button" class="chip-remove" onclick="removeChip(${id})" title="Hapus">
+              <i class="fas fa-times"></i>
+            </button>
+          </span>
+        `;
+      }).join('');
+    }
+
+    function removeChip(classId) {
+      selectedClassIds = selectedClassIds.filter(id => id !== classId);
+      renderKelasCheckboxes();
+      updateTriggerText();
+      updateSelectedChips();
+      updateActiveFromSelection();
+      loadPagesForActiveClass();
+    }
+
+    function updateActiveFromSelection() {
+      if (selectedClassIds.length === 0) {
+        activeClassId = null;
+        activeClassName = '';
+        document.getElementById('btnNewPage').disabled = true;
+        return;
+      }
+      activeClassId = selectedClassIds[0];
+      const c = allKelasForCurrentMapel.find(x => x.id === activeClassId);
+      activeClassName = c ? c.name : '';
+
+      const assign = allAssignments.find(a =>
+        a.subjects && a.subjects.id === currentSubjectId &&
+        a.classes && a.classes.id === activeClassId
+      );
+      currentSubjectName = assign?.subjects?.name || '-';
+
+      sessionStorage.setItem('guru_context', JSON.stringify({
+        subjectId: currentSubjectId,
+        classId: activeClassId,
+        subjectName: currentSubjectName
+      }));
+
+      document.getElementById('btnNewPage').disabled = false;
+    }
+
+    // ============================================
+    // LOAD PAGES
+    // ============================================
+    async function loadPagesForActiveClass() {
+      if (!currentSubjectId || !activeClassId) {
+        allPages = [];
+        currentPage = null;
         renderPageList();
+        resetEditor();
+        return;
+      }
+      try {
+        allPages = await getPages(activeClassId, currentSubjectId);
+        currentPage = null;
+        renderPageList();
+        resetEditor();
       } catch (err) {
-        console.error(err);
-        document.getElementById('pageList').innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+        console.error('loadPages error:', err);
+        document.getElementById('pageList').innerHTML =
+          '<div class="empty-msg" style="color:var(--danger);">Error: ' + esc(err.message) + '</div>';
       }
     }
 
     function renderPageList() {
       const container = document.getElementById('pageList');
+      if (!activeClassId) {
+        container.innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📚</span>
+            Pilih Kelas untuk melihat halaman
+          </div>`;
+        return;
+      }
       if (allPages.length === 0) {
-        container.innerHTML = '<div class="empty-msg">Belum ada halaman. Klik "+ Halaman Baru"</div>';
+        container.innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📄</span>
+            Belum ada halaman di <strong>${esc(activeClassName)}</strong>.<br>
+            Klik "+ Halaman Baru"
+          </div>`;
         return;
       }
       container.innerHTML = allPages.map(p => `
@@ -293,7 +1371,12 @@
              onclick="selectPage(${p.id})">
           <span class="title">${esc(p.title)}</span>
           <div class="actions">
-            <button class="icon-btn" onclick="event.stopPropagation(); deletePageConfirm(${p.id})" title="Hapus">🗑️</button>
+            <button class="icon-btn dup" onclick="event.stopPropagation(); openDuplicateModal(${p.id})" title="Duplikat ke kelas lain">
+              <i class="fas fa-copy"></i>
+            </button>
+            <button class="icon-btn del" onclick="event.stopPropagation(); deletePageConfirm(${p.id})" title="Hapus">
+              <i class="fas fa-trash"></i>
+            </button>
           </div>
         </div>
       `).join('');
@@ -312,25 +1395,47 @@
         allBlocks = await getBlocks(currentPage.id);
         renderEditor();
       } catch (err) {
-        console.error(err);
+        console.error('loadBlocks error:', err);
       }
     }
 
+    function resetEditor() {
+      currentPage = null;
+      allBlocks = [];
+      document.getElementById('editorTitle').innerHTML = '<i class="fas fa-pen"></i> Editor Halaman';
+      document.getElementById('editorContent').innerHTML = `
+        <div class="empty-msg">
+          <span class="emoji">📄</span>
+          Pilih halaman dari daftar untuk mengedit
+        </div>`;
+    }
+
+    // ============================================
+    // EDITOR RENDER
+    // ============================================
     function renderEditor() {
       const container = document.getElementById('editorContent');
       const title = document.getElementById('editorTitle');
 
       if (!currentPage) {
-        title.textContent = '✏️ Editor Halaman';
-        container.innerHTML = '<div class="empty-msg">Pilih halaman dari daftar</div>';
+        title.innerHTML = '<i class="fas fa-pen"></i> Editor Halaman';
+        container.innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📄</span>
+            Pilih halaman dari daftar
+          </div>`;
         return;
       }
 
-      title.textContent = '✏️ ' + currentPage.title;
+      title.innerHTML = '<i class="fas fa-pen"></i> ' + esc(currentPage.title);
 
       let html = '<div class="block-list">';
       if (allBlocks.length === 0) {
-        html += '<div class="empty-msg">Belum ada blok. Tambahkan blok di bawah.</div>';
+        html += `
+          <div class="empty-msg">
+            <span class="emoji">📝</span>
+            Belum ada blok. Tambahkan blok di bawah.
+          </div>`;
       } else {
         allBlocks.forEach(b => {
           html += renderBlockPreview(b);
@@ -339,10 +1444,10 @@
       html += '</div>';
 
       html += '<div class="block-type-selector">';
-      html += '<button class="block-type-btn" onclick="openBlockModal(\'text\')">📝 Teks</button>';
-      html += '<button class="block-type-btn" onclick="openBlockModal(\'image\')">🖼️ Gambar</button>';
-      html += '<button class="block-type-btn" onclick="openBlockModal(\'video\')">🎬 Video</button>';
-      html += '<button class="block-type-btn" onclick="openBlockModal(\'file\')">📎 File</button>';
+      html += '<button class="block-type-btn" onclick="openBlockModal(\'text\')"><i class="fas fa-align-left"></i> Teks</button>';
+      html += '<button class="block-type-btn" onclick="openBlockModal(\'image\')"><i class="fas fa-image"></i> Gambar</button>';
+      html += '<button class="block-type-btn" onclick="openBlockModal(\'video\')"><i class="fas fa-video"></i> Video</button>';
+      html += '<button class="block-type-btn" onclick="openBlockModal(\'file\')"><i class="fas fa-paperclip"></i> File</button>';
       html += '</div>';
 
       container.innerHTML = html;
@@ -351,84 +1456,308 @@
     function renderBlockPreview(b) {
       const d = b.data || {};
       let bodyHtml = '';
+      let typeLabel = b.type;
+      let typeIcon = 'fa-cube';
+
       if (b.type === 'text') {
-        bodyHtml = (d.content || '').replace(/\n/g, '<br>');
+        typeLabel = 'Teks';
+        typeIcon = 'fa-align-left';
+        bodyHtml = esc(d.content || '').replace(/\n/g, '<br>');
+        if (!d.content) bodyHtml = '<em style="color:var(--text-muted);">(Kosong)</em>';
       } else if (b.type === 'image') {
-        bodyHtml = d.url ? `<img src="${esc(d.url)}" alt="${esc(d.caption || '')}"><div style="font-size:0.75rem; color:#888; margin-top:4px;">${esc(d.caption || '')}</div>` : '<em style="color:#999;">(Belum ada gambar)</em>';
+        typeLabel = 'Gambar';
+        typeIcon = 'fa-image';
+        bodyHtml = d.url
+          ? `<img src="${esc(d.url)}" alt="${esc(d.caption || '')}">${d.caption ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px; text-align:center;">${esc(d.caption)}</div>` : ''}`
+          : '<em style="color:var(--text-muted);">(Belum ada gambar)</em>';
       } else if (b.type === 'video') {
+        typeLabel = 'Video';
+        typeIcon = 'fa-video';
         const yt = (d.url || '').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
         if (yt) {
           bodyHtml = `<iframe src="https://www.youtube.com/embed/${yt[1]}" allowfullscreen></iframe>`;
+        } else if (d.url) {
+          bodyHtml = `<a href="${esc(d.url)}" target="_blank"><i class="fas fa-external-link-alt"></i> ${esc(d.url)}</a>`;
         } else {
-          bodyHtml = `<a href="${esc(d.url || '#')}" target="_blank">${esc(d.url || '')}</a>`;
+          bodyHtml = '<em style="color:var(--text-muted);">(Belum ada video)</em>';
         }
       } else if (b.type === 'file') {
-        bodyHtml = d.url ? `<a href="${esc(d.url)}" target="_blank">📎 ${esc(d.name || d.url)}</a>` : '<em style="color:#999;">(Belum ada file)</em>';
+        typeLabel = 'File';
+        typeIcon = 'fa-paperclip';
+        bodyHtml = d.url
+          ? `<a href="${esc(d.url)}" target="_blank"><i class="fas fa-file-download"></i> ${esc(d.name || d.url)}</a>`
+          : '<em style="color:var(--text-muted);">(Belum ada file)</em>';
       }
+
       return `
         <div class="block-item">
           <div class="block-header">
-            <span>${b.type}</span>
+            <span class="type-label"><i class="fas ${typeIcon}"></i> ${typeLabel}</span>
             <div class="block-actions">
-              <button onclick="editBlock(${b.id})" title="Edit">✏️</button>
-              <button class="danger" onclick="deleteBlockConfirm(${b.id})" title="Hapus">🗑️</button>
+              <button onclick="editBlock(${b.id})" title="Edit"><i class="fas fa-pen"></i></button>
+              <button class="danger" onclick="deleteBlockConfirm(${b.id})" title="Hapus"><i class="fas fa-trash"></i></button>
             </div>
           </div>
           <div class="block-body">${bodyHtml}</div>
         </div>`;
     }
 
-    /* ===== PAGE ===== */
+    // ============================================
+    // PAGE CRUD (multi-kelas)
+    // ============================================
     function openPageModal() {
-      if (!currentContext) {
-        alert('Pilih kelas dulu dari halaman "Mapel Saya" → kelas → Materi');
+      if (!currentSubjectId || selectedClassIds.length === 0) {
+        alert('Pilih Mapel & minimal 1 Kelas terlebih dahulu.');
         return;
       }
       document.getElementById('inputPageTitle').value = '';
+      document.getElementById('infoKelasCount').textContent = selectedClassIds.length;
       document.getElementById('modalPage').classList.add('active');
       setTimeout(() => document.getElementById('inputPageTitle').focus(), 100);
     }
-    function closePageModal() { document.getElementById('modalPage').classList.remove('active'); }
+
+    function closePageModal() {
+      document.getElementById('modalPage').classList.remove('active');
+    }
 
     async function savePage() {
       const title = document.getElementById('inputPageTitle').value.trim();
       if (!title) { alert('Judul wajib diisi'); return; }
+      if (selectedClassIds.length === 0) { alert('Pilih minimal 1 kelas'); return; }
+
       const btn = document.getElementById('btnSavePage');
-      btn.disabled = true; btn.textContent = 'Menyimpan...';
-      try {
-        await createPage({
-          classId: currentContext.classId,
-          subjectId: currentContext.subjectId,
-          title,
-          authorId: currentUser.id
-        });
-        closePageModal();
-        showToast('✅ Halaman dibuat');
-        await loadPages();
-      } catch (err) {
-        alert('Gagal: ' + err.message);
-        btn.disabled = false; btn.textContent = 'Buat Halaman';
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan ke ' + selectedClassIds.length + ' kelas...';
+
+      let success = 0;
+      let failed = 0;
+      const errors = [];
+
+      for (const classId of selectedClassIds) {
+        try {
+          await createPage({
+            classId: classId,
+            subjectId: currentSubjectId,
+            title,
+            authorId: currentUser.id
+          });
+          success++;
+        } catch (err) {
+          failed++;
+          errors.push(err.message);
+          console.error('Gagal buat di kelas', classId, err);
+        }
       }
+
+      closePageModal();
+      btn.disabled = false;
+      btn.textContent = 'Buat Halaman';
+
+      if (success > 0) {
+        let msg = '✅ Halaman dibuat di ' + success + ' kelas';
+        if (failed > 0) msg += ' (' + failed + ' gagal)';
+        showToast(msg, failed === 0 ? 'success' : 'error');
+      } else {
+        showToast('❌ Gagal membuat halaman: ' + (errors[0] || 'Unknown'), 'error');
+        return;
+      }
+
+      await loadPagesForActiveClass();
     }
 
     async function deletePageConfirm(pageId) {
-      if (!confirm('Hapus halaman ini beserta semua bloknya?')) return;
+      if (!confirm('Hapus halaman ini beserta semua bloknya?\n\n(Catatan: yang dihapus hanya halaman di kelas aktif ini, bukan di kelas lain.)')) return;
       try {
         await deletePage(pageId);
         if (currentPage && currentPage.id === pageId) currentPage = null;
         showToast('🗑️ Halaman dihapus');
-        await loadPages();
-        renderEditor();
+        await loadPagesForActiveClass();
+        resetEditor();
       } catch (err) {
         alert('Gagal: ' + err.message);
       }
     }
 
-    /* ===== BLOCK ===== */
+    // ============================================
+    // DUPLIKAT PAGE ke kelas lain
+    // ============================================
+    async function openDuplicateModal(pageId) {
+      dupSourcePageId = pageId;
+      dupSelectedClassIds = [];
+
+      const page = allPages.find(p => p.id === pageId);
+      if (!page) return;
+
+      document.getElementById('dupPageTitle').textContent = page.title;
+
+      // Kelas tujuan: semua kelas di mapel ini, KECUALI kelas sumber (activeClassId)
+      const targetClasses = allKelasForCurrentMapel.filter(c => c.id !== activeClassId);
+
+      const listEl = document.getElementById('dupKelasList');
+      if (targetClasses.length === 0) {
+        listEl.innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">🏫</span>
+            Tidak ada kelas lain untuk mapel ini.
+          </div>`;
+        document.getElementById('btnDoDuplicate').disabled = true;
+      } else {
+        document.getElementById('btnDoDuplicate').disabled = false;
+        listEl.innerHTML = targetClasses.map(c => `
+          <label class="kelas-option" data-dup-class-id="${c.id}">
+            <input type="checkbox" value="${c.id}" onchange="onDupKelasToggle(${c.id}, this.checked)">
+            <span class="kelas-name">${esc(c.name)}</span>
+            ${c.grade ? `<span class="kelas-extra">${esc(c.grade)}</span>` : ''}
+          </label>
+        `).join('');
+      }
+
+      updateDupChips();
+      document.getElementById('modalDuplicate').classList.add('active');
+    }
+
+    function onDupKelasToggle(classId, checked) {
+      if (checked) {
+        if (!dupSelectedClassIds.includes(classId)) dupSelectedClassIds.push(classId);
+      } else {
+        dupSelectedClassIds = dupSelectedClassIds.filter(id => id !== classId);
+      }
+      const label = document.querySelector(`.kelas-option[data-dup-class-id="${classId}"]`);
+      if (label) label.classList.toggle('checked', checked);
+      updateDupChips();
+    }
+
+    function updateDupChips() {
+      const container = document.getElementById('dupChips');
+      if (dupSelectedClassIds.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = dupSelectedClassIds.map(id => {
+        const c = allKelasForCurrentMapel.find(x => x.id === id);
+        if (!c) return '';
+        return `
+          <span class="kelas-chip">
+            ${esc(c.name)}
+            <button type="button" class="chip-remove" onclick="removeDupChip(${id})" title="Hapus">
+              <i class="fas fa-times"></i>
+            </button>
+          </span>
+        `;
+      }).join('');
+    }
+
+    function removeDupChip(classId) {
+      dupSelectedClassIds = dupSelectedClassIds.filter(id => id !== classId);
+      const label = document.querySelector(`.kelas-option[data-dup-class-id="${classId}"]`);
+      if (label) {
+        label.classList.remove('checked');
+        const cb = label.querySelector('input[type="checkbox"]');
+        if (cb) cb.checked = false;
+      }
+      updateDupChips();
+    }
+
+    function closeDuplicateModal() {
+      document.getElementById('modalDuplicate').classList.remove('active');
+      dupSourcePageId = null;
+      dupSelectedClassIds = [];
+    }
+
+    async function doDuplicate() {
+      if (!dupSourcePageId) return;
+      if (dupSelectedClassIds.length === 0) {
+        alert('Pilih minimal 1 kelas tujuan.');
+        return;
+      }
+
+      const srcPage = allPages.find(p => p.id === dupSourcePageId);
+      if (!srcPage) {
+        alert('Halaman sumber tidak ditemukan.');
+        return;
+      }
+
+      const btn = document.getElementById('btnDoDuplicate');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+      // Ambil blok sumber SEKALI di awal
+      let srcBlocks = [];
+      try {
+        srcBlocks = await getBlocks(srcPage.id);
+      } catch (err) {
+        console.warn('Gagal ambil blok sumber:', err);
+      }
+
+      let success = 0;
+      let skipped = 0;
+      let failed = 0;
+      const errors = [];
+
+      for (const targetClassId of dupSelectedClassIds) {
+        try {
+          // Cek duplikat judul di kelas tujuan
+          const existing = await getPages(targetClassId, currentSubjectId);
+          const sameTitle = (existing || []).find(e => e.title === srcPage.title);
+          if (sameTitle) {
+            skipped++;
+            continue;
+          }
+
+          // Buat page baru di kelas tujuan
+          const newPage = await createPage({
+            classId: targetClassId,
+            subjectId: currentSubjectId,
+            title: srcPage.title,
+            authorId: currentUser.id
+          });
+
+          // Salin semua blok
+          if (newPage && newPage.id && srcBlocks.length > 0) {
+            for (let i = 0; i < srcBlocks.length; i++) {
+              const b = srcBlocks[i];
+              try {
+                await createBlock({
+                  pageId: newPage.id,
+                  type: b.type,
+                  data: b.data || {},
+                  order: i
+                });
+              } catch (blockErr) {
+                console.warn('Gagal copy blok ke page', newPage.id, blockErr);
+              }
+            }
+          }
+
+          success++;
+        } catch (err) {
+          failed++;
+          errors.push('Kelas ID ' + targetClassId + ': ' + err.message);
+          console.error('Duplikat error:', err);
+        }
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-copy"></i> Duplikat';
+      closeDuplicateModal();
+
+      let msg = '✅ Berhasil duplikat ke ' + success + ' kelas';
+      if (skipped > 0) msg += ', ' + skipped + ' dilewati (judul sama)';
+      if (failed > 0) msg += ', ' + failed + ' gagal';
+
+      showToast(msg, failed === 0 ? 'success' : 'error');
+      if (failed > 0) console.warn('Duplikat errors:', errors);
+    }
+
+    // ============================================
+    // BLOCK CRUD
+    // ============================================
     function openBlockModal(type) {
       addingBlockType = type;
       editingBlockId = null;
-      document.getElementById('blockModalTitle').textContent = 'Tambah Blok: ' + type;
+      const titles = { text: 'Teks', image: 'Gambar', video: 'Video', file: 'File' };
+      document.getElementById('blockModalTitle').innerHTML =
+        '<i class="fas fa-cube"></i> Tambah Blok: ' + (titles[type] || type);
       renderBlockForm(type, {});
       document.getElementById('modalBlock').classList.add('active');
     }
@@ -438,7 +1767,9 @@
       if (!b) return;
       editingBlockId = blockId;
       addingBlockType = b.type;
-      document.getElementById('blockModalTitle').textContent = 'Edit Blok: ' + b.type;
+      const titles = { text: 'Teks', image: 'Gambar', video: 'Video', file: 'File' };
+      document.getElementById('blockModalTitle').innerHTML =
+        '<i class="fas fa-pen"></i> Edit Blok: ' + (titles[b.type] || b.type);
       renderBlockForm(b.type, b.data || {});
       document.getElementById('modalBlock').classList.add('active');
     }
@@ -446,6 +1777,7 @@
     function renderBlockForm(type, data) {
       const c = document.getElementById('blockFormContainer');
       let html = '';
+
       if (type === 'text') {
         html = `
           <label class="form-label">Isi Teks</label>
@@ -458,7 +1790,7 @@
           <input type="text" id="blockCaption" class="form-input" placeholder="Deskripsi gambar" value="${esc(data.caption || '')}">`;
       } else if (type === 'video') {
         html = `
-          <label class="form-label">URL Video (YouTube / Drive)</label>
+          <label class="form-label">URL Video (YouTube)</label>
           <input type="text" id="blockUrl" class="form-input" placeholder="https://youtube.com/watch?v=..." value="${esc(data.url || '')}">`;
       } else if (type === 'file') {
         html = `
@@ -467,18 +1799,24 @@
           <label class="form-label">Nama File</label>
           <input type="text" id="blockName" class="form-input" placeholder="Modul Bab 1.pdf" value="${esc(data.name || '')}">`;
       }
+
       c.innerHTML = html;
     }
 
-    function closeBlockModal() { document.getElementById('modalBlock').classList.remove('active'); }
+    function closeBlockModal() {
+      document.getElementById('modalBlock').classList.remove('active');
+    }
 
     async function saveBlock() {
       if (!currentPage) return;
+
       const btn = document.getElementById('btnSaveBlock');
-      btn.disabled = true; btn.textContent = 'Menyimpan...';
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
       try {
         let data = {};
+
         if (addingBlockType === 'text') {
           data = { content: document.getElementById('blockContent').value };
         } else if (addingBlockType === 'image') {
@@ -498,12 +1836,11 @@
         if (editingBlockId) {
           await updateBlock(editingBlockId, { data });
         } else {
-          const order = allBlocks.length;
           await createBlock({
             pageId: currentPage.id,
             type: addingBlockType,
             data,
-            order
+            order: allBlocks.length
           });
         }
         closeBlockModal();
@@ -512,7 +1849,8 @@
       } catch (err) {
         alert('Gagal: ' + err.message);
       } finally {
-        btn.disabled = false; btn.textContent = 'Simpan';
+        btn.disabled = false;
+        btn.textContent = 'Simpan';
       }
     }
 
@@ -527,6 +1865,9 @@
       }
     }
 
+    // ============================================
+    // UTILS
+    // ============================================
     function esc(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');
@@ -537,15 +1878,18 @@
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg;
-      t.className = 'toast show ' + (type === 'error' ? 'error' : '');
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
       clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
     }
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         closePageModal();
         closeBlockModal();
+        closeDuplicateModal();
+        document.getElementById('kelasDropdown').classList.remove('open');
+        document.getElementById('multikelasTrigger').classList.remove('open');
       }
     });
   </script>

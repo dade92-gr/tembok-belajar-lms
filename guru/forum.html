@@ -4,165 +4,672 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forum Kelas — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
   <style>
-    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
 
-    .context-bar {
-      background: var(--tb-light); border-radius: 12px;
-      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
-      display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
     }
-    .context-bar strong { color: var(--tb-dark); }
 
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* BUTTONS */
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* CONTEXT SELECTOR */
+    .context-selector {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      position: relative;
+    }
+
+    .context-selector label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .context-selector label i { color: var(--primary); }
+
+    .context-selector select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+    }
+    .context-selector select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .context-selector select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: var(--bg-soft);
+    }
+
+    /* PANEL */
     .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
       margin-bottom: 1.2rem;
     }
+
     .panel-title {
-      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--tb-light);
-      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .panel-title-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title i { color: var(--primary); font-size: 0.9rem; }
+
+    .badge-count {
+      background: var(--primary);
+      color: white;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
     }
 
-    .post-list { display: flex; flex-direction: column; gap: 1rem; }
+    /* FORM */
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      margin-bottom: 0.9rem;
+    }
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    textarea.form-input {
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.6;
+    }
+
+    /* POST LIST */
+    .post-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
     .post {
-      background: var(--tb-bg); border-radius: 12px;
-      padding: 1rem 1.2rem; border-left: 4px solid var(--tb-primary);
+      background: var(--bg-soft);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      border-left: 4px solid var(--primary);
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
     }
+    .post:hover {
+      box-shadow: var(--shadow-sm);
+      border-left-color: var(--primary-dark);
+    }
+
     .post-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 0.6rem; gap: 1rem; flex-wrap: wrap;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.7rem;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
+
     .post-author {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 0.85rem; font-weight: 600; color: var(--tb-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--navy);
     }
     .author-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
-      color: white; display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.8rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
     }
-    .post-time { font-size: 0.7rem; color: var(--tb-text-muted); font-weight: 400; }
-    .post-title { font-weight: 700; color: var(--tb-text); font-size: 0.95rem; margin-bottom: 0.4rem; }
-    .post-body { font-size: 0.85rem; color: var(--tb-text); line-height: 1.6; margin-bottom: 0.7rem; white-space: pre-wrap; }
+    .author-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .post-time {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 2px;
+    }
 
+    .badge-role {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 1px 7px;
+      border-radius: 6px;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+    .badge-role.guru {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .post-title {
+      font-weight: 700;
+      color: var(--navy);
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+    }
+    .post-body {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 0.7rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* REPLIES */
     .reply-list {
-      margin-top: 0.8rem; padding-top: 0.8rem;
-      border-top: 1px dashed #ccc;
-      display: flex; flex-direction: column; gap: 0.5rem;
+      margin-top: 0.9rem;
+      padding-top: 0.9rem;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
     }
+
     .reply {
-      background: white; padding: 0.7rem 1rem;
-      border-radius: 8px; font-size: 0.8rem;
+      background: var(--surface);
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
     }
-    .reply-header { display: flex; gap: 8px; align-items: center; margin-bottom: 0.3rem; font-size: 0.75rem; }
-    .reply-header strong { color: var(--tb-dark); }
-    .reply-body { color: var(--tb-text); white-space: pre-wrap; }
+    .reply-header {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 0.3rem;
+      font-size: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .reply-header strong {
+      color: var(--navy);
+      font-weight: 700;
+    }
+    .reply-header .time {
+      color: var(--text-muted);
+      font-size: 0.68rem;
+    }
+    .reply-body {
+      color: var(--text);
+      white-space: pre-wrap;
+      font-size: 0.83rem;
+      line-height: 1.6;
+      word-break: break-word;
+    }
 
-    .post-actions { display: flex; gap: 6px; margin-top: 0.5rem; }
+    .reply-empty {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 0.3rem;
+      font-style: italic;
+    }
+
+    /* ACTIONS */
+    .post-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 0.6rem;
+      flex-wrap: wrap;
+    }
+
     .btn-sm-outline {
-      background: white; border: 1px solid var(--tb-border);
-      padding: 4px 12px; border-radius: 20px;
-      font-size: 0.7rem; font-weight: 600; cursor: pointer;
-      transition: var(--tb-transition);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
-    .btn-sm-outline:hover { background: var(--tb-light); border-color: var(--tb-primary); }
-    .btn-sm-outline.danger:hover { background: #fadbd8; border-color: var(--tb-danger); }
-
-    .form-label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--tb-dark); }
-    .form-input {
-      width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--tb-border);
-      border-radius: 10px; font-size: 0.9rem; font-family: inherit;
-      margin-bottom: 1rem; outline: none;
+    .btn-sm-outline:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
     }
-    .form-input:focus { border-color: var(--tb-primary); box-shadow: 0 0 0 3px rgba(46,204,113,0.15); }
-    textarea.form-input { resize: vertical; min-height: 80px; }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
-      color: white; border: none; padding: 0.6rem 1.4rem;
-      border-radius: 30px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
-      transition: var(--tb-transition);
+    .btn-sm-outline.danger:hover {
+      background: var(--danger-light);
+      border-color: var(--danger);
+      color: var(--danger);
     }
-    .btn-primary:hover { transform: translateY(-2px); }
+    .btn-sm-outline i { font-size: 0.75rem; }
 
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-back {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+    /* REPLY FORM */
+    .reply-form {
+      margin-top: 0.7rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+    .reply-form.active { display: block; }
+    .reply-form textarea {
+      margin-bottom: 0.5rem;
+    }
+
+    /* EMPTY */
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2.5rem 1rem;
       font-size: 0.85rem;
     }
-    .btn-back:hover { background: var(--tb-light); }
+    .empty-msg .emoji {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+    .empty-msg strong { color: var(--text); }
 
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* TOAST */
     .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--tb-dark); color: white;
-      padding: 1rem 1.4rem; border-radius: 12px;
-      font-size: 0.85rem; font-weight: 500;
-      opacity: 0; transform: translateY(20px);
-      transition: all 0.3s ease; z-index: 3000;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--navy);
+      color: white;
+      padding: 1rem 1.4rem;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000;
+      max-width: 400px;
+      line-height: 1.5;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.error { background: var(--tb-danger); }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .context-selector { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+    }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat forum...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
     <div class="page-toolbar">
-      <h1>💬 Forum Kelas
-        <small>Diskusi dengan siswa di kelas ini</small>
-      </h1>
-    </div>
-
-    <div class="context-bar" id="contextBar" style="display:none;">
-      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
-      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
-    </div>
-
-    <!-- Form Buat Topik -->
-    <div class="panel">
-      <h2 class="panel-title">✍️ Buat Topik Diskusi Baru</h2>
-      <label class="form-label">Judul Topik</label>
-      <input type="text" id="inputTitle" class="form-input" placeholder="Contoh: Diskusi Bab 3 - Trigonometri" maxlength="200">
-      <label class="form-label">Isi / Pertanyaan</label>
-      <textarea id="inputBody" class="form-input" placeholder="Tulis pertanyaan atau topik diskusi..." rows="3"></textarea>
-      <button class="btn-primary" id="btnPost" onclick="submitPost()">📤 Posting</button>
-    </div>
-
-    <!-- Daftar Topik -->
-    <div class="panel">
-      <h2 class="panel-title">📋 Daftar Diskusi</h2>
-      <div class="post-list" id="postList">
-        <div class="empty-msg">Memuat...</div>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#forum';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-comments"></i>
+          <span>
+            Forum Kelas
+            <small>Diskusi dengan siswa di kelas ini</small>
+          </span>
+        </h1>
       </div>
     </div>
 
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat forum...</p>
     </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Context Selector -->
+      <div class="context-selector">
+        <div class="selector-group">
+          <label for="selectMapel"><i class="fas fa-book"></i> Mapel</label>
+          <select id="selectMapel" onchange="onMapelChange()" disabled>
+            <option value="">-- Memuat... --</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label for="selectKelas"><i class="fas fa-school"></i> Kelas</label>
+          <select id="selectKelas" onchange="onKelasChange()" disabled>
+            <option value="">-- Pilih Mapel dulu --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Form Buat Topik -->
+      <div class="panel" id="panelNewPost" style="display:none;">
+        <h2 class="panel-title">
+          <div class="panel-title-left">
+            <i class="fas fa-pen"></i> Buat Topik Diskusi Baru
+          </div>
+        </h2>
+        <label class="form-label">Judul Topik</label>
+        <input type="text" id="inputTitle" class="form-input" placeholder="Contoh: Diskusi Bab 3 - Trigonometri" maxlength="200">
+        <label class="form-label">Isi / Pertanyaan</label>
+        <textarea id="inputBody" class="form-input" placeholder="Tulis pertanyaan atau topik diskusi..." rows="3"></textarea>
+        <button class="btn-primary" id="btnPost" onclick="submitPost()">
+          <i class="fas fa-paper-plane"></i> Posting
+        </button>
+      </div>
+
+      <!-- Daftar Topik -->
+      <div class="panel">
+        <h2 class="panel-title">
+          <div class="panel-title-left">
+            <i class="fas fa-list"></i> Daftar Diskusi
+          </div>
+          <span class="badge-count" id="postCount" style="display:none;">0</span>
+        </h2>
+        <div class="post-list" id="postList">
+          <div class="empty-msg">
+            <span class="emoji">💬</span>
+            Pilih Mapel & Kelas di atas
+          </div>
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#forum';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <div class="toast" id="toast"></div>
@@ -171,67 +678,261 @@
   <script src="../assets/js/supabase.js"></script>
   <script>
     let currentUser = null;
-    let currentContext = null;
+    let allAssignments = [];
+    let currentSubjectId = null;
+    let currentClassId = null;
+    let currentSubjectName = '';
+    let currentClassName = '';
+    let allKelasForCurrentMapel = [];
     let allPosts = [];
 
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('guru');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
+      try {
+        allAssignments = await getMyTeachingAssignments(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load assignments:', err);
+        allAssignments = [];
+      }
+
+      if (!allAssignments || allAssignments.length === 0) {
+        document.getElementById('loading').innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📚</span>
+            <strong>Belum ada mapel yang diampu.</strong><br>
+            Hubungi operator sekolah untuk ditugaskan.
+          </div>`;
+        return;
+      }
+
+      // Prefill dari sessionStorage
       const ctx = sessionStorage.getItem('guru_context');
+      let prefillSubjectId = null;
+      let prefillClassId = null;
+
       if (ctx) {
-        currentContext = JSON.parse(ctx);
-        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
-        document.getElementById('contextBar').style.display = 'flex';
         try {
-          const classes = await getClasses(currentUser.school_id);
-          const cls = classes.find(c => c.id === currentContext.classId);
-          if (cls) document.getElementById('ctxClass').textContent = cls.name;
+          const parsed = JSON.parse(ctx);
+          prefillSubjectId = parsed.subjectId;
+          prefillClassId = parsed.classId;
         } catch (e) {}
-        await loadPosts();
-      } else {
-        document.getElementById('postList').innerHTML = '<div class="empty-msg">Pilih kelas dulu dari halaman Mapel Saya</div>';
+      }
+
+      populateMapelDropdown(prefillSubjectId);
+
+      if (prefillSubjectId) {
+        populateKelasDropdown(prefillSubjectId, prefillClassId);
+        if (prefillClassId) {
+          await loadPostsForClass(prefillSubjectId, prefillClassId);
+        }
       }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
     })();
 
-    async function loadPosts() {
-      if (!currentContext) return;
+    // ============================================
+    // MAPEL DROPDOWN
+    // ============================================
+    function populateMapelDropdown(selectedSubjectId) {
+      const sel = document.getElementById('selectMapel');
+      const subjectMap = {};
+      allAssignments.forEach(a => {
+        if (a.subjects) subjectMap[a.subjects.id] = a.subjects;
+      });
+      const subjects = Object.values(subjectMap);
+
+      if (subjects.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada mapel --</option>';
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
+        subjects.map(s => `<option value="${s.id}">${esc(s.name)}${s.code ? ' (' + esc(s.code) + ')' : ''}</option>`).join('');
+
+      sel.disabled = false;
+      if (selectedSubjectId && subjectMap[selectedSubjectId]) {
+        sel.value = String(selectedSubjectId);
+      }
+    }
+
+    function onMapelChange() {
+      const subjectId = parseInt(document.getElementById('selectMapel').value) || null;
+      currentSubjectId = subjectId;
+
+      const selKelas = document.getElementById('selectKelas');
+      if (!subjectId) {
+        selKelas.innerHTML = '<option value="">-- Pilih Mapel dulu --</option>';
+        selKelas.disabled = true;
+        resetPosts();
+        return;
+      }
+      populateKelasDropdown(subjectId, null);
+      resetPosts();
+    }
+
+    function populateKelasDropdown(subjectId, selectedClassId) {
+      const sel = document.getElementById('selectKelas');
+      const filtered = allAssignments.filter(a => a.subjects && a.subjects.id === subjectId);
+      const classMap = {};
+      filtered.forEach(a => {
+        if (a.classes) classMap[a.classes.id] = a.classes;
+      });
+      allKelasForCurrentMapel = Object.values(classMap);
+
+      if (allKelasForCurrentMapel.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada kelas --</option>';
+        sel.disabled = true;
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+        allKelasForCurrentMapel.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+      sel.disabled = false;
+
+      if (selectedClassId && classMap[selectedClassId]) {
+        sel.value = String(selectedClassId);
+      }
+    }
+
+    function onKelasChange() {
+      const classId = parseInt(document.getElementById('selectKelas').value) || null;
+      currentClassId = classId;
+
+      if (!classId) {
+        resetPosts();
+        return;
+      }
+      loadPostsForClass(currentSubjectId, classId);
+    }
+
+    function resetPosts() {
+      allPosts = [];
+      document.getElementById('postList').innerHTML = `
+        <div class="empty-msg">
+          <span class="emoji">💬</span>
+          Pilih Mapel & Kelas di atas
+        </div>`;
+      document.getElementById('panelNewPost').style.display = 'none';
+      document.getElementById('postCount').style.display = 'none';
+    }
+
+    // ============================================
+    // LOAD POSTS
+    // ============================================
+    async function loadPostsForClass(subjectId, classId) {
+      currentSubjectId = subjectId;
+      currentClassId = classId;
+
+      const assign = allAssignments.find(a =>
+        a.subjects && a.subjects.id === subjectId &&
+        a.classes && a.classes.id === classId
+      );
+      currentSubjectName = assign?.subjects?.name || '-';
+      currentClassName = assign?.classes?.name || '-';
+
+      // Tampilkan form buat topik
+      document.getElementById('panelNewPost').style.display = 'block';
+
+      document.getElementById('postList').innerHTML = `
+        <div class="empty-msg">Memuat diskusi...</div>`;
+
       try {
-        allPosts = await getForumPosts(currentContext.classId, currentContext.subjectId);
-        renderPosts();
+        allPosts = await getForumPosts(classId, subjectId);
+        await renderPosts();
       } catch (err) {
-        document.getElementById('postList').innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+        console.error('loadPosts error:', err);
+        document.getElementById('postList').innerHTML = `
+          <div class="empty-msg" style="color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            <strong>Gagal memuat diskusi</strong><br>
+            <small>${esc(err.message)}</small>
+          </div>`;
       }
     }
 
     async function renderPosts() {
       const c = document.getElementById('postList');
+      const countEl = document.getElementById('postCount');
+
       if (allPosts.length === 0) {
-        c.innerHTML = '<div class="empty-msg">Belum ada topik diskusi. Buat topik pertama di atas!</div>';
+        c.innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">💬</span>
+            Belum ada topik diskusi.<br>
+            Buat topik pertama di form atas!
+          </div>`;
+        countEl.style.display = 'none';
         return;
       }
 
+      countEl.textContent = allPosts.length;
+      countEl.style.display = 'inline-block';
+
+      // Render semua post dengan balasan (parallel)
+      const postsWithReplies = await Promise.all(
+        allPosts.map(async (p) => {
+          let replies = [];
+          try {
+            replies = await getForumReplies(p.id);
+          } catch (e) {
+            console.warn('Gagal load replies untuk post', p.id, e);
+          }
+          return { post: p, replies };
+        })
+      );
+
       let html = '';
-      for (const p of allPosts) {
+      for (const { post: p, replies } of postsWithReplies) {
         const author = p.profiles;
-        const replies = await getForumReplies(p.id);
         const isOwner = author && author.id === currentUser.id;
-        const isGuru = author && author.role === 'guru';
+        const isGuruPost = author && author.role === 'guru';
+        const isGuru = currentUser.role === 'guru';
+
+        const authorInitial = (author?.name || '?').charAt(0).toUpperCase();
+        const createdDate = new Date(p.created_at).toLocaleString('id-ID', {
+          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        const repliesHtml = replies.length === 0
+          ? '<div class="reply-empty">Belum ada balasan</div>'
+          : replies.map(r => {
+              const rAuthor = r.profiles;
+              const rIsGuru = rAuthor && rAuthor.role === 'guru';
+              const rInitial = (rAuthor?.name || '?').charAt(0).toUpperCase();
+              const rDate = new Date(r.created_at).toLocaleString('id-ID', {
+                day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+              });
+              return `
+                <div class="reply">
+                  <div class="reply-header">
+                    <strong>${esc(rAuthor?.name || '-')}</strong>
+                    ${rIsGuru ? '<span class="badge-role guru">GURU</span>' : ''}
+                    <span class="time">${rDate}</span>
+                  </div>
+                  <div class="reply-body">${esc(r.body || '')}</div>
+                </div>`;
+            }).join('');
 
         html += `
           <div class="post">
             <div class="post-header">
               <div class="post-author">
-                <div class="author-avatar">${esc((author?.name || '?').charAt(0).toUpperCase())}</div>
+                <div class="author-avatar">${esc(authorInitial)}</div>
                 <div>
-                  ${esc(author?.name || '-')} ${isGuru ? '<span style="font-size:0.65rem; background:var(--tb-light); color:var(--tb-dark); padding:1px 6px; border-radius:6px; margin-left:4px;">GURU</span>' : ''}
-                  <div class="post-time">${new Date(p.created_at).toLocaleString('id-ID')}</div>
+                  <div class="author-name">
+                    ${esc(author?.name || '-')}
+                    ${isGuruPost ? '<span class="badge-role guru">GURU</span>' : ''}
+                  </div>
+                  <div class="post-time">
+                    <i class="fas fa-clock"></i> ${createdDate}
+                  </div>
                 </div>
               </div>
             </div>
@@ -239,73 +940,103 @@
             <div class="post-body">${esc(p.body || '')}</div>
 
             <div class="reply-list">
-              ${replies.length === 0 ? '<div style="font-size:0.75rem; color:#999; padding:0.3rem;">Belum ada balasan</div>' : replies.map(r => `
-                <div class="reply">
-                  <div class="reply-header">
-                    <strong>${esc(r.profiles?.name || '-')}</strong>
-                    ${r.profiles?.role === 'guru' ? '<span style="font-size:0.6rem; background:var(--tb-light); color:var(--tb-dark); padding:1px 6px; border-radius:6px;">GURU</span>' : ''}
-                    <span style="color:#999;">${new Date(r.created_at).toLocaleString('id-ID')}</span>
-                  </div>
-                  <div class="reply-body">${esc(r.body || '')}</div>
-                </div>
-              `).join('')}
+              ${repliesHtml}
             </div>
 
             <div class="post-actions">
-              <button class="btn-sm-outline" onclick="showReplyForm(${p.id})">💬 Balas</button>
-              ${(isOwner || currentUser.role === 'guru') ? `<button class="btn-sm-outline danger" onclick="deletePostConfirm(${p.id})">🗑️ Hapus</button>` : ''}
+              <button class="btn-sm-outline" onclick="toggleReplyForm(${p.id})">
+                <i class="fas fa-reply"></i> Balas
+              </button>
+              ${(isOwner || isGuru) ? `
+                <button class="btn-sm-outline danger" onclick="deletePostConfirm(${p.id})">
+                  <i class="fas fa-trash"></i> Hapus
+                </button>
+              ` : ''}
             </div>
 
-            <div id="replyForm-${p.id}" style="display:none; margin-top:0.6rem;">
-              <textarea id="replyBody-${p.id}" class="form-input" placeholder="Tulis balasan..." rows="2" style="margin-bottom:0.5rem;"></textarea>
-              <button class="btn-primary" onclick="submitReply(${p.id})" style="font-size:0.75rem; padding:0.4rem 1rem;">Kirim Balasan</button>
+            <div class="reply-form" id="replyForm-${p.id}">
+              <textarea id="replyBody-${p.id}" class="form-input" placeholder="Tulis balasan..." rows="2"></textarea>
+              <button class="btn-primary" onclick="submitReply(${p.id})" style="font-size:0.78rem; padding:0.5rem 1rem;">
+                <i class="fas fa-paper-plane"></i> Kirim Balasan
+              </button>
             </div>
           </div>
         `;
       }
+
       c.innerHTML = html;
     }
 
-    function showReplyForm(postId) {
+    function toggleReplyForm(postId) {
       const el = document.getElementById('replyForm-' + postId);
-      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-    }
-
-    async function submitPost() {
-      if (!currentContext) { alert('Pilih kelas dulu'); return; }
-      const title = document.getElementById('inputTitle').value.trim();
-      const body = document.getElementById('inputBody').value.trim();
-      if (!title) { alert('Judul wajib diisi'); return; }
-
-      const btn = document.getElementById('btnPost');
-      btn.disabled = true; btn.textContent = 'Memposting...';
-
-      try {
-        await createForumPost({
-          classId: currentContext.classId,
-          subjectId: currentContext.subjectId,
-          authorId: currentUser.id,
-          title, body
-        });
-        document.getElementById('inputTitle').value = '';
-        document.getElementById('inputBody').value = '';
-        showToast('✅ Topik diposting');
-        await loadPosts();
-      } catch (err) {
-        alert('Gagal: ' + err.message);
-      } finally {
-        btn.disabled = false; btn.textContent = '📤 Posting';
+      if (!el) return;
+      const isOpen = el.classList.contains('active');
+      // Tutup semua form lain
+      document.querySelectorAll('.reply-form.active').forEach(f => f.classList.remove('active'));
+      if (!isOpen) {
+        el.classList.add('active');
+        const ta = el.querySelector('textarea');
+        if (ta) setTimeout(() => ta.focus(), 100);
       }
     }
 
-    async function submitReply(parentId) {
-      const body = document.getElementById('replyBody-' + parentId).value.trim();
-      if (!body) { alert('Balasan tidak boleh kosong'); return; }
+    // ============================================
+    // SUBMIT POST
+    // ============================================
+    async function submitPost() {
+      if (!currentSubjectId || !currentClassId) {
+        alert('Pilih Mapel & Kelas terlebih dahulu.');
+        return;
+      }
+
+      const title = document.getElementById('inputTitle').value.trim();
+      const body = document.getElementById('inputBody').value.trim();
+      if (!title) {
+        alert('Judul wajib diisi');
+        return;
+      }
+
+      const btn = document.getElementById('btnPost');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memposting...';
 
       try {
         await createForumPost({
-          classId: currentContext.classId,
-          subjectId: currentContext.subjectId,
+          classId: currentClassId,
+          subjectId: currentSubjectId,
+          authorId: currentUser.id,
+          title,
+          body
+        });
+        document.getElementById('inputTitle').value = '';
+        document.getElementById('inputBody').value = '';
+        showToast('✅ Topik berhasil diposting');
+        await loadPostsForClass(currentSubjectId, currentClassId);
+      } catch (err) {
+        console.error('submitPost error:', err);
+        alert('Gagal: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Posting';
+      }
+    }
+
+    // ============================================
+    // SUBMIT REPLY
+    // ============================================
+    async function submitReply(parentId) {
+      const ta = document.getElementById('replyBody-' + parentId);
+      if (!ta) return;
+      const body = ta.value.trim();
+      if (!body) {
+        alert('Balasan tidak boleh kosong');
+        return;
+      }
+
+      try {
+        await createForumPost({
+          classId: currentClassId,
+          subjectId: currentSubjectId,
           authorId: currentUser.id,
           title: 'Re:',
           body,
@@ -314,21 +1045,29 @@
         showToast('✅ Balasan dikirim');
         await renderPosts();
       } catch (err) {
+        console.error('submitReply error:', err);
         alert('Gagal: ' + err.message);
       }
     }
 
+    // ============================================
+    // DELETE POST
+    // ============================================
     async function deletePostConfirm(id) {
       if (!confirm('Hapus topik ini beserta semua balasannya?')) return;
       try {
         await deleteForumPost(id);
         showToast('🗑️ Topik dihapus');
-        await loadPosts();
+        await loadPostsForClass(currentSubjectId, currentClassId);
       } catch (err) {
+        console.error('deletePost error:', err);
         alert('Gagal: ' + err.message);
       }
     }
 
+    // ============================================
+    // UTILS
+    // ============================================
     function esc(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');
@@ -339,9 +1078,9 @@
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg;
-      t.className = 'toast show ' + (type === 'error' ? 'error' : '');
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
       clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
     }
   </script>
 </body>

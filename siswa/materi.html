@@ -4,122 +4,533 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Materi Belajar — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
   <style>
-    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { margin-bottom: 1.5rem; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
 
-    .selector-row {
-      background: white; border-radius: var(--tb-radius-lg);
-      padding: 1rem 1.5rem; margin-bottom: 1.5rem;
-      box-shadow: var(--tb-shadow-sm);
-      display: flex; gap: 1rem; flex-wrap: wrap;
-    }
-    .selector-row > div { flex: 1; min-width: 200px; }
-    .selector-row label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--tb-dark); margin-bottom: 0.4rem; }
-    .selector-row select {
-      width: 100%; padding: 0.6rem 0.8rem;
-      border: 1px solid var(--tb-border); border-radius: 10px;
-      font-size: 0.85rem; font-family: inherit; cursor: pointer;
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
     }
 
-    .two-col { display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* CONTEXT SELECTOR */
+    .context-selector {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      position: relative;
+    }
+
+    .context-selector label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .context-selector label i { color: var(--primary); }
+
+    .context-selector select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+    }
+    .context-selector select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .context-selector select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: var(--bg-soft);
+    }
+
+    /* TWO COL LAYOUT */
+    .two-col {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 1.2rem;
+      align-items: start;
+    }
+
+    /* PANEL */
     .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.2rem;
+      box-shadow: var(--shadow-sm);
     }
+
     .panel-title {
-      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--tb-light);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title i { color: var(--primary); font-size: 0.85rem; }
+
+    .badge-count {
+      background: var(--primary);
+      color: white;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-left: auto;
     }
 
-    .page-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    /* PAGE LIST */
+    .page-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
     .page-item {
-      padding: 0.7rem 0.9rem; border-radius: 10px;
-      background: var(--tb-bg); cursor: pointer;
-      font-size: 0.85rem; transition: var(--tb-transition);
+      padding: 0.75rem 0.9rem;
+      border-radius: 10px;
+      background: var(--bg-soft);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      color: var(--text);
     }
-    .page-item:hover { background: var(--tb-light); }
-    .page-item.active { background: var(--tb-light); border-left: 3px solid var(--tb-primary); font-weight: 600; }
+    .page-item:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+    .page-item.active {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      border-left: 4px solid var(--primary);
+      padding-left: calc(0.9rem - 3px);
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+    .page-item .page-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .page-item.active .page-num {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .page-item .page-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
-    .page-content h1, .page-content h2, .page-content h3 { color: var(--tb-dark); margin: 1rem 0 0.5rem; }
-    .page-content p { margin-bottom: 0.8rem; line-height: 1.7; }
-    .page-content img { max-width: 100%; border-radius: 10px; margin: 0.5rem 0; }
-    .page-content iframe { width: 100%; max-width: 720px; height: 400px; border: none; border-radius: 10px; margin: 0.5rem 0; }
-    .page-content a { color: var(--tb-primary); word-break: break-all; }
+    /* PAGE CONTENT */
+    .page-content {
+      font-size: 0.92rem;
+      line-height: 1.75;
+      color: var(--text);
+    }
+    .page-content h1,
+    .page-content h2,
+    .page-content h3 {
+      color: var(--navy);
+      margin: 1.2rem 0 0.6rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .page-content h1 { font-size: 1.3rem; }
+    .page-content h2 { font-size: 1.15rem; }
+    .page-content h3 { font-size: 1.05rem; }
+    .page-content p {
+      margin-bottom: 0.9rem;
+    }
+    .page-content img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin: 0.8rem 0;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-xs);
+    }
+    .page-content iframe {
+      width: 100%;
+      max-width: 100%;
+      height: 400px;
+      border: none;
+      border-radius: 10px;
+      margin: 1rem 0;
+      box-shadow: var(--shadow-sm);
+    }
+    .page-content a {
+      color: var(--primary);
+      word-break: break-all;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .page-content a:hover {
+      text-decoration: underline;
+      color: var(--primary-dark);
+    }
 
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
+    .block-item {
+      margin-bottom: 1.2rem;
+    }
+    .image-caption {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: -0.4rem;
+      margin-bottom: 0.8rem;
+      font-style: italic;
+    }
+    .file-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-lighter);
+      border: 1px solid var(--primary-light);
+      padding: 6px 12px;
+      border-radius: 8px;
+      color: var(--primary-dark);
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
 
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+    /* EMPTY */
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2.5rem 1rem;
       font-size: 0.85rem;
     }
-    .btn-secondary:hover { background: var(--tb-light); }
+    .empty-msg .emoji {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+    .empty-msg strong { color: var(--text); }
+
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .context-selector { grid-template-columns: 1fr; }
+    }
 
     @media (max-width: 768px) {
-      .page-container { padding: 1.2rem 1rem; }
-      .two-col { grid-template-columns: 1fr; }
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .page-content iframe { height: 240px; }
     }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Siswa</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat materi...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
     <div class="page-toolbar">
-      <h1>📄 Materi Belajar
-        <small>Baca materi yang sudah disiapkan guru</small>
-      </h1>
-    </div>
-
-    <div class="selector-row">
-      <div>
-        <label>Mata Pelajaran</label>
-        <select id="selSubject" onchange="onSubjectChange()"></select>
-      </div>
-      <div>
-        <label>Kelas</label>
-        <select id="selClass" onchange="loadPages()"></select>
+      <div class="page-toolbar-left">
+        <a href="mapel.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#mapel';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Mapel
+        </a>
+        <h1>
+          <i class="fas fa-file-alt"></i>
+          <span>
+            Materi Belajar
+            <small>Baca materi yang sudah disiapkan guru</small>
+          </span>
+        </h1>
       </div>
     </div>
 
-    <div class="two-col">
-      <div class="panel">
-        <h2 class="panel-title">📑 Daftar Halaman</h2>
-        <div class="page-list" id="pageList">
-          <div class="empty-msg">Pilih mapel dan kelas</div>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat materi...</p>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Context Selector -->
+      <div class="context-selector">
+        <div class="selector-group">
+          <label for="selSubject"><i class="fas fa-book"></i> Mapel</label>
+          <select id="selSubject" onchange="onSubjectChange()" disabled>
+            <option value="">-- Memuat... --</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label for="selClass"><i class="fas fa-school"></i> Kelas</label>
+          <select id="selClass" onchange="onKelasChange()" disabled>
+            <option value="">-- Pilih Mapel dulu --</option>
+          </select>
         </div>
       </div>
 
-      <div class="panel">
-        <h2 class="panel-title" id="contentTitle">📖 Konten</h2>
-        <div class="page-content" id="contentArea">
-          <div class="empty-msg">Pilih halaman untuk membaca</div>
+      <!-- Two Col -->
+      <div class="two-col">
+
+        <!-- LEFT: Daftar Halaman -->
+        <div class="panel">
+          <h2 class="panel-title">
+            <i class="fas fa-list"></i> Daftar Halaman
+            <span class="badge-count" id="pageCount" style="display:none;">0</span>
+          </h2>
+          <div class="page-list" id="pageList">
+            <div class="empty-msg">
+              <span class="emoji">📑</span>
+              Pilih Mapel & Kelas
+            </div>
+          </div>
         </div>
+
+        <!-- RIGHT: Konten -->
+        <div class="panel">
+          <h2 class="panel-title" id="contentTitle">
+            <i class="fas fa-book-open"></i> Konten
+          </h2>
+          <div class="page-content" id="contentArea">
+            <div class="empty-msg">
+              <span class="emoji">📖</span>
+              Pilih halaman untuk membaca
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="back-nav">
+        <a href="mapel.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#mapel';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Mapel
+        </a>
       </div>
     </div>
 
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-secondary">← Kembali ke Dashboard</a>
-    </div>
   </div>
 
   <script src="../assets/js/config.js"></script>
@@ -129,13 +540,16 @@
     let allAssigns = [];
     let allPages = [];
     let currentPage = null;
+    let currentSubjectId = null;
+    let currentClassId = null;
 
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('siswa');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
       try {
         allAssigns = await getMyEnrolledSubjects(currentUser.id);
@@ -147,119 +561,269 @@
         });
         const selSubject = document.getElementById('selSubject');
         selSubject.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
-          Object.values(subjectsMap).map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+          Object.values(subjectsMap).map(s => `<option value="${s.id}">${esc(s.name)}${s.code ? ' (' + esc(s.code) + ')' : ''}</option>`).join('');
+        selSubject.disabled = false;
 
-        // Pre-select dari URL param
-        const params = new URLSearchParams(window.location.search);
-        const sid = params.get('subject');
-        if (sid) {
-          selSubject.value = sid;
-          onSubjectChange();
+        // Pre-select dari siswa_context (dari mapel.html) atau URL param
+        let prefillSubjectId = null;
+        let prefillClassId = null;
+
+        const ctx = sessionStorage.getItem('siswa_context');
+        if (ctx) {
+          try {
+            const parsed = JSON.parse(ctx);
+            prefillSubjectId = parsed.subjectId;
+            prefillClassId = parsed.classId;
+          } catch (e) {}
+        }
+
+        if (!prefillSubjectId) {
+          const params = new URLSearchParams(window.location.search);
+          const sidParam = params.get('subject');
+          if (sidParam) prefillSubjectId = parseInt(sidParam);
+        }
+
+        if (prefillSubjectId && subjectsMap[prefillSubjectId]) {
+          selSubject.value = String(prefillSubjectId);
+          populateKelasDropdown(prefillSubjectId, prefillClassId);
         }
       } catch (err) {
-        console.error(err);
+        console.error('Init error:', err);
       }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
     })();
 
+    // ============================================
+    // SUBJECT CHANGE
+    // ============================================
     function onSubjectChange() {
-      const sid = parseInt(document.getElementById('selSubject').value);
+      const sid = parseInt(document.getElementById('selSubject').value) || null;
       const selClass = document.getElementById('selClass');
+
       if (!sid) {
-        selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+        selClass.innerHTML = '<option value="">-- Pilih Mapel dulu --</option>';
+        selClass.disabled = true;
+        resetPages();
         return;
       }
+      populateKelasDropdown(sid, null);
+      resetPages();
+    }
+
+    function populateKelasDropdown(sid, selectedClassId) {
+      const selClass = document.getElementById('selClass');
       const classes = allAssigns.filter(a => a.subjects && a.subjects.id === sid)
         .map(a => a.classes).filter(Boolean)
         .filter((v, i, self) => self.findIndex(x => x.id === v.id) === i);
-      selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
-        classes.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-      if (classes.length === 1) {
-        selClass.value = classes[0].id;
-        loadPages();
-      }
-    }
 
-    async function loadPages() {
-      const sid = parseInt(document.getElementById('selSubject').value);
-      const cid = parseInt(document.getElementById('selClass').value);
-      const pageList = document.getElementById('pageList');
-      const contentArea = document.getElementById('contentArea');
-      const contentTitle = document.getElementById('contentTitle');
-
-      if (!sid || !cid) {
-        pageList.innerHTML = '<div class="empty-msg">Pilih mapel dan kelas</div>';
-        contentArea.innerHTML = '<div class="empty-msg">Pilih halaman</div>';
+      if (classes.length === 0) {
+        selClass.innerHTML = '<option value="">-- Tidak ada kelas --</option>';
+        selClass.disabled = true;
         return;
       }
 
-      pageList.innerHTML = '<div class="empty-msg">Memuat...</div>';
-      try {
-        allPages = await getPages(cid, sid);
-        if (allPages.length === 0) {
-          pageList.innerHTML = '<div class="empty-msg">Belum ada materi di kelas ini</div>';
-          contentArea.innerHTML = '<div class="empty-msg">Belum ada materi</div>';
-          return;
-        }
-        pageList.innerHTML = allPages.map(p => `
-          <div class="page-item" onclick="selectPage(${p.id})">${esc(p.title)}</div>
-        `).join('');
+      selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+        classes.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+      selClass.disabled = false;
 
-        // Auto-load page pertama
-        selectPage(allPages[0].id);
-      } catch (err) {
-        pageList.innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+      // Auto-select kalau cuma 1 kelas atau ada prefill
+      if (selectedClassId && classes.find(c => c.id === selectedClassId)) {
+        selClass.value = String(selectedClassId);
+        onKelasChange();
+      } else if (classes.length === 1) {
+        selClass.value = String(classes[0].id);
+        onKelasChange();
       }
     }
 
+    function onKelasChange() {
+      const sid = parseInt(document.getElementById('selSubject').value) || null;
+      const cid = parseInt(document.getElementById('selClass').value) || null;
+
+      if (!sid || !cid) {
+        resetPages();
+        return;
+      }
+      currentSubjectId = sid;
+      currentClassId = cid;
+
+      // Simpan ke siswa_context (untuk konsistensi modul lain)
+      try {
+        const ctx = JSON.parse(sessionStorage.getItem('siswa_context') || '{}');
+        ctx.subjectId = sid;
+        ctx.classId = cid;
+        ctx.subjectName = document.getElementById('selSubject').selectedOptions[0]?.textContent || '';
+        ctx.className = document.getElementById('selClass').selectedOptions[0]?.textContent || '';
+        sessionStorage.setItem('siswa_context', JSON.stringify(ctx));
+      } catch (e) {}
+
+      loadPages();
+    }
+
+    function resetPages() {
+      allPages = [];
+      currentPage = null;
+      document.getElementById('pageCount').style.display = 'none';
+      document.getElementById('pageList').innerHTML = `
+        <div class="empty-msg">
+          <span class="emoji">📑</span>
+          Pilih Mapel & Kelas
+        </div>`;
+      document.getElementById('contentTitle').innerHTML = '<i class="fas fa-book-open"></i> Konten';
+      document.getElementById('contentArea').innerHTML = `
+        <div class="empty-msg">
+          <span class="emoji">📖</span>
+          Pilih halaman untuk membaca
+        </div>`;
+    }
+
+    // ============================================
+    // LOAD PAGES
+    // ============================================
+    async function loadPages() {
+      const pageList = document.getElementById('pageList');
+      const contentArea = document.getElementById('contentArea');
+      const contentTitle = document.getElementById('contentTitle');
+      const pageCount = document.getElementById('pageCount');
+
+      pageList.innerHTML = '<div class="empty-msg">Memuat halaman...</div>';
+      contentArea.innerHTML = '<div class="empty-msg">Memuat...</div>';
+      contentTitle.innerHTML = '<i class="fas fa-book-open"></i> Konten';
+      pageCount.style.display = 'none';
+
+      try {
+        allPages = await getPages(currentClassId, currentSubjectId);
+
+        if (!allPages || allPages.length === 0) {
+          pageList.innerHTML = `
+            <div class="empty-msg">
+              <span class="emoji">📄</span>
+              Belum ada materi di kelas ini.
+            </div>`;
+          contentArea.innerHTML = `
+            <div class="empty-msg">
+              <span class="emoji">📖</span>
+              Guru belum menyiapkan materi untuk kelas ini.
+            </div>`;
+          return;
+        }
+
+        pageCount.textContent = allPages.length;
+        pageCount.style.display = 'inline-block';
+
+        pageList.innerHTML = allPages.map((p, i) => `
+          <div class="page-item" data-page-id="${p.id}" onclick="selectPage(${p.id})">
+            <span class="page-num">${i + 1}</span>
+            <span class="page-title">${esc(p.title)}</span>
+          </div>
+        `).join('');
+
+        // Auto-load halaman pertama
+        selectPage(allPages[0].id);
+      } catch (err) {
+        console.error('loadPages error:', err);
+        pageList.innerHTML = `
+          <div class="empty-msg" style="color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            <strong>Gagal memuat</strong><br>
+            <small>${esc(err.message)}</small>
+          </div>`;
+        contentArea.innerHTML = `
+          <div class="empty-msg" style="color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            Gagal memuat konten
+          </div>`;
+      }
+    }
+
+    // ============================================
+    // SELECT PAGE
+    // ============================================
     async function selectPage(pageId) {
       currentPage = allPages.find(p => p.id === pageId);
       if (!currentPage) return;
 
-      document.querySelectorAll('.page-item').forEach((el, i) => {
-        el.classList.toggle('active', allPages[i].id === pageId);
+      // Update active state
+      document.querySelectorAll('.page-item').forEach(el => {
+        el.classList.toggle('active', parseInt(el.dataset.pageId) === pageId);
       });
 
       const contentArea = document.getElementById('contentArea');
       const contentTitle = document.getElementById('contentTitle');
-      contentTitle.textContent = '📖 ' + currentPage.title;
+
+      contentTitle.innerHTML = '<i class="fas fa-book-open"></i> ' + esc(currentPage.title);
       contentArea.innerHTML = '<div class="empty-msg">Memuat konten...</div>';
 
       try {
         const blocks = await getBlocks(pageId);
-        if (blocks.length === 0) {
-          contentArea.innerHTML = '<div class="empty-msg">Halaman ini belum memiliki konten</div>';
+
+        if (!blocks || blocks.length === 0) {
+          contentArea.innerHTML = `
+            <div class="empty-msg">
+              <span class="emoji">📝</span>
+              Halaman ini belum memiliki konten.
+            </div>`;
           return;
         }
+
         contentArea.innerHTML = blocks.map(b => renderBlock(b)).join('');
       } catch (err) {
-        contentArea.innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+        console.error('loadBlocks error:', err);
+        contentArea.innerHTML = `
+          <div class="empty-msg" style="color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            <strong>Gagal memuat konten</strong><br>
+            <small>${esc(err.message)}</small>
+          </div>`;
       }
     }
 
+    // ============================================
+    // RENDER BLOCK
+    // ============================================
     function renderBlock(b) {
       const d = b.data || {};
+
       if (b.type === 'text') {
-        return '<p>' + (d.content || '').replace(/\n/g, '<br>') + '</p>';
+        if (!d.content) return '';
+        // Render as paragraphs, preserve newlines
+        return `<div class="block-item">${esc(d.content).replace(/\n/g, '<br>')}</div>`;
       }
+
       if (b.type === 'image') {
-        const img = d.url ? `<img src="${esc(d.url)}" alt="${esc(d.caption || '')}">` : '';
-        const cap = d.caption ? `<p style="font-size:0.8rem; color:#888; text-align:center;">${esc(d.caption)}</p>` : '';
-        return img + cap;
+        if (!d.url) return '';
+        const img = `<img src="${esc(d.url)}" alt="${esc(d.caption || '')}" loading="lazy">`;
+        const cap = d.caption ? `<div class="image-caption">${esc(d.caption)}</div>` : '';
+        return `<div class="block-item">${img}${cap}</div>`;
       }
+
       if (b.type === 'video') {
-        const yt = (d.url || '').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
-        if (yt) return `<iframe src="https://www.youtube.com/embed/${yt[1]}" allowfullscreen></iframe>`;
-        return d.url ? `<p><a href="${esc(d.url)}" target="_blank">${esc(d.url)}</a></p>` : '';
+        if (!d.url) return '';
+        const yt = d.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+        if (yt) {
+          return `<div class="block-item"><iframe src="https://www.youtube.com/embed/${yt[1]}" allowfullscreen loading="lazy"></iframe></div>`;
+        }
+        return `<div class="block-item"><p><a href="${esc(d.url)}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> ${esc(d.url)}</a></p></div>`;
       }
+
       if (b.type === 'file') {
-        return d.url ? `<p>📎 <a href="${esc(d.url)}" target="_blank">${esc(d.name || d.url)}</a></p>` : '';
+        if (!d.url) return '';
+        return `
+          <div class="block-item">
+            <a href="${esc(d.url)}" target="_blank" rel="noopener" class="file-item">
+              <i class="fas fa-file-download"></i> ${esc(d.name || 'Unduh File')}
+            </a>
+          </div>`;
       }
+
       return '';
     }
 
+    // ============================================
+    // UTILS
+    // ============================================
     function esc(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');

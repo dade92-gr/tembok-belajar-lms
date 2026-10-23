@@ -4,165 +4,691 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tugas & Kuis — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
   <style>
-    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { margin-bottom: 1.5rem; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
 
-    .selector-row {
-      background: white; border-radius: var(--tb-radius-lg);
-      padding: 1rem 1.5rem; margin-bottom: 1.5rem;
-      box-shadow: var(--tb-shadow-sm);
-      display: flex; gap: 1rem; flex-wrap: wrap;
-    }
-    .selector-row > div { flex: 1; min-width: 200px; }
-    .selector-row label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--tb-dark); margin-bottom: 0.4rem; }
-    .selector-row select {
-      width: 100%; padding: 0.6rem 0.8rem;
-      border: 1px solid var(--tb-border); border-radius: 10px;
-      font-size: 0.85rem; font-family: inherit; cursor: pointer;
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --info: #0284c7;
+      --info-light: #e0f2fe;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
     }
 
-    .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
-    }
-    .panel-title {
-      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--tb-light);
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .task-list { display: flex; flex-direction: column; gap: 1rem; }
-    .task-item {
-      background: var(--tb-bg); border-radius: 12px;
-      padding: 1.2rem 1.4rem; border-left: 4px solid var(--tb-primary);
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
     }
-    .task-header {
-      display: flex; justify-content: space-between; align-items: start;
-      gap: 1rem; margin-bottom: 0.6rem; flex-wrap: wrap;
-    }
-    .task-title { font-weight: 700; color: var(--tb-dark); font-size: 1rem; }
-    .task-desc { font-size: 0.85rem; color: var(--tb-text); margin-bottom: 0.8rem; line-height: 1.6; white-space: pre-wrap; }
-    .task-meta {
-      display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.75rem;
-      color: var(--tb-text-muted); margin-bottom: 0.8rem;
-    }
-    .badge {
-      padding: 3px 10px; border-radius: 20px;
-      font-size: 0.7rem; font-weight: 700;
-    }
-    .badge-green { background: var(--tb-light); color: var(--tb-dark); }
-    .badge-yellow { background: #fff3cd; color: #856404; }
-    .badge-red { background: #fadbd8; color: #c0392b; }
-    .badge-blue { background: #e8f4fd; color: #2980b9; }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
 
-    .submission-box {
-      background: white; border-radius: 10px;
-      padding: 0.8rem 1rem; margin-top: 0.5rem;
+    .page-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
       font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
     }
-    .submission-box .label { font-weight: 600; color: var(--tb-dark); margin-bottom: 0.3rem; }
-    .submission-box .val { color: var(--tb-text); word-break: break-word; }
-    .submission-box .val a { color: var(--tb-primary); }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
 
-    .submit-form { margin-top: 1rem; display: none; }
-    .submit-form.active { display: block; }
-    .submit-form textarea {
-      width: 100%; padding: 0.7rem; border: 1px solid var(--tb-border);
-      border-radius: 8px; font-family: inherit; font-size: 0.85rem;
-      resize: vertical; min-height: 80px; margin-bottom: 0.5rem;
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .submit-form input[type="text"] {
-      width: 100%; padding: 0.7rem; border: 1px solid var(--tb-border);
-      border-radius: 8px; font-family: inherit; font-size: 0.85rem;
-      margin-bottom: 0.5rem;
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
     }
-    .btn-submit {
-      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
-      color: white; border: none; padding: 0.5rem 1.2rem;
-      border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
-      transition: var(--tb-transition);
-    }
-    .btn-submit:hover { transform: translateY(-1px); }
-    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    /* CONTEXT SELECTOR */
+    .context-selector {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      position: relative;
+    }
+
+    .context-selector label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .context-selector label i { color: var(--primary); }
+
+    .context-selector select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+    }
+    .context-selector select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .context-selector select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: var(--bg-soft);
+    }
+
+    /* SUMMARY BAR */
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+    }
+    .summary-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 0.8rem 1rem;
+      box-shadow: var(--shadow-xs);
+    }
+    .summary-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
+    .summary-value {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      line-height: 1.1;
+    }
+    .summary-value.warning { color: var(--warning); }
+    .summary-value.danger { color: var(--danger); }
+    .summary-value.success { color: var(--success); }
+
+    /* PANEL */
+    .panel {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title i { color: var(--primary); font-size: 0.9rem; }
+
+    /* TASK LIST */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .task-item {
+      background: var(--bg-soft);
+      border-radius: 12px;
+      padding: 1.1rem 1.3rem;
+      border-left: 4px solid var(--primary);
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    .task-item:hover {
+      box-shadow: var(--shadow-sm);
+      border-left-color: var(--primary-dark);
+    }
+    .task-item.graded { border-left-color: var(--success); }
+    .task-item.pending { border-left-color: var(--info); }
+    .task-item.overdue { border-left-color: var(--danger); }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .task-title {
+      font-weight: 700;
+      color: var(--navy);
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0.3rem;
+    }
+    .task-title i { color: var(--primary); font-size: 0.95rem; }
+
+    .task-meta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.6rem;
+    }
+    .task-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .task-meta i { color: var(--primary); }
+
+    .task-desc {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.65;
+      margin-bottom: 0.8rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* BADGE */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-graded { background: var(--success-light); color: #047857; }
+    .badge-pending { background: var(--info-light); color: var(--info); }
+    .badge-overdue { background: var(--danger-light); color: #b91c1c; }
+    .badge-todo { background: var(--warning-light); color: #92400e; }
+    .badge-type {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+    .badge-type.quiz { background: #fef3c7; color: #92400e; }
+
+    /* SUBMISSION BOX */
+    .submission-box {
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      margin-top: 0.8rem;
+      font-size: 0.82rem;
+      border: 1px solid var(--border);
+    }
+    .submission-box .label {
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+    }
+    .submission-box .label i { color: var(--primary); }
+    .submission-box .val {
+      color: var(--text);
+      word-break: break-word;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+    .submission-box .val a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .submission-box .val a:hover { text-decoration: underline; }
+    .submission-box .meta {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+    .feedback-box {
+      margin-top: 0.7rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--warning-light);
+      border-radius: 8px;
+      border-left: 3px solid var(--warning);
+      font-size: 0.8rem;
+      color: #92400e;
+    }
+    .feedback-box strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--navy);
+    }
+    .feedback-box em {
+      color: #78350f;
+      font-style: normal;
+    }
+
+    /* SUBMIT FORM */
     .btn-toggle {
-      background: white; border: 1px solid var(--tb-border);
-      padding: 4px 12px; border-radius: 20px;
-      font-size: 0.75rem; font-weight: 600; cursor: pointer;
-      transition: var(--tb-transition);
+      background: var(--surface);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
-    .btn-toggle:hover { background: var(--tb-light); border-color: var(--tb-primary); }
+    .btn-toggle:hover {
+      background: var(--primary);
+      color: white;
+    }
 
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
+    .submit-form {
+      margin-top: 0.8rem;
+      padding-top: 0.8rem;
+      border-top: 1px dashed var(--border);
+      display: none;
+    }
+    .submit-form.active { display: block; }
+    .submit-form label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 0.35rem;
+    }
+    .submit-form textarea,
+    .submit-form input[type="text"] {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      margin-bottom: 0.7rem;
+      outline: none;
+      transition: var(--transition);
+      background: var(--surface);
+      color: var(--text);
+    }
+    .submit-form textarea:focus,
+    .submit-form input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .submit-form textarea {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.6;
+    }
 
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+    .btn-submit {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.3rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-submit:hover:not(:disabled) {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .overdue-note {
+      margin-top: 0.6rem;
+      padding: 0.6rem 0.9rem;
+      background: var(--danger-light);
+      border-radius: 8px;
+      border-left: 3px solid var(--danger);
+      font-size: 0.78rem;
+      color: #b91c1c;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* EMPTY */
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2.5rem 1rem;
       font-size: 0.85rem;
     }
-    .btn-secondary:hover { background: var(--tb-light); }
+    .empty-msg .emoji {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+    .empty-msg strong { color: var(--text); }
 
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* TOAST */
     .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--tb-dark); color: white;
-      padding: 1rem 1.4rem; border-radius: 12px;
-      font-size: 0.85rem; font-weight: 500;
-      opacity: 0; transform: translateY(20px);
-      transition: all 0.3s ease; z-index: 3000;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--navy);
+      color: white;
+      padding: 1rem 1.4rem;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000;
+      max-width: 400px;
+      line-height: 1.5;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.error { background: var(--tb-danger); }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .context-selector { grid-template-columns: 1fr; }
+      .summary-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .task-header { flex-direction: column; align-items: stretch; }
+    }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Siswa</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat tugas...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
     <div class="page-toolbar">
-      <h1>✏️ Tugas & Kuis
-        <small>Kerjakan dan kumpulkan tugas Anda</small>
-      </h1>
-    </div>
-
-    <div class="selector-row">
-      <div>
-        <label>Mata Pelajaran</label>
-        <select id="selSubject" onchange="onSubjectChange()"></select>
-      </div>
-      <div>
-        <label>Kelas</label>
-        <select id="selClass" onchange="loadTasks()"></select>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#tugas';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-tasks"></i>
+          <span>
+            Tugas & Kuis
+            <small>Kerjakan dan kumpulkan tugas Anda</small>
+          </span>
+        </h1>
       </div>
     </div>
 
-    <div class="panel">
-      <h2 class="panel-title">📋 Daftar Tugas</h2>
-      <div class="task-list" id="taskList">
-        <div class="empty-msg">Pilih mapel dan kelas</div>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat tugas...</p>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Context Selector -->
+      <div class="context-selector">
+        <div class="selector-group">
+          <label for="selSubject"><i class="fas fa-book"></i> Mapel</label>
+          <select id="selSubject" onchange="onSubjectChange()" disabled>
+            <option value="">-- Memuat... --</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label for="selClass"><i class="fas fa-school"></i> Kelas</label>
+          <select id="selClass" onchange="onKelasChange()" disabled>
+            <option value="">-- Pilih Mapel dulu --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-bar" id="summaryBar" style="display:none;">
+        <div class="summary-card">
+          <div class="summary-label">Total Tugas</div>
+          <div class="summary-value" id="sumTotal">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Belum Dikerjakan</div>
+          <div class="summary-value warning" id="sumTodo">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Menunggu Dinilai</div>
+          <div class="summary-value" id="sumPending">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Sudah Dinilai</div>
+          <div class="summary-value success" id="sumGraded">0</div>
+        </div>
+      </div>
+
+      <!-- Task List -->
+      <div class="panel">
+        <h2 class="panel-title">
+          <i class="fas fa-list-check"></i> Daftar Tugas & Kuis
+        </h2>
+        <div class="task-list" id="taskList">
+          <div class="empty-msg">
+            <span class="emoji">📝</span>
+            Pilih Mapel & Kelas di atas
+          </div>
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#tugas';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
       </div>
     </div>
 
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-secondary">← Kembali ke Dashboard</a>
-    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -173,115 +699,276 @@
     let currentUser = null;
     let allAssigns = [];
     let allTasks = [];
+    let currentSubjectId = null;
+    let currentClassId = null;
 
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('siswa');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
       try {
         allAssigns = await getMyEnrolledSubjects(currentUser.id);
+
+        // Isi dropdown subject (unique)
         const subjectsMap = {};
-        allAssigns.forEach(a => { if (a.subjects) subjectsMap[a.subjects.id] = a.subjects; });
+        allAssigns.forEach(a => {
+          if (a.subjects) subjectsMap[a.subjects.id] = a.subjects;
+        });
         const selSubject = document.getElementById('selSubject');
         selSubject.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
-          Object.values(subjectsMap).map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
-      } catch (err) { console.error(err); }
+          Object.values(subjectsMap).map(s => `<option value="${s.id}">${esc(s.name)}${s.code ? ' (' + esc(s.code) + ')' : ''}</option>`).join('');
+        selSubject.disabled = false;
+
+        // Prefill dari siswa_context
+        let prefillSubjectId = null;
+        let prefillClassId = null;
+
+        const ctx = sessionStorage.getItem('siswa_context');
+        if (ctx) {
+          try {
+            const parsed = JSON.parse(ctx);
+            prefillSubjectId = parsed.subjectId;
+            prefillClassId = parsed.classId;
+          } catch (e) {}
+        }
+
+        if (prefillSubjectId && subjectsMap[prefillSubjectId]) {
+          selSubject.value = String(prefillSubjectId);
+          populateKelasDropdown(prefillSubjectId, prefillClassId);
+        }
+      } catch (err) {
+        console.error('Init error:', err);
+      }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
     })();
 
+    // ============================================
+    // SUBJECT CHANGE
+    // ============================================
     function onSubjectChange() {
-      const sid = parseInt(document.getElementById('selSubject').value);
-      const selClass = document.getElementById('selClass');
+      const sid = parseInt(document.getElementById('selSubject').value) || null;
       if (!sid) {
-        selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+        document.getElementById('selClass').innerHTML = '<option value="">-- Pilih Mapel dulu --</option>';
+        document.getElementById('selClass').disabled = true;
+        resetTasks();
         return;
       }
+      populateKelasDropdown(sid, null);
+      resetTasks();
+    }
+
+    function populateKelasDropdown(sid, selectedClassId) {
+      const selClass = document.getElementById('selClass');
       const classes = allAssigns.filter(a => a.subjects && a.subjects.id === sid)
         .map(a => a.classes).filter(Boolean)
         .filter((v, i, self) => self.findIndex(x => x.id === v.id) === i);
-      selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
-        classes.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-      if (classes.length === 1) { selClass.value = classes[0].id; loadTasks(); }
-    }
 
-    async function loadTasks() {
-      const sid = parseInt(document.getElementById('selSubject').value);
-      const cid = parseInt(document.getElementById('selClass').value);
-      const list = document.getElementById('taskList');
-      if (!sid || !cid) {
-        list.innerHTML = '<div class="empty-msg">Pilih mapel dan kelas</div>';
+      if (classes.length === 0) {
+        selClass.innerHTML = '<option value="">-- Tidak ada kelas --</option>';
+        selClass.disabled = true;
         return;
       }
-      list.innerHTML = '<div class="empty-msg">Memuat tugas...</div>';
+
+      selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+        classes.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+      selClass.disabled = false;
+
+      if (selectedClassId && classes.find(c => c.id === selectedClassId)) {
+        selClass.value = String(selectedClassId);
+        onKelasChange();
+      } else if (classes.length === 1) {
+        selClass.value = String(classes[0].id);
+        onKelasChange();
+      }
+    }
+
+    function onKelasChange() {
+      const sid = parseInt(document.getElementById('selSubject').value) || null;
+      const cid = parseInt(document.getElementById('selClass').value) || null;
+
+      if (!sid || !cid) {
+        resetTasks();
+        return;
+      }
+      currentSubjectId = sid;
+      currentClassId = cid;
+
+      // Simpan ke siswa_context
       try {
-        allTasks = await getMyActivities(currentUser.id, cid, sid);
+        const ctx = JSON.parse(sessionStorage.getItem('siswa_context') || '{}');
+        ctx.subjectId = sid;
+        ctx.classId = cid;
+        ctx.subjectName = document.getElementById('selSubject').selectedOptions[0]?.textContent || '';
+        ctx.className = document.getElementById('selClass').selectedOptions[0]?.textContent || '';
+        sessionStorage.setItem('siswa_context', JSON.stringify(ctx));
+      } catch (e) {}
+
+      loadTasks();
+    }
+
+    function resetTasks() {
+      allTasks = [];
+      document.getElementById('summaryBar').style.display = 'none';
+      document.getElementById('taskList').innerHTML = `
+        <div class="empty-msg">
+          <span class="emoji">📝</span>
+          Pilih Mapel & Kelas di atas
+        </div>`;
+    }
+
+    // ============================================
+    // LOAD TASKS
+    // ============================================
+    async function loadTasks() {
+      const list = document.getElementById('taskList');
+      list.innerHTML = '<div class="empty-msg">Memuat tugas...</div>';
+      document.getElementById('summaryBar').style.display = 'none';
+
+      try {
+        allTasks = await getMyActivities(currentUser.id, currentClassId, currentSubjectId);
         renderTasks();
       } catch (err) {
-        list.innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+        console.error('loadTasks error:', err);
+        list.innerHTML = `
+          <div class="empty-msg" style="color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            <strong>Gagal memuat tugas</strong><br>
+            <small>${esc(err.message)}</small>
+          </div>`;
       }
     }
 
     function renderTasks() {
       const list = document.getElementById('taskList');
-      if (allTasks.length === 0) {
-        list.innerHTML = '<div class="empty-msg">Belum ada tugas di kelas ini</div>';
+
+      if (!allTasks || allTasks.length === 0) {
+        document.getElementById('summaryBar').style.display = 'none';
+        list.innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📝</span>
+            Belum ada tugas di kelas ini.
+          </div>`;
         return;
       }
 
       const now = new Date();
+      let todoCount = 0, pendingCount = 0, gradedCount = 0;
+
+      // Hitung summary dulu
+      allTasks.forEach(t => {
+        const hasSubmission = !!t.submission;
+        const hasGrade = !!t.grade;
+        if (hasGrade) gradedCount++;
+        else if (hasSubmission) pendingCount++;
+        else todoCount++;
+      });
+
+      document.getElementById('sumTotal').textContent = allTasks.length;
+      document.getElementById('sumTodo').textContent = todoCount;
+      document.getElementById('sumPending').textContent = pendingCount;
+      document.getElementById('sumGraded').textContent = gradedCount;
+      document.getElementById('summaryBar').style.display = 'grid';
+
       list.innerHTML = allTasks.map(t => {
         const deadline = t.deadline ? new Date(t.deadline) : null;
         const isPast = deadline && deadline < now;
         const hasSubmission = !!t.submission;
         const hasGrade = !!t.grade;
 
+        // Tentukan class item + badge
+        let itemClass = '';
         let statusBadge = '';
-        if (hasGrade) statusBadge = `<span class="badge badge-green">✅ Dinilai: ${t.grade.score}/${t.max_score}</span>`;
-        else if (hasSubmission) statusBadge = `<span class="badge badge-blue">⏳ Menunggu penilaian</span>`;
-        else if (isPast) statusBadge = `<span class="badge badge-red">❌ Terlambat</span>`;
-        else statusBadge = `<span class="badge badge-yellow">📝 Belum dikerjakan</span>`;
+        if (hasGrade) {
+          itemClass = 'graded';
+          statusBadge = `<span class="badge badge-graded"><i class="fas fa-check"></i> Dinilai: ${t.grade.score}/${t.max_score}</span>`;
+        } else if (hasSubmission) {
+          itemClass = 'pending';
+          statusBadge = `<span class="badge badge-pending"><i class="fas fa-hourglass-half"></i> Menunggu Dinilai</span>`;
+        } else if (isPast) {
+          itemClass = 'overdue';
+          statusBadge = `<span class="badge badge-overdue"><i class="fas fa-times"></i> Terlambat</span>`;
+        } else {
+          statusBadge = `<span class="badge badge-todo"><i class="fas fa-pen"></i> Belum Dikerjakan</span>`;
+        }
 
+        const typeBadge = t.type === 'quiz'
+          ? '<span class="badge-type quiz">🧪 Kuis</span>'
+          : '<span class="badge-type">📝 Tugas</span>';
+
+        const deadlineStr = deadline
+          ? deadline.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : '-';
+
+        // Submission box
         let submissionHtml = '';
         if (hasSubmission) {
           submissionHtml = `
             <div class="submission-box">
-              <div class="label">📤 Jawaban Anda:</div>
-              <div class="val">${t.submission.content ? esc(t.submission.content).replace(/\n/g, '<br>') : '<em style="color:#999;">(kosong)</em>'}</div>
-              ${t.submission.file_url ? `<div class="val" style="margin-top:6px;">📎 <a href="${esc(t.submission.file_url)}" target="_blank">${esc(t.submission.file_url)}</a></div>` : ''}
-              <div class="val" style="font-size:0.7rem; color:#999; margin-top:4px;">Dikumpul: ${new Date(t.submission.submitted_at).toLocaleString('id-ID')}</div>
-              ${hasGrade && t.grade.feedback ? `<div class="val" style="margin-top:6px; padding:6px 10px; background:#fff3cd; border-radius:6px;">💬 Feedback guru: <em>${esc(t.grade.feedback)}</em></div>` : ''}
+              <div class="label"><i class="fas fa-paper-plane"></i> Jawaban Anda</div>
+              <div class="val">${t.submission.content ? esc(t.submission.content) : '<em style="color:var(--text-muted);">(kosong)</em>'}</div>
+              ${t.submission.file_url ? `<div class="val" style="margin-top:6px;"><i class="fas fa-paperclip"></i> <a href="${esc(t.submission.file_url)}" target="_blank" rel="noopener">${esc(t.submission.file_url)}</a></div>` : ''}
+              <div class="meta"><i class="fas fa-clock"></i> Dikumpul: ${t.submission.submitted_at ? new Date(t.submission.submitted_at).toLocaleString('id-ID') : '-'}</div>
+              ${hasGrade && t.grade.feedback ? `
+                <div class="feedback-box">
+                  <strong>💬 Feedback Guru:</strong>
+                  <em>${esc(t.grade.feedback)}</em>
+                </div>
+              ` : ''}
             </div>
           `;
         }
 
-        const canSubmit = !hasGrade && !isPast;
+        // Form submit (hanya kalau belum dinilai & belum lewat deadline)
+        let submitHtml = '';
+        if (!hasGrade && !isPast) {
+          const btnLabel = hasSubmission ? 'Ubah Jawaban' : 'Kumpulkan Tugas';
+          submitHtml = `
+            <button class="btn-toggle" onclick="toggleSubmitForm(${t.id})">
+              <i class="fas fa-paper-plane"></i> ${btnLabel}
+            </button>
+            <div class="submit-form" id="submitForm-${t.id}">
+              <label>Jawaban Teks</label>
+              <textarea id="content-${t.id}" placeholder="Tulis jawaban Anda di sini...">${t.submission ? esc(t.submission.content || '') : ''}</textarea>
+              <label>URL File / Link (opsional)</label>
+              <input type="text" id="fileUrl-${t.id}" placeholder="https://drive.google.com/..." value="${t.submission ? esc(t.submission.file_url || '') : ''}">
+              <button class="btn-submit" id="btnSubmit-${t.id}" onclick="submitTask(${t.id})">
+                <i class="fas fa-paper-plane"></i> Kirim Jawaban
+              </button>
+            </div>
+          `;
+        } else if (isPast && !hasSubmission) {
+          submitHtml = `
+            <div class="overdue-note">
+              <i class="fas fa-exclamation-triangle"></i>
+              Deadline sudah lewat, tidak bisa mengumpulkan.
+            </div>
+          `;
+        }
+
         return `
-          <div class="task-item">
+          <div class="task-item ${itemClass}">
             <div class="task-header">
               <div>
-                <div class="task-title">${esc(t.title)} ${t.type === 'quiz' ? '🧪' : '📝'}</div>
+                <div class="task-title">
+                  ${typeBadge}
+                  <span>${esc(t.title)}</span>
+                </div>
                 <div class="task-meta">
-                  <span>⏰ ${deadline ? deadline.toLocaleString('id-ID') : '-'}</span>
-                  <span>💯 Max: ${t.max_score}</span>
+                  <span><i class="fas fa-clock"></i> ${deadlineStr}${isPast ? ' <span style="color:var(--danger); font-weight:700;">(lewat)</span>' : ''}</span>
+                  <span><i class="fas fa-star"></i> Max: ${t.max_score}</span>
                 </div>
               </div>
               <div>${statusBadge}</div>
             </div>
             <div class="task-desc">${esc(t.description || '(tanpa deskripsi)')}</div>
             ${submissionHtml}
-            ${canSubmit ? `
-              <button class="btn-toggle" onclick="toggleSubmitForm(${t.id})">📤 ${hasSubmission ? 'Ubah Jawaban' : 'Kumpulkan Tugas'}</button>
-              <div class="submit-form" id="submitForm-${t.id}">
-                <textarea id="content-${t.id}" placeholder="Tulis jawaban Anda...">${t.submission ? esc(t.submission.content || '') : ''}</textarea>
-                <input type="text" id="fileUrl-${t.id}" placeholder="URL file/link (opsional, misal Google Drive)" value="${t.submission ? esc(t.submission.file_url || '') : ''}">
-                <button class="btn-submit" id="btnSubmit-${t.id}" onclick="submitTask(${t.id})">📤 Kirim</button>
-              </div>
-            ` : ''}
+            ${submitHtml}
           </div>
         `;
       }).join('');
@@ -289,33 +976,55 @@
 
     function toggleSubmitForm(activityId) {
       const el = document.getElementById('submitForm-' + activityId);
-      if (el) el.classList.toggle('active');
+      if (!el) return;
+      const isOpen = el.classList.contains('active');
+      el.classList.toggle('active', !isOpen);
+      if (!isOpen) {
+        setTimeout(() => {
+          const ta = document.getElementById('content-' + activityId);
+          if (ta) ta.focus();
+        }, 100);
+      }
     }
 
+    // ============================================
+    // SUBMIT TASK
+    // ============================================
     async function submitTask(activityId) {
-      const content = document.getElementById('content-' + activityId).value.trim();
-      const fileUrl = document.getElementById('fileUrl-' + activityId).value.trim();
+      const contentEl = document.getElementById('content-' + activityId);
+      const fileUrlEl = document.getElementById('fileUrl-' + activityId);
+      const content = contentEl.value.trim();
+      const fileUrl = fileUrlEl.value.trim();
+
       if (!content && !fileUrl) {
-        alert('Isi minimal salah satu: jawaban teks atau URL file');
+        alert('Isi minimal salah satu: jawaban teks atau URL file.');
         return;
       }
 
       const btn = document.getElementById('btnSubmit-' + activityId);
-      btn.disabled = true; btn.textContent = 'Mengirim...';
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
 
       try {
         await submitActivity({
-          activityId, studentId: currentUser.id,
-          content, fileUrl
+          activityId,
+          studentId: currentUser.id,
+          content,
+          fileUrl
         });
-        showToast('✅ Tugas berhasil dikumpulkan');
+        showToast('✅ Tugas berhasil dikumpulkan', 'success');
         await loadTasks();
       } catch (err) {
-        alert('Gagal: ' + err.message);
-        btn.disabled = false; btn.textContent = '📤 Kirim';
+        console.error('submitTask error:', err);
+        alert('Gagal mengirim: ' + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Jawaban';
       }
     }
 
+    // ============================================
+    // UTILS
+    // ============================================
     function esc(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');
@@ -326,9 +1035,9 @@
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg;
-      t.className = 'toast show ' + (type === 'error' ? 'error' : '');
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
       clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
     }
   </script>
 </body>

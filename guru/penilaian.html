@@ -4,152 +4,594 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Penilaian — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
   <style>
-    .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { margin-bottom: 1.5rem; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
 
-    .context-bar {
-      background: var(--tb-light); border-radius: 12px;
-      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
-      display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;
-    }
-    .context-bar strong { color: var(--tb-dark); }
-
-    .selector-row {
-      display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
-    }
-    .selector-row select {
-      flex: 1; min-width: 200px;
-      padding: 0.7rem 1rem; border: 1px solid var(--tb-border);
-      border-radius: 10px; font-size: 0.9rem; font-family: inherit;
-    }
-
-    .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
-    }
-    .panel-title {
-      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--tb-light);
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
     }
 
-    .submission-list { display: flex; flex-direction: column; gap: 0.8rem; }
-    .submission-item {
-      background: var(--tb-bg); border-radius: 12px; padding: 1rem 1.2rem;
-      border-left: 4px solid var(--tb-primary);
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
-    .submission-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 0.6rem; gap: 1rem; flex-wrap: wrap;
+
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
     }
-    .submission-student { font-weight: 700; color: var(--tb-dark); font-size: 0.9rem; }
-    .submission-meta { font-size: 0.75rem; color: var(--tb-text-muted); }
-    .submission-content {
-      background: white; border-radius: 8px; padding: 0.8rem;
-      font-size: 0.85rem; color: var(--tb-text);
-      margin-bottom: 0.6rem; word-break: break-word;
-      max-height: 150px; overflow-y: auto;
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
     }
-    .submission-content a { color: var(--tb-primary); word-break: break-all; }
-    .grade-row {
-      display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
     }
-    .grade-row input[type="number"] {
-      width: 90px; padding: 0.4rem 0.6rem;
-      border: 1px solid var(--tb-border); border-radius: 8px;
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* CONTEXT SELECTOR */
+    .context-selector {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      position: relative;
+    }
+
+    .context-selector label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .context-selector label i { color: var(--primary); }
+
+    .context-selector select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
       font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+    }
+    .context-selector select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .context-selector select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: var(--bg-soft);
+    }
+
+    /* PANEL */
+    .panel {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title i { color: var(--primary); font-size: 0.9rem; }
+
+    /* SUBMISSION LIST */
+    .submission-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .submission-item {
+      background: var(--bg-soft);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      border-left: 4px solid var(--primary);
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .submission-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.7rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .submission-student {
+      font-weight: 700;
+      color: var(--navy);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .student-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
+    .submission-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .submission-content {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      margin-bottom: 0.8rem;
+      word-break: break-word;
+      max-height: 180px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      line-height: 1.6;
+    }
+    .submission-content a { color: var(--primary); word-break: break-all; }
+
+    .grade-row {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      flex-wrap: wrap;
+      padding-top: 0.6rem;
+      border-top: 1px dashed var(--border);
+    }
+
+    .grade-row label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .grade-row input[type="number"] {
+      width: 90px;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: var(--transition);
     }
     .grade-row input[type="text"] {
-      flex: 1; min-width: 150px;
-      padding: 0.4rem 0.6rem; border: 1px solid var(--tb-border);
-      border-radius: 8px; font-size: 0.85rem;
+      flex: 1;
+      min-width: 200px;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: var(--transition);
     }
+    .grade-row input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+
     .btn-save-grade {
-      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
-      color: white; border: none; padding: 0.4rem 1rem;
-      border-radius: 20px; cursor: pointer; font-size: 0.75rem; font-weight: 600;
-      transition: var(--tb-transition);
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
-    .btn-save-grade:hover { transform: translateY(-1px); }
-    .btn-save-grade:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-save-grade:hover:not(:disabled) {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    .btn-save-grade:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
     .badge-graded {
-      background: var(--tb-light); color: var(--tb-dark);
-      padding: 3px 10px; border-radius: 20px;
-      font-size: 0.7rem; font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .badge-graded.done { background: var(--success); color: white; }
+    .badge-graded.pending { background: var(--warning); color: white; }
+
+    /* SUMMARY */
+    .summary-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .summary-card {
+      flex: 1;
+      min-width: 140px;
+      background: var(--primary-lighter);
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      border: 1px solid var(--primary-light);
+    }
+    .summary-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
+    .summary-value {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--primary-dark);
     }
 
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-back {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+    /* EMPTY */
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2.5rem 1rem;
       font-size: 0.85rem;
     }
-    .btn-back:hover { background: var(--tb-light); }
+    .empty-msg .emoji {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+    .empty-msg strong { color: var(--text); }
 
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* TOAST */
     .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--tb-dark); color: white;
-      padding: 1rem 1.4rem; border-radius: 12px;
-      font-size: 0.85rem; font-weight: 500;
-      opacity: 0; transform: translateY(20px);
-      transition: all 0.3s ease; z-index: 3000;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--navy);
+      color: white;
+      padding: 1rem 1.4rem;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000;
+      max-width: 400px;
+      line-height: 1.5;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.error { background: var(--tb-danger); }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
 
-    @media (max-width: 600px) { .page-container { padding: 1.2rem 1rem; } }
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .context-selector { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .context-selector { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+    }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat penilaian...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
     <div class="page-toolbar">
-      <h1>📝 Penilaian
-        <small>Beri nilai untuk submission siswa</small>
-      </h1>
-    </div>
-
-    <div class="context-bar" id="contextBar" style="display:none;">
-      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
-      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
-    </div>
-
-    <div class="selector-row" id="selectorRow" style="display:none;">
-      <select id="selectActivity" onchange="loadSubmissions()">
-        <option value="">-- Pilih Aktivitas --</option>
-      </select>
-    </div>
-
-    <div class="panel">
-      <h2 class="panel-title">📥 Submission Siswa</h2>
-      <div class="submission-list" id="submissionList">
-        <div class="empty-msg">Pilih aktivitas untuk melihat submission</div>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#penilaian';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-check-circle"></i>
+          <span>
+            Penilaian
+            <small>Beri nilai untuk submission siswa</small>
+          </span>
+        </h1>
       </div>
     </div>
 
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat penilaian...</p>
     </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Context Selector -->
+      <div class="context-selector">
+        <div class="selector-group">
+          <label for="selectMapel"><i class="fas fa-book"></i> Mapel</label>
+          <select id="selectMapel" onchange="onMapelChange()" disabled>
+            <option value="">-- Memuat... --</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label for="selectKelas"><i class="fas fa-school"></i> Kelas</label>
+          <select id="selectKelas" onchange="onKelasChange()" disabled>
+            <option value="">-- Pilih Mapel dulu --</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label for="selectActivity"><i class="fas fa-tasks"></i> Aktivitas</label>
+          <select id="selectActivity" onchange="loadSubmissions()" disabled>
+            <option value="">-- Pilih Kelas dulu --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Panel Submission -->
+      <div class="panel">
+        <h2 class="panel-title">
+          <i class="fas fa-inbox"></i> Submission Siswa
+        </h2>
+
+        <div class="summary-row" id="summaryRow" style="display:none;">
+          <div class="summary-card">
+            <div class="summary-label">Total Submission</div>
+            <div class="summary-value" id="sumTotal">0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Sudah Dinilai</div>
+            <div class="summary-value" id="sumGraded">0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Belum Dinilai</div>
+            <div class="summary-value" id="sumUngraded">0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Nilai Maks</div>
+            <div class="summary-value" id="sumMax">-</div>
+          </div>
+        </div>
+
+        <div class="submission-list" id="submissionList">
+          <div class="empty-msg">
+            <span class="emoji">📝</span>
+            Pilih Mapel, Kelas, dan Aktivitas di atas
+          </div>
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#penilaian';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <div class="toast" id="toast"></div>
@@ -158,60 +600,226 @@
   <script src="../assets/js/supabase.js"></script>
   <script>
     let currentUser = null;
-    let currentContext = null;
+    let allAssignments = [];
+    let currentSubjectId = null;
+    let currentClassId = null;
+    let currentSubjectName = '';
+    let currentClassName = '';
+    let allKelasForCurrentMapel = [];
     let allActivities = [];
     let currentActivity = null;
     let currentSubmissions = [];
     let currentGrades = {};
 
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('guru');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
+      try {
+        allAssignments = await getMyTeachingAssignments(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load assignments:', err);
+        allAssignments = [];
+      }
+
+      if (!allAssignments || allAssignments.length === 0) {
+        document.getElementById('loading').innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📚</span>
+            <strong>Belum ada mapel yang diampu.</strong><br>
+            Hubungi operator sekolah untuk ditugaskan.
+          </div>`;
+        return;
+      }
+
+      // Prefill dari sessionStorage
       const ctx = sessionStorage.getItem('guru_context');
+      let prefillSubjectId = null;
+      let prefillClassId = null;
+      let prefillActivityId = null;
+
       if (ctx) {
-        currentContext = JSON.parse(ctx);
-        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
-        document.getElementById('contextBar').style.display = 'flex';
         try {
-          const classes = await getClasses(currentUser.school_id);
-          const cls = classes.find(c => c.id === currentContext.classId);
-          if (cls) document.getElementById('ctxClass').textContent = cls.name;
+          const parsed = JSON.parse(ctx);
+          prefillSubjectId = parsed.subjectId;
+          prefillClassId = parsed.classId;
+          prefillActivityId = parsed.activityId;
         } catch (e) {}
+      }
 
-        // Load activities
-        try {
-          allActivities = await getActivities(currentContext.classId, currentContext.subjectId);
-          const sel = document.getElementById('selectActivity');
-          sel.innerHTML = '<option value="">-- Pilih Aktivitas --</option>' +
-            allActivities.map(a => `<option value="${a.id}">${esc(a.title)}</option>`).join('');
-          document.getElementById('selectorRow').style.display = 'flex';
+      populateMapelDropdown(prefillSubjectId);
 
-          // Jika ada activityId dari konteks, pre-select
-          if (currentContext.activityId) {
-            sel.value = currentContext.activityId;
-            await loadSubmissions();
-          }
-        } catch (e) {}
+      if (prefillSubjectId) {
+        populateKelasDropdown(prefillSubjectId, prefillClassId);
+        if (prefillClassId) {
+          await loadActivitiesForClass(prefillSubjectId, prefillClassId, prefillActivityId);
+        }
       }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
     })();
 
+    // ============================================
+    // MAPEL DROPDOWN
+    // ============================================
+    function populateMapelDropdown(selectedSubjectId) {
+      const sel = document.getElementById('selectMapel');
+      const subjectMap = {};
+      allAssignments.forEach(a => {
+        if (a.subjects) subjectMap[a.subjects.id] = a.subjects;
+      });
+      const subjects = Object.values(subjectMap);
+
+      if (subjects.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada mapel --</option>';
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
+        subjects.map(s => `<option value="${s.id}">${esc(s.name)}${s.code ? ' (' + esc(s.code) + ')' : ''}</option>`).join('');
+
+      sel.disabled = false;
+      if (selectedSubjectId && subjectMap[selectedSubjectId]) {
+        sel.value = String(selectedSubjectId);
+      }
+    }
+
+    function onMapelChange() {
+      const subjectId = parseInt(document.getElementById('selectMapel').value) || null;
+      currentSubjectId = subjectId;
+
+      // Reset kelas
+      const selKelas = document.getElementById('selectKelas');
+      if (!subjectId) {
+        selKelas.innerHTML = '<option value="">-- Pilih Mapel dulu --</option>';
+        selKelas.disabled = true;
+        resetActivitySelector();
+        return;
+      }
+      populateKelasDropdown(subjectId, null);
+      resetActivitySelector();
+    }
+
+    function populateKelasDropdown(subjectId, selectedClassId) {
+      const sel = document.getElementById('selectKelas');
+      const filtered = allAssignments.filter(a => a.subjects && a.subjects.id === subjectId);
+      const classMap = {};
+      filtered.forEach(a => {
+        if (a.classes) classMap[a.classes.id] = a.classes;
+      });
+      allKelasForCurrentMapel = Object.values(classMap);
+
+      if (allKelasForCurrentMapel.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada kelas --</option>';
+        sel.disabled = true;
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+        allKelasForCurrentMapel.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+      sel.disabled = false;
+
+      if (selectedClassId && classMap[selectedClassId]) {
+        sel.value = String(selectedClassId);
+      }
+    }
+
+    function onKelasChange() {
+      const classId = parseInt(document.getElementById('selectKelas').value) || null;
+      currentClassId = classId;
+
+      if (!classId) {
+        resetActivitySelector();
+        return;
+      }
+      loadActivitiesForClass(currentSubjectId, classId, null);
+    }
+
+    function resetActivitySelector() {
+      const sel = document.getElementById('selectActivity');
+      sel.innerHTML = '<option value="">-- Pilih Kelas dulu --</option>';
+      sel.disabled = true;
+      document.getElementById('summaryRow').style.display = 'none';
+      document.getElementById('submissionList').innerHTML = `
+        <div class="empty-msg">
+          <span class="emoji">📝</span>
+          Pilih Mapel, Kelas, dan Aktivitas di atas
+        </div>`;
+    }
+
+    async function loadActivitiesForClass(subjectId, classId, prefillActivityId) {
+      currentSubjectId = subjectId;
+      currentClassId = classId;
+
+      // Cari nama mapel & kelas
+      const assign = allAssignments.find(a =>
+        a.subjects && a.subjects.id === subjectId &&
+        a.classes && a.classes.id === classId
+      );
+      currentSubjectName = assign?.subjects?.name || '-';
+      currentClassName = assign?.classes?.name || '-';
+
+      const sel = document.getElementById('selectActivity');
+      sel.innerHTML = '<option value="">Memuat aktivitas...</option>';
+      sel.disabled = true;
+
+      try {
+        allActivities = await getActivities(classId, subjectId);
+        if (!allActivities || allActivities.length === 0) {
+          sel.innerHTML = '<option value="">-- Belum ada aktivitas --</option>';
+          document.getElementById('summaryRow').style.display = 'none';
+          document.getElementById('submissionList').innerHTML = `
+            <div class="empty-msg">
+              <span class="emoji">📝</span>
+              Belum ada aktivitas di kelas ini.<br>
+              Buat aktivitas dulu di menu <strong>Aktivitas</strong>.
+            </div>`;
+          return;
+        }
+
+        sel.innerHTML = '<option value="">-- Pilih Aktivitas --</option>' +
+          allActivities.map(a => `<option value="${a.id}">${esc(a.title)}</option>`).join('');
+        sel.disabled = false;
+
+        // Auto-select kalau ada prefill
+        if (prefillActivityId && allActivities.find(a => a.id === prefillActivityId)) {
+          sel.value = String(prefillActivityId);
+          await loadSubmissions();
+        }
+      } catch (err) {
+        console.error('loadActivities error:', err);
+        sel.innerHTML = '<option value="">Error: ' + esc(err.message) + '</option>';
+      }
+    }
+
+    // ============================================
+    // LOAD SUBMISSIONS
+    // ============================================
     async function loadSubmissions() {
       const activityId = parseInt(document.getElementById('selectActivity').value);
       const c = document.getElementById('submissionList');
+      const summary = document.getElementById('summaryRow');
+
       if (!activityId) {
-        c.innerHTML = '<div class="empty-msg">Pilih aktivitas</div>';
+        summary.style.display = 'none';
+        c.innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📝</span>
+            Pilih aktivitas untuk melihat submission
+          </div>`;
         return;
       }
+
       currentActivity = allActivities.find(a => a.id === activityId);
 
       c.innerHTML = '<div class="empty-msg">Memuat submission...</div>';
+      summary.style.display = 'none';
+
       try {
         currentSubmissions = await getSubmissionsByActivity(activityId);
         const grades = await getGradesByActivity(activityId);
@@ -220,48 +828,82 @@
 
         renderSubmissions();
       } catch (err) {
-        c.innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+        console.error('loadSubmissions error:', err);
+        c.innerHTML = `
+          <div class="empty-msg" style="color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            <strong>Error:</strong> ${esc(err.message)}
+          </div>`;
       }
     }
 
     function renderSubmissions() {
       const c = document.getElementById('submissionList');
+      const summary = document.getElementById('summaryRow');
+
       if (currentSubmissions.length === 0) {
-        c.innerHTML = '<div class="empty-msg">Belum ada siswa yang mengumpulkan</div>';
+        summary.style.display = 'none';
+        c.innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📭</span>
+            Belum ada siswa yang mengumpulkan aktivitas ini.
+          </div>`;
         return;
       }
+
+      // Hitung summary
+      const gradedCount = currentSubmissions.filter(s => currentGrades[s.id]).length;
+      const ungradedCount = currentSubmissions.length - gradedCount;
+
+      document.getElementById('sumTotal').textContent = currentSubmissions.length;
+      document.getElementById('sumGraded').textContent = gradedCount;
+      document.getElementById('sumUngraded').textContent = ungradedCount;
+      document.getElementById('sumMax').textContent = currentActivity?.max_score || '-';
+      summary.style.display = 'flex';
 
       c.innerHTML = currentSubmissions.map(s => {
         const p = s.profiles;
         if (!p) return '';
         const grade = currentGrades[s.id];
         const isGraded = !!grade;
-        const submitted = s.submitted_at ? new Date(s.submitted_at).toLocaleString('id-ID') : '-';
+        const submitted = s.submitted_at
+          ? new Date(s.submitted_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : '-';
 
         let contentHtml = '';
         if (s.content) {
           contentHtml = esc(s.content).replace(/\n/g, '<br>');
         }
         if (s.file_url) {
-          contentHtml += `<div><a href="${esc(s.file_url)}" target="_blank">📎 ${esc(s.file_url)}</a></div>`;
+          contentHtml += `<div style="margin-top:6px;"><a href="${esc(s.file_url)}" target="_blank"><i class="fas fa-paperclip"></i> ${esc(s.file_url)}</a></div>`;
         }
-        if (!contentHtml) contentHtml = '<em style="color:#999;">(Tanpa konten)</em>';
+        if (!contentHtml) contentHtml = '<em style="color:var(--text-muted);">(Tanpa konten)</em>';
 
         return `
           <div class="submission-item">
             <div class="submission-header">
               <div>
-                <div class="submission-student">${esc(p.name)}</div>
-                <div class="submission-meta">${esc(p.email)} · Dikumpul: ${submitted}</div>
+                <div class="submission-student">
+                  <div class="student-avatar">${esc((p.name || '?').charAt(0).toUpperCase())}</div>
+                  ${esc(p.name)}
+                </div>
+                <div class="submission-meta">
+                  <i class="fas fa-envelope"></i> ${esc(p.email)} &middot;
+                  <i class="fas fa-clock"></i> ${submitted}
+                </div>
               </div>
-              ${isGraded ? `<span class="badge-graded">✅ Dinilai: ${grade.score}</span>` : '<span class="badge-graded" style="background:#fadbd8; color:#c0392b;">⏳ Belum dinilai</span>'}
+              ${isGraded
+                ? `<span class="badge-graded done"><i class="fas fa-check"></i> Dinilai: ${grade.score}</span>`
+                : `<span class="badge-graded pending"><i class="fas fa-hourglass-half"></i> Belum dinilai</span>`}
             </div>
             <div class="submission-content">${contentHtml}</div>
             <div class="grade-row">
-              <label style="font-size:0.75rem; color:#666;">Nilai:</label>
+              <label><i class="fas fa-star"></i> Nilai:</label>
               <input type="number" id="score-${s.id}" value="${grade ? grade.score : ''}" min="0" max="${currentActivity.max_score}" placeholder="0-${currentActivity.max_score}">
               <input type="text" id="feedback-${s.id}" value="${grade ? esc(grade.feedback || '') : ''}" placeholder="Feedback (opsional)">
-              <button class="btn-save-grade" onclick="saveGrade(${s.id}, '${esc(p.id)}')">💾 Simpan</button>
+              <button class="btn-save-grade" onclick="saveGrade(${s.id}, '${esc(p.id)}')">
+                <i class="fas fa-save"></i> Simpan
+              </button>
             </div>
           </div>
         `;
@@ -273,13 +915,14 @@
       const scoreInput = document.getElementById('score-' + submissionId);
       const feedbackInput = document.getElementById('feedback-' + submissionId);
       const score = parseFloat(scoreInput.value);
+
       if (isNaN(score) || score < 0 || score > currentActivity.max_score) {
         alert('Nilai harus antara 0 dan ' + currentActivity.max_score);
         return;
       }
 
       try {
-        await saveGrade({
+        await saveGradeHelper({
           submissionId,
           activityId: currentActivity.id,
           studentId,
@@ -294,6 +937,43 @@
       }
     }
 
+    // Wrapper: karena nama fungsi `saveGrade` di supabase.js sama dengan handler kita
+    async function saveGradeHelper(params) {
+  const client = initSupabase();
+
+  const { data: existing } = await client.from('grades')
+    .select('id').eq('submission_id', params.submissionId).maybeSingle();
+
+  if (existing) {
+    const { data, error } = await client.from('grades')
+      .update({
+        score: params.score,
+        feedback: params.feedback,
+        graded_by: params.gradedBy,
+        graded_at: new Date().toISOString()
+      })
+      .eq('id', existing.id).select().single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await client.from('grades')
+      .insert([{
+        submission_id: params.submissionId,
+        // activity_id TIDAK di-insert — tidak ada kolomnya
+        // Info aktivitas bisa diturunkan dari submissions.activity_id
+        student_id: params.studentId,
+        score: params.score,
+        feedback: params.feedback,
+        graded_by: params.gradedBy
+      }]).select().single();
+    if (error) throw error;
+    return data;
+  }
+}
+
+    // ============================================
+    // UTILS
+    // ============================================
     function esc(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');
@@ -304,9 +984,9 @@
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg;
-      t.className = 'toast show ' + (type === 'error' ? 'error' : '');
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
       clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
     }
   </script>
 </body>

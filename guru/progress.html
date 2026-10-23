@@ -4,224 +4,799 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Progress Siswa — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
   <style>
-    .page-container { max-width: 1300px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { margin-bottom: 1.5rem; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
 
-    .context-bar {
-      background: var(--tb-light); border-radius: 12px;
-      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
-      display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
     }
-    .context-bar strong { color: var(--tb-dark); }
 
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* CONTEXT SELECTOR */
+    .context-selector {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      position: relative;
+    }
+
+    .context-selector label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .context-selector label i { color: var(--primary); }
+
+    .context-selector select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+    }
+    .context-selector select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .context-selector select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: var(--bg-soft);
+    }
+
+    /* STAT GRID */
     .stat-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1rem; margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.2rem;
     }
     .stat-card {
-      background: white; border-radius: var(--tb-radius); padding: 1.2rem;
-      text-align: center; border: 1px solid rgba(46,204,113,0.1);
-      box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-xs);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
     }
-    .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--tb-primary); }
-    .stat-label { font-size: 0.75rem; color: var(--tb-text-muted); margin-top: 0.3rem; }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: var(--primary);
+      opacity: 0;
+      transition: var(--transition);
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+    .stat-icon.green { background: #d1fae5; color: #059669; }
+    .stat-icon.orange { background: #fed7aa; color: #ea580c; }
+    .stat-info { flex: 1; min-width: 0; }
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
 
+    /* PANEL */
     .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
     }
+
     .panel-title {
-      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--tb-light);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+    .panel-title i { color: var(--primary); font-size: 0.9rem; }
 
+    /* TABLE */
     .table-wrapper {
-      overflow-x: auto; border-radius: 12px; border: 1px solid #eee;
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      max-height: 70vh;
     }
+
     .progress-table {
-      width: 100%; border-collapse: collapse; font-size: 0.85rem;
-    }
-    .progress-table thead { background: var(--tb-light); }
-    .progress-table th {
-      padding: 0.8rem 0.7rem; text-align: left;
-      font-weight: 600; color: var(--tb-dark); font-size: 0.75rem;
-      border-bottom: 2px solid var(--tb-primary);
-      text-transform: uppercase; letter-spacing: 0.3px;
-    }
-    .progress-table td {
-      padding: 0.7rem; border-bottom: 1px solid #f0f0f0;
-    }
-    .progress-table tr:hover { background: #f8f9fa; }
-    .progress-table .name { font-weight: 600; color: var(--tb-text); }
-    .progress-table .email { font-size: 0.7rem; color: var(--tb-text-muted); }
-
-    .progress-bar-wrap {
-      background: #f0f0f0; border-radius: 10px; height: 18px; overflow: hidden;
-      position: relative; min-width: 100px;
-    }
-    .progress-bar-fill {
-      height: 100%; border-radius: 10px; transition: width 0.3s ease;
-    }
-    .progress-bar-text {
-      position: absolute; top: 0; left: 0; right: 0;
-      text-align: center; line-height: 18px; font-size: 0.65rem; font-weight: 700;
-      color: #333;
-    }
-
-    .badge {
-      padding: 3px 10px; border-radius: 20px;
-      font-size: 0.7rem; font-weight: 600;
-      display: inline-block;
-    }
-    .badge-green { background: var(--tb-light); color: var(--tb-dark); }
-    .badge-yellow { background: #fff3cd; color: #856404; }
-    .badge-red { background: #fadbd8; color: #c0392b; }
-
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-back {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+      width: 100%;
+      border-collapse: collapse;
       font-size: 0.85rem;
     }
-    .btn-back:hover { background: var(--tb-light); }
+
+    .progress-table thead {
+      background: var(--bg-soft);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .progress-table th {
+      padding: 0.75rem 0.7rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      border-bottom: 2px solid var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .progress-table td {
+      padding: 0.75rem 0.7rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .progress-table tbody tr:hover {
+      background: var(--primary-lighter);
+    }
+
+    .progress-table .name {
+      font-weight: 600;
+      color: var(--text);
+    }
+    .progress-table .email {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* PROGRESS BAR */
+    .progress-bar-wrap {
+      background: #e2e8f0;
+      border-radius: 10px;
+      height: 20px;
+      overflow: hidden;
+      position: relative;
+      min-width: 100px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
+    .progress-bar-text {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      text-align: center;
+      line-height: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* BADGE */
+    .badge {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .badge-green { background: #d1fae5; color: #047857; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-red { background: #fee2e2; color: #b91c1c; }
+
+    /* EMPTY */
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2.5rem 1rem;
+      font-size: 0.85rem;
+    }
+    .empty-msg .emoji {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+    .empty-msg strong { color: var(--text); }
+
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .context-selector { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+    }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat progress...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
     <div class="page-toolbar">
-      <h1>📈 Progress Siswa
-        <small>Pantau siapa yang sudah/belum mengerjakan aktivitas</small>
-      </h1>
-    </div>
-
-    <div class="context-bar" id="contextBar" style="display:none;">
-      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
-      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
-    </div>
-
-    <div class="stat-grid" id="statsGrid"></div>
-
-    <div class="panel">
-      <h2 class="panel-title">📊 Progress per Siswa</h2>
-      <div class="table-wrapper">
-        <table class="progress-table">
-          <thead>
-            <tr>
-              <th style="width:40px;">No</th>
-              <th>Siswa</th>
-              <th style="width:80px;">Aktivitas</th>
-              <th style="width:80px;">Dikumpul</th>
-              <th style="width:80px;">Belum</th>
-              <th style="width:180px;">Progress Kumpul</th>
-              <th style="width:80px;">Dinilai</th>
-              <th style="width:80px;">Rata-rata</th>
-            </tr>
-          </thead>
-          <tbody id="progressTbody">
-            <tr><td colspan="8" class="empty-msg">Memuat...</td></tr>
-          </tbody>
-        </table>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#progress';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-chart-line"></i>
+          <span>
+            Progress Siswa
+            <small>Pantau siapa yang sudah/belum mengerjakan aktivitas</small>
+          </span>
+        </h1>
       </div>
     </div>
 
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat progress...</p>
     </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Context Selector -->
+      <div class="context-selector">
+        <div class="selector-group">
+          <label for="selectMapel"><i class="fas fa-book"></i> Mapel</label>
+          <select id="selectMapel" onchange="onMapelChange()" disabled>
+            <option value="">-- Memuat... --</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label for="selectKelas"><i class="fas fa-school"></i> Kelas</label>
+          <select id="selectKelas" onchange="onKelasChange()" disabled>
+            <option value="">-- Pilih Mapel dulu --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stat Grid -->
+      <div class="stat-grid" id="statsGrid" style="display:none;"></div>
+
+      <!-- Panel Progress -->
+      <div class="panel">
+        <h2 class="panel-title">
+          <i class="fas fa-chart-bar"></i> Progress per Siswa
+        </h2>
+        <div class="table-wrapper">
+          <table class="progress-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">No</th>
+                <th>Siswa</th>
+                <th style="width:80px; text-align:center;">Aktivitas</th>
+                <th style="width:80px; text-align:center;">Dikumpul</th>
+                <th style="width:80px; text-align:center;">Belum</th>
+                <th style="width:180px;">Progress Kumpul</th>
+                <th style="width:100px; text-align:center;">Dinilai</th>
+                <th style="width:80px; text-align:center;">Rata-rata</th>
+              </tr>
+            </thead>
+            <tbody id="progressTbody">
+              <tr>
+                <td colspan="8" class="empty-msg">
+                  <span class="emoji">📊</span>
+                  Pilih Mapel & Kelas di atas
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#progress';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
     let currentUser = null;
-    let currentContext = null;
+    let allAssignments = [];
+    let currentSubjectId = null;
+    let currentClassId = null;
+    let currentSubjectName = '';
+    let currentClassName = '';
+    let allKelasForCurrentMapel = [];
 
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('guru');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
+      try {
+        allAssignments = await getMyTeachingAssignments(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load assignments:', err);
+        allAssignments = [];
+      }
+
+      if (!allAssignments || allAssignments.length === 0) {
+        document.getElementById('loading').innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📚</span>
+            <strong>Belum ada mapel yang diampu.</strong><br>
+            Hubungi operator sekolah untuk ditugaskan.
+          </div>`;
+        return;
+      }
+
+      // Prefill dari sessionStorage
       const ctx = sessionStorage.getItem('guru_context');
+      let prefillSubjectId = null;
+      let prefillClassId = null;
+
       if (ctx) {
-        currentContext = JSON.parse(ctx);
-        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
-        document.getElementById('contextBar').style.display = 'flex';
         try {
-          const classes = await getClasses(currentUser.school_id);
-          const cls = classes.find(c => c.id === currentContext.classId);
-          if (cls) document.getElementById('ctxClass').textContent = cls.name;
+          const parsed = JSON.parse(ctx);
+          prefillSubjectId = parsed.subjectId;
+          prefillClassId = parsed.classId;
         } catch (e) {}
-        await loadProgress();
+      }
+
+      populateMapelDropdown(prefillSubjectId);
+
+      if (prefillSubjectId) {
+        populateKelasDropdown(prefillSubjectId, prefillClassId);
+        if (prefillClassId) {
+          await loadProgressForClass(prefillSubjectId, prefillClassId);
+        }
       }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
     })();
 
-    async function loadProgress() {
-      if (!currentContext) return;
+    // ============================================
+    // MAPEL DROPDOWN
+    // ============================================
+    function populateMapelDropdown(selectedSubjectId) {
+      const sel = document.getElementById('selectMapel');
+      const subjectMap = {};
+      allAssignments.forEach(a => {
+        if (a.subjects) subjectMap[a.subjects.id] = a.subjects;
+      });
+      const subjects = Object.values(subjectMap);
+
+      if (subjects.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada mapel --</option>';
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
+        subjects.map(s => `<option value="${s.id}">${esc(s.name)}${s.code ? ' (' + esc(s.code) + ')' : ''}</option>`).join('');
+
+      sel.disabled = false;
+      if (selectedSubjectId && subjectMap[selectedSubjectId]) {
+        sel.value = String(selectedSubjectId);
+      }
+    }
+
+    function onMapelChange() {
+      const subjectId = parseInt(document.getElementById('selectMapel').value) || null;
+      currentSubjectId = subjectId;
+
+      const selKelas = document.getElementById('selectKelas');
+      if (!subjectId) {
+        selKelas.innerHTML = '<option value="">-- Pilih Mapel dulu --</option>';
+        selKelas.disabled = true;
+        resetTable();
+        return;
+      }
+      populateKelasDropdown(subjectId, null);
+      resetTable();
+    }
+
+    function populateKelasDropdown(subjectId, selectedClassId) {
+      const sel = document.getElementById('selectKelas');
+      const filtered = allAssignments.filter(a => a.subjects && a.subjects.id === subjectId);
+      const classMap = {};
+      filtered.forEach(a => {
+        if (a.classes) classMap[a.classes.id] = a.classes;
+      });
+      allKelasForCurrentMapel = Object.values(classMap);
+
+      if (allKelasForCurrentMapel.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada kelas --</option>';
+        sel.disabled = true;
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+        allKelasForCurrentMapel.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+      sel.disabled = false;
+
+      if (selectedClassId && classMap[selectedClassId]) {
+        sel.value = String(selectedClassId);
+      }
+    }
+
+    function onKelasChange() {
+      const classId = parseInt(document.getElementById('selectKelas').value) || null;
+      currentClassId = classId;
+
+      if (!classId) {
+        resetTable();
+        return;
+      }
+      loadProgressForClass(currentSubjectId, classId);
+    }
+
+    function resetTable() {
+      document.getElementById('statsGrid').style.display = 'none';
+      document.getElementById('statsGrid').innerHTML = '';
+      document.getElementById('progressTbody').innerHTML = `
+        <tr>
+          <td colspan="8" class="empty-msg">
+            <span class="emoji">📊</span>
+            Pilih Mapel & Kelas di atas
+          </td>
+        </tr>`;
+    }
+
+    // ============================================
+    // LOAD PROGRESS
+    // ============================================
+    async function loadProgressForClass(subjectId, classId) {
+      currentSubjectId = subjectId;
+      currentClassId = classId;
+
+      const assign = allAssignments.find(a =>
+        a.subjects && a.subjects.id === subjectId &&
+        a.classes && a.classes.id === classId
+      );
+      currentSubjectName = assign?.subjects?.name || '-';
+      currentClassName = assign?.classes?.name || '-';
+
+      const tbody = document.getElementById('progressTbody');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="empty-msg">Memuat progress...</td>
+        </tr>`;
+
       try {
-        const data = await getStudentProgress(currentContext.classId, currentContext.subjectId);
+        const data = await getStudentProgress(classId, subjectId);
         renderStats(data);
         renderTable(data);
       } catch (err) {
-        document.getElementById('progressTbody').innerHTML = '<tr><td colspan="8" class="empty-msg" style="color:red;">Error: ' + err.message + '</td></tr>';
+        console.error('loadProgress error:', err);
+        document.getElementById('statsGrid').style.display = 'none';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="empty-msg" style="color:var(--danger);">
+              <span class="emoji">⚠️</span>
+              <strong>Gagal memuat progress</strong><br>
+              <small>${esc(err.message)}</small>
+            </td>
+          </tr>`;
       }
     }
 
     function renderStats(data) {
-      if (data.length === 0) {
-        document.getElementById('statsGrid').innerHTML = '';
+      const grid = document.getElementById('statsGrid');
+
+      if (!data || data.length === 0) {
+        grid.style.display = 'none';
+        grid.innerHTML = '';
         return;
       }
+
       const totalStudents = data.length;
       const totalActivities = data[0]?.totalActivities || 0;
-      const avgSubmit = (data.reduce((s, d) => s + parseInt(d.submitPercent || 0), 0) / data.length).toFixed(0);
-      const sudahSemua = data.filter(d => d.notSubmitted === 0 && d.totalActivities > 0).length;
 
-      document.getElementById('statsGrid').innerHTML = `
-        <div class="stat-card"><div class="stat-value">${totalStudents}</div><div class="stat-label">Total Siswa</div></div>
-        <div class="stat-card"><div class="stat-value">${totalActivities}</div><div class="stat-label">Total Aktivitas</div></div>
-        <div class="stat-card"><div class="stat-value">${avgSubmit}%</div><div class="stat-label">Rata-rata Kumpul</div></div>
-        <div class="stat-card"><div class="stat-value">${sudahSemua}</div><div class="stat-label">Siswa Lengkap</div></div>
-      `;
+      // Rata-rata kumpul
+      const avgSubmit = (data.reduce((s, d) => s + parseInt(d.submitPercent || 0), 0) / data.length).toFixed(0);
+
+      // Siswa yang sudah submit semua
+      const sudahSemua = data.filter(d => d.totalActivities > 0 && d.notSubmitted === 0).length;
+
+      const stats = [
+        { icon: 'fa-users', color: 'blue', value: totalStudents, label: 'Total Siswa' },
+        { icon: 'fa-tasks', color: 'purple', value: totalActivities, label: 'Total Aktivitas' },
+        { icon: 'fa-chart-line', color: 'green', value: avgSubmit + '%', label: 'Rata-rata Kumpul' },
+        { icon: 'fa-check-circle', color: 'orange', value: sudahSemua, label: 'Siswa Lengkap' }
+      ];
+
+      grid.innerHTML = stats.map(s => `
+        <div class="stat-card">
+          <div class="stat-icon ${s.color}"><i class="fas ${s.icon}"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${s.value}</div>
+            <div class="stat-label">${s.label}</div>
+          </div>
+        </div>
+      `).join('');
+      grid.style.display = 'grid';
     }
 
     function renderTable(data) {
       const tbody = document.getElementById('progressTbody');
-      if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Belum ada siswa atau aktivitas</td></tr>';
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="empty-msg">
+              <span class="emoji">👥</span>
+              Belum ada siswa atau aktivitas di kelas ini.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      // Kalau tidak ada aktivitas sama sekali
+      if (data[0]?.totalActivities === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="empty-msg">
+              <span class="emoji">📝</span>
+              Belum ada aktivitas di kelas ini.<br>
+              Buat aktivitas dulu di menu <strong>Aktivitas</strong>.
+            </td>
+          </tr>`;
         return;
       }
 
       tbody.innerHTML = data.map((d, i) => {
-        const pct = parseInt(d.submitPercent);
+        const pct = parseInt(d.submitPercent || 0);
+
         let colorClass = 'badge-red';
-        let barColor = '#e74c3c';
-        if (pct >= 80) { colorClass = 'badge-green'; barColor = '#27ae60'; }
-        else if (pct >= 50) { colorClass = 'badge-yellow'; barColor = '#f39c12'; }
+        let barColor = '#ef4444';
+        if (pct >= 80) {
+          colorClass = 'badge-green';
+          barColor = '#10b981';
+        } else if (pct >= 50) {
+          colorClass = 'badge-yellow';
+          barColor = '#f59e0b';
+        }
 
         return `
           <tr>
@@ -230,22 +805,27 @@
               <div class="name">${esc(d.student.name)}</div>
               <div class="email">${esc(d.student.email)}</div>
             </td>
-            <td style="text-align:center;">${d.totalActivities}</td>
-            <td style="text-align:center; color:#27ae60; font-weight:700;">${d.submitted}</td>
-            <td style="text-align:center; color:#e74c3c; font-weight:700;">${d.notSubmitted}</td>
+            <td style="text-align:center; font-weight:600;">${d.totalActivities}</td>
+            <td style="text-align:center; color:#10b981; font-weight:700;">${d.submitted}</td>
+            <td style="text-align:center; color:#ef4444; font-weight:700;">${d.notSubmitted}</td>
             <td>
               <div class="progress-bar-wrap">
                 <div class="progress-bar-fill" style="width:${pct}%; background:${barColor};"></div>
                 <div class="progress-bar-text">${pct}%</div>
               </div>
             </td>
-            <td style="text-align:center;"><span class="badge ${colorClass}">${d.graded}/${d.totalActivities}</span></td>
+            <td style="text-align:center;">
+              <span class="badge ${colorClass}">${d.graded}/${d.totalActivities}</span>
+            </td>
             <td style="text-align:center; font-weight:700;">${d.avg}</td>
           </tr>
         `;
       }).join('');
     }
 
+    // ============================================
+    // UTILS
+    // ============================================
     function esc(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');

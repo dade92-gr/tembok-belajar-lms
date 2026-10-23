@@ -4,258 +4,873 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cetak Rapor — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
   <style>
-    .page-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { margin-bottom: 1.5rem; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
 
-    .context-bar {
-      background: var(--tb-light); border-radius: 12px;
-      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
-      display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
     }
-    .context-bar strong { color: var(--tb-dark); }
 
-    .selector-bar {
-      background: white; border-radius: var(--tb-radius-lg);
-      padding: 1rem 1.5rem; margin-bottom: 1.5rem;
-      box-shadow: var(--tb-shadow-sm);
-      display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;
-    }
-    .selector-bar > div { flex: 1; min-width: 200px; }
-    .selector-bar label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--tb-dark); margin-bottom: 0.4rem; }
-    .selector-bar select, .selector-bar input {
-      width: 100%; padding: 0.6rem 0.8rem;
-      border: 1px solid var(--tb-border); border-radius: 10px;
-      font-size: 0.85rem; font-family: inherit;
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
+
+    .page-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* BUTTON */
     .btn-primary {
-      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
-      color: white; border: none; padding: 0.7rem 1.4rem;
-      border-radius: 30px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
-      transition: var(--tb-transition); white-space: nowrap;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
-    .btn-primary:hover { transform: translateY(-2px); }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    /* RAPOR */
-    .rapor-container {
-      background: white; border-radius: var(--tb-radius-lg);
-      padding: 2rem; box-shadow: var(--tb-shadow-sm);
-      border: 1px solid rgba(46,204,113,0.1);
+    /* CONTEXT SELECTOR */
+    .context-selector {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 1rem;
+      align-items: end;
     }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      position: relative;
+    }
+
+    .context-selector label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .context-selector label i { color: var(--primary); }
+
+    .context-selector select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+    }
+    .context-selector select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .context-selector select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: var(--bg-soft);
+    }
+
+    /* RAPOR CONTAINER */
+    .rapor-container {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+
     .rapor-header {
-      text-align: center; border-bottom: 3px solid var(--tb-primary);
-      padding-bottom: 1rem; margin-bottom: 1.5rem;
+      text-align: center;
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
     .rapor-header h2 {
-      font-size: 1.4rem; font-weight: 700; color: var(--tb-dark); margin-bottom: 0.3rem;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.3px;
     }
-    .rapor-header p { font-size: 0.85rem; color: var(--tb-text-muted); }
+    .rapor-header p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
 
     .student-info {
-      display: grid; grid-template-columns: 140px 1fr; gap: 0.5rem 1rem;
-      font-size: 0.85rem; margin-bottom: 1.5rem;
-      background: var(--tb-bg); padding: 1rem 1.2rem; border-radius: 10px;
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0.5rem 1rem;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      background: var(--bg-soft);
+      padding: 1rem 1.2rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
     }
-    .student-info .label { color: var(--tb-text-muted); font-weight: 500; }
-    .student-info .value { color: var(--tb-text); font-weight: 600; }
+    .student-info .label {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .student-info .value {
+      color: var(--text);
+      font-weight: 600;
+    }
 
     table.nilai-table {
-      width: 100%; border-collapse: collapse;
-      font-size: 0.85rem; margin-bottom: 1.5rem;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
     }
-    table.nilai-table thead { background: var(--tb-light); }
+    table.nilai-table thead {
+      background: var(--bg-soft);
+    }
     table.nilai-table th {
-      padding: 0.7rem 0.8rem; text-align: left;
-      font-weight: 600; color: var(--tb-dark);
-      border: 1px solid #ddd; font-size: 0.8rem;
+      padding: 0.7rem 0.8rem;
+      text-align: left;
+      font-weight: 700;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
     }
     table.nilai-table td {
-      padding: 0.6rem 0.8rem; border: 1px solid #ddd;
+      padding: 0.7rem 0.8rem;
+      border: 1px solid var(--border);
+      vertical-align: top;
     }
-    table.nilai-table td.center { text-align: center; }
-    table.nilai-table .feedback { font-size: 0.75rem; color: var(--tb-text-muted); font-style: italic; }
+    table.nilai-table td.center {
+      text-align: center;
+    }
+    table.nilai-table td.center strong {
+      color: var(--primary-dark);
+      font-size: 0.95rem;
+    }
+    table.nilai-table .feedback {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    table.nilai-table tbody tr:hover {
+      background: var(--primary-lighter);
+    }
 
+    .badge-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .badge-type.quiz { background: #fef3c7; color: #92400e; }
+    .badge-type.task { background: var(--primary-light); color: var(--primary-dark); }
+
+    /* SUMMARY */
     .summary-box {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem; margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
     }
     .summary-item {
-      background: var(--tb-light); border-radius: 10px;
-      padding: 1rem; text-align: center;
+      background: var(--primary-lighter);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      border: 1px solid var(--primary-light);
     }
     .summary-item .val {
-      font-size: 1.5rem; font-weight: 700; color: var(--tb-dark);
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      line-height: 1.1;
     }
     .summary-item .lbl {
-      font-size: 0.7rem; color: var(--tb-text-muted); margin-top: 0.2rem;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.4px;
     }
 
     .rapor-footer {
-      text-align: right; margin-top: 2rem; padding-top: 1rem;
-      border-top: 1px dashed #ccc; font-size: 0.8rem; color: var(--tb-text-muted);
+      text-align: right;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-style: italic;
     }
 
-    .btn-print {
-      background: white; color: var(--tb-dark);
-      border: 2px solid var(--tb-primary); padding: 0.6rem 1.4rem;
-      border-radius: 30px; cursor: pointer; font-size: 0.85rem;
-      font-weight: 600; margin-top: 1rem;
-    }
-    .btn-print:hover { background: var(--tb-light); }
-
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 3rem; font-size: 0.85rem; }
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-back {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+    /* EMPTY */
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 3rem 1rem;
       font-size: 0.85rem;
     }
-    .btn-back:hover { background: var(--tb-light); }
+    .empty-msg .emoji {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+    .empty-msg strong { color: var(--text); }
 
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .context-selector {
+        grid-template-columns: 1fr 1fr;
+      }
+      .context-selector .btn-primary {
+        grid-column: 1 / -1;
+        justify-content: center;
+      }
+    }
+    @media (max-width: 640px) {
+      .context-selector {
+        grid-template-columns: 1fr;
+      }
+      .student-info {
+        grid-template-columns: 110px 1fr;
+      }
+      .rapor-container {
+        padding: 1.2rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+    }
+
+    /* PRINT */
     @media print {
-      .app-header, .page-toolbar, .context-bar, .selector-bar,
-      .back-nav, .btn-print, .no-print {
+      .app-header,
+      .page-toolbar,
+      .context-selector,
+      .back-nav,
+      .btn-back,
+      .btn-primary,
+      .no-print {
         display: none !important;
       }
-      body { background: white; }
-      .page-container { padding: 0; max-width: 100%; }
-      .rapor-container { box-shadow: none; border: none; padding: 0; }
+      html, body {
+        background: white;
+        padding: 0;
+        margin: 0;
+      }
+      .page-container {
+        padding: 0;
+        max-width: 100%;
+      }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+      }
+      .rapor-container {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        background: white;
+      }
+      .rapor-header {
+        border-bottom: 2px solid #000;
+      }
+      .rapor-header h2 {
+        color: #000;
+      }
+      table.nilai-table th,
+      table.nilai-table td {
+        border-color: #999;
+      }
+      table.nilai-table thead {
+        background: #f0f0f0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .summary-item {
+        background: #f0f0f0 !important;
+        border: 1px solid #999;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .summary-item .val {
+        color: #000;
+      }
+      .student-info {
+        background: #f0f0f0 !important;
+        border: 1px solid #999;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .badge-type.quiz {
+        background: #fef3c7 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .badge-type.task {
+        background: #dbeafe !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat rapor...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
     <div class="page-toolbar">
-      <h1>🖨️ Cetak Rapor
-        <small>Lihat & cetak rekap nilai per siswa</small>
-      </h1>
-    </div>
-
-    <div class="context-bar" id="contextBar" style="display:none;">
-      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
-      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
-    </div>
-
-    <div class="selector-bar no-print">
-      <div>
-        <label>Pilih Siswa</label>
-        <select id="selectStudent" onchange="loadReport()">
-          <option value="">-- Pilih Siswa --</option>
-        </select>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#cetak-rapor';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-print"></i>
+          <span>
+            Cetak Rapor
+            <small>Lihat & cetak rekap nilai per siswa</small>
+          </span>
+        </h1>
       </div>
-      <button class="btn-primary" onclick="window.print()">🖨️ Cetak</button>
     </div>
 
-    <div class="rapor-container" id="raporContainer">
-      <div class="empty-msg">Pilih siswa untuk melihat rapor</div>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat rapor...</p>
     </div>
 
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Context Selector -->
+      <div class="context-selector no-print">
+        <div class="selector-group">
+          <label for="selectMapel"><i class="fas fa-book"></i> Mapel</label>
+          <select id="selectMapel" onchange="onMapelChange()" disabled>
+            <option value="">-- Memuat... --</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label for="selectKelas"><i class="fas fa-school"></i> Kelas</label>
+          <select id="selectKelas" onchange="onKelasChange()" disabled>
+            <option value="">-- Pilih Mapel dulu --</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label for="selectStudent"><i class="fas fa-user-graduate"></i> Siswa</label>
+          <select id="selectStudent" onchange="loadReport()" disabled>
+            <option value="">-- Pilih Kelas dulu --</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:end;">
+          <button class="btn-primary" id="btnPrint" onclick="window.print()" disabled>
+            <i class="fas fa-print"></i> Cetak
+          </button>
+        </div>
+      </div>
+
+      <!-- Rapor Container -->
+      <div class="rapor-container" id="raporContainer">
+        <div class="empty-msg">
+          <span class="emoji">🖨️</span>
+          Pilih Mapel, Kelas, dan Siswa di atas untuk melihat rapor.
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#cetak-rapor';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
     </div>
+
   </div>
 
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
     let currentUser = null;
-    let currentContext = null;
+    let allAssignments = [];
+    let currentSubjectId = null;
+    let currentClassId = null;
+    let currentSubjectName = '';
+    let currentClassName = '';
+    let allKelasForCurrentMapel = [];
     let allStudents = [];
 
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('guru');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
+      try {
+        allAssignments = await getMyTeachingAssignments(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load assignments:', err);
+        allAssignments = [];
+      }
+
+      if (!allAssignments || allAssignments.length === 0) {
+        document.getElementById('loading').innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📚</span>
+            <strong>Belum ada mapel yang diampu.</strong><br>
+            Hubungi operator sekolah untuk ditugaskan.
+          </div>`;
+        return;
+      }
+
+      // Prefill dari sessionStorage
       const ctx = sessionStorage.getItem('guru_context');
-      if (ctx) {
-        currentContext = JSON.parse(ctx);
-        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
-        document.getElementById('contextBar').style.display = 'flex';
-        try {
-          const classes = await getClasses(currentUser.school_id);
-          const cls = classes.find(c => c.id === currentContext.classId);
-          if (cls) document.getElementById('ctxClass').textContent = cls.name;
-        } catch (e) {}
+      let prefillSubjectId = null;
+      let prefillClassId = null;
 
-        // Load siswa
+      if (ctx) {
         try {
-          allStudents = await getStudentsForReport(currentContext.classId);
-          const sel = document.getElementById('selectStudent');
-          sel.innerHTML = '<option value="">-- Pilih Siswa --</option>' +
-            allStudents.map(s => `<option value="${s.id}">${esc(s.name)} (${esc(s.email)})</option>`).join('');
+          const parsed = JSON.parse(ctx);
+          prefillSubjectId = parsed.subjectId;
+          prefillClassId = parsed.classId;
         } catch (e) {}
+      }
+
+      populateMapelDropdown(prefillSubjectId);
+
+      if (prefillSubjectId) {
+        populateKelasDropdown(prefillSubjectId, prefillClassId);
+        if (prefillClassId) {
+          await loadStudentsForClass(prefillSubjectId, prefillClassId);
+        }
       }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
     })();
 
+    // ============================================
+    // MAPEL DROPDOWN
+    // ============================================
+    function populateMapelDropdown(selectedSubjectId) {
+      const sel = document.getElementById('selectMapel');
+      const subjectMap = {};
+      allAssignments.forEach(a => {
+        if (a.subjects) subjectMap[a.subjects.id] = a.subjects;
+      });
+      const subjects = Object.values(subjectMap);
+
+      if (subjects.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada mapel --</option>';
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
+        subjects.map(s => `<option value="${s.id}">${esc(s.name)}${s.code ? ' (' + esc(s.code) + ')' : ''}</option>`).join('');
+
+      sel.disabled = false;
+      if (selectedSubjectId && subjectMap[selectedSubjectId]) {
+        sel.value = String(selectedSubjectId);
+      }
+    }
+
+    function onMapelChange() {
+      const subjectId = parseInt(document.getElementById('selectMapel').value) || null;
+      currentSubjectId = subjectId;
+
+      const selKelas = document.getElementById('selectKelas');
+      if (!subjectId) {
+        selKelas.innerHTML = '<option value="">-- Pilih Mapel dulu --</option>';
+        selKelas.disabled = true;
+        resetStudentAndRapor();
+        return;
+      }
+      populateKelasDropdown(subjectId, null);
+      resetStudentAndRapor();
+    }
+
+    function populateKelasDropdown(subjectId, selectedClassId) {
+      const sel = document.getElementById('selectKelas');
+      const filtered = allAssignments.filter(a => a.subjects && a.subjects.id === subjectId);
+      const classMap = {};
+      filtered.forEach(a => {
+        if (a.classes) classMap[a.classes.id] = a.classes;
+      });
+      allKelasForCurrentMapel = Object.values(classMap);
+
+      if (allKelasForCurrentMapel.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada kelas --</option>';
+        sel.disabled = true;
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+        allKelasForCurrentMapel.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+      sel.disabled = false;
+
+      if (selectedClassId && classMap[selectedClassId]) {
+        sel.value = String(selectedClassId);
+      }
+    }
+
+    function onKelasChange() {
+      const classId = parseInt(document.getElementById('selectKelas').value) || null;
+      currentClassId = classId;
+
+      if (!classId) {
+        resetStudentAndRapor();
+        return;
+      }
+      loadStudentsForClass(currentSubjectId, classId);
+    }
+
+    function resetStudentAndRapor() {
+      const sel = document.getElementById('selectStudent');
+      sel.innerHTML = '<option value="">-- Pilih Kelas dulu --</option>';
+      sel.disabled = true;
+      document.getElementById('btnPrint').disabled = true;
+      allStudents = [];
+      document.getElementById('raporContainer').innerHTML = `
+        <div class="empty-msg">
+          <span class="emoji">🖨️</span>
+          Pilih Mapel, Kelas, dan Siswa di atas untuk melihat rapor.
+        </div>`;
+    }
+
+    // ============================================
+    // LOAD STUDENTS
+    // ============================================
+    async function loadStudentsForClass(subjectId, classId) {
+      currentSubjectId = subjectId;
+      currentClassId = classId;
+
+      // Cari nama mapel & kelas
+      const assign = allAssignments.find(a =>
+        a.subjects && a.subjects.id === subjectId &&
+        a.classes && a.classes.id === classId
+      );
+      currentSubjectName = assign?.subjects?.name || '-';
+      currentClassName = assign?.classes?.name || '-';
+
+      const sel = document.getElementById('selectStudent');
+      sel.innerHTML = '<option value="">Memuat siswa...</option>';
+      sel.disabled = true;
+
+      try {
+        allStudents = await getStudentsForReport(classId);
+        if (!allStudents || allStudents.length === 0) {
+          sel.innerHTML = '<option value="">-- Belum ada siswa --</option>';
+          document.getElementById('raporContainer').innerHTML = `
+            <div class="empty-msg">
+              <span class="emoji">👥</span>
+              Belum ada siswa di kelas ini.
+            </div>`;
+          document.getElementById('btnPrint').disabled = true;
+          return;
+        }
+
+        sel.innerHTML = '<option value="">-- Pilih Siswa --</option>' +
+          allStudents.map(s => `<option value="${s.id}">${esc(s.name)} (${esc(s.email)})</option>`).join('');
+        sel.disabled = false;
+
+        // Reset rapor tampilan
+        document.getElementById('raporContainer').innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">🖨️</span>
+            Pilih siswa untuk melihat rapor.
+          </div>`;
+        document.getElementById('btnPrint').disabled = true;
+      } catch (err) {
+        console.error('loadStudents error:', err);
+        sel.innerHTML = '<option value="">Error: ' + esc(err.message) + '</option>';
+      }
+    }
+
+    // ============================================
+    // LOAD RAPOR
+    // ============================================
     async function loadReport() {
       const studentId = document.getElementById('selectStudent').value;
       const container = document.getElementById('raporContainer');
 
       if (!studentId) {
-        container.innerHTML = '<div class="empty-msg">Pilih siswa untuk melihat rapor</div>';
+        container.innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">🖨️</span>
+            Pilih siswa untuk melihat rapor.
+          </div>`;
+        document.getElementById('btnPrint').disabled = true;
         return;
       }
 
-      container.innerHTML = '<div class="empty-msg">Memuat...</div>';
+      container.innerHTML = `
+        <div class="empty-msg">
+          <span class="spinner" style="margin: 0 auto 1rem;"></span>
+          Memuat rapor...
+        </div>`;
+
       try {
-        const data = await getStudentReport(studentId, currentContext.classId, currentContext.subjectId);
+        // getStudentReport dari supabase.js (sudah dinormalisasi)
+        const data = await getStudentReport(studentId, currentClassId, currentSubjectId);
         const student = allStudents.find(s => s.id === studentId);
 
         if (!student) {
-          container.innerHTML = '<div class="empty-msg">Siswa tidak ditemukan</div>';
+          container.innerHTML = `
+            <div class="empty-msg" style="color:var(--danger);">
+              <span class="emoji">⚠️</span>
+              Siswa tidak ditemukan.
+            </div>`;
           return;
         }
 
-        if (data.activities.length === 0) {
-          container.innerHTML = '<div class="empty-msg">Belum ada aktivitas di kelas ini</div>';
+        if (!data.activities || data.activities.length === 0) {
+          container.innerHTML = `
+            <div class="empty-msg">
+              <span class="emoji">📝</span>
+              Belum ada aktivitas di kelas ini.
+            </div>`;
+          document.getElementById('btnPrint').disabled = true;
           return;
         }
+
+        const today = new Date().toLocaleDateString('id-ID', {
+          day: 'numeric', month: 'long', year: 'numeric'
+        });
 
         let html = `
           <div class="rapor-header">
             <h2>RAPOR NILAI SISWA</h2>
-            <p>Tembok Belajar · Mapel ${esc(currentContext.subjectName)}</p>
+            <p>Tembok Belajar &middot; Mapel ${esc(currentSubjectName)} &middot; Kelas ${esc(currentClassName)}</p>
           </div>
 
           <div class="student-info">
             <div class="label">Nama Siswa</div><div class="value">${esc(student.name)}</div>
             <div class="label">Email</div><div class="value">${esc(student.email)}</div>
-            <div class="label">Kelas</div><div class="value" id="kelasName">-</div>
-            <div class="label">Tanggal Cetak</div><div class="value">${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            <div class="label">Kelas</div><div class="value">${esc(currentClassName)}</div>
+            <div class="label">Tanggal Cetak</div><div class="value">${today}</div>
           </div>
 
           <table class="nilai-table">
             <thead>
               <tr>
-                <th style="width:40px;">No</th>
+                <th style="width:40px; text-align:center;">No</th>
                 <th>Judul Aktivitas</th>
                 <th style="width:100px;">Tipe</th>
-                <th style="width:80px;">Nilai</th>
-                <th style="width:80px;">Max</th>
+                <th style="width:80px; text-align:center;">Nilai</th>
+                <th style="width:80px; text-align:center;">Max</th>
                 <th>Feedback</th>
               </tr>
             </thead>
@@ -264,14 +879,22 @@
 
         data.activities.forEach((a, i) => {
           const g = a.grade;
-          const nilai = g ? g.score : '-';
-          const feedback = g && g.feedback ? esc(g.feedback) : '<em style="color:#ccc;">-</em>';
+          const nilai = g && g.score !== null && g.score !== undefined
+            ? `<strong>${g.score}</strong>`
+            : '<em style="color:var(--text-muted);">-</em>';
+          const feedback = g && g.feedback
+            ? esc(g.feedback)
+            : '<em style="color:var(--text-muted);">-</em>';
+          const typeLabel = a.type === 'quiz'
+            ? '<span class="badge-type quiz">🧪 Kuis</span>'
+            : '<span class="badge-type task">📝 Tugas</span>';
+
           html += `
             <tr>
               <td class="center">${i + 1}</td>
               <td>${esc(a.title)}</td>
-              <td class="center">${a.type === 'quiz' ? '🧪 Kuis' : '📝 Tugas'}</td>
-              <td class="center"><strong>${nilai}</strong></td>
+              <td class="center">${typeLabel}</td>
+              <td class="center">${nilai}</td>
               <td class="center">${a.max_score}</td>
               <td class="feedback">${feedback}</td>
             </tr>
@@ -302,25 +925,27 @@
           </div>
 
           <div class="rapor-footer">
-            Dicetak dari Tembok Belajar — ${new Date().toLocaleString('id-ID')}
+            Dicetak dari Tembok Belajar &mdash; ${new Date().toLocaleString('id-ID')}
           </div>
         `;
 
         container.innerHTML = html;
-
-        // Set nama kelas
-        try {
-          const classes = await getClasses(currentUser.school_id);
-          const cls = classes.find(c => c.id === currentContext.classId);
-          if (cls && document.getElementById('kelasName')) {
-            document.getElementById('kelasName').textContent = cls.name;
-          }
-        } catch (e) {}
+        document.getElementById('btnPrint').disabled = false;
       } catch (err) {
-        container.innerHTML = '<div class="empty-msg" style="color:red;">Error: ' + err.message + '</div>';
+        console.error('loadReport error:', err);
+        container.innerHTML = `
+          <div class="empty-msg" style="color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            <strong>Gagal memuat rapor</strong><br>
+            <small>${esc(err.message)}</small>
+          </div>`;
+        document.getElementById('btnPrint').disabled = true;
       }
     }
 
+    // ============================================
+    // UTILS
+    // ============================================
     function esc(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');

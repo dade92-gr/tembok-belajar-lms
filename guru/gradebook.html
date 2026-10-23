@@ -4,201 +4,814 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grade Book — Tembok Belajar</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PATCH 1 -->
+  <script>
+    (function() {
+      function applyEmbedMode() {
+        if (new URLSearchParams(window.location.search).get('embed') === '1') {
+          document.documentElement.classList.add('tb-embed');
+          if (document.body) document.body.classList.add('tb-embed');
+        }
+      }
+      applyEmbedMode();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEmbedMode);
+      }
+      window.addEventListener('load', applyEmbedMode);
+    })();
+  </script>
+
   <style>
-    .page-container { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-toolbar { margin-bottom: 1.5rem; }
-    .page-toolbar h1 { font-size: 1.6rem; color: var(--tb-dark); font-weight: 700; }
-    .page-toolbar h1 small { display: block; font-size: 0.8rem; font-weight: 400; color: var(--tb-text-muted); margin-top: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scrollbar-gutter: stable; }
 
-    .context-bar {
-      background: var(--tb-light); border-radius: 12px;
-      padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
-      display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #dbeafe;
+      --primary-lighter: #eff6ff;
+      --navy: #1e293b;
+      --navy-dark: #0f172a;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
     }
-    .context-bar strong { color: var(--tb-dark); }
 
-    .panel {
-      background: white; border-radius: var(--tb-radius-lg);
-      border: 1px solid rgba(46,204,113,0.1);
-      padding: 1.5rem; box-shadow: var(--tb-shadow-sm);
-    }
-    .panel-title {
-      font-size: 1rem; font-weight: 700; color: var(--tb-dark);
-      margin-bottom: 1rem; padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--tb-light);
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .table-wrapper {
-      overflow-x: auto; border-radius: 12px;
-      border: 1px solid #eee;
+    /* PATCH 2 */
+    html.tb-embed .btn-back,
+    body.tb-embed .btn-back { display: none !important; }
+    html.tb-embed .page-container,
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
     }
-    .grade-table {
-      width: 100%; border-collapse: collapse;
-      font-size: 0.8rem; min-width: 600px;
-    }
-    .grade-table thead { background: var(--tb-light); }
-    .grade-table th {
-      padding: 0.7rem 0.6rem; text-align: center;
-      font-weight: 600; color: var(--tb-dark);
-      border-bottom: 2px solid var(--tb-primary);
-      font-size: 0.75rem;
-      position: sticky; top: 0; z-index: 5;
-    }
-    .grade-table th.col-name {
-      text-align: left; min-width: 180px;
-      position: sticky; left: 0; background: var(--tb-light); z-index: 6;
-    }
-    .grade-table td {
-      padding: 0.6rem; text-align: center;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .grade-table td.col-name {
-      text-align: left; font-weight: 600; color: var(--tb-text);
-      position: sticky; left: 0; background: white;
-      white-space: nowrap;
-    }
-    .grade-table tr:hover { background: #f8f9fa; }
-    .grade-table tr:hover td.col-name { background: #f8f9fa; }
+    html.tb-embed .back-nav,
+    body.tb-embed .back-nav { display: none !important; }
+    html.tb-embed .app-header,
+    body.tb-embed .app-header { display: none !important; }
 
-    .cell-grade { font-weight: 700; }
-    .cell-grade.high { color: var(--tb-dark); }
-    .cell-grade.mid { color: var(--tb-warning); }
-    .cell-grade.low { color: var(--tb-danger); }
-    .cell-grade.empty { color: #ccc; font-weight: 400; }
+    .page-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .page-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+      width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .page-toolbar h1 {
+      font-size: 1.5rem;
+      color: var(--navy);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
 
     .btn-export {
-      background: linear-gradient(135deg, var(--tb-primary), var(--tb-secondary));
-      color: white; border: none; padding: 0.5rem 1.2rem;
-      border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
-      margin-bottom: 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
-    .btn-export:hover { transform: translateY(-1px); }
+    .btn-export:hover:not(:disabled) {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-export:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    .empty-msg { text-align: center; color: var(--tb-text-muted); padding: 2rem; font-size: 0.85rem; }
-    .back-nav { text-align: center; margin-top: 2rem; }
-    .btn-back {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--tb-dark);
-      padding: 0.6rem 1.5rem; border-radius: 30px;
-      text-decoration: none; font-weight: 600; border: 1px solid var(--tb-light);
+    /* CONTEXT SELECTOR */
+    .context-selector {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      position: relative;
+    }
+
+    .context-selector label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .context-selector label i { color: var(--primary); }
+
+    .context-selector select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+    }
+    .context-selector select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .context-selector select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: var(--bg-soft);
+    }
+
+    /* PANEL */
+    .panel {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title i { color: var(--primary); font-size: 0.9rem; }
+
+    /* SUMMARY */
+    .summary-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .summary-card {
+      flex: 1;
+      min-width: 140px;
+      background: var(--primary-lighter);
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      border: 1px solid var(--primary-light);
+    }
+    .summary-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
+    .summary-value {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+    }
+
+    /* TABLE */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      max-height: 70vh;
+    }
+
+    .grade-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      min-width: 600px;
+    }
+
+    .grade-table thead {
+      background: var(--bg-soft);
+    }
+
+    .grade-table th {
+      padding: 0.75rem 0.6rem;
+      text-align: center;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--primary);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--bg-soft);
+      white-space: nowrap;
+    }
+
+    .grade-table th.col-name {
+      text-align: left;
+      min-width: 180px;
+      position: sticky;
+      left: 0;
+      background: var(--bg-soft);
+      z-index: 6;
+    }
+
+    .grade-table td {
+      padding: 0.6rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .grade-table td.col-name {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text);
+      position: sticky;
+      left: 0;
+      background: var(--surface);
+      white-space: nowrap;
+      z-index: 4;
+    }
+
+    .grade-table tbody tr:hover {
+      background: var(--primary-lighter);
+    }
+    .grade-table tbody tr:hover td.col-name {
+      background: var(--primary-lighter);
+    }
+
+    .cell-grade {
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: inline-block;
+      min-width: 40px;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .cell-grade.high { color: #047857; background: #d1fae5; }
+    .cell-grade.mid { color: #92400e; background: #fef3c7; }
+    .cell-grade.low { color: #b91c1c; background: #fee2e2; }
+    .cell-grade.empty { color: var(--text-muted); font-weight: 400; background: transparent; }
+
+    .cell-avg {
+      font-weight: 800;
+      color: var(--primary-dark);
+      background: var(--primary-light);
+      padding: 3px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      min-width: 45px;
+    }
+    .cell-avg.na {
+      color: var(--text-muted);
+      background: transparent;
+      font-weight: 400;
+    }
+
+    /* EMPTY */
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2.5rem 1rem;
       font-size: 0.85rem;
     }
-    .btn-back:hover { background: var(--tb-light); }
+    .empty-msg .emoji {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      opacity: 0.4;
+    }
+    .empty-msg strong { color: var(--text); }
 
-    @media (max-width: 600px) { .page-container { padding: 1.2rem 1rem; } }
+    /* LOADING */
+    .loading-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* BACK NAV */
+    .back-nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-back-full {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .btn-back-full:hover {
+      background: var(--primary-lighter);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .context-selector { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      html.tb-embed .page-container,
+      body.tb-embed .page-container {
+        padding-top: calc(var(--header-height) + 0.8rem);
+      }
+      .page-toolbar h1 { font-size: 1.25rem; }
+    }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="app-brand">🧱 Tembok Belajar — Guru</div>
-    <div class="app-user">
-      <span id="userName">Memuat...</span>
-      <div class="avatar" id="userAvatar">?</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
-    </div>
-  </header>
 
-  <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat grade book...</p></div>
+  <div class="page-container">
 
-  <div class="page-container hidden" id="pageContent">
     <div class="page-toolbar">
-      <h1>📊 Grade Book
-        <small>Rekap nilai lengkap per kelas</small>
-      </h1>
-    </div>
-
-    <div class="context-bar" id="contextBar" style="display:none;">
-      <span>📚 Mapel: <strong id="ctxSubject">-</strong></span>
-      <span>🏫 Kelas: <strong id="ctxClass">-</strong></span>
-    </div>
-
-    <div class="panel">
-      <h2 class="panel-title">📋 Tabel Nilai</h2>
-      <button class="btn-export" onclick="exportCSV()">⬇️ Export CSV</button>
-      <div class="table-wrapper">
-        <table class="grade-table" id="gradeTable">
-          <thead id="gradeThead"></thead>
-          <tbody id="gradeTbody">
-            <tr><td class="empty-msg" colspan="2">Memuat...</td></tr>
-          </tbody>
-        </table>
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#gradebook';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-table"></i>
+          <span>
+            Grade Book
+            <small>Rekap nilai lengkap per kelas</small>
+          </span>
+        </h1>
+      </div>
+      <div>
+        <button class="btn-export" id="btnExport" onclick="exportCSV()" disabled>
+          <i class="fas fa-download"></i> Export CSV
+        </button>
       </div>
     </div>
 
-    <div class="back-nav">
-      <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat grade book...</p>
     </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- Context Selector -->
+      <div class="context-selector">
+        <div class="selector-group">
+          <label for="selectMapel"><i class="fas fa-book"></i> Mapel</label>
+          <select id="selectMapel" onchange="onMapelChange()" disabled>
+            <option value="">-- Memuat... --</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label for="selectKelas"><i class="fas fa-school"></i> Kelas</label>
+          <select id="selectKelas" onchange="onKelasChange()" disabled>
+            <option value="">-- Pilih Mapel dulu --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Panel Grade Book -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <i class="fas fa-clipboard-list"></i> Tabel Nilai
+          </h2>
+        </div>
+
+        <div class="summary-row" id="summaryRow" style="display:none;">
+          <div class="summary-card">
+            <div class="summary-label">Total Siswa</div>
+            <div class="summary-value" id="sumStudents">0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Total Aktivitas</div>
+            <div class="summary-value" id="sumActivities">0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Sudah Dinilai</div>
+            <div class="summary-value" id="sumGraded">0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Belum Dinilai</div>
+            <div class="summary-value" id="sumUngraded">0</div>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="grade-table" id="gradeTable">
+            <thead id="gradeThead"></thead>
+            <tbody id="gradeTbody">
+              <tr>
+                <td colspan="2" class="empty-msg">
+                  <span class="emoji">📊</span>
+                  Pilih Mapel & Kelas di atas
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="back-nav">
+        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#gradebook';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
     let currentUser = null;
-    let currentContext = null;
+    let allAssignments = [];
+    let currentSubjectId = null;
+    let currentClassId = null;
+    let currentSubjectName = '';
+    let currentClassName = '';
+    let allKelasForCurrentMapel = [];
     let gradeData = null;
 
+    // ============================================
+    // INIT
+    // ============================================
     (async () => {
       initSupabase();
       currentUser = await requireAuth('guru');
       if (!currentUser) return;
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
+      try {
+        allAssignments = await getMyTeachingAssignments(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load assignments:', err);
+        allAssignments = [];
+      }
+
+      if (!allAssignments || allAssignments.length === 0) {
+        document.getElementById('loading').innerHTML = `
+          <div class="empty-msg">
+            <span class="emoji">📚</span>
+            <strong>Belum ada mapel yang diampu.</strong><br>
+            Hubungi operator sekolah untuk ditugaskan.
+          </div>`;
+        return;
+      }
+
+      // Prefill dari sessionStorage
       const ctx = sessionStorage.getItem('guru_context');
-      if (ctx) {
-        currentContext = JSON.parse(ctx);
-        document.getElementById('ctxSubject').textContent = currentContext.subjectName;
-        document.getElementById('contextBar').style.display = 'flex';
-        try {
-          const classes = await getClasses(currentUser.school_id);
-          const cls = classes.find(c => c.id === currentContext.classId);
-          if (cls) document.getElementById('ctxClass').textContent = cls.name;
-        } catch (e) {}
+      let prefillSubjectId = null;
+      let prefillClassId = null;
 
-        await loadGradeBook();
+      if (ctx) {
+        try {
+          const parsed = JSON.parse(ctx);
+          prefillSubjectId = parsed.subjectId;
+          prefillClassId = parsed.classId;
+        } catch (e) {}
+      }
+
+      populateMapelDropdown(prefillSubjectId);
+
+      if (prefillSubjectId) {
+        populateKelasDropdown(prefillSubjectId, prefillClassId);
+        if (prefillClassId) {
+          await loadGradeBookForClass(prefillSubjectId, prefillClassId);
+        }
       }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
     })();
 
-    async function loadGradeBook() {
+    // ============================================
+    // MAPEL DROPDOWN
+    // ============================================
+    function populateMapelDropdown(selectedSubjectId) {
+      const sel = document.getElementById('selectMapel');
+      const subjectMap = {};
+      allAssignments.forEach(a => {
+        if (a.subjects) subjectMap[a.subjects.id] = a.subjects;
+      });
+      const subjects = Object.values(subjectMap);
+
+      if (subjects.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada mapel --</option>';
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
+        subjects.map(s => `<option value="${s.id}">${esc(s.name)}${s.code ? ' (' + esc(s.code) + ')' : ''}</option>`).join('');
+
+      sel.disabled = false;
+      if (selectedSubjectId && subjectMap[selectedSubjectId]) {
+        sel.value = String(selectedSubjectId);
+      }
+    }
+
+    function onMapelChange() {
+      const subjectId = parseInt(document.getElementById('selectMapel').value) || null;
+      currentSubjectId = subjectId;
+
+      const selKelas = document.getElementById('selectKelas');
+      if (!subjectId) {
+        selKelas.innerHTML = '<option value="">-- Pilih Mapel dulu --</option>';
+        selKelas.disabled = true;
+        resetTable();
+        return;
+      }
+      populateKelasDropdown(subjectId, null);
+      resetTable();
+    }
+
+    function populateKelasDropdown(subjectId, selectedClassId) {
+      const sel = document.getElementById('selectKelas');
+      const filtered = allAssignments.filter(a => a.subjects && a.subjects.id === subjectId);
+      const classMap = {};
+      filtered.forEach(a => {
+        if (a.classes) classMap[a.classes.id] = a.classes;
+      });
+      allKelasForCurrentMapel = Object.values(classMap);
+
+      if (allKelasForCurrentMapel.length === 0) {
+        sel.innerHTML = '<option value="">-- Tidak ada kelas --</option>';
+        sel.disabled = true;
+        return;
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+        allKelasForCurrentMapel.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+      sel.disabled = false;
+
+      if (selectedClassId && classMap[selectedClassId]) {
+        sel.value = String(selectedClassId);
+      }
+    }
+
+    function onKelasChange() {
+      const classId = parseInt(document.getElementById('selectKelas').value) || null;
+      currentClassId = classId;
+
+      if (!classId) {
+        resetTable();
+        return;
+      }
+      loadGradeBookForClass(currentSubjectId, classId);
+    }
+
+    function resetTable() {
+      document.getElementById('summaryRow').style.display = 'none';
+      document.getElementById('btnExport').disabled = true;
+      document.getElementById('gradeThead').innerHTML = '';
+      document.getElementById('gradeTbody').innerHTML = `
+        <tr>
+          <td colspan="2" class="empty-msg">
+            <span class="emoji">📊</span>
+            Pilih Mapel & Kelas di atas
+          </td>
+        </tr>`;
+      gradeData = null;
+    }
+
+    // ============================================
+    // LOAD GRADE BOOK
+    // ============================================
+    async function loadGradeBookForClass(subjectId, classId) {
+      currentSubjectId = subjectId;
+      currentClassId = classId;
+
+      // Cari nama mapel & kelas
+      const assign = allAssignments.find(a =>
+        a.subjects && a.subjects.id === subjectId &&
+        a.classes && a.classes.id === classId
+      );
+      currentSubjectName = assign?.subjects?.name || '-';
+      currentClassName = assign?.classes?.name || '-';
+
+      const tbody = document.getElementById('gradeTbody');
+      tbody.innerHTML = '<tr><td colspan="2" class="empty-msg">Memuat grade book...</td></tr>';
+
       try {
-        gradeData = await getGradeBook(currentContext.classId);
+        // getGradeBook dari supabase.js (sudah dinormalisasi untuk tidak butuh grades.activity_id)
+        gradeData = await getGradeBook(classId);
         renderTable();
       } catch (err) {
-        document.getElementById('gradeTbody').innerHTML = '<tr><td class="empty-msg" colspan="2" style="color:red;">Error: ' + err.message + '</td></tr>';
+        console.error('loadGradeBook error:', err);
+        document.getElementById('gradeThead').innerHTML = '';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="2" class="empty-msg" style="color:var(--danger);">
+              <span class="emoji">⚠️</span>
+              <strong>Gagal memuat grade book</strong><br>
+              <small>${esc(err.message)}</small>
+            </td>
+          </tr>`;
       }
     }
 
     function renderTable() {
+      if (!gradeData) return;
+
       const { activities, students, submissions, grades } = gradeData;
 
-      if (students.length === 0) {
+      if (!students || students.length === 0) {
         document.getElementById('gradeThead').innerHTML = '';
-        document.getElementById('gradeTbody').innerHTML = '<tr><td class="empty-msg" colspan="2">Belum ada siswa</td></tr>';
-        return;
-      }
-      if (activities.length === 0) {
-        document.getElementById('gradeThead').innerHTML = '';
-        document.getElementById('gradeTbody').innerHTML = '<tr><td class="empty-msg" colspan="2">Belum ada aktivitas</td></tr>';
+        document.getElementById('gradeTbody').innerHTML = `
+          <tr>
+            <td colspan="2" class="empty-msg">
+              <span class="emoji">👥</span>
+              Belum ada siswa di kelas ini.
+            </td>
+          </tr>`;
+        document.getElementById('summaryRow').style.display = 'none';
+        document.getElementById('btnExport').disabled = true;
         return;
       }
 
-      // Map submission & grade per (student, activity)
+      if (!activities || activities.length === 0) {
+        document.getElementById('gradeThead').innerHTML = '';
+        document.getElementById('gradeTbody').innerHTML = `
+          <tr>
+            <td colspan="2" class="empty-msg">
+              <span class="emoji">📝</span>
+              Belum ada aktivitas di kelas ini.
+            </td>
+          </tr>`;
+        document.getElementById('summaryRow').style.display = 'none';
+        document.getElementById('btnExport').disabled = true;
+        return;
+      }
+
+      // Map submission & grade per (activity:student)
       const subMap = {};
-      submissions.forEach(s => { subMap[s.activity_id + ':' + s.student_id] = s; });
+      (submissions || []).forEach(s => { subMap[s.activity_id + ':' + s.student_id] = s; });
+
       const gradeMap = {};
-      grades.forEach(g => { gradeMap[g.activity_id + ':' + g.student_id] = g; });
+      (grades || []).forEach(g => {
+        // grade sudah dinormalisasi: punya activity_id dari join
+        const actId = g.activity_id ?? g.submissions?.activity_id;
+        if (actId !== undefined && actId !== null) {
+          gradeMap[actId + ':' + g.student_id] = g;
+        }
+      });
+
+      // Summary
+      let gradedCount = 0;
+      students.forEach(st => {
+        activities.forEach(a => {
+          if (gradeMap[a.id + ':' + st.id]) gradedCount++;
+        });
+      });
+      const totalPossible = students.length * activities.length;
+      const ungradedCount = totalPossible - gradedCount;
+
+      document.getElementById('sumStudents').textContent = students.length;
+      document.getElementById('sumActivities').textContent = activities.length;
+      document.getElementById('sumGraded').textContent = gradedCount;
+      document.getElementById('sumUngraded').textContent = ungradedCount;
+      document.getElementById('summaryRow').style.display = 'flex';
+      document.getElementById('btnExport').disabled = false;
 
       // Header
       const thead = document.getElementById('gradeThead');
       thead.innerHTML = `
         <tr>
           <th class="col-name">Siswa</th>
-          ${activities.map(a => `<th title="${esc(a.title)}">${esc(a.title.substring(0, 20))}${a.title.length > 20 ? '…' : ''}</th>`).join('')}
+          ${activities.map(a => {
+            const label = a.title.length > 18 ? a.title.substring(0, 18) + '…' : a.title;
+            return `<th title="${esc(a.title)} · Max: ${a.max_score}">${esc(label)}</th>`;
+          }).join('')}
           <th>Rata-rata</th>
         </tr>
       `;
@@ -211,48 +824,70 @@
 
         const cells = activities.map(a => {
           const g = gradeMap[a.id + ':' + st.id];
-          if (g && g.score !== null && g.score !== undefined) {
-            totalScore += parseFloat(g.score);
+          if (g && g.score !== null && g.score !== undefined && g.score !== '') {
+            const score = parseFloat(g.score);
+            totalScore += score;
             countScored++;
-            const pct = (g.score / a.max_score) * 100;
+            const pct = (score / a.max_score) * 100;
             let cls = 'high';
             if (pct < 60) cls = 'low';
             else if (pct < 80) cls = 'mid';
-            return `<td><span class="cell-grade ${cls}">${g.score}</span></td>`;
+            return `<td><span class="cell-grade ${cls}">${score}</span></td>`;
           }
           const sub = subMap[a.id + ':' + st.id];
           if (sub) return '<td><span class="cell-grade empty">⏳</span></td>';
           return '<td><span class="cell-grade empty">-</span></td>';
         }).join('');
 
-        const avg = countScored > 0 ? (totalScore / countScored).toFixed(1) : '-';
+        const avg = countScored > 0 ? (totalScore / countScored).toFixed(1) : null;
+        const avgHtml = avg
+          ? `<span class="cell-avg">${avg}</span>`
+          : `<span class="cell-avg na">-</span>`;
 
         return `
           <tr>
             <td class="col-name">${esc(st.name)}</td>
             ${cells}
-            <td><strong>${avg}</strong></td>
+            <td>${avgHtml}</td>
           </tr>
         `;
       }).join('');
     }
 
+    // ============================================
+    // EXPORT CSV
+    // ============================================
     function exportCSV() {
       if (!gradeData) return;
       const { activities, students, grades } = gradeData;
-      const gradeMap = {};
-      grades.forEach(g => { gradeMap[g.activity_id + ':' + g.student_id] = g; });
 
-      let csv = 'Nama,' + activities.map(a => '"' + a.title.replace(/"/g, '""') + '"').join(',') + ',Rata-rata\n';
+      // Map grade dengan activity_id yang sudah dinormalisasi
+      const gradeMap = {};
+      (grades || []).forEach(g => {
+        const actId = g.activity_id ?? g.submissions?.activity_id;
+        if (actId !== undefined && actId !== null) {
+          gradeMap[actId + ':' + g.student_id] = g;
+        }
+      });
+
+      const subjectLabel = currentSubjectName || 'Mapel';
+      const classLabel = currentClassName || 'Kelas';
+      const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      let csv = `Grade Book - ${subjectLabel} - ${classLabel}\n`;
+      csv += `Tanggal Export: ${dateStr}\n\n`;
+
+      csv += 'Nama,' + activities.map(a => '"' + a.title.replace(/"/g, '""') + '"').join(',') + ',Rata-rata\n';
 
       students.forEach(st => {
         let total = 0, count = 0;
         const row = [st.name];
         activities.forEach(a => {
           const g = gradeMap[a.id + ':' + st.id];
-          if (g && g.score !== null) {
-            row.push(g.score);
-            total += parseFloat(g.score);
+          if (g && g.score !== null && g.score !== undefined && g.score !== '') {
+            const score = parseFloat(g.score);
+            row.push(score);
+            total += score;
             count++;
           } else {
             row.push('');
@@ -266,11 +901,16 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'gradebook_' + Date.now() + '.csv';
+      const safeClass = classLabel.replace(/[^a-z0-9]/gi, '_');
+      const safeSubject = subjectLabel.replace(/[^a-z0-9]/gi, '_');
+      a.download = `gradebook_${safeSubject}_${safeClass}_${Date.now()}.csv`;
       a.click();
       URL.revokeObjectURL(url);
     }
 
+    // ============================================
+    // UTILS
+    // ============================================
     function esc(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');
