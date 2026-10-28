@@ -59,7 +59,6 @@
       padding-bottom: 2rem;
     }
 
-    /* PAGE TOOLBAR */
     .page-toolbar {
       display: flex;
       justify-content: space-between;
@@ -118,7 +117,6 @@
 
     .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 
-    /* BUTTONS */
     .btn-primary {
       background: var(--primary);
       color: white;
@@ -193,7 +191,6 @@
 
     .btn-danger:hover { background: #dc2626; }
 
-    /* FILTER BAR */
     .filter-card {
       background: var(--surface);
       border-radius: var(--radius-lg);
@@ -272,7 +269,6 @@
       color: var(--danger);
     }
 
-    /* INFO BAR */
     .info-bar {
       background: var(--primary-light);
       border-radius: 10px;
@@ -291,7 +287,76 @@
     .info-bar i { color: var(--primary); }
     .info-bar strong { color: var(--navy); }
 
-    /* TABLE */
+    /* BULK ACTION BAR */
+    .bulk-bar {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 1rem;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.2s ease;
+    }
+    .bulk-bar.active { display: flex; }
+    .bulk-info {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bulk-info strong { color: #78350f; font-size: 1rem; }
+    .bulk-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn-bulk-clear {
+      background: transparent;
+      border: 1px solid #92400e;
+      color: #92400e;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-bulk-clear:hover { background: #fef3c7; }
+    .btn-bulk-delete {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-bulk-delete:hover { background: #dc2626; transform: translateY(-1px); }
+    .btn-bulk-delete:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Checkbox styling */
+    .row-checkbox, #checkAll {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+    .checkbox-cell { text-align: center; width: 40px; }
+    .data-table tbody tr.selected { background: #eff6ff !important; }
+    .data-table tbody tr.selected:hover { background: #dbeafe !important; }
+
     .table-card {
       background: var(--surface);
       border-radius: var(--radius-lg);
@@ -387,7 +452,6 @@
       opacity: 0.5;
     }
 
-    /* PAGINATION */
     .pagination-bar {
       background: var(--surface);
       border-top: 1px solid var(--border);
@@ -452,7 +516,6 @@
 
     .page-numbers { display: flex; gap: 0.3rem; align-items: center; }
 
-    /* MODAL */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -477,6 +540,8 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       animation: fadeInUp 0.25s ease;
       margin: auto;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .modal-card h2 {
@@ -542,7 +607,6 @@
     .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
     .alert-success { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
 
-    /* PROGRESS */
     .progress-box {
       background: var(--surface);
       border-radius: 10px;
@@ -586,7 +650,45 @@
     .progress-detail .item-ok { color: var(--success); }
     .progress-detail .item-err { color: var(--danger); }
 
-    /* TOAST */
+    .bulk-progress {
+      margin-top: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .bulk-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    .bulk-progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .bulk-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--danger), #b91c1c);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .bulk-progress-detail {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      max-height: 120px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+    }
+    .bulk-progress-detail .ok { color: var(--success); }
+    .bulk-progress-detail .err { color: var(--danger); }
+
     .toast {
       position: fixed;
       bottom: 24px;
@@ -705,12 +807,31 @@
             Halaman: <strong id="currentPageInfo">1</strong> dari <strong id="totalPagesInfo">1</strong></span>
     </div>
 
+    <!-- BULK ACTION BAR -->
+    <div class="bulk-bar" id="bulkBar">
+      <div class="bulk-info">
+        <i class="fas fa-check-square"></i>
+        <strong id="selectedCount">0</strong> kelas dipilih
+      </div>
+      <div class="bulk-actions">
+        <button class="btn-bulk-clear" onclick="clearSelection()">
+          <i class="fas fa-xmark"></i> Batal Pilih
+        </button>
+        <button class="btn-bulk-delete" id="btnBulkDelete" onclick="openBulkDelete()">
+          <i class="fas fa-trash"></i> Hapus <span id="bulkCountLabel">0</span> Kelas
+        </button>
+      </div>
+    </div>
+
     <!-- TABLE -->
     <div class="table-card">
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
             <tr>
+              <th class="checkbox-cell">
+                <input type="checkbox" id="checkAll" onchange="toggleSelectAll(this.checked)" title="Pilih semua di halaman ini">
+              </th>
               <th style="width:50px;">No</th>
               <th style="width:100px;">Tingkat</th>
               <th>Nama Kelas</th>
@@ -719,7 +840,7 @@
             </tr>
           </thead>
           <tbody id="tableBody">
-            <tr><td colspan="5" class="empty-row">Memuat...</td></tr>
+            <tr><td colspan="6" class="empty-row">Memuat...</td></tr>
           </tbody>
         </table>
       </div>
@@ -818,17 +939,60 @@
     </div>
   </div>
 
-  <!-- Modal Konfirmasi Hapus -->
+  <!-- Modal Konfirmasi Hapus Tunggal -->
   <div class="modal-overlay" id="modalDelete">
     <div class="modal-card">
-      <h2 style="color: var(--danger);"><i class="fas fa-trash"></i> Hapus Kelas?</h2>
+      <h2 style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> Hapus Kelas?</h2>
       <p id="deleteMessage" style="color: var(--text); margin-bottom: 0.8rem;"></p>
-      <p style="font-size: 0.75rem; color: #92400e; background: #fef3c7; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid var(--warning);">
-        ℹ️ Kelas yang sedang dipakai di penugasan atau enrollment tidak bisa dihapus.
-      </p>
+
+      <div style="background: #fef3c7; border-left: 3px solid var(--warning); padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.78rem; color: #92400e; margin-bottom: 1rem;">
+        ⚠️ <strong>Perhatian:</strong> Jika kelas ini memiliki penugasan (assignment), halaman materi, atau data terkait, <strong>semua data tersebut akan ikut terhapus</strong> secara permanen. Tindakan ini tidak dapat dibatalkan.
+      </div>
+
+      <div id="deleteUsageInfo" class="hidden" style="background: #fee2e2; border-left: 3px solid var(--danger); padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.78rem; color: #b91c1c; margin-bottom: 1rem;">
+      </div>
+
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
-        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
+        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus Semua</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus Massal -->
+  <div class="modal-overlay" id="modalBulkDelete">
+    <div class="modal-card">
+      <h2 style="color: var(--danger);">
+        <i class="fas fa-exclamation-triangle"></i> Hapus <span id="bulkDeleteCount">0</span> Kelas Sekaligus?
+      </h2>
+      <p id="bulkDeleteMessage" style="color: var(--text); margin-bottom: 0.8rem;"></p>
+
+      <div style="max-height: 180px; overflow-y: auto; background: var(--bg); border-radius: 8px; padding: 0.7rem; margin-bottom: 1rem; font-size: 0.78rem;">
+        <ol id="bulkDeleteList" style="margin: 0 0 0 1.2rem; padding: 0;"></ol>
+      </div>
+
+      <div style="background: #fef3c7; border-left: 3px solid var(--warning); padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.78rem; color: #92400e; margin-bottom: 1rem;">
+        ⚠️ <strong>Perhatian:</strong> Semua kelas yang dipilih akan dihapus beserta <strong>penugasan, halaman materi, dan data terkait</strong> yang ada di dalamnya. Tindakan ini tidak dapat dibatalkan.
+      </div>
+
+      <div id="bulkProgressBox" class="bulk-progress hidden">
+        <div class="bulk-progress-label">
+          <span>Memproses...</span>
+          <span id="bulkProgressText">0 / 0</span>
+        </div>
+        <div class="bulk-progress-bar">
+          <div class="bulk-progress-fill" id="bulkProgressFill"></div>
+        </div>
+        <div class="bulk-progress-detail" id="bulkProgressDetail"></div>
+      </div>
+
+      <div id="bulkDeleteError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnBulkCancel" onclick="closeBulkDelete()">Batal</button>
+        <button class="btn-danger" id="btnConfirmBulkDelete" onclick="confirmBulkDelete()">
+          Ya, Hapus Semua
+        </button>
       </div>
     </div>
   </div>
@@ -847,6 +1011,8 @@
     let selectedExcelData = null;
     let currentPage = 1;
     let pageSize = 25;
+    let selectedIds = new Set();
+    let bulkDeleteIds = [];
 
     (async () => {
       initSupabase();
@@ -861,20 +1027,24 @@
     async function loadClasses() {
       try {
         allClasses = await getClasses(currentSchoolId);
+        const validIds = new Set(allClasses.map(c => String(c.id)));
+        selectedIds.forEach(id => { if (!validIds.has(id)) selectedIds.delete(id); });
         populateGradeFilter();
         applyFilter();
       } catch (err) {
         console.error('Gagal load kelas:', err);
         document.getElementById('tableBody').innerHTML =
-          '<tr><td colspan="5" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + err.message + '</td></tr>';
+          '<tr><td colspan="6" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + err.message + '</td></tr>';
       }
     }
 
     function populateGradeFilter() {
       const grades = [...new Set(allClasses.map(c => c.grade).filter(Boolean))].sort();
       const sel = document.getElementById('filterGrade');
+      const current = sel.value;
       sel.innerHTML = '<option value="">Semua Tingkat</option>' +
         grades.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+      if (current && grades.includes(current)) sel.value = current;
     }
 
     function applyFilter() {
@@ -909,12 +1079,13 @@
 
       if (filteredClasses.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="5" class="empty-row">
+          <tr><td colspan="6" class="empty-row">
             <span class="emoji">🏫</span>
             ${allClasses.length === 0
               ? 'Belum ada kelas. Klik "+ Tambah Kelas" atau "Import Excel".'
               : 'Tidak ada kelas yang cocok dengan filter.'}
           </td></tr>`;
+        updateBulkBar();
         return;
       }
 
@@ -922,8 +1093,16 @@
       const endIdx = Math.min(startIdx + pageSize, filteredClasses.length);
       const pageData = filteredClasses.slice(startIdx, endIdx);
 
-      tbody.innerHTML = pageData.map((c, i) => `
-        <tr>
+      tbody.innerHTML = pageData.map((c, i) => {
+        const sid = String(c.id);
+        return `
+        <tr class="${selectedIds.has(sid) ? 'selected' : ''}">
+          <td class="checkbox-cell">
+            <input type="checkbox" class="row-checkbox"
+              data-id="${sid}"
+              ${selectedIds.has(sid) ? 'checked' : ''}
+              onchange="toggleRowSelection('${sid}', this.checked)">
+          </td>
           <td>${startIdx + i + 1}</td>
           <td>${c.grade ? `<span class="grade-badge">${escapeHtml(c.grade)}</span>` : '-'}</td>
           <td class="nama-kelas">${escapeHtml(c.name)}</td>
@@ -938,8 +1117,11 @@
               </button>
             </div>
           </td>
-        </tr>
-      `).join('');
+        </tr>`;
+      }).join('');
+
+      syncCheckAllState();
+      updateBulkBar();
     }
 
     function renderPagination() {
@@ -1025,6 +1207,65 @@
       currentPage = 1;
       renderTable();
       renderPagination();
+    }
+
+    /* ============================================
+       SELEKSI MULTI BARIS
+       ============================================ */
+    function toggleRowSelection(id, checked) {
+      const sid = String(id);
+      if (checked) selectedIds.add(sid);
+      else selectedIds.delete(sid);
+      const cb = document.querySelector(`.row-checkbox[data-id="${sid}"]`);
+      if (cb) cb.closest('tr').classList.toggle('selected', checked);
+      syncCheckAllState();
+      updateBulkBar();
+    }
+
+    function toggleSelectAll(checked) {
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredClasses.length);
+      const pageData = filteredClasses.slice(startIdx, endIdx);
+
+      pageData.forEach(c => {
+        const sid = String(c.id);
+        if (checked) selectedIds.add(sid);
+        else selectedIds.delete(sid);
+      });
+      renderTable();
+    }
+
+    function syncCheckAllState() {
+      const checkAll = document.getElementById('checkAll');
+      if (!checkAll) return;
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredClasses.length);
+      const pageData = filteredClasses.slice(startIdx, endIdx);
+
+      if (pageData.length === 0) {
+        checkAll.checked = false;
+        checkAll.indeterminate = false;
+        return;
+      }
+      const selectedOnPage = pageData.filter(c => selectedIds.has(String(c.id))).length;
+      checkAll.checked = selectedOnPage === pageData.length;
+      checkAll.indeterminate = selectedOnPage > 0 && selectedOnPage < pageData.length;
+    }
+
+    function updateBulkBar() {
+      const count = selectedIds.size;
+      const bar = document.getElementById('bulkBar');
+      document.getElementById('selectedCount').textContent = count;
+      document.getElementById('bulkCountLabel').textContent = count;
+      document.getElementById('btnBulkDelete').disabled = count === 0;
+      if (count > 0) bar.classList.add('active');
+      else bar.classList.remove('active');
+    }
+
+    function clearSelection() {
+      selectedIds.clear();
+      renderTable();
+      updateBulkBar();
     }
 
     /* ============================================
@@ -1256,14 +1497,38 @@
     }
 
     /* ============================================
-       HAPUS
+       HAPUS KELAS (TUNGGAL) — pakai edge function delete-classes
        ============================================ */
-    function openDelete(id) {
+    async function openDelete(id) {
       deletingId = id;
       const cls = allClasses.find(c => c.id === id);
       if (!cls) return;
+
       document.getElementById('deleteMessage').innerHTML =
-        'Anda yakin ingin menghapus kelas <strong>' + escapeHtml(cls.name) + '</strong>?';
+        'Anda yakin ingin menghapus kelas <strong>' + escapeHtml(cls.name) + '</strong>' +
+        (cls.grade ? ' (Tingkat ' + escapeHtml(cls.grade) + ')' : '') + '?';
+
+      // Cek dulu berapa penugasan & halaman terkait
+      const usageBox = document.getElementById('deleteUsageInfo');
+      usageBox.classList.add('hidden');
+      usageBox.innerHTML = '';
+
+      try {
+        const usage = await getClassUsageInfo(id);
+        if (usage.total > 0) {
+          const parts = [];
+          if (usage.assignments > 0) parts.push(`<strong>${usage.assignments} penugasan</strong>`);
+          if (usage.pages > 0) parts.push(`<strong>${usage.pages} halaman materi</strong>`);
+          if (usage.enrollments > 0) parts.push(`<strong>${usage.enrollments} enrollment siswa</strong>`);
+          usageBox.innerHTML =
+            '<i class="fas fa-exclamation-circle"></i> <strong>Perhatian:</strong> Kelas ini sedang dipakai. ' +
+            'Jika dihapus, data berikut akan ikut terhapus: ' + parts.join(', ') + '.';
+          usageBox.classList.remove('hidden');
+        }
+      } catch (e) {
+        // ignore — usage info opsional
+      }
+
       document.getElementById('modalDelete').classList.add('active');
     }
 
@@ -1279,25 +1544,245 @@
       btn.textContent = 'Menghapus...';
 
       try {
-        const check = await isClassUsed(deletingId);
-        if (check.used) {
-          closeDeleteModal();
-          showToast('⚠️ Kelas sedang dipakai (' + check.by + '), tidak bisa dihapus.', 'error');
-          btn.disabled = false;
-          btn.textContent = 'Ya, Hapus';
-          return;
+        const { data, error } = await supabaseClient.functions.invoke('delete-classes', {
+          body: { classIds: [deletingId] }
+        });
+
+        if (error) {
+          let detail = error.message;
+          try {
+            const errBody = await error.context?.json();
+            detail = errBody?.error || errBody?.message || detail;
+          } catch (e) { /* ignore */ }
+          throw new Error(detail);
         }
-        await deleteClass(deletingId);
+        if (data && data.error) throw new Error(data.error);
+
+        const r = (data?.results || [])[0];
+        if (r && !r.success) {
+          throw new Error(r.error || 'Gagal menghapus kelas');
+        }
+
         closeDeleteModal();
-        showToast('🗑️ Kelas berhasil dihapus');
+        showToast('🗑️ Kelas berhasil dihapus' + (r?.deleted && Object.keys(r.deleted).length ? ' (termasuk data terkait)' : ''));
         await loadClasses();
       } catch (err) {
         console.error('Delete error:', err);
         showToast('Gagal menghapus: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Ya, Hapus';
+        btn.textContent = 'Ya, Hapus Semua';
       }
+    }
+
+    /* ============================================
+       HAPUS KELAS (MASSAL) — pakai edge function delete-classes
+       ============================================ */
+    function openBulkDelete() {
+      const ids = Array.from(selectedIds);
+      if (ids.length === 0) return;
+
+      bulkDeleteIds = ids.map(x => x);
+      const classes = ids
+        .map(id => allClasses.find(c => String(c.id) === String(id)))
+        .filter(Boolean);
+
+      document.getElementById('bulkDeleteCount').textContent = classes.length;
+      document.getElementById('bulkDeleteMessage').innerHTML =
+        'Anda akan menghapus <strong>' + classes.length + ' kelas</strong> berikut secara permanen:';
+
+      document.getElementById('bulkDeleteList').innerHTML =
+        classes.map(c =>
+          '<li><strong>' + escapeHtml(c.name) + '</strong>' +
+          (c.grade ? ' <span style="color:#94a3b8;">(Tingkat ' + escapeHtml(c.grade) + ')</span>' : '') +
+          (c.room ? ' <span style="color:#94a3b8;">— ' + escapeHtml(c.room) + '</span>' : '') +
+          '</li>'
+        ).join('');
+
+      document.getElementById('bulkProgressBox').classList.add('hidden');
+      document.getElementById('bulkProgressFill').style.width = '0%';
+      document.getElementById('bulkProgressDetail').innerHTML = '';
+      document.getElementById('bulkProgressText').textContent = '0 / 0';
+      document.getElementById('bulkDeleteError').classList.add('hidden');
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      btn.disabled = false;
+      btn.dataset.processing = '0';
+      btn.innerHTML = 'Ya, Hapus Semua';
+      btn.onclick = confirmBulkDelete;
+      document.getElementById('btnBulkCancel').disabled = false;
+
+      document.getElementById('modalBulkDelete').classList.add('active');
+    }
+
+    function closeBulkDelete() {
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      if (btn.disabled && btn.dataset.processing === '1') return;
+
+      document.getElementById('modalBulkDelete').classList.remove('active');
+      bulkDeleteIds = [];
+      btn.onclick = confirmBulkDelete;
+    }
+
+    async function confirmBulkDelete() {
+      if (bulkDeleteIds.length === 0) return;
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      const btnCancel = document.getElementById('btnBulkCancel');
+      btn.disabled = true;
+      btn.dataset.processing = '1';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+      btnCancel.disabled = true;
+
+      const progressBox = document.getElementById('bulkProgressBox');
+      const progressFill = document.getElementById('bulkProgressFill');
+      const progressText = document.getElementById('bulkProgressText');
+      const progressDetail = document.getElementById('bulkProgressDetail');
+      const errorBox = document.getElementById('bulkDeleteError');
+
+      progressBox.classList.remove('hidden');
+      progressDetail.innerHTML = '';
+      errorBox.classList.add('hidden');
+
+      const total = bulkDeleteIds.length;
+      progressText.textContent = '0 / ' + total;
+      progressFill.style.width = '25%';
+
+      const waitingItem = document.createElement('div');
+      waitingItem.textContent = '⏳ Mengirim ' + total + ' kelas ke server...';
+      progressDetail.appendChild(waitingItem);
+
+      try {
+        // Konversi class IDs: kalau numeric di DB, ubah ke number
+        const payloadIds = bulkDeleteIds.map(id => {
+          const n = Number(id);
+          return Number.isFinite(n) && String(n) === String(id) ? n : id;
+        });
+
+        const { data, error } = await supabaseClient.functions.invoke('delete-classes', {
+          body: { classIds: payloadIds }
+        });
+
+        if (error) {
+          let detail = error.message;
+          try {
+            const errBody = await error.context?.json();
+            detail = errBody?.error || errBody?.message || detail;
+          } catch (e) { /* ignore */ }
+          throw new Error(detail);
+        }
+        if (data && data.error) throw new Error(data.error);
+
+        progressFill.style.width = '100%';
+        progressText.textContent = total + ' / ' + total + ' selesai';
+        progressDetail.innerHTML = '';
+
+        const results = data?.results || [];
+        const successIds = [];
+
+        results.forEach(r => {
+          const cls = allClasses.find(c => String(c.id) === String(r.classId));
+          const label = cls ? cls.name : String(r.classId);
+          const item = document.createElement('div');
+          if (r.success) {
+            const details = r.deleted && Object.keys(r.deleted).length
+              ? ' (' + Object.entries(r.deleted).map(([k, v]) => `${k}:${v}`).join(', ') + ')'
+              : '';
+            item.textContent = '✅ ' + label + ' — berhasil dihapus' + details;
+            item.className = 'ok';
+            successIds.push(String(r.classId));
+          } else {
+            item.textContent = '❌ ' + label + ' — ' + (r.error || 'Gagal');
+            item.className = 'err';
+          }
+          progressDetail.appendChild(item);
+        });
+
+        successIds.forEach(id => selectedIds.delete(id));
+
+        if ((data.failedCount || 0) > 0) {
+          errorBox.innerHTML =
+            '<strong>⚠️ ' + data.failedCount + ' dari ' + total + ' gagal dihapus:</strong><br>' +
+            results.filter(r => !r.success).map(r => {
+              const cls = allClasses.find(c => String(c.id) === String(r.classId));
+              const label = cls ? cls.name : String(r.classId);
+              return '• ' + label + ': ' + (r.error || 'Gagal');
+            }).join('<br>');
+          errorBox.classList.remove('hidden');
+        }
+
+        btn.disabled = false;
+        btn.dataset.processing = '0';
+        btnCancel.disabled = false;
+
+        if ((data.failedCount || 0) === 0) {
+          btn.innerHTML = '<i class="fas fa-check"></i> Selesai';
+          showToast('🗑️ ' + (data.successCount || total) + ' kelas berhasil dihapus', 'success');
+          setTimeout(() => {
+            document.getElementById('modalBulkDelete').classList.remove('active');
+            bulkDeleteIds = [];
+            btn.onclick = confirmBulkDelete;
+          }, 800);
+        } else {
+          btn.innerHTML = 'Tutup';
+          btn.onclick = () => {
+            document.getElementById('modalBulkDelete').classList.remove('active');
+            bulkDeleteIds = [];
+            btn.onclick = confirmBulkDelete;
+          };
+          showToast(
+            (data.successCount || 0) + ' dihapus, ' + (data.failedCount || 0) + ' gagal',
+            'error'
+          );
+        }
+
+        await loadClasses();
+        updateBulkBar();
+
+      } catch (err) {
+        console.error('Bulk delete error:', err);
+        progressFill.style.width = '0%';
+        errorBox.innerHTML = '<strong>❌ Gagal:</strong> ' + (err.message || 'Unknown error');
+        errorBox.classList.remove('hidden');
+
+        btn.disabled = false;
+        btn.dataset.processing = '0';
+        btnCancel.disabled = false;
+        btn.innerHTML = 'Ya, Hapus Semua';
+        btn.onclick = confirmBulkDelete;
+
+        showToast('Gagal menghapus massal: ' + (err.message || 'Unknown error'), 'error');
+      }
+    }
+
+    /* ============================================
+       HELPER: Cek pemakaian kelas (untuk info peringatan)
+       ============================================ */
+    async function getClassUsageInfo(classId) {
+      const result = { assignments: 0, pages: 0, enrollments: 0, total: 0 };
+
+      // Helper untuk hitung baris di tabel tertentu dengan aman
+      async function countIn(table, col, val) {
+        try {
+          const { count, error } = await supabaseClient
+            .from(table).select('*', { count: 'exact', head: true }).eq(col, val);
+          if (error) return 0;
+          return count || 0;
+        } catch { return 0; }
+      }
+
+      // Coba beberapa nama tabel yang mungkin
+      const assignmentsVariants = ['assignments', 'teacher_assign', 'class_assignments'];
+      for (const t of assignmentsVariants) {
+        const c = await countIn(t, 'class_id', classId);
+        if (c > 0) { result.assignments += c; break; }
+      }
+
+      result.pages = await countIn('pages', 'class_id', classId);
+      result.enrollments = await countIn('enrollments', 'class_id', classId);
+
+      result.total = result.assignments + result.pages + result.enrollments;
+      return result;
     }
 
     /* UTILS */
@@ -1321,6 +1806,7 @@
         closeModal();
         closeImportModal();
         closeDeleteModal();
+        closeBulkDelete();
       }
     });
   </script>

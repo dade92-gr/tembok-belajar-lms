@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview Unit — Tembok Belajar</title>
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #10b981; --green-dark: #047857; --green-light: #d1fae5; --green-lighter: #ecfdf5;
+      --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      -webkit-font-smoothing: antialiased; overflow: hidden;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+
+    .preview-topbar {
+      height: 60px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 1rem;
+      gap: 1rem; box-shadow: var(--shadow-sm); z-index: 50;
+    }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.5rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .btn-back:hover { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .topbar-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .topbar-title-main {
+      font-size: 0.95rem; font-weight: 800; color: var(--text);
+      line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .topbar-title-sub { font-size: 0.72rem; color: var(--text-muted); line-height: 1.2; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .preview-mode-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white; padding: 0.4rem 0.9rem;
+      border-radius: 999px; font-size: 0.72rem; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .kelas-selector {
+      padding: 0.45rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit; font-size: 0.78rem;
+      font-weight: 600; color: var(--text);
+      background: var(--surface); cursor: pointer;
+      outline: none; flex-shrink: 0;
+      max-width: 220px;
+    }
+    .kelas-selector:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+    .kelas-selector:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .preview-layout { display: flex; height: calc(100vh - 60px); overflow: hidden; }
+
+    /* SIDEBAR */
+    .preview-sidebar {
+      width: 300px; background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .sidebar-header { padding: 1rem 1.1rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .sidebar-eyebrow {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--green-lighter); color: var(--green-dark);
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 0.62rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 0.5rem; border: 1px solid var(--green-light);
+    }
+    .sidebar-unit-title { font-size: 1rem; font-weight: 800; color: var(--text); line-height: 1.3; margin-bottom: 0.4rem; word-break: break-word; }
+    .sidebar-unit-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 2px; }
+    .sidebar-unit-meta span { display: inline-flex; align-items: center; gap: 5px; }
+    .sidebar-unit-meta i { color: var(--green); font-size: 0.68rem; }
+
+    .sidebar-activity-title {
+      padding: 0.7rem 1.1rem 0.4rem;
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--text-muted);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-shrink: 0;
+    }
+    .sidebar-activity-count {
+      font-size: 0.7rem; font-weight: 800;
+      background: var(--green-light); color: var(--green-dark);
+      padding: 1px 8px; border-radius: 999px;
+    }
+    .activity-nav-list { flex: 1; overflow-y: auto; padding: 0.4rem 0.6rem 0.6rem; }
+    .activity-nav-list::-webkit-scrollbar { width: 6px; }
+    .activity-nav-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .activity-nav-btn {
+      width: 100%; background: var(--bg-soft);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.7rem 0.8rem; margin-bottom: 0.5rem;
+      cursor: pointer; transition: var(--transition);
+      font-family: inherit; text-align: left;
+      display: flex; align-items: center; gap: 0.6rem;
+      position: relative;
+    }
+    .activity-nav-btn:hover { border-color: var(--green); background: var(--green-lighter); }
+    .activity-nav-btn.active { border-color: var(--green); background: var(--green-lighter); box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
+    .activity-nav-btn.active::before {
+      content: ''; position: absolute; left: -1px; top: 20%; bottom: 20%;
+      width: 3px; background: var(--green); border-radius: 0 3px 3px 0;
+    }
+    .nav-num-circle {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: white; border: 1px solid var(--border);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 800; color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .activity-nav-btn.active .nav-num-circle { background: var(--green); color: white; border-color: var(--green); }
+    .nav-info { flex: 1; min-width: 0; }
+    .nav-title { font-size: 0.82rem; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 2px; word-break: break-word; }
+    .nav-type {
+      display: inline-block; font-size: 0.62rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.3px;
+      padding: 1px 6px; border-radius: 3px;
+    }
+    .nav-type.materi { background: #dbeafe; color: #1e40af; }
+    .nav-type.lkpd { background: #fef3c7; color: #92400e; }
+    .nav-type.asesmen { background: #ede9fe; color: #6d28d9; }
+    .nav-type.refleksi { background: #fce7f3; color: #be185d; }
+    .nav-type.diskusi { background: #d1fae5; color: #047857; }
+    .nav-type.custom { background: #f1f5f9; color: #475569; }
+
+    /* MAIN */
+    .preview-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+    .preview-content { flex: 1; overflow-y: auto; padding: 1.5rem; }
+    .preview-content::-webkit-scrollbar { width: 8px; }
+    .preview-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    .activity-render {
+      max-width: 820px; margin: 0 auto;
+      background: var(--surface); border-radius: var(--radius);
+      border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .activity-render-header {
+      padding: 1.3rem 1.8rem;
+      background: var(--bg-soft);
+      border-bottom: 2px solid var(--green-light);
+      position: relative;
+    }
+    .activity-render-header::before {
+      content: ''; position: absolute; left: 0; top: 1rem; bottom: 1rem;
+      width: 4px; background: var(--green); border-radius: 0 3px 3px 0;
+    }
+    .activity-render-eyebrow {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 6px;
+      font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+    .activity-render-eyebrow.materi { background: #dbeafe; color: #1e40af; }
+    .activity-render-eyebrow.lkpd { background: #fef3c7; color: #92400e; }
+    .activity-render-eyebrow.asesmen { background: #ede9fe; color: #6d28d9; }
+    .activity-render-eyebrow.refleksi { background: #fce7f3; color: #be185d; }
+    .activity-render-eyebrow.diskusi { background: #d1fae5; color: #047857; }
+    .activity-render-eyebrow.custom { background: #f1f5f9; color: #475569; }
+    .activity-render-title { font-size: 1.3rem; font-weight: 800; color: var(--text); line-height: 1.3; padding-left: 0.6rem; word-break: break-word; }
+    .activity-render-body { padding: 1.8rem; }
+    .component-block { margin-bottom: 1.4rem; line-height: 1.7; }
+    .component-block:last-child { margin-bottom: 0; }
+
+    /* Typography */
+    .component-block h1, .component-block h2, .component-block h3 {
+      color: var(--text); font-weight: 800; line-height: 1.3;
+      margin: 1rem 0 0.6rem;
+    }
+    .component-block h1 { font-size: 1.8rem; }
+    .component-block h2 { font-size: 1.4rem; }
+    .component-block h3 { font-size: 1.15rem; }
+    .component-block p { color: var(--text-secondary); margin-bottom: 0.6rem; }
+    .component-block ul, .component-block ol {
+      margin: 0.5rem 0 0.5rem 1.5rem; color: var(--text-secondary);
+    }
+    .component-block li { margin-bottom: 0.3rem; }
+    .component-block strong { color: var(--text); font-weight: 700; }
+    .component-block a { color: var(--green-dark); text-decoration: underline; text-decoration-color: rgba(16,185,129,0.3); }
+    .component-block a:hover { text-decoration-color: var(--green); }
+    .component-block blockquote {
+      border-left: 4px solid var(--green); background: var(--green-lighter);
+      padding: 0.8rem 1.2rem; margin: 0.8rem 0;
+      border-radius: 0 8px 8px 0;
+      color: var(--text-secondary); font-style: italic;
+    }
+    .component-block pre {
+      background: #0f172a; color: #e2e8f0;
+      padding: 1rem; border-radius: 8px;
+      overflow-x: auto; font-family: 'Courier New', monospace;
+      font-size: 0.85rem; line-height: 1.5;
+    }
+    .component-block img { max-width: 100%; height: auto; border-radius: 8px; display: block; margin: 0.5rem 0; }
+
+    .heading-render-block {
+      font-weight: 800; line-height: 1.3;
+      margin: 0.8rem 0 0.4rem; padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+      word-break: break-word;
+    }
+    .heading-render-block.h1 { font-size: 1.8rem; }
+    .heading-render-block.h2 { font-size: 1.4rem; }
+    .heading-render-block.h3 { font-size: 1.15rem; }
+
+    /* Footer nav */
+    .preview-footer-nav {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 0.9rem 1.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem; flex-wrap: wrap; flex-shrink: 0;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+    }
+    .nav-info-text { font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+    .nav-info-text strong { color: var(--text); }
+    .footer-nav-btn {
+      padding: 0.6rem 1.2rem; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1.5px solid;
+    }
+    .footer-nav-btn.primary { background: var(--green); border-color: var(--green); color: white; }
+    .footer-nav-btn.primary:hover:not(:disabled) {
+      background: var(--green-dark); border-color: var(--green-dark);
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+    }
+    .footer-nav-btn.secondary { background: var(--surface); border-color: var(--border); color: var(--text-secondary); }
+    .footer-nav-btn.secondary:hover:not(:disabled) { border-color: var(--green); color: var(--green-dark); }
+    .footer-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Empty + loading */
+    .empty-state { text-align: center; padding: 4rem 1.5rem; color: var(--text-muted); max-width: 500px; margin: 0 auto; }
+    .empty-state .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-state h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 0.85rem; line-height: 1.6; }
+    .empty-state .sub-text { font-size: 0.78rem; margin-top: 0.5rem; color: var(--text-muted); }
+
+    .loading-box {
+      display: flex; align-items: center; justify-content: center;
+      height: 100vh; flex-direction: column; gap: 1rem;
+      color: var(--text-muted); font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    @media (max-width: 900px) { .preview-sidebar { width: 240px; } }
+    @media (max-width: 768px) {
+      .preview-layout { flex-direction: column; height: auto; min-height: calc(100vh - 60px); }
+      .preview-sidebar { width: 100%; max-height: 300px; border-right: none; border-bottom: 1px solid var(--border); }
+      .preview-content { padding: 1rem; }
+      .preview-footer-nav { padding: 0.8rem 1rem; }
+      .footer-nav-btn { padding: 0.5rem 1rem; font-size: 0.78rem; }
+      .nav-info-text { width: 100%; justify-content: center; }
+      .preview-topbar { flex-wrap: wrap; height: auto; padding: 0.5rem; gap: 0.5rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div id="loadingScreen" class="loading-box">
+    <div class="spinner"></div>
+    <p>Memuat preview...</p>
+  </div>
+
+  <div id="previewScreen" class="hidden">
+    <div class="preview-topbar">
+      <button class="btn-back" onclick="exitPreview()"><i class="fas fa-arrow-left"></i> Kembali</button>
+      <div class="topbar-title">
+        <div class="topbar-title-main" id="topbarTitle">-</div>
+        <div class="topbar-title-sub" id="topbarSub">-</div>
+      </div>
+      <select id="kelasSelector" class="kelas-selector" onchange="onKelasChange()" title="Pilih kelas untuk preview">
+        <option value="">Memuat...</option>
+      </select>
+      <span class="preview-mode-badge"><i class="fas fa-eye"></i> Preview</span>
+    </div>
+
+    <div class="preview-layout">
+      <aside class="preview-sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-eyebrow"><i class="fas fa-book-open"></i> Unit Pembelajaran</div>
+          <div class="sidebar-unit-title" id="sidebarUnitTitle">-</div>
+          <div class="sidebar-unit-meta" id="sidebarUnitMeta"></div>
+        </div>
+        <div class="sidebar-activity-title">
+          <span>Daftar Aktivitas</span>
+          <span class="sidebar-activity-count" id="activityCountBadge">0</span>
+        </div>
+        <div class="activity-nav-list" id="activityNavList"></div>
+      </aside>
+
+      <main class="preview-main">
+        <div class="preview-content" id="previewContent">
+          <div class="empty-state">
+            <span class="emoji">👈</span>
+            <h3>Pilih Aktivitas</h3>
+            <p>Klik salah satu aktivitas di sidebar untuk melihat kontennya.</p>
+          </div>
+        </div>
+        <div class="preview-footer-nav" id="footerNav" style="display:none;">
+          <div class="nav-info-text">
+            <i class="fas fa-list-ol" style="color:var(--green);"></i>
+            Aktivitas <strong id="navCurrentNum">1</strong> dari <strong id="navTotalNum">1</strong>
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button class="footer-nav-btn secondary" id="btnPrevAct" onclick="goToPrevActivity()"><i class="fas fa-arrow-left"></i> Sebelumnya</button>
+            <button class="footer-nav-btn primary" id="btnNextAct" onclick="goToNextActivity()">Berikutnya <i class="fas fa-arrow-right"></i></button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let currentUnit = null;
+    let unitClasses = [];          // semua kelas yang terkait unit
+    let selectedClassId = null;
+    let activities = [];           // activities yang akan dirender (dari snapshot ATAU live)
+    let activeActivityId = null;
+    let renderSource = 'live';     // 'snapshot' | 'live'
+
+    const ACTIVITY_TYPE_LABEL = {
+      materi: 'Materi', lkpd: 'LKPD', asesmen: 'Asesmen',
+      refleksi: 'Refleksi', diskusi: 'Diskusi', custom: 'Custom'
+    };
+    const ACTIVITY_TYPE_ICON = {
+      materi: 'fa-book', lkpd: 'fa-file-pen', asesmen: 'fa-clipboard-check',
+      refleksi: 'fa-brain', diskusi: 'fa-comments', custom: 'fa-wrench'
+    };
+
+    // ============================================
+    // DRIVE URL CONVERTER
+    // ============================================
+    function extractDriveId(url) {
+      if (!url) return null;
+      const patterns = [
+        /\/file\/d\/([a-zA-Z0-9_-]+)/,
+        /\/d\/([a-zA-Z0-9_-]+)/,
+        /[?&]id=([a-zA-Z0-9_-]+)/
+      ];
+      for (const p of patterns) {
+        const m = url.match(p);
+        if (m) return m[1];
+      }
+      return null;
+    }
+    function convertDriveUrl(url, type = 'image') {
+      if (!url) return '';
+      const id = extractDriveId(url);
+      if (!id) return url;
+      if (type === 'image') return `https://drive.google.com/thumbnail?id=${id}&sz=w1600`;
+      if (type === 'video') return `https://drive.google.com/file/d/${id}/preview`;
+      return url;
+    }
+    function toEmbedVideoUrl(url) {
+      if (!url) return '';
+      const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+      const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+      if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+      const driveId = extractDriveId(url);
+      if (driveId) return `https://drive.google.com/file/d/${driveId}/preview`;
+      if (url.includes('embed') || url.includes('/iframe')) return url;
+      return '';
+    }
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+
+      const unitId = new URLSearchParams(window.location.search).get('unitId');
+      if (!unitId) {
+        document.getElementById('loadingScreen').innerHTML = '<p style="color:var(--danger);">Parameter unitId tidak ditemukan.</p>';
+        return;
+      }
+
+      try {
+        currentUnit = await getUnitById(unitId);
+        if (!currentUnit) throw new Error('Unit tidak ditemukan.');
+        const teacherId = currentUnit.annual_plans?.teacher_id;
+        if (String(teacherId) !== String(currentUser.id)) throw new Error('Anda tidak berhak melihat unit ini.');
+
+        document.getElementById('topbarTitle').textContent = currentUnit.title;
+        document.getElementById('topbarSub').textContent =
+          (currentUnit.annual_plans?.classes?.name || '-') + ' · ' +
+          (currentUnit.annual_plans?.subjects?.name || '-');
+        document.getElementById('sidebarUnitTitle').textContent = currentUnit.title;
+        document.getElementById('sidebarUnitMeta').innerHTML = `
+          <span><i class="fas fa-school"></i> ${escapeHtml(currentUnit.annual_plans?.classes?.name || '-')}</span>
+          <span><i class="fas fa-book"></i> ${escapeHtml(currentUnit.annual_plans?.subjects?.name || '-')}</span>
+          <span><i class="fas fa-graduation-cap"></i> Semester ${escapeHtml(String(currentUnit.annual_plans?.semester || '-'))}</span>
+        `;
+
+        // Load kelas terkait
+        await loadKelasSelector();
+
+        // Render
+        await loadAndRender();
+        
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('previewScreen').classList.remove('hidden');
+      } catch (err) {
+        console.error('Init error:', err);
+        document.getElementById('loadingScreen').innerHTML = `<div style="text-align:center; color:var(--danger); padding:2rem;"><i class="fas fa-triangle-exclamation" style="font-size:2rem; margin-bottom:1rem;"></i><p>${escapeHtml(err.message)}</p><button class="btn-back" onclick="exitPreview()" style="margin-top:1rem;"><i class="fas fa-arrow-left"></i> Kembali</button></div>`;
+      }
+    })();
+
+    async function loadKelasSelector() {
+      try {
+        unitClasses = await getUnitClasses(currentUnit.id);
+        const sel = document.getElementById('kelasSelector');
+        if (unitClasses.length === 0) {
+          sel.innerHTML = '<option value="">Belum ada kelas</option>';
+          sel.disabled = true;
+          return;
+        }
+        sel.innerHTML = unitClasses.map(uc => {
+          const name = uc.classes?.name || '-';
+          const grade = uc.classes?.grade ? ' — ' + uc.classes.grade : '';
+          const status = uc.is_published 
+            ? '✓ Published' 
+            : '○ Draft';
+          return `<option value="${uc.class_id}">${escapeHtml(name + grade)} (${status})</option>`;
+        }).join('');
+        // Default: pilih kelas pertama yang published, kalau tidak ada pilih pertama
+        const firstPublished = unitClasses.find(uc => uc.is_published);
+        selectedClassId = String((firstPublished || unitClasses[0]).class_id);
+        sel.value = selectedClassId;
+      } catch (err) {
+        console.error('Load kelas selector error:', err);
+      }
+    }
+
+    function onKelasChange() {
+      const sel = document.getElementById('kelasSelector');
+      selectedClassId = sel.value;
+      loadAndRender();
+    }
+
+    async function loadAndRender() {
+      if (!selectedClassId) {
+        document.getElementById('activityNavList').innerHTML = '<div style="padding:1rem; text-align:center; font-size:0.8rem; color:var(--text-muted);">Pilih kelas</div>';
+        return;
+      }
+
+      const uc = unitClasses.find(u => String(u.class_id) === String(selectedClassId));
+      if (!uc) {
+        document.getElementById('activityNavList').innerHTML = '<div style="padding:1rem; text-align:center; font-size:0.8rem; color:var(--text-muted);">Kelas tidak ditemukan</div>';
+        return;
+      }
+
+      const list = document.getElementById('activityNavList');
+      list.innerHTML = '<div style="padding:1rem; text-align:center;"><div class="spinner"></div></div>';
+
+      // Strategi: pakai snapshot kalau ada, fallback ke live
+      let useSnapshot = uc.is_published && uc.published_version && uc.published_version.activities;
+
+      if (useSnapshot) {
+        renderSource = 'snapshot';
+        activities = uc.published_version.activities.map(a => ({
+          id: a.id,
+          title: a.title,
+          type: a.type,
+          order_index: a.order_index,
+          _components: a.components || []    // sudah include components
+        }));
+        document.getElementById('activityCountBadge').textContent = activities.length;
+        renderActivityList();
+        if (activities.length > 0) {
+          activeActivityId = activities[0].id;
+          renderActivityFromSnapshot(activities[0]);
+          renderActivityList();
+          updateFooterNav();
+        } else {
+          document.getElementById('previewContent').innerHTML = `<div class="empty-state"><span class="emoji">📭</span><h3>Unit Masih Kosong</h3><p>Belum ada aktivitas di unit ini.</p></div>`;
+        }
+      } else {
+        // Fallback: baca live (untuk unit lama yang belum pernah publish)
+        renderSource = 'live';
+        try {
+          activities = await getUnitActivities(currentUnit.id);
+          document.getElementById('activityCountBadge').textContent = activities.length;
+          
+          if (activities.length === 0) {
+            document.getElementById('activityNavList').innerHTML = '';
+            document.getElementById('previewContent').innerHTML = `
+              <div class="empty-state">
+                <span class="emoji">📭</span>
+                <h3>Belum Ada Aktivitas</h3>
+                <p>Unit ini belum di-publish ke kelas ini.</p>
+                <p class="sub-text">Kembali ke editor dan klik "Publish" untuk mendistribusikan konten.</p>
+              </div>`;
+            return;
+          }
+
+          renderActivityList();
+          activeActivityId = activities[0].id;
+          await renderActivityFromLive(activities[0]);
+          renderActivityList();
+          updateFooterNav();
+        } catch (err) {
+          console.error('Load live activities error:', err);
+          document.getElementById('previewContent').innerHTML = `<div class="empty-state" style="color:var(--danger);"><p>Gagal memuat: ${escapeHtml(err.message)}</p></div>`;
+        }
+      }
+    }
+
+    // ============================================
+    // RENDER LIST
+    // ============================================
+    function renderActivityList() {
+      const list = document.getElementById('activityNavList');
+      if (activities.length === 0) {
+        list.innerHTML = '<div style="padding:1rem; text-align:center; font-size:0.8rem; color:var(--text-muted);">Kosong</div>';
+        return;
+      }
+      list.innerHTML = activities.map((a, idx) => {
+        const isActive = String(a.id) === String(activeActivityId);
+        const typeLabel = ACTIVITY_TYPE_LABEL[a.type] || a.type;
+        return `<button class="activity-nav-btn ${isActive ? 'active' : ''}" onclick="switchActivity('${a.id}')">
+          <span class="nav-num-circle">${idx + 1}</span>
+          <div class="nav-info">
+            <div class="nav-title">${escapeHtml(a.title)}</div>
+            <span class="nav-type ${a.type}">${typeLabel}</span>
+          </div>
+        </button>`;
+      }).join('');
+    }
+
+    async function switchActivity(activityId) {
+      if (String(activityId) === String(activeActivityId)) return;
+      activeActivityId = activityId;
+      renderActivityList();
+      
+      if (renderSource === 'snapshot') {
+        const act = activities.find(a => String(a.id) === String(activityId));
+        if (act) renderActivityFromSnapshot(act);
+      } else {
+        const act = activities.find(a => String(a.id) === String(activityId));
+        if (act) await renderActivityFromLive(act);
+      }
+      updateFooterNav();
+      document.getElementById('previewContent').scrollTop = 0;
+    }
+
+    // ============================================
+    // RENDER FROM SNAPSHOT
+    // ============================================
+    function renderActivityFromSnapshot(activity) {
+      const content = document.getElementById('previewContent');
+      const icon = ACTIVITY_TYPE_ICON[activity.type] || 'fa-file';
+      const typeLabel = ACTIVITY_TYPE_LABEL[activity.type] || activity.type;
+      const comps = activity._components || [];
+
+      const bodyHtml = comps.length === 0
+        ? `<div class="empty-state" style="padding:2rem 1rem;"><span class="emoji">📄</span><h3>Belum Ada Konten</h3><p>Aktivitas ini belum memiliki komponen.</p></div>`
+        : comps.map(c => `<div class="component-block">${renderComponentReadOnly(c.component_type, c.component_data || {})}</div>`).join('');
+
+      content.innerHTML = `
+        <div class="activity-render">
+          <div class="activity-render-header">
+            <div class="activity-render-eyebrow ${activity.type}"><i class="fas ${icon}"></i> ${typeLabel}</div>
+            <div class="activity-render-title">${escapeHtml(activity.title)}</div>
+          </div>
+          <div class="activity-render-body">${bodyHtml}</div>
+        </div>`;
+    }
+
+    // ============================================
+    // RENDER FROM LIVE
+    // ============================================
+    async function renderActivityFromLive(activity) {
+      const content = document.getElementById('previewContent');
+      const icon = ACTIVITY_TYPE_ICON[activity.type] || 'fa-file';
+      const typeLabel = ACTIVITY_TYPE_LABEL[activity.type] || activity.type;
+      content.innerHTML = '<div style="text-align:center; padding:3rem;"><div class="spinner"></div></div>';
+
+      let comps = [];
+      try {
+        comps = await getActivityComponents(activity.id);
+      } catch (err) {
+        content.innerHTML = `<div class="empty-state" style="color:var(--danger);"><p>Gagal memuat: ${escapeHtml(err.message)}</p></div>`;
+        return;
+      }
+
+      const bodyHtml = comps.length === 0
+        ? `<div class="empty-state" style="padding:2rem 1rem;"><span class="emoji">📄</span><h3>Belum Ada Konten</h3><p>Aktivitas ini belum memiliki komponen.</p></div>`
+        : comps.map(c => `<div class="component-block">${renderComponentReadOnly(c.component_type, c.component_data || {})}</div>`).join('');
+
+      content.innerHTML = `
+        <div class="activity-render">
+          <div class="activity-render-header">
+            <div class="activity-render-eyebrow ${activity.type}"><i class="fas ${icon}"></i> ${typeLabel}</div>
+            <div class="activity-render-title">${escapeHtml(activity.title)}</div>
+          </div>
+          <div class="activity-render-body">${bodyHtml}</div>
+        </div>`;
+    }
+
+    // ============================================
+    // COMPONENT RENDER (READ-ONLY) — dipakai oleh kedua sumber
+    // ============================================
+    function renderComponentReadOnly(type, data) {
+      if (type === 'text') {
+        return data.html || '<p style="color:var(--text-muted); font-style:italic;">(Konten kosong)</p>';
+      }
+
+      if (type === 'heading') {
+        const level = data.level || 'h2';
+        const text = data.text || '(Judul kosong)';
+        const color = data.color || '';
+        const align = data.align || 'left';
+        const styleArr = [];
+        if (color) styleArr.push('color: ' + color);
+        styleArr.push('text-align: ' + align);
+        return `<div class="heading-render-block ${level}" style="${styleArr.join('; ')}">${escapeHtml(text)}</div>`;
+      }
+
+      if (type === 'image') {
+        const url = data.url || '';
+        const alt = data.alt || '';
+        const caption = data.caption || '';
+        const align = data.align || 'center';
+        if (!url) return '';
+        const displayUrl = convertDriveUrl(url, 'image');
+        const alignMap = { left: 'flex-start', center: 'center', right: 'flex-end' };
+        return `<div style="display:flex; flex-direction:column; align-items:${alignMap[align]};">
+          <img src="${escapeHtml(displayUrl)}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div style="display:none; padding:0.7rem; background:#fef3c7; color:#92400e; border-radius:8px; font-size:0.8rem;">⚠️ Gambar gagal dimuat. Cek URL atau sharing file.</div>
+          ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; font-style:italic; margin-top:0.3rem;">${escapeHtml(caption)}</div>` : ''}
+        </div>`;
+      }
+
+      if (type === 'video') {
+        const url = data.url || '';
+        const caption = data.caption || '';
+        if (!url) return '';
+        const embedUrl = toEmbedVideoUrl(url);
+        if (!embedUrl) return `<p style="color:var(--danger); font-size:0.85rem;">⚠️ Video tidak dapat dimuat: ${escapeHtml(url)}</p>`;
+        return `<div>
+          <div style="position:relative; padding-bottom:56.25%; height:0; border-radius:8px; overflow:hidden; background:#000;">
+            <iframe src="${escapeHtml(embedUrl)}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          </div>
+          ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-top:0.4rem; font-style:italic;">${escapeHtml(caption)}</div>` : ''}
+        </div>`;
+      }
+
+      if (type === 'audio') {
+        const url = data.url || '';
+        const caption = data.caption || '';
+        if (!url) return '';
+        return `<div>
+          <audio controls style="width:100%; margin-bottom:0.4rem;"><source src="${escapeHtml(url)}" type="audio/mpeg"></audio>
+          ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; font-style:italic;">${escapeHtml(caption)}</div>` : ''}
+        </div>`;
+      }
+
+      if (type === 'table') {
+        const columns = data.columns || [];
+        const rows = data.rows || [];
+        const widths = data.widths || [];
+        if (columns.length === 0) return '';
+        return `<div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; font-size:0.85rem; table-layout:fixed;">
+            <thead><tr style="background:var(--green-lighter);">${columns.map((c, i) => `<th style="padding:0.55rem 0.75rem; border:1px solid var(--border); text-align:left; font-weight:700; color:var(--green-dark); ${widths[i] ? 'width:' + widths[i] + '%' : ''}">${escapeHtml(c)}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map(row => `<tr>${columns.map((_, i) => `<td style="padding:0.55rem 0.75rem; border:1px solid var(--border); word-break:break-word;">${escapeHtml(row[i] || '')}</td>`).join('')}</tr>`).join('')}</tbody>
+          </table>
+        </div>`;
+      }
+
+      if (type === 'note') {
+        const variant = data.variant || 'info';
+        const title = data.title || '';
+        const text = data.text || '';
+        if (!title && !text) return '';
+        const variantMap = {
+          info: { bg: '#dbeafe', color: '#1e40af', border: '#3b82f6', icon: 'fa-circle-info' },
+          success: { bg: '#d1fae5', color: '#047857', border: '#10b981', icon: 'fa-circle-check' },
+          warning: { bg: '#fef3c7', color: '#92400e', border: '#f59e0b', icon: 'fa-triangle-exclamation' },
+          danger: { bg: '#fee2e2', color: '#b91c1c', border: '#ef4444', icon: 'fa-circle-xmark' }
+        };
+        const v = variantMap[variant] || variantMap.info;
+        return `<div style="padding:0.9rem 1.1rem; background:${v.bg}; border-left:4px solid ${v.border}; border-radius:8px; color:${v.color};">
+          ${title ? `<div style="font-weight:800; margin-bottom:0.3rem; display:flex; align-items:center; gap:6px;"><i class="fas ${v.icon}"></i> ${escapeHtml(title)}</div>` : ''}
+          <div style="font-size:0.88rem; line-height:1.6; white-space:pre-wrap;">${escapeHtml(text)}</div>
+        </div>`;
+      }
+
+      if (type === 'accordion') {
+        const items = data.items || [];
+        if (items.length === 0) return '';
+        return items.map(it => `<details style="margin-bottom:0.5rem; background:var(--bg-soft); border-radius:8px; border:1px solid var(--border);">
+          <summary style="padding:0.7rem 1rem; cursor:pointer; font-weight:700; font-size:0.88rem; color:var(--text);">${escapeHtml(it.title || 'Tanpa judul')}</summary>
+          <div style="padding:0.8rem 1rem; border-top:1px solid var(--border); font-size:0.85rem; color:var(--text-secondary); line-height:1.6; white-space:pre-wrap;">${escapeHtml(it.content || '')}</div>
+        </details>`).join('');
+      }
+
+      if (type === 'file') {
+        const url = data.url || '';
+        const label = data.label || 'Download File';
+        const description = data.description || '';
+        if (!url) return '';
+        return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="text-decoration:none; display:block;">
+          <div style="display:flex; align-items:center; gap:0.9rem; padding:0.9rem 1.1rem; background:var(--green-lighter); border:1px solid var(--green-light); border-radius:8px;">
+            <div style="width:44px; height:44px; background:var(--green); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;"><i class="fas fa-file-arrow-down"></i></div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:700; font-size:0.88rem; color:var(--green-dark);">${escapeHtml(label)}</div>
+              ${description ? `<div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(description)}</div>` : ''}
+            </div>
+            <i class="fas fa-download" style="color:var(--green);"></i>
+          </div>
+        </a>`;
+      }
+
+      if (type === 'embed') {
+        const url = data.url || '';
+        const height = data.height || 500;
+        if (!url) return '';
+        return `<iframe src="${escapeHtml(url)}" style="width:100%; height:${height}px; border:1px solid var(--border); border-radius:8px; background:white;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+      }
+
+      return `<p style="color:var(--text-muted); font-style:italic; font-size:0.85rem;">[Komponen "${escapeHtml(type)}" — belum didukung]</p>`;
+    }
+
+    // ============================================
+    // FOOTER NAV
+    // ============================================
+    function updateFooterNav() {
+      const footer = document.getElementById('footerNav');
+      if (activities.length === 0) { footer.style.display = 'none'; return; }
+      footer.style.display = 'flex';
+      const idx = activities.findIndex(a => String(a.id) === String(activeActivityId));
+      document.getElementById('navCurrentNum').textContent = idx + 1;
+      document.getElementById('navTotalNum').textContent = activities.length;
+      document.getElementById('btnPrevAct').disabled = idx <= 0;
+      document.getElementById('btnNextAct').disabled = idx >= activities.length - 1;
+    }
+
+    function goToPrevActivity() {
+      const idx = activities.findIndex(a => String(a.id) === String(activeActivityId));
+      if (idx > 0) switchActivity(activities[idx - 1].id);
+    }
+    function goToNextActivity() {
+      const idx = activities.findIndex(a => String(a.id) === String(activeActivityId));
+      if (idx < activities.length - 1) switchActivity(activities[idx + 1].id);
+    }
+
+    // ============================================
+    // EXIT
+    // ============================================
+    function exitPreview() {
+      if (window.self !== window.top) {
+        window.parent.postMessage({ type: 'GURU_GOTO', target: 'editor', params: { unitId: currentUnit.id } }, '*');
+      } else {
+        window.location.href = 'unit-editor.html?embed=1&unitId=' + currentUnit.id;
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

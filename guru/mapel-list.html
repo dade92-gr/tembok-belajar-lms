@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapel Saya — Tembok Belajar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #10b981;
+      --green-dark: #047857;
+      --green-light: #d1fae5;
+      --green-lighter: #ecfdf5;
+      --primary: #3b82f6;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    body.tb-embed .page-toolbar-left { gap: 0.3rem; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--green); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 2fr auto;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .filter-group label i { color: var(--green); }
+    .filter-input {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .btn-reset {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-muted); padding: 0.55rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-reset:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+    .info-bar {
+      background: var(--green-lighter); border-radius: 10px;
+      padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.82rem;
+      color: var(--green-dark); font-weight: 500; display: flex;
+      align-items: center; gap: 8px;
+      border: 1px solid rgba(16,185,129,0.2); flex-wrap: wrap;
+    }
+    .info-bar i { color: var(--green); }
+    .info-bar strong { color: var(--text); }
+
+    /* MAPEL GRID */
+    .mapel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .mapel-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.3rem;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+    .mapel-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: var(--green);
+    }
+    .mapel-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--green);
+    }
+    .mapel-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 0.7rem;
+      gap: 0.6rem;
+    }
+    .mapel-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      background: var(--green-lighter);
+      border: 1px solid var(--green-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .mapel-card-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 0.2rem;
+    }
+    .mapel-card-code {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      background: var(--green-lighter);
+      color: var(--green-dark);
+      border: 1px solid var(--green-light);
+    }
+    .mapel-card-kelas-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 0.6rem;
+      margin-bottom: 0.9rem;
+    }
+    .kelas-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .kelas-badge i { font-size: 0.65rem; }
+    .mapel-card-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--border);
+    }
+    .mapel-stat {
+      text-align: center;
+    }
+    .mapel-stat-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--green-dark);
+      line-height: 1;
+    }
+    .mapel-stat-label {
+      font-size: 0.66rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-top: 3px;
+    }
+    .mapel-card-actions {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.9rem;
+    }
+    .btn-open {
+      flex: 1;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      background: var(--green);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .btn-open:hover {
+      background: var(--green-dark);
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+    }
+
+    /* EMPTY / LOADING */
+    .empty-row {
+      text-align: center; padding: 3rem 1rem; color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+    .empty-row .emoji {
+      font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.6;
+    }
+    .empty-row h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-row p { font-size: 0.85rem; line-height: 1.6; max-width: 400px; margin: 0 auto; }
+    .loading-box {
+      text-align: center; padding: 4rem 1rem; color: var(--text-muted);
+    }
+    .spinner {
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .mapel-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-book"></i>
+          <span>
+            Mapel Saya
+            <small>Semua mata pelajaran yang Anda ampu di sekolah ini</small>
+          </span>
+        </h1>
+      </div>
+    </div>
+
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat mapel...</p>
+    </div>
+
+    <div id="pageContent" class="hidden">
+      <div class="filter-card">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="searchInput"><i class="fas fa-search"></i> Cari Mapel</label>
+            <input type="text" id="searchInput" class="filter-input" placeholder="Cari nama atau kode mapel..." oninput="applyFilter()">
+          </div>
+          <div class="filter-group">
+            <button class="btn-reset" onclick="resetFilter()">
+              <i class="fas fa-rotate-left"></i> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-bar">
+        <i class="fas fa-info-circle"></i>
+        <span>Total: <strong id="totalCount">0</strong> mapel · Menampilkan: <strong id="shownCount">0</strong></span>
+      </div>
+
+      <div class="mapel-grid" id="mapelGrid"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let allSubjects = [];       // [{ subject, classes: [], unitCount, publishedCount }]
+    let filteredSubjects = [];
+    let currentUser = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+
+      await loadSubjects();
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    async function loadSubjects() {
+      const grid = document.getElementById('mapelGrid');
+      grid.innerHTML = '<div class="empty-row"><div class="spinner"></div><p>Memuat...</p></div>';
+
+      try {
+        const assignments = await getMyTeachingAssignments(currentUser.id);
+
+        if (!assignments || assignments.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-row">
+              <span class="emoji">📚</span>
+              <h3>Belum Ada Mapel Diampu</h3>
+              <p>Anda belum ditugaskan mengampu mapel. Hubungi operator sekolah.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Group by subject
+        const bySubject = {};
+        assignments.forEach(a => {
+          if (!a.subjects) return;
+          const sid = String(a.subject_id);
+          if (!bySubject[sid]) {
+            bySubject[sid] = {
+              subject: a.subjects,
+              classes: []
+            };
+          }
+          if (a.classes) bySubject[sid].classes.push(a.classes);
+        });
+
+        // Hitung unit per subject via annual_plans
+        let plans = [];
+        try { plans = await getMyAnnualPlans(currentUser.id); } catch (e) {}
+
+        const plansBySubject = {};
+        plans.forEach(p => {
+          const sid = String(p.subject_id);
+          if (!plansBySubject[sid]) plansBySubject[sid] = [];
+          plansBySubject[sid].push(p);
+        });
+
+        allSubjects = await Promise.all(Object.entries(bySubject).map(async ([sid, data]) => {
+          const subjectPlans = plansBySubject[sid] || [];
+          let unitCount = 0, publishedCount = 0, draftCount = 0;
+          for (const plan of subjectPlans) {
+            try {
+              const units = await getUnits(plan.id);
+              unitCount += units.length;
+              publishedCount += units.filter(u => u.status === 'published').length;
+              draftCount += units.filter(u => u.status === 'draft').length;
+            } catch (e) {}
+          }
+          return {
+            subject: data.subject,
+            classes: data.classes,
+            unitCount,
+            publishedCount,
+            draftCount
+          };
+        }));
+
+        // Sort by name
+        allSubjects.sort((a, b) =>
+          (a.subject.name || '').localeCompare(b.subject.name || '')
+        );
+
+        applyFilter();
+      } catch (err) {
+        console.error('Load subjects error:', err);
+        grid.innerHTML = `<div class="empty-row" style="color:var(--danger);">Gagal memuat: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function applyFilter() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+
+      filteredSubjects = allSubjects.filter(s => {
+        const name = (s.subject.name || '').toLowerCase();
+        const code = (s.subject.code || '').toLowerCase();
+        return !keyword || name.includes(keyword) || code.includes(keyword);
+      });
+
+      renderGrid();
+    }
+
+    function resetFilter() {
+      document.getElementById('searchInput').value = '';
+      applyFilter();
+    }
+
+    function renderGrid() {
+      document.getElementById('totalCount').textContent = allSubjects.length;
+      document.getElementById('shownCount').textContent = filteredSubjects.length;
+
+      const grid = document.getElementById('mapelGrid');
+
+      if (filteredSubjects.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-row">
+            <span class="emoji">🔍</span>
+            <h3>Tidak Ada Mapel Cocok</h3>
+            <p>Coba ubah kata kunci pencarian Anda.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filteredSubjects.map(s => {
+        const kelasNames = [...new Set(s.classes.map(c => c.name))].filter(Boolean);
+        const kelasBadges = kelasNames.map(n =>
+          `<span class="kelas-badge"><i class="fas fa-school"></i> ${escapeHtml(n)}</span>`
+        ).join('');
+
+        return `
+          <div class="mapel-card" onclick="openWorkspace(${s.subject.id})">
+            <div class="mapel-card-header">
+              <div style="flex:1; min-width:0;">
+                <div class="mapel-card-title">${escapeHtml(s.subject.name)}</div>
+                ${s.subject.code ? `<span class="mapel-card-code">${escapeHtml(s.subject.code)}</span>` : ''}
+              </div>
+              <div class="mapel-icon"><i class="fas fa-book"></i></div>
+            </div>
+            <div class="mapel-card-kelas-list">
+              ${kelasBadges || '<span style="font-size:0.75rem; color:var(--text-muted);">Tidak ada kelas</span>'}
+            </div>
+            <div class="mapel-card-stats">
+              <div class="mapel-stat">
+                <div class="mapel-stat-value">${s.unitCount}</div>
+                <div class="mapel-stat-label">Total Unit</div>
+              </div>
+              <div class="mapel-stat">
+                <div class="mapel-stat-value" style="color:var(--green-dark);">${s.publishedCount}</div>
+                <div class="mapel-stat-label">Published</div>
+              </div>
+              <div class="mapel-stat">
+                <div class="mapel-stat-value" style="color:var(--warning);">${s.draftCount}</div>
+                <div class="mapel-stat-label">Draft</div>
+              </div>
+            </div>
+            <div class="mapel-card-actions">
+              <button class="btn-open" onclick="event.stopPropagation(); openWorkspace(${s.subject.id})">
+                <i class="fas fa-arrow-right"></i> Buka Workspace
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openWorkspace(subjectId) {
+      if (window.self !== window.top) {
+        window.parent.postMessage({
+          type: 'GURU_GOTO',
+          target: 'workspace',
+          params: { subjectId }
+        }, '*');
+      } else {
+        window.location.href = 'mapel-workspace.html?embed=1&subjectId=' + subjectId;
+      }
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

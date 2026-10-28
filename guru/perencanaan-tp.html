@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perencanaan TP — Tembok Belajar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #10b981;
+      --green-dark: #047857;
+      --green-light: #d1fae5;
+      --green-lighter: #ecfdf5;
+      --primary: #3b82f6;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--green); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+    .btn-primary {
+      background: var(--green); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--green-dark);
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger {
+      background: var(--danger); color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--green);
+      color: var(--green); padding: 0.55rem 1.1rem; border-radius: 8px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--green-light); }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition); font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover { background: var(--green-light); border-color: var(--green); color: var(--green); }
+    .btn-icon.danger:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+
+    /* ========== TWO VIEW: LIST / DETAIL ========== */
+    .view-list { display: block; }
+    .view-detail { display: none; }
+    body.showing-detail .view-list { display: none; }
+    body.showing-detail .view-detail { display: block; }
+
+    /* ========== PLAN CARD GRID ========== */
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .plan-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.3rem;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+    .plan-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: var(--green);
+    }
+    .plan-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--green);
+    }
+    .plan-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 0.6rem;
+      margin-bottom: 0.7rem;
+    }
+    .plan-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: var(--green-lighter);
+      border: 1px solid var(--green-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .plan-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.3;
+      flex: 1;
+    }
+    .plan-subject {
+      font-size: 0.82rem;
+      color: var(--green-dark);
+      font-weight: 700;
+      margin-bottom: 0.1rem;
+    }
+    .plan-class {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .plan-class i { color: var(--green); font-size: 0.7rem; }
+    .plan-meta {
+      display: flex;
+      gap: 1rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.7rem;
+    }
+    .plan-meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .plan-meta i { color: var(--green); font-size: 0.7rem; }
+    .plan-meta strong { color: var(--text); }
+    .plan-actions {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .btn-open-plan {
+      flex: 1;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      background: var(--green);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .btn-open-plan:hover { background: var(--green-dark); }
+    .btn-open-plan.secondary {
+      background: white;
+      color: var(--green);
+      border: 1px solid var(--green);
+    }
+    .btn-open-plan.secondary:hover { background: var(--green); color: white; }
+
+    /* ========== EMPTY / LOADING ========== */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 1.5rem;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 2px dashed var(--border);
+    }
+    .empty-state .emoji {
+      font-size: 4rem; display: block; margin-bottom: 1rem; opacity: 0.6;
+    }
+    .empty-state h3 { font-size: 1.2rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 0.85rem; line-height: 1.6; max-width: 450px; margin: 0 auto 1.2rem; color: var(--text-muted); }
+
+    .loading-box {
+      text-align: center; padding: 4rem 1rem; color: var(--text-muted);
+    }
+    .spinner {
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    /* ========== DETAIL VIEW ========== */
+    .detail-header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .detail-header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 5px; height: 100%;
+      background: linear-gradient(to bottom, var(--green), var(--green-light));
+    }
+    .detail-header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .detail-header-info h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+      line-height: 1.3;
+    }
+    .detail-header-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+    .detail-header-meta span {
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .detail-header-meta i { color: var(--green); }
+    .detail-header-meta strong { color: var(--text); }
+
+    /* ========== PANEL ========== */
+    .panel {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.2rem;
+      overflow: hidden;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.1rem 1.4rem;
+      background: var(--bg-soft);
+      border-bottom: 2px solid var(--green-light);
+      position: relative;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .panel-header::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 1rem;
+      bottom: 1rem;
+      width: 3px;
+      background: var(--green);
+      border-radius: 0 3px 3px 0;
+    }
+    .panel-header > div:first-child {
+      display: flex; flex-direction: column; padding-left: 0.6rem;
+    }
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .panel-title i { color: var(--green); font-size: 1rem; }
+    .panel-subtitle { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .panel-body { padding: 1.2rem 1.4rem; }
+
+    /* ========== TP LIST ========== */
+    .tp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .tp-item {
+      background: var(--bg-soft);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      border-left: 3px solid var(--green);
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 0.9rem;
+      transition: var(--transition);
+    }
+    .tp-item:hover { background: var(--green-lighter); }
+    .tp-content { flex: 1; min-width: 0; }
+    .tp-code {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--green);
+      color: white;
+      margin-bottom: 0.4rem;
+    }
+    .tp-desc {
+      font-size: 0.88rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .tp-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    /* ========== UNIT MINI LIST ========== */
+    .unit-mini-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .unit-mini-item {
+      background: var(--bg-soft);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      border-left: 3px solid var(--border);
+    }
+    .unit-mini-item.status-published { border-left-color: var(--green); }
+    .unit-mini-item.status-draft { border-left-color: var(--warning); }
+    .unit-mini-item.status-archived { border-left-color: #94a3b8; }
+    .unit-mini-name {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--text);
+      flex: 1;
+    }
+    .unit-mini-status {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .unit-mini-status.published { background: var(--green-light); color: var(--green-dark); }
+    .unit-mini-status.draft { background: #fef3c7; color: #92400e; }
+    .unit-mini-status.archived { background: #e2e8f0; color: #475569; }
+
+    /* ========== MODAL ========== */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem; width: 100%; max-width: 560px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--text); margin-bottom: 1rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--green); }
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem;
+    }
+    .form-label {
+      display: block; font-size: 0.75rem; font-weight: 700;
+      margin-bottom: 0.45rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-label .req { color: var(--danger); }
+    .form-input, .form-textarea, .form-select {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.9rem;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .form-input:disabled { background: var(--bg); cursor: not-allowed; }
+    .form-textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 35px;
+      cursor: pointer;
+    }
+    .form-hint {
+      font-size: 0.72rem; color: var(--text-muted);
+      margin-top: -0.5rem; margin-bottom: 0.9rem;
+      padding-left: 4px; line-height: 1.5;
+    }
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    .form-row-2 > div { margin-bottom: 0; }
+    .form-row-2 .form-input, .form-row-2 .form-select { margin-bottom: 0.9rem; }
+    .alert {
+      margin-top: 1rem; padding: 0.75rem 1rem;
+      border-radius: 8px; font-size: 0.83rem; line-height: 1.5;
+    }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-success { background: var(--green-light); color: var(--green-dark); border: 1px solid #a7f3d0; }
+
+    /* ========== TOAST ========== */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--text); color: white;
+      padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--danger); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .plan-grid { grid-template-columns: 1fr; }
+      .form-row-2 { grid-template-columns: 1fr; }
+      .detail-header { padding: 1.1rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+
+    <!-- ========== VIEW: LIST ========== -->
+    <div class="view-list" id="viewList">
+      <div class="page-toolbar">
+        <div class="page-toolbar-left">
+          <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#perencanaan';return false;}">
+            <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+          </a>
+          <h1>
+            <i class="fas fa-clipboard-list"></i>
+            <span>
+              Perencanaan Pembelajaran
+              <small>Rencana tahunan + Tujuan Pembelajaran (TP) per kelas</small>
+            </span>
+          </h1>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn-primary" onclick="openCreatePlanModal()">
+            <i class="fas fa-plus"></i> Buat Perencanaan Baru
+          </button>
+        </div>
+      </div>
+
+      <div id="loadingPlans" class="loading-box">
+        <div class="spinner"></div>
+        <p>Memuat perencanaan...</p>
+      </div>
+
+      <div id="planContent" class="hidden">
+        <div class="plan-grid" id="planGrid"></div>
+      </div>
+    </div>
+
+    <!-- ========== VIEW: DETAIL ========== -->
+    <div class="view-detail" id="viewDetail">
+      <div class="page-toolbar" style="margin-bottom:1rem;">
+        <div class="page-toolbar-left">
+          <button class="btn-back" onclick="backToList()">
+            <i class="fas fa-arrow-left"></i> Kembali ke Daftar
+          </button>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn-outline" onclick="openCreateTPModal()">
+            <i class="fas fa-plus"></i> Tambah TP
+          </button>
+          <button class="btn-primary" onclick="openWorkspace()">
+            <i class="fas fa-book-open"></i> Buka Workspace
+          </button>
+        </div>
+      </div>
+
+      <div class="detail-header">
+        <div class="detail-header-content">
+          <div class="detail-header-info">
+            <h2 id="detailTitle">-</h2>
+            <div class="detail-header-meta" id="detailMeta"></div>
+          </div>
+          <button class="btn-icon danger" title="Hapus Perencanaan" onclick="openDeletePlanModal()" style="width:38px;height:38px;">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel TP -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              <i class="fas fa-bullseye"></i>
+              Tujuan Pembelajaran (TP)
+            </div>
+            <div class="panel-subtitle">Capaian yang ingin diraih siswa di unit-unit pembelajaran</div>
+          </div>
+          <span style="font-size:0.78rem; color:var(--text-muted);" id="tpCountLabel">0 TP</span>
+        </div>
+        <div class="panel-body">
+          <div id="tpListContainer">
+            <div class="tp-list" id="tpList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Unit (read-only, link ke workspace) -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              <i class="fas fa-layer-group"></i>
+              Unit Pembelajaran
+            </div>
+            <div class="panel-subtitle">Unit yang sudah dibuat untuk perencanaan ini</div>
+          </div>
+          <span style="font-size:0.78rem; color:var(--text-muted);" id="unitCountLabel">0 unit</span>
+        </div>
+        <div class="panel-body">
+          <div id="unitListContainer">
+            <div class="unit-mini-list" id="unitMiniList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== MODAL: CREATE PLAN ========== -->
+  <div class="modal-overlay" id="modalCreatePlan">
+    <div class="modal-card">
+      <h2><i class="fas fa-plus"></i> Buat Perencanaan Baru</h2>
+      <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">
+        Perencanaan = ikatan antara <strong>Mapel × Kelas × Tahun Ajaran × Semester</strong>.
+        Satu mapel bisa punya banyak perencanaan (untuk berbagai kelas/semester).
+      </p>
+
+      <label class="form-label" for="inputSubject">Mata Pelajaran <span class="req">*</span></label>
+      <select id="inputSubject" class="form-select" onchange="onSubjectChange()">
+        <option value="">-- Pilih Mapel --</option>
+      </select>
+
+      <label class="form-label" for="inputClass">Kelas <span class="req">*</span></label>
+      <select id="inputClass" class="form-select">
+        <option value="">-- Pilih Kelas --</option>
+      </select>
+      <p class="form-hint" id="classHint">Kelas yang Anda ampu untuk mapel ini</p>
+
+      <div class="form-row-2">
+        <div>
+          <label class="form-label" for="inputYear">Tahun Ajaran <span class="req">*</span></label>
+          <input type="text" id="inputYear" class="form-input" placeholder="2025/2026" maxlength="20">
+        </div>
+        <div>
+          <label class="form-label" for="inputSemester">Semester <span class="req">*</span></label>
+          <select id="inputSemester" class="form-select">
+            <option value="1">Semester 1 (Ganjil)</option>
+            <option value="2">Semester 2 (Genap)</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="form-label" for="inputCP">Capaian Pembelajaran (CP) <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(opsional)</span></label>
+      <textarea id="inputCP" class="form-textarea" placeholder="Deskripsi capaian pembelajaran umum untuk mapel ini..." maxlength="2000"></textarea>
+
+      <div id="createPlanError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeCreatePlanModal()">Batal</button>
+        <button class="btn-primary" id="btnSavePlan" onclick="savePlan()">
+          <i class="fas fa-save"></i> Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: CREATE TP ========== -->
+  <div class="modal-overlay" id="modalCreateTP">
+    <div class="modal-card" style="max-width:520px;">
+      <h2><i class="fas fa-bullseye"></i> Tambah Tujuan Pembelajaran</h2>
+
+      <label class="form-label" for="inputTPCode">Kode TP <span class="req">*</span></label>
+      <input type="text" id="inputTPCode" class="form-input" placeholder="Contoh: TP.1, TP.2" maxlength="20">
+
+      <label class="form-label" for="inputTPDesc">Deskripsi TP <span class="req">*</span></label>
+      <textarea id="inputTPDesc" class="form-textarea" placeholder="Contoh: Siswa mampu menjelaskan komponen ekosistem dan interaksinya..." maxlength="1000"></textarea>
+
+      <div id="createTPError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeCreateTPModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveTP" onclick="saveTP()">
+          <i class="fas fa-save"></i> Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: EDIT TP ========== -->
+  <div class="modal-overlay" id="modalEditTP">
+    <div class="modal-card" style="max-width:520px;">
+      <h2><i class="fas fa-pen"></i> Edit Tujuan Pembelajaran</h2>
+
+      <label class="form-label" for="editTPCode">Kode TP <span class="req">*</span></label>
+      <input type="text" id="editTPCode" class="form-input" maxlength="20">
+
+      <label class="form-label" for="editTPDesc">Deskripsi TP <span class="req">*</span></label>
+      <textarea id="editTPDesc" class="form-textarea" maxlength="1000"></textarea>
+
+      <div id="editTPError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeEditTPModal()">Batal</button>
+        <button class="btn-primary" id="btnUpdateTP" onclick="updateTP()">
+          <i class="fas fa-save"></i> Simpan Perubahan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: DELETE PLAN ========== -->
+  <div class="modal-overlay" id="modalDeletePlan">
+    <div class="modal-card" style="max-width:480px;">
+      <h2 style="color:var(--danger);"><i class="fas fa-trash"></i> Hapus Perencanaan?</h2>
+      <p id="deletePlanMessage" style="color:var(--text); margin-bottom:0.8rem;"></p>
+      <p style="font-size:0.75rem; color:#92400e; background:#fef3c7; padding:0.6rem 0.8rem; border-radius:8px; margin-bottom:1rem; border-left:3px solid var(--warning);">
+        ⚠️ Semua <strong>TP</strong> dan <strong>unit</strong> di dalam perencanaan ini akan ikut terhapus permanen.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeletePlanModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmDeletePlan" onclick="confirmDeletePlan()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: DELETE TP ========== -->
+  <div class="modal-overlay" id="modalDeleteTP">
+    <div class="modal-card" style="max-width:440px;">
+      <h2 style="color:var(--danger);"><i class="fas fa-trash"></i> Hapus TP?</h2>
+      <p id="deleteTPMessage" style="color:var(--text); margin-bottom:1rem;"></p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteTPModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmDeleteTP" onclick="confirmDeleteTP()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let allPlans = [];
+    let myAssignments = [];       // teacher_assign guru
+    let activePlan = null;        // plan yg sedang dibuka
+    let activeTPs = [];           // learning_objectives plan aktif
+    let activeUnits = [];         // unit di plan aktif
+    let editingTPId = null;
+    let deletingPlanId = null;
+    let deletingTPId = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+
+      await loadAllPlans();
+      document.getElementById('loadingPlans').classList.add('hidden');
+      document.getElementById('planContent').classList.remove('hidden');
+
+      // Cek URL param
+      const planIdFromUrl = new URLSearchParams(window.location.search).get('planId');
+      if (planIdFromUrl) openDetail(planIdFromUrl);
+    })();
+
+    // ============================================
+    // LOAD PLANS
+    // ============================================
+    async function loadAllPlans() {
+      try {
+        myAssignments = await getMyTeachingAssignments(currentUser.id);
+        allPlans = await getMyAnnualPlans(currentUser.id);
+        renderPlanGrid();
+      } catch (err) {
+        console.error('Load plans error:', err);
+        document.getElementById('planGrid').innerHTML =
+          `<div class="empty-state" style="grid-column:1/-1; color:var(--danger);">
+            <span class="emoji">⚠️</span>
+            <h3>Gagal Memuat</h3>
+            <p>${escapeHtml(err.message)}</p>
+          </div>`;
+      }
+    }
+
+    async function renderPlanGrid() {
+      const grid = document.getElementById('planGrid');
+
+      if (allPlans.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1;">
+            <span class="emoji">📋</span>
+            <h3>Belum Ada Perencanaan</h3>
+            <p>Mulai dengan membuat perencanaan tahunan untuk mapel dan kelas yang Anda ampu.</p>
+            <button class="btn-primary" onclick="openCreatePlanModal()">
+              <i class="fas fa-plus"></i> Buat Perencanaan Pertama
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      // Hitung TP & Unit per plan
+      const enriched = await Promise.all(allPlans.map(async p => {
+        let tpCount = 0, unitCount = 0, publishedCount = 0;
+        try {
+          const tps = await getLearningObjectives(p.id);
+          tpCount = tps.length;
+        } catch (e) {}
+        try {
+          const units = await getUnits(p.id);
+          unitCount = units.length;
+          publishedCount = units.filter(u => u.status === 'published').length;
+        } catch (e) {}
+        return { ...p, tpCount, unitCount, publishedCount };
+      }));
+
+      grid.innerHTML = enriched.map(p => `
+        <div class="plan-card" onclick="openDetail('${p.id}')">
+          <div class="plan-card-header">
+            <div style="flex:1; min-width:0;">
+              <div class="plan-subject">${escapeHtml(p.subjects?.name || '-')}</div>
+              <div class="plan-title">${escapeHtml(p.classes?.name || '-')}</div>
+            </div>
+            <div class="plan-icon"><i class="fas fa-clipboard-list"></i></div>
+          </div>
+          <div class="plan-class">
+            <i class="fas fa-graduation-cap"></i>
+            <span>Semester ${escapeHtml(String(p.semester || '-'))} · TA ${escapeHtml(p.academic_year || '-')}</span>
+          </div>
+          <div class="plan-meta">
+            <span><i class="fas fa-bullseye"></i> <strong>${p.tpCount}</strong> TP</span>
+            <span><i class="fas fa-layer-group"></i> <strong>${p.unitCount}</strong> unit</span>
+            <span><i class="fas fa-check-circle"></i> <strong>${p.publishedCount}</strong> published</span>
+          </div>
+          <div class="plan-actions">
+            <button class="btn-open-plan" onclick="event.stopPropagation(); openDetail('${p.id}')">
+              <i class="fas fa-arrow-right"></i> Buka
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================
+    // CREATE PLAN
+    // ============================================
+    function openCreatePlanModal() {
+      // Populate subject dropdown dari myAssignments (unique subjects)
+      const bySubject = {};
+      myAssignments.forEach(a => {
+        if (a.subjects) bySubject[String(a.subject_id)] = a.subjects;
+      });
+
+      const sel = document.getElementById('inputSubject');
+      sel.innerHTML = '<option value="">-- Pilih Mapel --</option>';
+      Object.values(bySubject).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name + (s.code ? ' (' + s.code + ')' : '');
+        sel.appendChild(opt);
+      });
+
+      // Reset class dropdown
+      document.getElementById('inputClass').innerHTML = '<option value="">-- Pilih Mapel dulu --</option>';
+
+      // Default year = tahun ajaran sekarang
+      const now = new Date();
+      const yearStart = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+      document.getElementById('inputYear').value = yearStart + '/' + (yearStart + 1);
+
+      document.getElementById('inputSemester').value = '1';
+      document.getElementById('inputCP').value = '';
+      document.getElementById('createPlanError').classList.add('hidden');
+      document.getElementById('btnSavePlan').disabled = false;
+      document.getElementById('btnSavePlan').innerHTML = '<i class="fas fa-save"></i> Simpan';
+
+      document.getElementById('modalCreatePlan').classList.add('active');
+      setTimeout(() => sel.focus(), 100);
+    }
+
+    function closeCreatePlanModal() {
+      document.getElementById('modalCreatePlan').classList.remove('active');
+    }
+
+    function onSubjectChange() {
+      const subjectId = document.getElementById('inputSubject').value;
+      const sel = document.getElementById('inputClass');
+      const hint = document.getElementById('classHint');
+
+      sel.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+
+      if (!subjectId) {
+        hint.textContent = 'Kelas yang Anda ampu untuk mapel ini';
+        return;
+      }
+
+      // Filter kelas yang diampu untuk subject ini
+      const classesForSubject = myAssignments.filter(
+        a => String(a.subject_id) === String(subjectId)
+      );
+
+      if (classesForSubject.length === 0) {
+        hint.textContent = 'Anda tidak mengampu mapel ini di kelas manapun.';
+        return;
+      }
+
+      // Dedupe by class_id
+      const uniqueClasses = {};
+      classesForSubject.forEach(a => {
+        if (a.classes) uniqueClasses[String(a.class_id)] = a.classes;
+      });
+
+      // Filter kelas yang sudah punya plan untuk mapel + semester ini? (opsional)
+      // Cek: kelas yang belum punya plan
+      const takenClassIds = new Set(
+        allPlans
+          .filter(p => String(p.subject_id) === String(subjectId))
+          .map(p => String(p.class_id))
+      );
+
+      let availableCount = 0;
+      Object.values(uniqueClasses).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        if (takenClassIds.has(String(c.id))) {
+          opt.textContent = c.name + ' (sudah ada plan)';
+          opt.disabled = true;
+        } else {
+          opt.textContent = c.name + (c.grade ? ' — ' + c.grade : '');
+          availableCount++;
+        }
+        sel.appendChild(opt);
+      });
+
+      hint.textContent = availableCount > 0
+        ? 'Menampilkan ' + availableCount + ' kelas yang belum punya perencanaan untuk mapel ini.'
+        : 'Semua kelas sudah punya perencanaan untuk mapel ini.';
+    }
+
+    async function savePlan() {
+      const subjectId = document.getElementById('inputSubject').value;
+      const classId = document.getElementById('inputClass').value;
+      const year = document.getElementById('inputYear').value.trim();
+      const semester = document.getElementById('inputSemester').value;
+      const cpText = document.getElementById('inputCP').value.trim();
+      const errBox = document.getElementById('createPlanError');
+      const btn = document.getElementById('btnSavePlan');
+
+      errBox.classList.add('hidden');
+
+      if (!subjectId) { errBox.textContent = 'Pilih mapel.'; errBox.classList.remove('hidden'); return; }
+      if (!classId) { errBox.textContent = 'Pilih kelas.'; errBox.classList.remove('hidden'); return; }
+      if (!year) { errBox.textContent = 'Tahun ajaran wajib diisi.'; errBox.classList.remove('hidden'); return; }
+      if (!semester) { errBox.textContent = 'Pilih semester.'; errBox.classList.remove('hidden'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        await createAnnualPlan({
+          teacherId: currentUser.id,
+          subjectId: parseInt(subjectId),
+          classId: parseInt(classId),
+          academicYear: year,
+          semester: parseInt(semester),
+          cpText: cpText || null
+        });
+
+        closeCreatePlanModal();
+        showToast('✅ Perencanaan berhasil dibuat', 'success');
+        await loadAllPlans();
+      } catch (err) {
+        console.error('Save plan error:', err);
+        let msg = err.message || 'Unknown error';
+        if (msg.includes('duplicate') || msg.includes('unique')) {
+          msg = 'Perencanaan untuk mapel + kelas + semester ini sudah ada.';
+        }
+        errBox.textContent = 'Gagal menyimpan: ' + msg;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+      }
+    }
+
+    // ============================================
+    // OPEN DETAIL
+    // ============================================
+    async function openDetail(planId) {
+      const plan = allPlans.find(p => String(p.id) === String(planId));
+      if (!plan) {
+        showToast('Perencanaan tidak ditemukan.', 'error');
+        return;
+      }
+      activePlan = plan;
+      document.body.classList.add('showing-detail');
+
+      // Render header
+      document.getElementById('detailTitle').textContent =
+        (plan.classes?.name || '-') + ' — ' + (plan.subjects?.name || '-');
+
+      document.getElementById('detailMeta').innerHTML = `
+        <span><i class="fas fa-graduation-cap"></i> Semester <strong>${escapeHtml(String(plan.semester || '-'))}</strong></span>
+        <span><i class="fas fa-calendar"></i> TA <strong>${escapeHtml(plan.academic_year || '-')}</strong></span>
+        <span><i class="fas fa-book"></i> ${escapeHtml(plan.subjects?.code || '')}</span>
+      `;
+
+      // Load TP & Units
+      await Promise.all([
+        loadTPs(plan.id),
+        loadUnits(plan.id)
+      ]);
+    }
+
+    function backToList() {
+      document.body.classList.remove('showing-detail');
+      activePlan = null;
+      activeTPs = [];
+      activeUnits = [];
+    }
+
+    async function loadTPs(planId) {
+      const container = document.getElementById('tpList');
+      container.innerHTML = '<div style="text-align:center; padding:1rem;"><div class="spinner" style="width:24px;height:24px;"></div></div>';
+
+      try {
+        activeTPs = await getLearningObjectives(planId);
+        renderTPs();
+      } catch (err) {
+        console.error('Load TP error:', err);
+        container.innerHTML = `<div class="empty-state" style="color:var(--danger); padding:1.5rem;"><p>Gagal memuat TP: ${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    function renderTPs() {
+      const container = document.getElementById('tpList');
+      document.getElementById('tpCountLabel').textContent = activeTPs.length + ' TP';
+
+      if (activeTPs.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:1.5rem; color:var(--text-muted); font-size:0.85rem;">
+            Belum ada TP. Klik <strong>+ Tambah TP</strong> di atas untuk memulai.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = activeTPs.map(tp => `
+        <div class="tp-item">
+          <div class="tp-content">
+            <div class="tp-code">${escapeHtml(tp.code)}</div>
+            <div class="tp-desc">${escapeHtml(tp.description)}</div>
+          </div>
+          <div class="tp-actions">
+            <button class="btn-icon" title="Edit" onclick="openEditTPModal('${tp.id}')">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button class="btn-icon danger" title="Hapus" onclick="openDeleteTPModal('${tp.id}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadUnits(planId) {
+      const container = document.getElementById('unitMiniList');
+      container.innerHTML = '<div style="text-align:center; padding:1rem;"><div class="spinner" style="width:24px;height:24px;"></div></div>';
+
+      try {
+        activeUnits = await getUnits(planId);
+        renderUnits();
+      } catch (err) {
+        console.error('Load units error:', err);
+        container.innerHTML = `<div style="color:var(--danger); padding:1rem;">Gagal memuat unit: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function renderUnits() {
+      const container = document.getElementById('unitMiniList');
+      document.getElementById('unitCountLabel').textContent = activeUnits.length + ' unit';
+
+      if (activeUnits.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:1.5rem; color:var(--text-muted); font-size:0.85rem;">
+            Belum ada unit. Klik <strong>Buka Workspace</strong> di atas untuk mulai membuat unit.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = activeUnits.map(u => {
+        const statusClass = u.status || 'draft';
+        const statusLabel = {
+          draft: 'Draft',
+          published: 'Published',
+          archived: 'Archived'
+        }[statusClass] || statusClass;
+        return `
+          <div class="unit-mini-item status-${statusClass}" onclick="openUnitEditor('${u.id}')" style="cursor:pointer;">
+            <div class="unit-mini-name">${escapeHtml(u.title)}</div>
+            <span class="unit-mini-status ${statusClass}">${statusLabel}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ============================================
+    // CREATE TP
+    // ============================================
+    function openCreateTPModal() {
+      if (!activePlan) return;
+      document.getElementById('inputTPCode').value = '';
+      document.getElementById('inputTPDesc').value = '';
+      document.getElementById('createTPError').classList.add('hidden');
+      document.getElementById('btnSaveTP').disabled = false;
+      document.getElementById('btnSaveTP').innerHTML = '<i class="fas fa-save"></i> Simpan';
+      document.getElementById('modalCreateTP').classList.add('active');
+      setTimeout(() => document.getElementById('inputTPCode').focus(), 100);
+    }
+
+    function closeCreateTPModal() {
+      document.getElementById('modalCreateTP').classList.remove('active');
+    }
+
+    async function saveTP() {
+      const code = document.getElementById('inputTPCode').value.trim();
+      const description = document.getElementById('inputTPDesc').value.trim();
+      const errBox = document.getElementById('createTPError');
+      const btn = document.getElementById('btnSaveTP');
+
+      errBox.classList.add('hidden');
+      if (!code) { errBox.textContent = 'Kode TP wajib diisi.'; errBox.classList.remove('hidden'); return; }
+      if (!description) { errBox.textContent = 'Deskripsi TP wajib diisi.'; errBox.classList.remove('hidden'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        await createLearningObjective({
+          annualPlanId: activePlan.id,
+          code, description
+        });
+        closeCreateTPModal();
+        showToast('✅ TP berhasil ditambahkan', 'success');
+        await loadTPs(activePlan.id);
+      } catch (err) {
+        console.error('Save TP error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + (err.message || 'Unknown error');
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+      }
+    }
+
+    // ============================================
+    // EDIT TP
+    // ============================================
+    function openEditTPModal(tpId) {
+      const tp = activeTPs.find(t => String(t.id) === String(tpId));
+      if (!tp) return;
+      editingTPId = tpId;
+      document.getElementById('editTPCode').value = tp.code || '';
+      document.getElementById('editTPDesc').value = tp.description || '';
+      document.getElementById('editTPError').classList.add('hidden');
+      document.getElementById('btnUpdateTP').disabled = false;
+      document.getElementById('btnUpdateTP').innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
+      document.getElementById('modalEditTP').classList.add('active');
+      setTimeout(() => document.getElementById('editTPCode').focus(), 100);
+    }
+
+    function closeEditTPModal() {
+      document.getElementById('modalEditTP').classList.remove('active');
+      editingTPId = null;
+    }
+
+    async function updateTP() {
+      if (!editingTPId) return;
+      const code = document.getElementById('editTPCode').value.trim();
+      const description = document.getElementById('editTPDesc').value.trim();
+      const errBox = document.getElementById('editTPError');
+      const btn = document.getElementById('btnUpdateTP');
+
+      errBox.classList.add('hidden');
+      if (!code) { errBox.textContent = 'Kode TP wajib diisi.'; errBox.classList.remove('hidden'); return; }
+      if (!description) { errBox.textContent = 'Deskripsi TP wajib diisi.'; errBox.classList.remove('hidden'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        await updateLearningObjective(editingTPId, { code, description });
+        closeEditTPModal();
+        showToast('✅ TP berhasil diperbarui', 'success');
+        await loadTPs(activePlan.id);
+      } catch (err) {
+        console.error('Update TP error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + (err.message || 'Unknown error');
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
+      }
+    }
+
+    // ============================================
+    // DELETE TP
+    // ============================================
+    function openDeleteTPModal(tpId) {
+      const tp = activeTPs.find(t => String(t.id) === String(tpId));
+      if (!tp) return;
+      deletingTPId = tpId;
+      document.getElementById('deleteTPMessage').innerHTML =
+        `Hapus TP <strong>${escapeHtml(tp.code)}</strong> — ${escapeHtml(tp.description.substring(0, 80))}...?`;
+      document.getElementById('modalDeleteTP').classList.add('active');
+    }
+
+    function closeDeleteTPModal() {
+      document.getElementById('modalDeleteTP').classList.remove('active');
+      deletingTPId = null;
+    }
+
+    async function confirmDeleteTP() {
+      if (!deletingTPId) return;
+      const btn = document.getElementById('btnConfirmDeleteTP');
+      btn.disabled = true;
+      btn.textContent = 'Menghapus...';
+      try {
+        await deleteLearningObjective(deletingTPId);
+        closeDeleteTPModal();
+        showToast('🗑️ TP berhasil dihapus', 'success');
+        await loadTPs(activePlan.id);
+      } catch (err) {
+        console.error('Delete TP error:', err);
+        showToast('Gagal menghapus: ' + (err.message || 'Unknown error'), 'error');
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus';
+      }
+    }
+
+    // ============================================
+    // DELETE PLAN
+    // ============================================
+    function openDeletePlanModal() {
+      if (!activePlan) return;
+      deletingPlanId = activePlan.id;
+      document.getElementById('deletePlanMessage').innerHTML =
+        `Hapus perencanaan <strong>${escapeHtml(activePlan.classes?.name || '-')} — ${escapeHtml(activePlan.subjects?.name || '-')}</strong>?`;
+      document.getElementById('modalDeletePlan').classList.add('active');
+    }
+
+    function closeDeletePlanModal() {
+      document.getElementById('modalDeletePlan').classList.remove('active');
+      deletingPlanId = null;
+    }
+
+    async function confirmDeletePlan() {
+      if (!deletingPlanId) return;
+      const btn = document.getElementById('btnConfirmDeletePlan');
+      btn.disabled = true;
+      btn.textContent = 'Menghapus...';
+      try {
+        await deleteAnnualPlan(deletingPlanId);
+        closeDeletePlanModal();
+        showToast('🗑️ Perencanaan berhasil dihapus', 'success');
+        backToList();
+        await loadAllPlans();
+      } catch (err) {
+        console.error('Delete plan error:', err);
+        showToast('Gagal menghapus: ' + (err.message || 'Unknown error'), 'error');
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus';
+      }
+    }
+
+    // ============================================
+    // NAVIGATION
+    // ============================================
+    function openWorkspace() {
+      if (!activePlan) return;
+      if (window.self !== window.top) {
+        window.parent.postMessage({
+          type: 'GURU_GOTO',
+          target: 'workspace',
+          params: { subjectId: activePlan.subject_id }
+        }, '*');
+      } else {
+        window.location.href = 'mapel-workspace.html?embed=1&subjectId=' + activePlan.subject_id;
+      }
+    }
+
+    function openUnitEditor(unitId) {
+      if (window.self !== window.top) {
+        window.parent.postMessage({
+          type: 'GURU_GOTO',
+          target: 'editor',
+          params: { unitId }
+        }, '*');
+      } else {
+        window.location.href = 'unit-editor.html?embed=1&unitId=' + unitId;
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeCreatePlanModal();
+        closeCreateTPModal();
+        closeEditTPModal();
+        closeDeleteTPModal();
+        closeDeletePlanModal();
+      }
+    });
+  </script>
+</body>
+</html>

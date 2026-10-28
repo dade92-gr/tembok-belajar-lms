@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Siswa — Wali Kelas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #ec4899; --primary-dark: #be185d; --primary-light: #fce7f3;
+      --primary-lighter: #fdf2f8;
+      --navy: #1e293b; --navy-dark: #0f172a;
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+      --blue: #3b82f6;
+      --bg: #f1f5f9; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    body.tb-embed .page-toolbar-left { gap: 0.3rem; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--navy); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--primary); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark); box-shadow: 0 4px 12px rgba(236,72,153,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--primary);
+      color: var(--primary); padding: 0.55rem 1.1rem; border-radius: 8px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--primary-light); }
+    /* FILTER */
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 1.2fr 2fr 1fr auto;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .filter-input, .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(236,72,153,0.15);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
+    }
+    .btn-reset {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-muted); padding: 0.55rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-reset:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+    /* INFO */
+    .info-bar {
+      background: var(--primary-light); border-radius: 10px;
+      padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.82rem;
+      color: var(--primary-dark); font-weight: 500; display: flex;
+      align-items: center; gap: 8px; border: 1px solid rgba(236,72,153,0.2);
+      flex-wrap: wrap;
+    }
+    .info-bar i { color: var(--primary); }
+    .info-bar strong { color: var(--navy); }
+    /* TABLE */
+    .table-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table thead { background: #f8fafc; }
+    .data-table th {
+      padding: 0.85rem 1rem; text-align: left; font-weight: 600;
+      color: var(--text-muted); border-bottom: 2px solid var(--border);
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+      vertical-align: middle; color: var(--text);
+    }
+    .data-table tbody tr:hover { background: var(--primary-lighter); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .nama-siswa { font-weight: 600; color: var(--text); }
+    .email-teks { color: var(--text-muted); font-size: 0.8rem; }
+    .nisn-teks { color: var(--text-secondary); font-size: 0.78rem; font-family: 'Courier New', monospace; }
+    .status-badge {
+      display: inline-block; padding: 3px 12px; border-radius: 999px;
+      font-weight: 600; font-size: 0.7rem; white-space: nowrap;
+    }
+    .status-active { background: #d1fae5; color: #047857; }
+    .status-inactive { background: #fee2e2; color: #b91c1c; }
+    .action-btns { display: flex; gap: 6px; }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition); font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+    .empty-row { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    .empty-row .emoji { font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
+    /* PAGINATION */
+    .pagination-bar {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 0.9rem 1.2rem; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    .pagination-info { font-size: 0.8rem; color: var(--text-muted); }
+    .pagination-info strong { color: var(--text); font-weight: 600; }
+    .pagination-controls { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .page-size-select {
+      padding: 0.4rem 2rem 0.4rem 0.7rem; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 0.8rem; font-family: inherit;
+      background: var(--surface); color: var(--text); cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+    }
+    .page-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); width: 32px; height: 32px;
+      border-radius: 6px; cursor: pointer; font-size: 0.75rem;
+      font-weight: 600; transition: var(--transition);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: inherit;
+    }
+    .page-btn:hover:not(:disabled) {
+      background: var(--primary-light); border-color: var(--primary); color: var(--primary);
+    }
+    .page-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-numbers { display: flex; gap: 0.3rem; align-items: center; }
+    /* FORM INPUTS */
+    .form-label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      margin-bottom: 0.45rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-label .req { color: var(--danger); }
+    .form-input, .form-textarea {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.8rem;
+    }
+    .form-input:focus, .form-textarea:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(236,72,153,0.15);
+    }
+    .form-input:disabled { background: var(--bg); cursor: not-allowed; color: var(--text-muted); }
+    .form-textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+    .form-hint { font-size: 0.72rem; color: var(--text-muted); margin-top: -0.4rem; margin-bottom: 0.8rem; padding-left: 4px; }
+    select.form-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 35px; cursor: pointer;
+    }
+    .alert { margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.83rem; line-height: 1.5; }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--navy);
+      color: white; padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2); font-size: 0.85rem;
+      font-weight: 500; display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px); transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem 1.8rem 2.5rem; width: 100%; max-width: 640px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--navy); margin-bottom: 1rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--primary); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.2rem; flex-wrap: wrap; }
+    /* DETAIL */
+    .detail-header {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1rem; background: var(--primary-lighter);
+      border-radius: 12px; margin-bottom: 1.2rem;
+    }
+    .detail-avatar {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.5rem; flex-shrink: 0;
+    }
+    .detail-name { font-size: 1.1rem; font-weight: 800; color: var(--text); }
+    .detail-email { font-size: 0.82rem; color: var(--text-muted); }
+    .detail-section { margin-bottom: 1.2rem; }
+    .detail-section-title {
+      font-size: 0.78rem; font-weight: 700; color: var(--navy);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      padding-bottom: 0.5rem; border-bottom: 2px solid var(--primary-light);
+      margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px;
+    }
+    .detail-section-title i { color: var(--primary); }
+    .detail-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.7rem;
+    }
+    .detail-item {
+      background: var(--bg); padding: 0.7rem 0.9rem;
+      border-radius: 8px; border-left: 3px solid var(--primary);
+    }
+    .detail-item-label {
+      font-size: 0.68rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px;
+    }
+    .detail-item-value { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+    .detail-empty {
+      text-align: center; padding: 1.2rem; color: var(--text-muted);
+      font-size: 0.82rem; font-style: italic;
+      background: var(--bg); border-radius: 8px;
+    }
+    .progress-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .progress-item {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.6rem 0.8rem; background: var(--bg); border-radius: 8px;
+    }
+    .progress-item-name { flex: 1; font-size: 0.82rem; font-weight: 600; }
+    .progress-item-bar {
+      width: 120px; height: 6px; background: #e2e8f0; border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-item-fill {
+      height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+      border-radius: 999px;
+    }
+    .progress-item-val { font-size: 0.78rem; font-weight: 700; color: var(--primary-dark); min-width: 45px; text-align: right; }
+    .loading-box { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.9rem; }
+    .spinner {
+      width: 32px; height: 32px; margin: 0 auto 0.8rem;
+      border: 3px solid var(--primary-light); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 900px) {
+      .filter-row { grid-template-columns: 1fr 1fr; }
+      .filter-row .btn-reset { grid-column: 1 / -1; }
+    }
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .pagination-bar { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+      .pagination-controls { justify-content: center; }
+      .data-table th, .data-table td { padding: 0.55rem 0.5rem; font-size: 0.78rem; }
+      .detail-grid { grid-template-columns: 1fr 1fr; }
+      .progress-item-bar { width: 80px; }
+      .form-row-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-users"></i>
+          <span>
+            Daftar Siswa
+            <small>Lihat dan edit data siswa di kelas yang Anda ampu sebagai wali kelas</small>
+          </span>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-outline" onclick="loadStudents(currentClassId)">
+          <i class="fas fa-rotate"></i> Muat Ulang
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="filterKelas"><i class="fas fa-school"></i> Kelas Walian</label>
+          <select id="filterKelas" class="filter-select" onchange="onKelasChange()">
+            <option value="">-- Pilih Kelas --</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="searchInput"><i class="fas fa-search"></i> Cari</label>
+          <input type="text" id="searchInput" class="filter-input" placeholder="Cari nama, email, atau NISN..." oninput="applyFilter()">
+        </div>
+        <div class="filter-group">
+          <label for="filterStatus"><i class="fas fa-circle-check"></i> Status</label>
+          <select id="filterStatus" class="filter-select" onchange="applyFilter()">
+            <option value="">Semua Status</option>
+            <option value="active">Aktif</option>
+            <option value="inactive">Nonaktif</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <button class="btn-reset" onclick="resetFilter()">
+            <i class="fas fa-rotate-left"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-bar">
+      <i class="fas fa-info-circle"></i>
+      <span>Kelas: <strong id="currentKelasName">-</strong> ·
+            Total siswa: <strong id="totalCount">0</strong> ·
+            Menampilkan: <strong id="shownCount">0</strong> ·
+            Halaman: <strong id="currentPageInfo">1</strong> dari <strong id="totalPagesInfo">1</strong></span>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:50px;">No</th>
+              <th>Nama Siswa</th>
+              <th style="width:200px;">Email</th>
+              <th style="width:120px;">NISN</th>
+              <th style="width:100px;">JK</th>
+              <th style="width:110px;">Status Kelas</th>
+              <th style="width:100px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="7" class="empty-row">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-bar">
+        <div class="pagination-info">
+          Menampilkan <strong id="pageStart">0</strong>-<strong id="pageEnd">0</strong> dari <strong id="pageTotal">0</strong> data
+        </div>
+        <div class="pagination-controls">
+          <label style="font-size:0.75rem; color:var(--text-muted);">Baris:</label>
+          <select id="pageSize" class="page-size-select" onchange="changePageSize()">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="9999">Semua</option>
+          </select>
+          <button class="page-btn" id="btnPrev" onclick="prevPage()">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="page-numbers" id="pageNumbers"></div>
+          <button class="page-btn" id="btnNext" onclick="nextPage()">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Detail Siswa -->
+  <div class="modal-overlay" id="modalDetail">
+    <div class="modal-card">
+      <h2><i class="fas fa-user"></i> Detail Siswa</h2>
+      <div id="detailBody">
+        <div class="loading-box">
+          <div class="spinner"></div>
+          <p>Memuat detail...</p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDetail()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Data Siswa -->
+  <div class="modal-overlay" id="modalEditSiswa">
+    <div class="modal-card">
+      <h2><i class="fas fa-pen"></i> Edit Data Siswa</h2>
+      <p class="modal-desc" style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
+        Lengkapi atau perbaiki data <strong id="editSiswaNama">-</strong>.
+        Perubahan akan langsung tersimpan.
+      </p>
+
+      <label class="form-label" for="editName">Nama Lengkap <span class="req">*</span></label>
+      <input type="text" id="editName" class="form-input" maxlength="100">
+
+      <label class="form-label" for="editEmail">Email (tidak bisa diubah)</label>
+      <input type="email" id="editEmail" class="form-input" disabled>
+      <p class="form-hint">Email hanya bisa diubah oleh operator.</p>
+
+      <div class="form-row-2">
+        <div>
+          <label class="form-label" for="editNisn">NISN</label>
+          <input type="text" id="editNisn" class="form-input" maxlength="10" placeholder="10 digit">
+        </div>
+        <div>
+          <label class="form-label" for="editNis">NIS</label>
+          <input type="text" id="editNis" class="form-input" maxlength="20">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div>
+          <label class="form-label" for="editNik">NIK</label>
+          <input type="text" id="editNik" class="form-input" maxlength="16" placeholder="16 digit">
+        </div>
+        <div>
+          <label class="form-label" for="editNoHp">No HP</label>
+          <input type="text" id="editNoHp" class="form-input" maxlength="20">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div>
+          <label class="form-label" for="editTempatLahir">Tempat Lahir</label>
+          <input type="text" id="editTempatLahir" class="form-input" maxlength="100">
+        </div>
+        <div>
+          <label class="form-label" for="editTanggalLahir">Tanggal Lahir</label>
+          <input type="date" id="editTanggalLahir" class="form-input">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div>
+          <label class="form-label" for="editJenisKelamin">Jenis Kelamin</label>
+          <select id="editJenisKelamin" class="form-input">
+            <option value="">-- Pilih --</option>
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label" for="editAgama">Agama</label>
+          <select id="editAgama" class="form-input">
+            <option value="">-- Pilih --</option>
+            <option value="Islam">Islam</option>
+            <option value="Kristen">Kristen</option>
+            <option value="Katolik">Katolik</option>
+            <option value="Hindu">Hindu</option>
+            <option value="Buddha">Buddha</option>
+            <option value="Konghucu">Konghucu</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="form-label" for="editAlamat">Alamat</label>
+      <textarea id="editAlamat" class="form-textarea" maxlength="500"></textarea>
+
+      <div class="form-row-2">
+        <div>
+          <label class="form-label" for="editNamaAyah">Nama Ayah</label>
+          <input type="text" id="editNamaAyah" class="form-input" maxlength="100">
+        </div>
+        <div>
+          <label class="form-label" for="editNamaIbu">Nama Ibu</label>
+          <input type="text" id="editNamaIbu" class="form-input" maxlength="100">
+        </div>
+      </div>
+
+      <label class="form-label" for="editNamaWali">Nama Wali</label>
+      <input type="text" id="editNamaWali" class="form-input" maxlength="100">
+
+      <div id="editSiswaError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeEditSiswa()">Batal</button>
+        <button class="btn-primary" id="btnSaveSiswa" onclick="saveEditSiswa()">
+          <i class="fas fa-save"></i> Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let homeroomClasses = [];
+    let currentClassId = null;
+    let allStudents = [];
+    let filteredStudents = [];
+    let currentPage = 1;
+    let pageSize = 25;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('wali_kelas');
+      if (!currentUser) return;
+
+      await loadHomeroomClasses();
+      await autoSelectClass();
+    })();
+
+    async function loadHomeroomClasses() {
+      try {
+        homeroomClasses = await getMyHomeroomClasses(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load kelas walian:', err);
+        homeroomClasses = [];
+      }
+
+      const sel = document.getElementById('filterKelas');
+      sel.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+      if (homeroomClasses.length === 0) {
+        sel.innerHTML = '<option value="">(Anda belum jadi wali kelas)</option>';
+        document.getElementById('tableBody').innerHTML = `
+          <tr><td colspan="7" class="empty-row">
+            <span class="emoji">🏫</span>
+            Anda belum ditugaskan sebagai wali kelas.<br>
+            Hubungi operator sekolah untuk meng-assign Anda ke kelas.
+          </td></tr>`;
+        sel.disabled = true;
+        return;
+      }
+      homeroomClasses.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.class_id;
+        opt.textContent = c.class_name + (c.grade ? ' (Kelas ' + c.grade + ')' : '');
+        sel.appendChild(opt);
+      });
+    }
+
+    async function autoSelectClass() {
+      if (homeroomClasses.length === 0) return;
+      const urlClassId = new URLSearchParams(window.location.search).get('classId');
+      let selected = null;
+
+      if (urlClassId && homeroomClasses.find(c => String(c.class_id) === String(urlClassId))) {
+        selected = String(urlClassId);
+      } else {
+        selected = String(homeroomClasses[0].class_id);
+      }
+
+      document.getElementById('filterKelas').value = selected;
+      await loadStudents(parseInt(selected));
+    }
+
+    function onKelasChange() {
+      const val = document.getElementById('filterKelas').value;
+      if (!val) {
+        allStudents = [];
+        document.getElementById('currentKelasName').textContent = '-';
+        applyFilter();
+        return;
+      }
+      loadStudents(parseInt(val));
+    }
+
+    async function loadStudents(classId) {
+      currentClassId = classId;
+      const kelas = homeroomClasses.find(c => String(c.class_id) === String(classId));
+      document.getElementById('currentKelasName').textContent = kelas?.class_name || '-';
+
+      document.getElementById('tableBody').innerHTML =
+        '<tr><td colspan="7" class="empty-row">Memuat data siswa...</td></tr>';
+
+      try {
+        const enrollments = await getStudentsInClass(classId);
+        allStudents = (enrollments || [])
+          .filter(e => e.profiles && e.status === 'active')
+          .map(e => ({
+            ...e.profiles,
+            enrollment_status: e.status,
+            enrollment_id: e.id
+          }));
+
+        applyFilter();
+      } catch (err) {
+        console.error('Gagal load siswa:', err);
+        document.getElementById('tableBody').innerHTML =
+          '<tr><td colspan="7" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + escapeHtml(err.message) + '</td></tr>';
+      }
+    }
+
+    function applyFilter() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const status = document.getElementById('filterStatus').value;
+
+      filteredStudents = allStudents.filter(s => {
+        const nama = (s.name || '').toLowerCase();
+        const email = (s.email || '').toLowerCase();
+        const nisn = (s.nisn || '').toLowerCase();
+        const matchKeyword = !keyword || nama.includes(keyword) || email.includes(keyword) || nisn.includes(keyword);
+        const matchStatus = !status || s.enrollment_status === status;
+        return matchKeyword && matchStatus;
+      });
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    function resetFilter() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterStatus').value = '';
+      applyFilter();
+    }
+
+    function renderTable() {
+      document.getElementById('totalCount').textContent = allStudents.length;
+      document.getElementById('shownCount').textContent = filteredStudents.length;
+
+      const tbody = document.getElementById('tableBody');
+
+      if (filteredStudents.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="7" class="empty-row">
+            <span class="emoji">👥</span>
+            ${allStudents.length === 0
+              ? 'Belum ada siswa di kelas ini.'
+              : 'Tidak ada siswa yang cocok dengan filter.'}
+          </td></tr>`;
+        return;
+      }
+
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredStudents.length);
+      const pageData = filteredStudents.slice(startIdx, endIdx);
+
+      tbody.innerHTML = pageData.map((s, i) => `
+        <tr>
+          <td>${startIdx + i + 1}</td>
+          <td class="nama-siswa">${escapeHtml(s.name)}</td>
+          <td class="email-teks">${escapeHtml(s.email)}</td>
+          <td class="nisn-teks">${s.nisn ? escapeHtml(s.nisn) : '-'}</td>
+          <td>${s.jenis_kelamin ? escapeHtml(s.jenis_kelamin) : '-'}</td>
+          <td>
+            <span class="status-badge ${s.enrollment_status === 'active' ? 'status-active' : 'status-inactive'}">
+              ${s.enrollment_status === 'active' ? '✓ Aktif' : '✕ Nonaktif'}
+            </span>
+          </td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-icon" title="Lihat Detail" onclick="openDetail('${s.id}')">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn-icon" title="Edit Data Siswa" onclick="openEditSiswa('${s.id}')">
+                <i class="fas fa-pen"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPagination() {
+      const total = filteredStudents.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIdx = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const endIdx = Math.min(currentPage * pageSize, total);
+
+      document.getElementById('pageStart').textContent = startIdx;
+      document.getElementById('pageEnd').textContent = endIdx;
+      document.getElementById('pageTotal').textContent = total;
+      document.getElementById('currentPageInfo').textContent = currentPage;
+      document.getElementById('totalPagesInfo').textContent = totalPages;
+
+      document.getElementById('btnPrev').disabled = currentPage <= 1;
+      document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+      const numbersDiv = document.getElementById('pageNumbers');
+      numbersDiv.innerHTML = '';
+
+      const maxButtons = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+      if (endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+
+      if (startPage > 1) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = '1';
+        btn.onclick = () => goToPage(1);
+        numbersDiv.appendChild(btn);
+        if (startPage > 2) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => goToPage(i);
+        numbersDiv.appendChild(btn);
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = totalPages;
+        btn.onclick = () => goToPage(totalPages);
+        numbersDiv.appendChild(btn);
+      }
+    }
+
+    function goToPage(page) { currentPage = page; renderTable(); renderPagination(); }
+    function prevPage() { if (currentPage > 1) goToPage(currentPage - 1); }
+    function nextPage() {
+      const totalPages = Math.ceil(filteredStudents.length / pageSize);
+      if (currentPage < totalPages) goToPage(currentPage + 1);
+    }
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('pageSize').value);
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    /* ============================================
+       EDIT DATA SISWA
+       ============================================ */
+    let editingSiswaId = null;
+
+    function openEditSiswa(studentId) {
+      const s = allStudents.find(x => String(x.id) === String(studentId));
+      if (!s) return;
+
+      editingSiswaId = studentId;
+      document.getElementById('editSiswaNama').textContent = s.name || '-';
+      document.getElementById('editName').value = s.name || '';
+      document.getElementById('editEmail').value = s.email || '';
+      document.getElementById('editNisn').value = s.nisn || '';
+      document.getElementById('editNis').value = s.nis || '';
+      document.getElementById('editNik').value = s.nik || '';
+      document.getElementById('editNoHp').value = s.no_hp || '';
+      document.getElementById('editTempatLahir').value = s.tempat_lahir || '';
+      document.getElementById('editTanggalLahir').value = s.tanggal_lahir || '';
+      document.getElementById('editJenisKelamin').value = s.jenis_kelamin || '';
+      document.getElementById('editAgama').value = s.agama || '';
+      document.getElementById('editAlamat').value = s.alamat || '';
+      document.getElementById('editNamaAyah').value = s.nama_ayah || '';
+      document.getElementById('editNamaIbu').value = s.nama_ibu || '';
+      document.getElementById('editNamaWali').value = s.nama_wali || '';
+
+      document.getElementById('editSiswaError').classList.add('hidden');
+      document.getElementById('btnSaveSiswa').disabled = false;
+      document.getElementById('btnSaveSiswa').innerHTML = '<i class="fas fa-save"></i> Simpan';
+
+      document.getElementById('modalEditSiswa').classList.add('active');
+      setTimeout(() => document.getElementById('editName').focus(), 100);
+    }
+
+    function closeEditSiswa() {
+      document.getElementById('modalEditSiswa').classList.remove('active');
+      editingSiswaId = null;
+    }
+
+    async function saveEditSiswa() {
+      const name = document.getElementById('editName').value.trim();
+      const nisn = document.getElementById('editNisn').value.trim();
+      const nis = document.getElementById('editNis').value.trim();
+      const nik = document.getElementById('editNik').value.trim();
+      const noHp = document.getElementById('editNoHp').value.trim();
+      const tempatLahir = document.getElementById('editTempatLahir').value.trim();
+      const tanggalLahir = document.getElementById('editTanggalLahir').value;
+      const jenisKelamin = document.getElementById('editJenisKelamin').value;
+      const agama = document.getElementById('editAgama').value;
+      const alamat = document.getElementById('editAlamat').value.trim();
+      const namaAyah = document.getElementById('editNamaAyah').value.trim();
+      const namaIbu = document.getElementById('editNamaIbu').value.trim();
+      const namaWali = document.getElementById('editNamaWali').value.trim();
+
+      const errBox = document.getElementById('editSiswaError');
+      const btn = document.getElementById('btnSaveSiswa');
+
+      errBox.classList.add('hidden');
+
+      if (!name) {
+        errBox.textContent = 'Nama wajib diisi.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (nisn && !/^\d{10}$/.test(nisn)) {
+        errBox.textContent = 'NISN harus 10 digit angka.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (nik && !/^\d{16}$/.test(nik)) {
+        errBox.textContent = 'NIK harus 16 digit angka.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        const client = initSupabase();
+        const updates = {
+          name,
+          nisn: nisn || null,
+          nis: nis || null,
+          nik: nik || null,
+          no_hp: noHp || null,
+          tempat_lahir: tempatLahir || null,
+          tanggal_lahir: tanggalLahir || null,
+          jenis_kelamin: jenisKelamin || null,
+          agama: agama || null,
+          alamat: alamat || null,
+          nama_ayah: namaAyah || null,
+          nama_ibu: namaIbu || null,
+          nama_wali: namaWali || null
+        };
+
+                const { data: updatedRows, error } = await client
+          .from('profiles')
+          .update(updates)
+          .eq('id', editingSiswaId)
+          .select('id, name, nisn, nik, nis');
+
+        if (error) {
+          if (error.code === '23505') {
+            const msg = (error.message || '').toLowerCase();
+            let friendly = 'Data duplikat.';
+            if (msg.includes('nisn')) friendly = 'NISN sudah dipakai siswa lain.';
+            else if (msg.includes('nis_unique') || msg.includes('(nis)')) friendly = 'NIS sudah dipakai siswa lain.';
+            else if (msg.includes('nik')) friendly = 'NIK sudah dipakai siswa lain.';
+            throw new Error(friendly);
+          }
+          throw error;
+        }
+
+        if (!updatedRows || updatedRows.length === 0) {
+          throw new Error(
+            '❌ Data TIDAK tersimpan (0 baris ter-update).\n\n' +
+            'Kemungkinan penyebab:\n' +
+            '• Anda login bukan sebagai wali kelas siswa ini\n' +
+            '• Sesi login sudah expired — logout lalu login ulang\n' +
+            '• RLS policy masih memblokir\n\n' +
+            'Cek: apakah Anda benar-benar login sebagai Dade Sugiono?'
+          );
+        }
+
+        // Update local state
+        const s = allStudents.find(x => String(x.id) === String(editingSiswaId));
+        if (s) Object.assign(s, updates);
+
+        closeEditSiswa();
+        applyFilter();
+        showToast('✅ Data siswa berhasil diperbarui.', 'success');
+      } catch (err) {
+        console.error('Save siswa error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + (err.message || 'Unknown error');
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+      }
+    }
+
+    /* ============================================
+       MODAL DETAIL SISWA
+       ============================================ */
+    async function openDetail(studentId) {
+      const student = allStudents.find(s => String(s.id) === String(studentId));
+      if (!student) return;
+
+      const body = document.getElementById('detailBody');
+      body.innerHTML = `
+        <div class="loading-box">
+          <div class="spinner"></div>
+          <p>Memuat detail siswa...</p>
+        </div>
+      `;
+      document.getElementById('modalDetail').classList.add('active');
+
+      try {
+        const [progressData, absensiData, nilaiData] = await Promise.all([
+          fetchStudentProgress(studentId),
+          fetchStudentAbsensi(studentId),
+          fetchStudentNilai(studentId)
+        ]);
+
+        body.innerHTML = renderDetailContent(student, progressData, absensiData, nilaiData);
+      } catch (err) {
+        console.error('Detail error:', err);
+        body.innerHTML = `
+          <div class="detail-empty" style="color:var(--danger);">
+            Gagal memuat detail: ${escapeHtml(err.message)}
+          </div>
+        `;
+      }
+    }
+
+    function closeDetail() {
+      document.getElementById('modalDetail').classList.remove('active');
+    }
+
+    async function fetchStudentProgress(studentId) {
+      try {
+        const client = initSupabase();
+        const { data: enrolls } = await client
+          .from('enrollments')
+          .select('class_id')
+          .eq('student_id', studentId)
+          .eq('status', 'active');
+
+        if (!enrolls || enrolls.length === 0) return [];
+
+        const classIds = enrolls.map(e => e.class_id);
+        const { data: assigns } = await client
+          .from('teacher_assign')
+          .select('subject_id, class_id, subjects (id, name, code)')
+          .in('class_id', classIds);
+
+        if (!assigns || assigns.length === 0) return [];
+
+        const result = [];
+        for (const a of assigns) {
+          if (!a.subjects) continue;
+
+          const { data: acts } = await client
+            .from('activities')
+            .select('id')
+            .eq('class_id', a.class_id)
+            .eq('subject_id', a.subject_id);
+
+          const actIds = (acts || []).map(x => x.id);
+          if (actIds.length === 0) {
+            result.push({ subject: a.subjects, total: 0, submitted: 0, percent: 0 });
+            continue;
+          }
+
+          const { data: subs } = await client
+            .from('submissions')
+            .select('id')
+            .eq('student_id', studentId)
+            .in('activity_id', actIds);
+
+          const submitted = (subs || []).length;
+          const percent = Math.round((submitted / actIds.length) * 100);
+
+          result.push({
+            subject: a.subjects,
+            total: actIds.length,
+            submitted,
+            percent
+          });
+        }
+        return result;
+      } catch (e) {
+        console.warn('Progress fetch error:', e);
+        return [];
+      }
+    }
+
+    async function fetchStudentAbsensi(studentId) {
+      try {
+        const client = initSupabase();
+        const firstOfMonth = new Date();
+        firstOfMonth.setDate(1);
+        const firstStr = firstOfMonth.toISOString().slice(0, 10);
+
+        const { data } = await client
+          .from('absensi')
+          .select('status')
+          .eq('student_id', studentId)
+          .gte('tanggal', firstStr);
+
+        const counts = { hadir: 0, sakit: 0, izin: 0, alfa: 0 };
+        (data || []).forEach(r => {
+          if (counts[r.status] !== undefined) counts[r.status]++;
+        });
+        return counts;
+      } catch (e) {
+        console.warn('Absensi fetch error:', e);
+        return { hadir: 0, sakit: 0, izin: 0, alfa: 0 };
+      }
+    }
+
+    async function fetchStudentNilai(studentId) {
+      try {
+        const client = initSupabase();
+        const { data: rawGrades } = await client
+          .from('grades')
+          .select(`
+            score,
+            submissions!inner (activity_id)
+          `)
+          .eq('student_id', studentId);
+
+        if (!rawGrades || rawGrades.length === 0) return { avg: '-', count: 0 };
+
+        const total = rawGrades.reduce((s, g) => s + parseFloat(g.score || 0), 0);
+        const avg = (total / rawGrades.length).toFixed(1);
+        return { avg, count: rawGrades.length };
+      } catch (e) {
+        console.warn('Nilai fetch error:', e);
+        return { avg: '-', count: 0 };
+      }
+    }
+
+    function renderDetailContent(student, progressData, absensiData, nilaiData) {
+      const initials = (student.name || '?').charAt(0).toUpperCase();
+
+      const infoItems = [
+        { label: 'NISN', value: student.nisn || '-' },
+        { label: 'NIS', value: student.nis || '-' },
+        { label: 'Jenis Kelamin', value: student.jenis_kelamin === 'L' ? 'Laki-laki' : student.jenis_kelamin === 'P' ? 'Perempuan' : '-' },
+        { label: 'Tempat Lahir', value: student.tempat_lahir || '-' },
+        { label: 'Tanggal Lahir', value: student.tanggal_lahir ? formatTanggal(student.tanggal_lahir) : '-' },
+        { label: 'Agama', value: student.agama || '-' },
+        { label: 'No HP', value: student.no_hp || '-' },
+        { label: 'Status', value: student.enrollment_status === 'active' ? 'Aktif' : 'Nonaktif' }
+      ];
+
+      const absensiHtml = `
+        <div class="detail-grid">
+          <div class="detail-item" style="border-left-color: var(--success);">
+            <div class="detail-item-label">Hadir</div>
+            <div class="detail-item-value" style="color: var(--success);">${absensiData.hadir}</div>
+          </div>
+          <div class="detail-item" style="border-left-color: var(--warning);">
+            <div class="detail-item-label">Sakit</div>
+            <div class="detail-item-value" style="color: #92400e;">${absensiData.sakit}</div>
+          </div>
+          <div class="detail-item" style="border-left-color: #3b82f6;">
+            <div class="detail-item-label">Izin</div>
+            <div class="detail-item-value" style="color: #2563eb;">${absensiData.izin}</div>
+          </div>
+          <div class="detail-item" style="border-left-color: var(--danger);">
+            <div class="detail-item-label">Alfa</div>
+            <div class="detail-item-value" style="color: var(--danger);">${absensiData.alfa}</div>
+          </div>
+        </div>
+      `;
+
+      const nilaiHtml = `
+        <div class="detail-grid">
+          <div class="detail-item" style="border-left-color: var(--primary);">
+            <div class="detail-item-label">Rata-rata Nilai</div>
+            <div class="detail-item-value" style="color: var(--primary-dark); font-size: 1.2rem;">${nilaiData.avg}</div>
+          </div>
+          <div class="detail-item" style="border-left-color: var(--primary);">
+            <div class="detail-item-label">Total Dinilai</div>
+            <div class="detail-item-value">${nilaiData.count} tugas</div>
+          </div>
+        </div>
+      `;
+
+      let progressHtml;
+      if (!progressData || progressData.length === 0) {
+        progressHtml = '<div class="detail-empty">Belum ada aktivitas di kelas ini.</div>';
+      } else {
+        progressHtml = `
+          <div class="progress-list">
+            ${progressData.map(p => `
+              <div class="progress-item">
+                <div class="progress-item-name">${escapeHtml(p.subject.name)}</div>
+                <div class="progress-item-bar">
+                  <div class="progress-item-fill" style="width:${p.percent}%;"></div>
+                </div>
+                <div class="progress-item-val">${p.percent}%</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="detail-header">
+          <div class="detail-avatar">${initials}</div>
+          <div>
+            <div class="detail-name">${escapeHtml(student.name)}</div>
+            <div class="detail-email">${escapeHtml(student.email)}</div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title"><i class="fas fa-id-card"></i> Data Siswa</div>
+          <div class="detail-grid">
+            ${infoItems.map(i => `
+              <div class="detail-item">
+                <div class="detail-item-label">${escapeHtml(i.label)}</div>
+                <div class="detail-item-value">${escapeHtml(i.value)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title"><i class="fas fa-clipboard-check"></i> Absensi Bulan Ini</div>
+          ${absensiHtml}
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title"><i class="fas fa-star"></i> Ringkasan Nilai</div>
+          ${nilaiHtml}
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title"><i class="fas fa-chart-line"></i> Progress per Mapel</div>
+          ${progressHtml}
+        </div>
+      `;
+    }
+
+    function formatTanggal(tgl) {
+      if (!tgl) return '-';
+      try {
+        const d = new Date(tgl);
+        if (isNaN(d.getTime())) return tgl;
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      } catch { return tgl; }
+    }
+
+    /* ============================================
+       UTILS
+       ============================================ */
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeDetail();
+        closeEditSiswa();
+      }
+    });
+  </script>
+</body>
+</html>

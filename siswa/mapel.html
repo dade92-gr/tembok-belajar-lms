@@ -1,478 +1,267 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mapel Saya — Tembok Belajar</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapel Saya — Tembok Belajar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- PATCH 1 -->
-  <script>
-    (function() {
-      function applyEmbedMode() {
-        if (new URLSearchParams(window.location.search).get('embed') === '1') {
-          document.documentElement.classList.add('tb-embed');
-          if (document.body) document.body.classList.add('tb-embed');
+    <!-- PATCH EMBED MODE -->
+    <script>
+        (function() {
+            function applyEmbedMode() {
+                if (new URLSearchParams(window.location.search).get('embed') === '1') {
+                    document.documentElement.classList.add('tb-embed');
+                    if (document.body) document.body.classList.add('tb-embed');
+                }
+            }
+            applyEmbedMode();
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyEmbedMode);
+            window.addEventListener('load', applyEmbedMode);
+        })();
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scrollbar-gutter: stable; }
+        :root {
+            --header-height: 68px;
+            --siswa-accent: #f59e0b;
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
         }
-      }
-      applyEmbedMode();
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applyEmbedMode);
-      }
-      window.addEventListener('load', applyEmbedMode);
-    })();
-  </script>
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        html.tb-embed .page-container, body.tb-embed .page-container { padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem; }
+        .page-container { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
 
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scrollbar-gutter: stable; }
+        .page-title { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .page-title i { color: var(--siswa-accent); }
 
-    :root {
-      --primary: #3b82f6;
-      --primary-dark: #2563eb;
-      --primary-light: #dbeafe;
-      --primary-lighter: #eff6ff;
-      --navy: #1e293b;
-      --navy-dark: #0f172a;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --bg: #f1f5f9;
-      --bg-soft: #f8fafc;
-      --surface: #ffffff;
-      --text: #0f172a;
-      --text-secondary: #334155;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --header-height: 68px;
-      --radius: 12px;
-      --radius-lg: 16px;
-      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
-      --transition: all 0.2s ease;
-    }
+        /* GRID MAPEL */
+        .mapel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.2rem; }
+        .mapel-card {
+            background: var(--surface); border-radius: 16px; border: 1px solid var(--border);
+            padding: 1.5rem; cursor: pointer; transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;
+        }
+        .mapel-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(245,158,11,0.15); border-color: var(--siswa-accent); }
+        .mapel-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem; }
+        .mapel-code { font-size: 0.7rem; font-weight: 700; color: var(--siswa-accent); background: #fef3c7; padding: 4px 10px; border-radius: 6px; border: 1px solid #fde68a; }
+        .mapel-name { font-size: 1.1rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+        .mapel-class { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-top: 0.5rem; }
+        .mapel-class i { color: var(--siswa-accent); }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-    }
+        /* UNIT LIST */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .btn-back { background: transparent; border: none; color: var(--text-muted); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; }
+        .btn-back:hover { color: var(--text); }
+        .unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .unit-card {
+            background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
+            padding: 1.2rem; cursor: pointer; transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04); display: flex; flex-direction: column;
+        }
+        .unit-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59,130,246,0.1); }
+        .unit-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text); }
+        .unit-card p { font-size: 0.8rem; color: var(--text-muted); flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .unit-card-footer { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .unit-badge { font-size: 0.7rem; font-weight: 600; color: #047857; background: #d1fae5; padding: 2px 8px; border-radius: 4px; }
+        .btn-open { background: var(--primary); color: white; border: none; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
 
-    /* PATCH 2 */
-    html.tb-embed .btn-back,
-    body.tb-embed .btn-back { display: none !important; }
-    html.tb-embed .page-container,
-    body.tb-embed .page-container {
-      padding-top: calc(var(--header-height) + 1rem);
-      padding-bottom: 2rem;
-    }
-    html.tb-embed .back-nav,
-    body.tb-embed .back-nav { display: none !important; }
-    html.tb-embed .app-header,
-    body.tb-embed .app-header { display: none !important; }
-
-    .page-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem 1.5rem 3rem;
-    }
-
-    .page-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
-
-    .btn-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      padding: 0.45rem 0.9rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      font-weight: 600;
-      font-family: inherit;
-      text-decoration: none;
-      transition: var(--transition);
-      width: fit-content;
-    }
-    .btn-back:hover {
-      background: var(--primary-light);
-      border-color: var(--primary);
-      color: var(--primary-dark);
-    }
-
-    .page-toolbar h1 {
-      font-size: 1.5rem;
-      color: var(--navy);
-      font-weight: 800;
-      letter-spacing: -0.3px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
-    .page-toolbar h1 small {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 400;
-      color: var(--text-muted);
-      margin-top: 4px;
-      letter-spacing: 0;
-    }
-
-    /* MAPEL GRID */
-    .mapel-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.2rem;
-    }
-
-    .mapel-card {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-      transition: var(--transition);
-      cursor: pointer;
-      position: relative;
-    }
-    .mapel-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--primary);
-    }
-
-    .mapel-header {
-      padding: 1.2rem 1.4rem;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
-    .mapel-header::after {
-      content: '';
-      position: absolute;
-      top: -40px; right: -40px;
-      width: 120px; height: 120px;
-      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-    }
-    .mapel-header h3 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-      line-height: 1.3;
-      position: relative;
-      z-index: 1;
-    }
-    .mapel-header .kode {
-      font-size: 0.72rem;
-      opacity: 0.95;
-      font-family: 'Courier New', monospace;
-      font-weight: 600;
-      background: rgba(255,255,255,0.18);
-      padding: 2px 8px;
-      border-radius: 6px;
-      display: inline-block;
-      position: relative;
-      z-index: 1;
-    }
-
-    .mapel-body { padding: 1.1rem 1.4rem 1.3rem; }
-
-    .teacher-info {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 0.8rem;
-      font-weight: 500;
-    }
-    .teacher-info i { color: var(--primary); }
-
-    .kelas-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .kelas-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: var(--primary-lighter);
-      color: var(--primary-dark);
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      border: 1px solid var(--primary-light);
-    }
-    .kelas-badge i { font-size: 0.65rem; }
-
-    /* EMPTY */
-    .empty-state {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      padding: 3rem 2rem;
-      text-align: center;
-      box-shadow: var(--shadow-sm);
-      grid-column: 1 / -1;
-    }
-    .empty-state .emoji {
-      font-size: 3.5rem;
-      display: block;
-      margin-bottom: 1rem;
-      opacity: 0.4;
-    }
-    .empty-state h3 {
-      font-size: 1.1rem;
-      color: var(--navy);
-      margin-bottom: 0.5rem;
-      font-weight: 700;
-    }
-    .empty-state p {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      max-width: 400px;
-      margin: 0 auto;
-    }
-
-    /* LOADING */
-    .loading-box {
-      text-align: center;
-      padding: 4rem 1rem;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-    .spinner {
-      width: 40px; height: 40px;
-      margin: 0 auto 1rem;
-      border: 3px solid var(--primary-light);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .hidden { display: none !important; }
-
-    /* BACK NAV */
-    .back-nav {
-      text-align: center;
-      margin-top: 2rem;
-    }
-    .btn-back-full {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface);
-      color: var(--text-secondary);
-      padding: 0.6rem 1.5rem;
-      border-radius: 999px;
-      text-decoration: none;
-      font-weight: 600;
-      border: 1px solid var(--border);
-      font-size: 0.85rem;
-      transition: var(--transition);
-    }
-    .btn-back-full:hover {
-      background: var(--primary-lighter);
-      border-color: var(--primary);
-      color: var(--primary-dark);
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 768px) {
-      :root { --header-height: 60px; }
-      .page-container { padding: 1rem 1rem 2rem; }
-      html.tb-embed .page-container,
-      body.tb-embed .page-container {
-        padding-top: calc(var(--header-height) + 0.8rem);
-      }
-      .page-toolbar h1 { font-size: 1.25rem; }
-      .mapel-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+        .loading { text-align: center; padding: 3rem; color: var(--text-muted); }
+        .spinner { width: 30px; height: 30px; border: 3px solid #fef3c7; border-top-color: var(--siswa-accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
+    <div class="page-container">
+        <!-- TAMPILAN DAFTAR MAPEL -->
+        <div id="viewMapel">
+            <div class="page-title"><i class="fas fa-book"></i> Mapel Saya</div>
+            <div id="mapelList" class="mapel-grid">
+                <div class="loading"><div class="spinner"></div>Memuat mapel...</div>
+            </div>
+        </div>
 
-  <div class="page-container">
-
-    <div class="page-toolbar">
-      <div class="page-toolbar-left">
-        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#mapel';return false;}">
-          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
-        </a>
-        <h1>
-          <i class="fas fa-book"></i>
-          <span>
-            Mapel Saya
-            <small>Mata pelajaran dan kelas yang Anda ikuti</small>
-          </span>
-        </h1>
-      </div>
+        <!-- TAMPILAN DAFTAR UNIT -->
+        <div id="viewUnit" class="hidden">
+            <div class="section-header">
+                <div>
+                    <button class="btn-back" onclick="backToMapel()"><i class="fas fa-arrow-left"></i> Kembali ke Mapel</button>
+                    <div class="page-title" style="margin-top:1rem; margin-bottom:0.5rem;" id="mapelTitleUnit">Unit Pembelajaran</div>
+                </div>
+            </div>
+            <div id="unitList" class="unit-grid">
+                <!-- Unit akan dirender di sini -->
+            </div>
+        </div>
     </div>
 
-    <!-- LOADING -->
-    <div id="loading" class="loading-box">
-      <div class="spinner"></div>
-      <p>Memuat mapel...</p>
-    </div>
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/supabase.js"></script>
+    <script>
+        let currentUser = null;
+        let enrolledSubjects = [];
 
-    <!-- CONTENT -->
-    <div id="pageContent" class="hidden">
-      <div id="mapelGrid" class="mapel-grid"></div>
+        (async () => {
+            initSupabase();
+            currentUser = await requireAuth('siswa');
+            if (!currentUser) return;
 
-      <div class="back-nav">
-        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#mapel';return false;}">
-          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
-        </a>
-      </div>
-    </div>
+            try {
+                enrolledSubjects = await getMyEnrolledSubjects(currentUser.id);
+                renderMapelList();
+            } catch (err) {
+                document.getElementById('mapelList').innerHTML = `<div class="loading" style="color:var(--danger);">Gagal memuat mapel: ${err.message}</div>`;
+            }
+        })();
 
-  </div>
+        function renderMapelList() {
+            const container = document.getElementById('mapelList');
+            
+            if (!enrolledSubjects || enrolledSubjects.length === 0) {
+                container.innerHTML = `<div class="loading">Belum ada mapel yang diikuti. Hubungi guru/operator.</div>`;
+                return;
+            }
 
-  <script src="../assets/js/config.js"></script>
-  <script src="../assets/js/supabase.js"></script>
-  <script>
-    let currentUser = null;
-    let allAssigns = [];
-    let groupedMapel = {};
+            const subjectMap = {};
+            enrolledSubjects.forEach(item => {
+                if (!item.subjects) return;
+                const sid = item.subjects.id;
+                if (!subjectMap[sid]) {
+                    subjectMap[sid] = { subject: item.subjects, classes: [] };
+                }
+                if (item.classes && !subjectMap[sid].classes.find(c => c.id === item.classes.id)) {
+                    subjectMap[sid].classes.push(item.classes);
+                }
+            });
 
-    // ============================================
-    // INIT
-    // ============================================
-    (async () => {
-      initSupabase();
-      currentUser = await requireAuth('siswa');
-      if (!currentUser) return;
-      await loadData();
-    })();
+            const subjects = Object.values(subjectMap);
 
-    async function loadData() {
-      try {
-        allAssigns = await getMyEnrolledSubjects(currentUser.id);
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('pageContent').classList.remove('hidden');
+            container.innerHTML = subjects.map(item => {
+                const subj = item.subject;
+                const classesStr = item.classes.map(c => c.name).join(', ');
+                // Menggunakan data-id dan event listener untuk menghindari bug tanda kutip
+                return `
+                    <div class="mapel-card" data-id="${subj.id}" data-name="${esc(subj.name)}">
+                        <div class="mapel-card-header">
+                            <div class="mapel-name">${esc(subj.name)}</div>
+                            ${subj.code ? `<span class="mapel-code">${esc(subj.code)}</span>` : ''}
+                        </div>
+                        <div class="mapel-class">
+                            <i class="fas fa-door-open"></i> Kelas: ${esc(classesStr)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
-        if (!allAssigns || allAssigns.length === 0) {
-          document.getElementById('mapelGrid').innerHTML = `
-            <div class="empty-state">
-              <span class="emoji">📚</span>
-              <h3>Belum Terdaftar di Kelas</h3>
-              <p>Hubungi operator sekolah Anda untuk didaftarkan ke kelas.</p>
-            </div>`;
-          return;
+            // Pasang event listener setelah render
+            document.querySelectorAll('.mapel-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = parseInt(card.dataset.id);
+                    const name = card.dataset.name;
+                    openMapel(id, name);
+                });
+            });
         }
 
-        // Grouping per subject
-        groupedMapel = {};
-        allAssigns.forEach(a => {
-          if (!a.subjects) return;
-          const sid = a.subjects.id;
-          if (!groupedMapel[sid]) {
-            groupedMapel[sid] = { subject: a.subjects, classes: [], teachers: new Set() };
-          }
-          if (a.classes && !groupedMapel[sid].classes.find(c => c.id === a.classes.id)) {
-            groupedMapel[sid].classes.push(a.classes);
-          }
-          if (a.profiles?.name) {
-            groupedMapel[sid].teachers.add(a.profiles.name);
-          }
-        });
+        async function openMapel(subjectId, subjectName) {
+            document.getElementById('viewMapel').classList.add('hidden');
+            document.getElementById('viewUnit').classList.remove('hidden');
+            document.getElementById('mapelTitleUnit').innerHTML = `<i class="fas fa-layer-group"></i> Unit: ${esc(subjectName)}`;
+            
+            const unitContainer = document.getElementById('unitList');
+            unitContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Memuat unit...</div>';
 
-        document.getElementById('mapelGrid').innerHTML = Object.values(groupedMapel).map(g => {
-          const kelasBadges = g.classes.map(c =>
-            `<span class="kelas-badge">
-              <i class="fas fa-school"></i> ${esc(c.name)}
-            </span>`
-          ).join('');
-          const teacherText = Array.from(g.teachers).join(', ');
-          return `
-            <div class="mapel-card" onclick="openMapel(${g.subject.id})">
-              <div class="mapel-header">
-                <h3>${esc(g.subject.name)}</h3>
-                ${g.subject.code ? `<span class="kode">${esc(g.subject.code)}</span>` : ''}
-              </div>
-              <div class="mapel-body">
-                <div class="teacher-info">
-                  <i class="fas fa-chalkboard-teacher"></i>
-                  ${esc(teacherText || 'Guru belum ditentukan')}
-                </div>
-                <div class="kelas-badges">${kelasBadges}</div>
-              </div>
-            </div>`;
-        }).join('');
-      } catch (err) {
-        console.error('Load error:', err);
-        document.getElementById('loading').innerHTML =
-          '<p style="color:var(--danger);">Error: ' + err.message + '</p>';
-      }
-    }
+            try {
+                const client = initSupabase();
+                const classesForSubject = enrolledSubjects
+                    .filter(x => x.subjects && x.subjects.id === subjectId && x.classes)
+                    .map(x => x.classes.id);
 
-    // ============================================
-    // OPEN MAPEL — navigasi ke materi via parent
-    // ============================================
-    function openMapel(subjectId) {
-      // Ambil data subject dari grouping
-      const group = Object.values(groupedMapel).find(g => g.subject.id === subjectId);
-      if (!group) return;
+                const { data: plans, error: planErr } = await client
+                    .from('annual_plans')
+                    .select('id')
+                    .in('class_id', classesForSubject)
+                    .eq('subject_id', subjectId);
 
-      // Simpan konteks ke sessionStorage
-      const context = {
-        subjectId: subjectId,
-        subjectName: group.subject.name,
-        subjectCode: group.subject.code || '',
-        classes: group.classes,
-        // Auto-pilih kelas pertama kalau cuma 1, kalau lebih dari 1 guru bisa pilih di materi.html
-        classId: group.classes.length === 1 ? group.classes[0].id : null,
-        className: group.classes.length === 1 ? group.classes[0].name : ''
-      };
-      sessionStorage.setItem('siswa_context', JSON.stringify(context));
+                if (planErr) throw planErr;
+                if (!plans || plans.length === 0) {
+                    unitContainer.innerHTML = `<div class="loading">Guru belum menyusun perencanaan/unit untuk mapel ini.</div>`;
+                    return;
+                }
 
-      // Kalau di iframe → kirim pesan ke parent
-      if (window.self !== window.top) {
-        try {
-          window.top.postMessage({
-            type: 'SISWA_NAVIGATE',
-            view: 'materi',
-            context: context
-          }, '*');
-          return;
-        } catch (e) { /* fallback */ }
-      }
+                const planIds = plans.map(p => p.id);
 
-      // Fallback
-      window.location.href = 'materi.html?embed=1';
-    }
+                const { data: units, error: unitErr } = await client
+                    .from('units')
+                    .select('*')
+                    .in('annual_plan_id', planIds)
+                    .order('created_at', { ascending: true });
 
-    function esc(t) {
-      if (t === null || t === undefined) return '';
-      const d = document.createElement('div');
-      d.textContent = String(t);
-      return d.innerHTML;
-    }
-  </script>
+                if (unitErr) throw unitErr;
+
+                if (!units || units.length === 0) {
+                    unitContainer.innerHTML = `<div class="loading">Belum ada unit yang dipublikasikan.</div>`;
+                    return;
+                }
+
+                unitContainer.innerHTML = units.map(u => `
+                    <div class="unit-card" data-unit-id="${u.id}">
+                        <h3>${esc(u.title)}</h3>
+                        <p>${esc(u.description || 'Tidak ada deskripsi.')}</p>
+                        <div class="unit-card-footer">
+                            <span class="unit-badge">${esc(u.kktp_type || 'Unit')}</span>
+                            <button class="btn-open">Buka Unit <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Pasang event listener untuk unit card
+                document.querySelectorAll('.unit-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const unitId = card.dataset.unitId;
+                        openUnitDetail(unitId);
+                    });
+                });
+
+            } catch (err) {
+                unitContainer.innerHTML = `<div class="loading" style="color:var(--danger);">Gagal memuat unit: ${err.message}</div>`;
+            }
+        }
+
+        // Fungsi untuk membuka detail unit (Mengirim pesan ke Dashboard)
+        function openUnitDetail(unitId) {
+            if (window.self !== window.top) {
+                // Jika di dalam iframe, kirim pesan ke parent (dashboard)
+                window.parent.postMessage({ 
+                    type: 'SISWA_OPEN_UNIT_DETAIL', 
+                    unitId: unitId 
+                }, '*');
+            } else {
+                // Jika dibuka langsung di tab browser
+                window.location.href = `unit-detail.html?unit_id=${unitId}`;
+            }
+        }
+
+        function backToMapel() {
+            document.getElementById('viewUnit').classList.add('hidden');
+            document.getElementById('viewMapel').classList.remove('hidden');
+        }
+
+        function esc(t) {
+            if (!t) return '';
+            const d = document.createElement('div'); d.textContent = String(t); return d.innerHTML;
+        }
+    </script>
 </body>
 </html>

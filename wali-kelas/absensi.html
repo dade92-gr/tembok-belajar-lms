@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Absensi Siswa — Wali Kelas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #ec4899; --primary-dark: #be185d; --primary-light: #fce7f3;
+      --primary-lighter: #fdf2f8;
+      --navy: #1e293b; --navy-dark: #0f172a;
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+      --blue: #3b82f6;
+      --bg: #f1f5f9; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    body.tb-embed .page-toolbar-left { gap: 0.3rem; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--navy); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .btn-primary {
+      background: var(--primary); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark); box-shadow: 0 4px 12px rgba(236,72,153,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--primary);
+      color: var(--primary); padding: 0.55rem 1.1rem; border-radius: 8px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--primary-light); }
+    /* TABS */
+    .tabs-nav {
+      display: flex; gap: 0.3rem; border-bottom: 2px solid var(--border);
+      margin-bottom: 1rem; overflow-x: auto;
+    }
+    .tab-btn {
+      background: transparent; border: none; padding: 0.8rem 1.4rem;
+      cursor: pointer; font-size: 0.88rem; font-weight: 600;
+      color: var(--text-muted); font-family: inherit;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: var(--transition); white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    /* FILTER */
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 1fr 1fr auto;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-row.rekap { grid-template-columns: 1fr 1fr auto auto; }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .filter-input, .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(236,72,153,0.15);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
+    }
+    /* INFO */
+    .info-bar {
+      background: var(--primary-light); border-radius: 10px;
+      padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.82rem;
+      color: var(--primary-dark); font-weight: 500; display: flex;
+      align-items: center; gap: 8px; border: 1px solid rgba(236,72,153,0.2);
+      flex-wrap: wrap;
+    }
+    .info-bar i { color: var(--primary); }
+    .info-bar strong { color: var(--navy); }
+    /* TABLE */
+    .table-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table thead { background: #f8fafc; }
+    .data-table th {
+      padding: 0.85rem 1rem; text-align: left; font-weight: 600;
+      color: var(--text-muted); border-bottom: 2px solid var(--border);
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+      vertical-align: middle; color: var(--text);
+    }
+    .data-table tbody tr:hover { background: var(--primary-lighter); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .nama-siswa { font-weight: 600; color: var(--text); }
+    .nisn-teks { color: var(--text-secondary); font-size: 0.78rem; font-family: 'Courier New', monospace; }
+    /* RADIO ABSENSI */
+    .absen-group {
+      display: inline-flex; gap: 4px; align-items: center;
+    }
+    .absen-radio {
+      display: none;
+    }
+    .absen-label {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1.5px solid var(--border); cursor: pointer;
+      font-weight: 700; font-size: 0.75rem; color: var(--text-muted);
+      transition: var(--transition); user-select: none;
+    }
+    .absen-label:hover { border-color: var(--text-secondary); background: var(--bg); }
+    .absen-radio:checked + .absen-label.hadir {
+      background: var(--success); border-color: var(--success); color: white;
+    }
+    .absen-radio:checked + .absen-label.sakit {
+      background: var(--warning); border-color: var(--warning); color: white;
+    }
+    .absen-radio:checked + .absen-label.izin {
+      background: var(--blue); border-color: var(--blue); color: white;
+    }
+    .absen-radio:checked + .absen-label.alfa {
+      background: var(--danger); border-color: var(--danger); color: white;
+    }
+    .keterangan-input {
+      width: 100%; padding: 0.45rem 0.7rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.8rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .keterangan-input:focus { border-color: var(--primary); }
+    /* REKAP BADGE */
+    .rekap-cell {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 28px; border-radius: 6px;
+      font-size: 0.78rem; font-weight: 700;
+    }
+    .rekap-cell.hadir { background: #d1fae5; color: #047857; }
+    .rekap-cell.sakit { background: #fef3c7; color: #92400e; }
+    .rekap-cell.izin { background: #dbeafe; color: #1e40af; }
+    .rekap-cell.alfa { background: #fee2e2; color: #b91c1c; }
+    .rekap-cell.zero { background: var(--bg); color: var(--text-muted); }
+    .persen-cell { font-weight: 700; }
+    .persen-cell.good { color: var(--success); }
+    .persen-cell.warn { color: var(--warning); }
+    .persen-cell.bad { color: var(--danger); }
+    /* EMPTY */
+    .empty-row { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    .empty-row .emoji { font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
+    /* ALERT */
+    .alert { margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.83rem; line-height: 1.5; }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-success { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+    .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--navy);
+      color: white; padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2); font-size: 0.85rem;
+      font-weight: 500; display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px); transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
+    /* SAVE BAR */
+    .save-bar {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1rem 1.2rem;
+      margin-top: 1rem; display: flex; justify-content: space-between;
+      align-items: center; gap: 1rem; flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+    .save-bar-text { font-size: 0.85rem; color: var(--text-muted); }
+    .save-bar-text strong { color: var(--text); }
+    .hidden { display: none !important; }
+    .spinner {
+      width: 32px; height: 32px; margin: 0 auto 0.8rem;
+      border: 3px solid var(--primary-light); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-box { text-align: center; padding: 2rem 1rem; color: var(--text-muted); }
+    @media (max-width: 900px) {
+      .filter-row, .filter-row.rekap { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row, .filter-row.rekap { grid-template-columns: 1fr; }
+      .data-table th, .data-table td { padding: 0.55rem 0.5rem; font-size: 0.78rem; }
+      .absen-label { width: 28px; height: 28px; font-size: 0.7rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-clipboard-check"></i>
+          <span>
+            Absensi Siswa
+            <small>Catat kehadiran harian dan lihat rekap bulanan</small>
+          </span>
+        </h1>
+      </div>
+    </div>
+
+    <div class="tabs-nav">
+      <button class="tab-btn active" data-tab="input" onclick="switchTab('input')">
+        <i class="fas fa-pen-to-square"></i> Input Absensi
+      </button>
+      <button class="tab-btn" data-tab="rekap" onclick="switchTab('rekap')">
+        <i class="fas fa-chart-bar"></i> Rekap Bulanan
+      </button>
+    </div>
+
+    <!-- TAB 1: INPUT -->
+    <div class="tab-content active" id="tab-input">
+      <div class="filter-card">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="inputKelas"><i class="fas fa-school"></i> Kelas</label>
+            <select id="inputKelas" class="filter-select" onchange="loadInputData()">
+              <option value="">-- Pilih Kelas --</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="inputTanggal"><i class="fas fa-calendar"></i> Tanggal</label>
+            <input type="date" id="inputTanggal" class="filter-input" onchange="loadInputData()">
+          </div>
+          <div class="filter-group">
+            <button class="btn-outline" onclick="setAllStatus('hadir')">
+              <i class="fas fa-check-double"></i> Hadir Semua
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-bar">
+        <i class="fas fa-info-circle"></i>
+        <span>Kelas: <strong id="inputKelasName">-</strong> ·
+              Tanggal: <strong id="inputTanggalStr">-</strong> ·
+              Total: <strong id="inputTotal">0</strong> siswa ·
+              Sudah diisi: <strong id="inputFilled">0</strong></span>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">No</th>
+                <th style="width:200px;">Nama Siswa</th>
+                <th style="width:110px;">NISN</th>
+                <th style="width:260px; text-align:center;">Status Kehadiran</th>
+                <th>Keterangan (opsional)</th>
+              </tr>
+            </thead>
+            <tbody id="inputBody">
+              <tr><td colspan="5" class="empty-row">Pilih kelas dan tanggal untuk mulai input.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="save-bar hidden" id="saveBar">
+        <div class="save-bar-text">
+          <strong id="saveCount">0</strong> siswa sudah dipilih statusnya.
+          Perubahan belum disimpan.
+        </div>
+        <button class="btn-primary" id="btnSaveAbsensi" onclick="saveAbsensi()">
+          <i class="fas fa-save"></i> Simpan Absensi
+        </button>
+      </div>
+
+      <div id="inputAlert" class="alert hidden"></div>
+    </div>
+
+    <!-- TAB 2: REKAP -->
+    <div class="tab-content" id="tab-rekap">
+      <div class="filter-card">
+        <div class="filter-row rekap">
+          <div class="filter-group">
+            <label for="rekapKelas"><i class="fas fa-school"></i> Kelas</label>
+            <select id="rekapKelas" class="filter-select">
+              <option value="">-- Pilih Kelas --</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="rekapBulan"><i class="fas fa-calendar"></i> Bulan</label>
+            <input type="month" id="rekapBulan" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <button class="btn-primary" onclick="loadRekap()">
+              <i class="fas fa-search"></i> Tampilkan
+            </button>
+          </div>
+          <div class="filter-group">
+            <button class="btn-outline" onclick="exportRekapCSV()">
+              <i class="fas fa-download"></i> CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-bar">
+        <i class="fas fa-info-circle"></i>
+        <span>Kelas: <strong id="rekapKelasName">-</strong> ·
+              Bulan: <strong id="rekapBulanStr">-</strong> ·
+              Hari efektif: <strong id="rekapHariEfektif">0</strong></span>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">No</th>
+                <th>Nama Siswa</th>
+                <th style="width:80px; text-align:center;">Hadir</th>
+                <th style="width:80px; text-align:center;">Sakit</th>
+                <th style="width:80px; text-align:center;">Izin</th>
+                <th style="width:80px; text-align:center;">Alfa</th>
+                <th style="width:100px; text-align:center;">% Hadir</th>
+              </tr>
+            </thead>
+            <tbody id="rekapBody">
+              <tr><td colspan="7" class="empty-row">Pilih kelas dan bulan untuk melihat rekap.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let homeroomClasses = [];
+    let inputStudents = [];
+    let inputExisting = {};
+    let inputChanged = false;
+    let rekapData = [];
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('wali_kelas');
+      if (!currentUser) return;
+
+      await loadHomeroomClasses();
+
+      const today = new Date().toISOString().slice(0, 10);
+      document.getElementById('inputTanggal').value = today;
+      const now = new Date();
+      document.getElementById('rekapBulan').value =
+        now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+      await autoSelect();
+    })();
+
+    async function loadHomeroomClasses() {
+      try {
+        homeroomClasses = await getMyHomeroomClasses(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load kelas walian:', err);
+        homeroomClasses = [];
+      }
+
+      const sel1 = document.getElementById('inputKelas');
+      const sel2 = document.getElementById('rekapKelas');
+      sel1.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+      sel2.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+
+      if (homeroomClasses.length === 0) {
+        sel1.innerHTML = '<option value="">(Belum jadi wali kelas)</option>';
+        sel2.innerHTML = '<option value="">(Belum jadi wali kelas)</option>';
+        sel1.disabled = true;
+        sel2.disabled = true;
+        return;
+      }
+
+      homeroomClasses.forEach(c => {
+        const label = c.class_name + (c.grade ? ' (Kelas ' + c.grade + ')' : '');
+        const opt1 = document.createElement('option');
+        opt1.value = c.class_id;
+        opt1.textContent = label;
+        sel1.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = c.class_id;
+        opt2.textContent = label;
+        sel2.appendChild(opt2);
+      });
+    }
+
+    async function autoSelect() {
+      if (homeroomClasses.length === 0) return;
+      const urlClassId = new URLSearchParams(window.location.search).get('classId');
+      let selected = urlClassId && homeroomClasses.find(c => String(c.class_id) === String(urlClassId))
+        ? String(urlClassId)
+        : String(homeroomClasses[0].class_id);
+
+      document.getElementById('inputKelas').value = selected;
+      document.getElementById('rekapKelas').value = selected;
+      await loadInputData();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tab);
+      });
+      document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.toggle('active', c.id === 'tab-' + tab);
+      });
+    }
+
+    /* ============================================
+       TAB 1: INPUT ABSENSI
+       ============================================ */
+    async function loadInputData() {
+      const classId = document.getElementById('inputKelas').value;
+      const tanggal = document.getElementById('inputTanggal').value;
+      const alertBox = document.getElementById('inputAlert');
+      alertBox.classList.add('hidden');
+
+      if (!classId || !tanggal) {
+        document.getElementById('inputBody').innerHTML =
+          '<tr><td colspan="5" class="empty-row">Pilih kelas dan tanggal untuk mulai input.</td></tr>';
+        document.getElementById('saveBar').classList.add('hidden');
+        return;
+      }
+
+      const kelas = homeroomClasses.find(c => String(c.class_id) === String(classId));
+      document.getElementById('inputKelasName').textContent = kelas?.class_name || '-';
+      document.getElementById('inputTanggalStr').textContent = formatTanggalIndo(tanggal);
+
+      document.getElementById('inputBody').innerHTML =
+        '<tr><td colspan="5" class="empty-row"><div class="spinner"></div>Memuat siswa...</td></tr>';
+
+      try {
+        const enrollments = await getStudentsInClass(parseInt(classId));
+        inputStudents = (enrollments || [])
+          .map(e => e.profiles)
+          .filter(Boolean)
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        const client = initSupabase();
+        const { data: existing } = await client
+          .from('absensi')
+          .select('student_id, status, keterangan')
+          .eq('class_id', parseInt(classId))
+          .eq('tanggal', tanggal);
+
+        inputExisting = {};
+        (existing || []).forEach(r => {
+          inputExisting[r.student_id] = { status: r.status, keterangan: r.keterangan || '' };
+        });
+
+        renderInputTable();
+        updateSaveBar();
+      } catch (err) {
+        console.error('Load input error:', err);
+        document.getElementById('inputBody').innerHTML =
+          '<tr><td colspan="5" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + escapeHtml(err.message) + '</td></tr>';
+      }
+    }
+
+    function renderInputTable() {
+      const tbody = document.getElementById('inputBody');
+
+      if (inputStudents.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="5" class="empty-row">
+            <span class="emoji">👥</span>
+            Belum ada siswa di kelas ini.
+          </td></tr>`;
+        document.getElementById('saveBar').classList.add('hidden');
+        return;
+      }
+
+      tbody.innerHTML = inputStudents.map((s, i) => {
+        const ex = inputExisting[s.id] || {};
+        const currentStatus = ex.status || '';
+        const currentKet = ex.keterangan || '';
+        return `
+          <tr data-sid="${s.id}">
+            <td>${i + 1}</td>
+            <td class="nama-siswa">${escapeHtml(s.name)}</td>
+            <td class="nisn-teks">${s.nisn ? escapeHtml(s.nisn) : '-'}</td>
+            <td style="text-align:center;">
+              <div class="absen-group">
+                <input type="radio" name="absen-${s.id}" id="h-${s.id}" value="hadir" class="absen-radio" ${currentStatus === 'hadir' ? 'checked' : ''} onchange="onStatusChange('${s.id}')">
+                <label for="h-${s.id}" class="absen-label hadir" title="Hadir">H</label>
+                <input type="radio" name="absen-${s.id}" id="s-${s.id}" value="sakit" class="absen-radio" ${currentStatus === 'sakit' ? 'checked' : ''} onchange="onStatusChange('${s.id}')">
+                <label for="s-${s.id}" class="absen-label sakit" title="Sakit">S</label>
+                <input type="radio" name="absen-${s.id}" id="i-${s.id}" value="izin" class="absen-radio" ${currentStatus === 'izin' ? 'checked' : ''} onchange="onStatusChange('${s.id}')">
+                <label for="i-${s.id}" class="absen-label izin" title="Izin">I</label>
+                <input type="radio" name="absen-${s.id}" id="a-${s.id}" value="alfa" class="absen-radio" ${currentStatus === 'alfa' ? 'checked' : ''} onchange="onStatusChange('${s.id}')">
+                <label for="a-${s.id}" class="absen-label alfa" title="Alfa">A</label>
+              </div>
+            </td>
+            <td>
+              <input type="text" class="keterangan-input" data-sid="${s.id}" placeholder="Keterangan..." maxlength="200" value="${escapeHtml(currentKet)}" onchange="onKeteranganChange()">
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('inputTotal').textContent = inputStudents.length;
+      document.getElementById('saveBar').classList.remove('hidden');
+    }
+
+    function onStatusChange() {
+      inputChanged = true;
+      updateSaveBar();
+    }
+
+    function onKeteranganChange() {
+      inputChanged = true;
+      updateSaveBar();
+    }
+
+    function updateSaveBar() {
+      const filled = document.querySelectorAll('.absen-radio:checked').length;
+      document.getElementById('inputFilled').textContent = filled;
+      document.getElementById('saveCount').textContent = filled;
+      const btn = document.getElementById('btnSaveAbsensi');
+      btn.disabled = filled === 0;
+    }
+
+    function setAllStatus(status) {
+      if (inputStudents.length === 0) return;
+      inputStudents.forEach(s => {
+        const radio = document.getElementById(status === 'hadir' ? 'h-' :
+          status === 'sakit' ? 's-' :
+          status === 'izin' ? 'i-' : 'a-' + s.id);
+        const el = document.getElementById(status === 'hadir' ? 'h-' :
+          status === 'sakit' ? 's-' :
+          status === 'izin' ? 'i-' : 'a-' + s.id);
+        if (el) el.checked = true;
+      });
+      // Perbaiki: query by name
+      inputStudents.forEach(s => {
+        const radio = document.querySelector(`input[name="absen-${s.id}"][value="${status}"]`);
+        if (radio) radio.checked = true;
+      });
+      inputChanged = true;
+      updateSaveBar();
+    }
+
+    async function saveAbsensi() {
+      const classId = parseInt(document.getElementById('inputKelas').value);
+      const tanggal = document.getElementById('inputTanggal').value;
+      const alertBox = document.getElementById('inputAlert');
+      const btn = document.getElementById('btnSaveAbsensi');
+
+      if (!classId || !tanggal) return;
+
+      const rows = [];
+      inputStudents.forEach(s => {
+        const checked = document.querySelector(`input[name="absen-${s.id}"]:checked`);
+        if (!checked) return;
+        const ketEl = document.querySelector(`.keterangan-input[data-sid="${s.id}"]`);
+        rows.push({
+          student_id: s.id,
+          class_id: classId,
+          school_id: currentUser.school_id,
+          tanggal,
+          status: checked.value,
+          keterangan: (ketEl?.value || '').trim() || null,
+          recorded_by: currentUser.id
+        });
+      });
+
+      if (rows.length === 0) {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = 'Tidak ada data yang akan disimpan.';
+        alertBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+      alertBox.classList.add('hidden');
+
+      try {
+        const client = initSupabase();
+        const { error } = await client
+          .from('absensi')
+          .upsert(rows, { onConflict: 'student_id,class_id,tanggal' });
+
+        if (error) throw error;
+
+        alertBox.className = 'alert alert-success';
+        alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Absensi berhasil disimpan (' + rows.length + ' siswa).';
+        alertBox.classList.remove('hidden');
+
+        inputExisting = {};
+        rows.forEach(r => {
+          inputExisting[r.student_id] = { status: r.status, keterangan: r.keterangan || '' };
+        });
+        inputChanged = false;
+
+        showToast('✅ Absensi ' + formatTanggalIndo(tanggal) + ' tersimpan.', 'success');
+      } catch (err) {
+        console.error('Save absensi error:', err);
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = 'Gagal menyimpan: ' + (err.message || 'Unknown error');
+        alertBox.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan Absensi';
+      }
+    }
+
+    /* ============================================
+       TAB 2: REKAP
+       ============================================ */
+    async function loadRekap() {
+      const classId = document.getElementById('rekapKelas').value;
+      const bulan = document.getElementById('rekapBulan').value;
+
+      if (!classId || !bulan) {
+        document.getElementById('rekapBody').innerHTML =
+          '<tr><td colspan="7" class="empty-row">Pilih kelas dan bulan.</td></tr>';
+        return;
+      }
+
+      const kelas = homeroomClasses.find(c => String(c.class_id) === String(classId));
+      document.getElementById('rekapKelasName').textContent = kelas?.class_name || '-';
+      document.getElementById('rekapBulanStr').textContent = formatBulanIndo(bulan);
+
+      document.getElementById('rekapBody').innerHTML =
+        '<tr><td colspan="7" class="empty-row"><div class="spinner"></div>Memuat rekap...</td></tr>';
+
+      try {
+        const [year, month] = bulan.split('-').map(Number);
+        const firstDay = new Date(year, month - 1, 1).toISOString().slice(0, 10);
+        const lastDay = new Date(year, month, 0).toISOString().slice(0, 10);
+
+        const enrollments = await getStudentsInClass(parseInt(classId));
+        const students = (enrollments || [])
+          .map(e => e.profiles)
+          .filter(Boolean)
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        const client = initSupabase();
+        const { data: absData } = await client
+          .from('absensi')
+          .select('student_id, tanggal, status')
+          .eq('class_id', parseInt(classId))
+          .gte('tanggal', firstDay)
+          .lte('tanggal', lastDay);
+
+        const countMap = {};
+        const uniqueDates = new Set();
+        (absData || []).forEach(r => {
+          uniqueDates.add(r.tanggal);
+          if (!countMap[r.student_id]) {
+            countMap[r.student_id] = { hadir: 0, sakit: 0, izin: 0, alfa: 0 };
+          }
+          if (countMap[r.student_id][r.status] !== undefined) {
+            countMap[r.student_id][r.status]++;
+          }
+        });
+
+        const hariEfektif = uniqueDates.size;
+        document.getElementById('rekapHariEfektif').textContent = hariEfektif;
+
+        rekapData = students.map(s => {
+          const c = countMap[s.id] || { hadir: 0, sakit: 0, izin: 0, alfa: 0 };
+          const total = c.hadir + c.sakit + c.izin + c.alfa;
+          const persen = total > 0 ? Math.round((c.hadir / total) * 100) : 0;
+          return { student: s, ...c, total, persen };
+        });
+
+        renderRekapTable();
+      } catch (err) {
+        console.error('Load rekap error:', err);
+        document.getElementById('rekapBody').innerHTML =
+          '<tr><td colspan="7" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + escapeHtml(err.message) + '</td></tr>';
+      }
+    }
+
+    function renderRekapTable() {
+      const tbody = document.getElementById('rekapBody');
+
+      if (rekapData.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="7" class="empty-row">
+            <span class="emoji">📊</span>
+            Belum ada data absensi di bulan ini.
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rekapData.map((r, i) => {
+        const persenClass = r.persen >= 90 ? 'good' : r.persen >= 75 ? 'warn' : 'bad';
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td class="nama-siswa">${escapeHtml(r.student.name)}</td>
+            <td style="text-align:center;"><span class="rekap-cell ${r.hadir > 0 ? 'hadir' : 'zero'}">${r.hadir}</span></td>
+            <td style="text-align:center;"><span class="rekap-cell ${r.sakit > 0 ? 'sakit' : 'zero'}">${r.sakit}</span></td>
+            <td style="text-align:center;"><span class="rekap-cell ${r.izin > 0 ? 'izin' : 'zero'}">${r.izin}</span></td>
+            <td style="text-align:center;"><span class="rekap-cell ${r.alfa > 0 ? 'alfa' : 'zero'}">${r.alfa}</span></td>
+            <td style="text-align:center;" class="persen-cell ${persenClass}">${r.persen}%</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportRekapCSV() {
+      if (rekapData.length === 0) {
+        showToast('Tidak ada data untuk diexport.', 'error');
+        return;
+      }
+      const kelasName = document.getElementById('rekapKelasName').textContent;
+      const bulanStr = document.getElementById('rekapBulanStr').textContent;
+      const headers = ['No', 'Nama Siswa', 'NISN', 'Hadir', 'Sakit', 'Izin', 'Alfa', 'Total', '% Hadir'];
+      const rows = rekapData.map((r, i) => [
+        i + 1,
+        r.student.name,
+        r.student.nisn || '-',
+        r.hadir, r.sakit, r.izin, r.alfa,
+        r.total, r.persen + '%'
+      ]);
+      const csv = [headers, ...rows]
+        .map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Rekap_Absensi_${kelasName}_${bulanStr.replace(/\s/g, '_')}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('📥 CSV rekap diunduh.', 'success');
+    }
+
+    /* ============================================
+       UTILS
+       ============================================ */
+    function formatTanggalIndo(tgl) {
+      if (!tgl) return '-';
+      try {
+        const d = new Date(tgl + 'T00:00:00');
+        if (isNaN(d.getTime())) return tgl;
+        return d.toLocaleDateString('id-ID', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+      } catch { return tgl; }
+    }
+
+    function formatBulanIndo(bulan) {
+      if (!bulan) return '-';
+      try {
+        const [y, m] = bulan.split('-').map(Number);
+        const d = new Date(y, m - 1, 1);
+        return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+      } catch { return bulan; }
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+  </script>
+</body>
+</html>

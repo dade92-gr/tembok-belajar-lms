@@ -291,6 +291,76 @@
     .info-bar i { color: var(--primary); }
     .info-bar strong { color: var(--navy); }
 
+    /* BULK ACTION BAR */
+    .bulk-bar {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 1rem;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.2s ease;
+    }
+    .bulk-bar.active { display: flex; }
+    .bulk-info {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bulk-info strong { color: #78350f; font-size: 1rem; }
+    .bulk-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn-bulk-clear {
+      background: transparent;
+      border: 1px solid #92400e;
+      color: #92400e;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-bulk-clear:hover { background: #fef3c7; }
+    .btn-bulk-delete {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-bulk-delete:hover { background: #dc2626; transform: translateY(-1px); }
+    .btn-bulk-delete:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Checkbox styling */
+    .row-checkbox, #checkAll {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+    .checkbox-cell { text-align: center; width: 40px; }
+    .data-table tbody tr.selected { background: #eff6ff !important; }
+    .data-table tbody tr.selected:hover { background: #dbeafe !important; }
+
     /* TABLE */
     .table-card {
       background: var(--surface);
@@ -334,6 +404,7 @@
 
     .nama-siswa { font-weight: 600; color: var(--text); }
     .email-teks { color: var(--text-muted); font-size: 0.8rem; }
+    .nisn-teks { color: var(--text-secondary); font-size: 0.78rem; font-family: 'Courier New', monospace; }
 
     .status-badge {
       display: inline-block;
@@ -481,10 +552,12 @@
       border-radius: var(--radius-lg);
       padding: 1.8rem;
       width: 100%;
-      max-width: 500px;
+      max-width: 640px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       animation: fadeInUp 0.25s ease;
       margin: auto;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .modal-card h2 {
@@ -501,6 +574,43 @@
 
     .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; }
 
+    /* SECTION DIVIDER */
+    .form-section {
+      margin-top: 1.2rem;
+      margin-bottom: 0.6rem;
+    }
+    .form-section:first-of-type {
+      margin-top: 0;
+    }
+    .form-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--primary-light);
+      margin-bottom: 0.8rem;
+    }
+    .form-section-title i {
+      color: var(--primary);
+      font-size: 0.85rem;
+    }
+    .form-section-title .badge-opsional {
+      background: #f1f5f9;
+      color: var(--text-muted);
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    /* FORM */
     .form-label {
       display: block;
       font-size: 0.78rem;
@@ -510,6 +620,8 @@
       text-transform: uppercase;
       letter-spacing: 0.3px;
     }
+
+    .form-label .req { color: var(--danger); }
 
     .form-input {
       width: 100%;
@@ -530,6 +642,20 @@
       box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
     }
 
+    .form-input:disabled {
+      background: var(--bg);
+      cursor: not-allowed;
+    }
+
+    select.form-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 35px;
+      cursor: pointer;
+    }
+
     .form-hint {
       font-size: 0.7rem;
       color: var(--text-muted);
@@ -537,6 +663,22 @@
       margin-bottom: 1rem;
       padding-left: 4px;
       line-height: 1.5;
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    .form-row-2 .form-group {
+      margin-bottom: 0;
+    }
+    .form-row-2 .form-input {
+      margin-bottom: 0.8rem;
+    }
+
+    @media (max-width: 520px) {
+      .form-row-2 { grid-template-columns: 1fr; }
     }
 
     .alert {
@@ -593,6 +735,46 @@
 
     .progress-detail .item-ok { color: var(--success); }
     .progress-detail .item-err { color: var(--danger); }
+
+    /* BULK PROGRESS */
+    .bulk-progress {
+      margin-top: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .bulk-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    .bulk-progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .bulk-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--danger), #b91c1c);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .bulk-progress-detail {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      max-height: 120px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+    }
+    .bulk-progress-detail .ok { color: var(--success); }
+    .bulk-progress-detail .err { color: var(--danger); }
 
     /* TOAST */
     .toast {
@@ -689,7 +871,7 @@
       <div class="filter-row">
         <div class="filter-group">
           <label for="searchInput"><i class="fas fa-search"></i> Cari</label>
-          <input type="text" id="searchInput" class="filter-input" placeholder="Cari nama atau email siswa..." oninput="applyFilter()">
+          <input type="text" id="searchInput" class="filter-input" placeholder="Cari nama, email, atau NISN siswa..." oninput="applyFilter()">
         </div>
         <div class="filter-group">
           <label for="filterStatus"><i class="fas fa-circle-check"></i> Status</label>
@@ -715,21 +897,41 @@
             Halaman: <strong id="currentPageInfo">1</strong> dari <strong id="totalPagesInfo">1</strong></span>
     </div>
 
+    <!-- BULK ACTION BAR -->
+    <div class="bulk-bar" id="bulkBar">
+      <div class="bulk-info">
+        <i class="fas fa-check-square"></i>
+        <strong id="selectedCount">0</strong> siswa dipilih
+      </div>
+      <div class="bulk-actions">
+        <button class="btn-bulk-clear" onclick="clearSelection()">
+          <i class="fas fa-xmark"></i> Batal Pilih
+        </button>
+        <button class="btn-bulk-delete" id="btnBulkDelete" onclick="openBulkDelete()">
+          <i class="fas fa-trash"></i> Hapus <span id="bulkCountLabel">0</span> Siswa
+        </button>
+      </div>
+    </div>
+
     <!-- TABLE -->
     <div class="table-card">
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
             <tr>
+              <th class="checkbox-cell">
+                <input type="checkbox" id="checkAll" onchange="toggleSelectAll(this.checked)" title="Pilih semua di halaman ini">
+              </th>
               <th style="width:50px;">No</th>
               <th>Nama Siswa</th>
-              <th style="width:240px;">Email</th>
-              <th style="width:120px;">Status</th>
+              <th style="width:200px;">Email</th>
+              <th style="width:120px;">NISN</th>
+              <th style="width:100px;">Status</th>
               <th style="width:150px;">Aksi</th>
             </tr>
           </thead>
           <tbody id="tableBody">
-            <tr><td colspan="5" class="empty-row">Memuat...</td></tr>
+            <tr><td colspan="7" class="empty-row">Memuat...</td></tr>
           </tbody>
         </table>
       </div>
@@ -769,16 +971,107 @@
         Akun login dan profil siswa akan dibuat otomatis.
       </p>
 
-      <label class="form-label" for="inputName">Nama Lengkap <span style="color:var(--danger);">*</span></label>
-      <input type="text" id="inputName" class="form-input" placeholder="Contoh: Ahmad Fauzi" maxlength="100">
+      <!-- BAGIAN 1: DATA UTAMA -->
+      <div class="form-section">
+        <div class="form-section-title">
+          <i class="fas fa-user"></i> Data Utama
+        </div>
 
-      <label class="form-label" for="inputEmail">Email <span style="color:var(--danger);">*</span></label>
-      <input type="email" id="inputEmail" class="form-input" placeholder="Contoh: ahmad@siswa.sch.id" maxlength="100">
+        <label class="form-label" for="inputName">Nama Lengkap <span class="req">*</span></label>
+        <input type="text" id="inputName" class="form-input" placeholder="Contoh: Ahmad Fauzi" maxlength="100">
 
-      <div id="passwordField">
-        <label class="form-label" for="inputPassword">Password Awal <span style="color:var(--danger);">*</span></label>
-        <input type="password" id="inputPassword" class="form-input" placeholder="Minimal 6 karakter" maxlength="50">
-        <p class="form-hint">Siswa bisa mengganti password setelah login pertama.</p>
+        <label class="form-label" for="inputEmail">Email <span class="req">*</span></label>
+        <input type="email" id="inputEmail" class="form-input" placeholder="Contoh: ahmad@siswa.sch.id" maxlength="100">
+
+        <div id="passwordField">
+          <label class="form-label" for="inputPassword">Password Awal <span class="req">*</span></label>
+          <input type="password" id="inputPassword" class="form-input" placeholder="Minimal 6 karakter" maxlength="50">
+          <p class="form-hint">Siswa bisa mengganti password setelah login pertama.</p>
+        </div>
+      </div>
+
+      <!-- BAGIAN 2: DATA KEPENDUDUKAN -->
+      <div class="form-section">
+        <div class="form-section-title">
+          <i class="fas fa-id-card"></i> Data Kependudukan
+          <span class="badge-opsional">Opsional</span>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="inputNisn">NISN</label>
+            <input type="text" id="inputNisn" class="form-input" placeholder="10 digit angka" maxlength="10">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inputNis">NIS</label>
+            <input type="text" id="inputNis" class="form-input" placeholder="Nomor Induk Siswa" maxlength="20">
+          </div>
+        </div>
+
+        <label class="form-label" for="inputNik">NIK (KTP)</label>
+        <input type="text" id="inputNik" class="form-input" placeholder="16 digit angka" maxlength="16">
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="inputTempatLahir">Tempat Lahir</label>
+            <input type="text" id="inputTempatLahir" class="form-input" placeholder="Contoh: Indramayu" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inputTanggalLahir">Tanggal Lahir</label>
+            <input type="date" id="inputTanggalLahir" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="inputJenisKelamin">Jenis Kelamin</label>
+            <select id="inputJenisKelamin" class="form-input">
+              <option value="">-- Pilih --</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inputAgama">Agama</label>
+            <select id="inputAgama" class="form-input">
+              <option value="">-- Pilih --</option>
+              <option value="Islam">Islam</option>
+              <option value="Kristen">Kristen</option>
+              <option value="Katolik">Katolik</option>
+              <option value="Hindu">Hindu</option>
+              <option value="Buddha">Buddha</option>
+              <option value="Konghucu">Konghucu</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="form-label" for="inputAlamat">Alamat</label>
+        <input type="text" id="inputAlamat" class="form-input" placeholder="Jl. Raya No. 1, Indramayu" maxlength="500">
+
+        <label class="form-label" for="inputNoHp">No HP</label>
+        <input type="text" id="inputNoHp" class="form-input" placeholder="081234567890" maxlength="20">
+      </div>
+
+      <!-- BAGIAN 3: DATA ORANG TUA -->
+      <div class="form-section">
+        <div class="form-section-title">
+          <i class="fas fa-users"></i> Data Orang Tua
+          <span class="badge-opsional">Opsional</span>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="inputNamaAyah">Nama Ayah</label>
+            <input type="text" id="inputNamaAyah" class="form-input" placeholder="Nama ayah" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inputNamaIbu">Nama Ibu</label>
+            <input type="text" id="inputNamaIbu" class="form-input" placeholder="Nama ibu" maxlength="100">
+          </div>
+        </div>
+
+        <label class="form-label" for="inputNamaWali">Nama Wali</label>
+        <input type="text" id="inputNamaWali" class="form-input" placeholder="Kosongkan jika tidak ada" maxlength="100">
       </div>
 
       <div id="modalError" class="alert alert-error hidden"></div>
@@ -799,7 +1092,7 @@
         <strong>📋 Langkah:</strong>
         <ol style="margin: 0.5rem 0 0 1rem; padding: 0;">
           <li>Klik <strong>"Download Template"</strong> di bawah</li>
-          <li>Buka file Excel → isi kolom: <strong>Nama, Email, Password</strong></li>
+          <li>Buka file Excel → isi kolom: <strong>Nama, Email, Password</strong> (wajib) + kolom opsional (NISN, NIS, dll)</li>
           <li>Simpan file</li>
           <li>Klik <strong>"Pilih File Excel"</strong> → pilih file yang sudah diisi</li>
           <li>Klik <strong>"Mulai Import"</strong> → tunggu proses selesai</li>
@@ -841,13 +1134,12 @@
       <h2><i class="fas fa-key"></i> Reset Password Siswa</h2>
       <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
         Atur password baru untuk <strong id="resetStudentName">-</strong>.
-        Siswa akan bisa login dengan password baru ini.
       </p>
 
-      <label class="form-label" for="inputNewPassword">Password Baru <span style="color:var(--danger);">*</span></label>
+      <label class="form-label" for="inputNewPassword">Password Baru <span class="req">*</span></label>
       <input type="password" id="inputNewPassword" class="form-input" placeholder="Minimal 6 karakter" maxlength="50">
 
-      <label class="form-label" for="inputConfirmPassword">Konfirmasi Password <span style="color:var(--danger);">*</span></label>
+      <label class="form-label" for="inputConfirmPassword">Konfirmasi Password <span class="req">*</span></label>
       <input type="password" id="inputConfirmPassword" class="form-input" placeholder="Ketik ulang password baru" maxlength="50">
 
       <div id="resetError" class="alert alert-error hidden"></div>
@@ -859,17 +1151,55 @@
     </div>
   </div>
 
-  <!-- Modal Konfirmasi Hapus -->
+  <!-- Modal Konfirmasi Hapus Tunggal -->
   <div class="modal-overlay" id="modalDelete">
     <div class="modal-card">
       <h2 style="color: var(--danger);"><i class="fas fa-trash"></i> Hapus Siswa Total?</h2>
       <p id="deleteMessage" style="color: var(--text); margin-bottom: 0.8rem;"></p>
       <p style="font-size: 0.75rem; color: #92400e; background: #fef3c7; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid var(--warning);">
-        ⚠️ <strong>Perhatian:</strong> Akun login (Auth) dan profil siswa akan dihapus permanen. Siswa tidak akan bisa login lagi dengan email ini. Tindakan ini tidak dapat dibatalkan.
+        ⚠️ <strong>Perhatian:</strong> Akun login (Auth) dan profil siswa akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
       </p>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
         <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus Total</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus Massal -->
+  <div class="modal-overlay" id="modalBulkDelete">
+    <div class="modal-card">
+      <h2 style="color: var(--danger);">
+        <i class="fas fa-trash"></i> Hapus <span id="bulkDeleteCount">0</span> Siswa Sekaligus?
+      </h2>
+      <p id="bulkDeleteMessage" style="color: var(--text); margin-bottom: 0.8rem;"></p>
+
+      <div style="max-height: 180px; overflow-y: auto; background: var(--bg); border-radius: 8px; padding: 0.7rem; margin-bottom: 1rem; font-size: 0.78rem;">
+        <ol id="bulkDeleteList" style="margin: 0 0 0 1.2rem; padding: 0;"></ol>
+      </div>
+
+      <p style="font-size: 0.75rem; color: #92400e; background: #fef3c7; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid var(--warning);">
+        ⚠️ <strong>Perhatian:</strong> Semua akun login (Auth) dan profil siswa terpilih akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
+      </p>
+
+      <div id="bulkProgressBox" class="bulk-progress hidden">
+        <div class="bulk-progress-label">
+          <span>Memproses...</span>
+          <span id="bulkProgressText">0 / 0</span>
+        </div>
+        <div class="bulk-progress-bar">
+          <div class="bulk-progress-fill" id="bulkProgressFill"></div>
+        </div>
+        <div class="bulk-progress-detail" id="bulkProgressDetail"></div>
+      </div>
+
+      <div id="bulkDeleteError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnBulkCancel" onclick="closeBulkDelete()">Batal</button>
+        <button class="btn-danger" id="btnConfirmBulkDelete" onclick="confirmBulkDelete()">
+          Ya, Hapus Semua
+        </button>
       </div>
     </div>
   </div>
@@ -889,6 +1219,8 @@
     let selectedExcelData = null;
     let currentPage = 1;
     let pageSize = 25;
+    let selectedIds = new Set();
+    let bulkDeleteIds = [];
 
     (async () => {
       initSupabase();
@@ -902,11 +1234,13 @@
     async function loadStudents() {
       try {
         allStudents = await getStudents(currentSchoolId);
+        const validIds = new Set(allStudents.map(s => s.id));
+        selectedIds.forEach(id => { if (!validIds.has(id)) selectedIds.delete(id); });
         applyFilter();
       } catch (err) {
         console.error('Gagal load siswa:', err);
         document.getElementById('tableBody').innerHTML =
-          '<tr><td colspan="5" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + err.message + '</td></tr>';
+          '<tr><td colspan="7" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + err.message + '</td></tr>';
       }
     }
 
@@ -920,7 +1254,8 @@
       filteredStudents = allStudents.filter(s => {
         const nama = (s.name || '').toLowerCase();
         const email = (s.email || '').toLowerCase();
-        const matchKeyword = !keyword || nama.includes(keyword) || email.includes(keyword);
+        const nisn = (s.nisn || '').toLowerCase();
+        const matchKeyword = !keyword || nama.includes(keyword) || email.includes(keyword) || nisn.includes(keyword);
         const matchStatus = !filterStatus || s.status === filterStatus;
         return matchKeyword && matchStatus;
       });
@@ -944,12 +1279,13 @@
 
       if (filteredStudents.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="5" class="empty-row">
+          <tr><td colspan="7" class="empty-row">
             <span class="emoji">👥</span>
             ${allStudents.length === 0
               ? 'Belum ada siswa. Klik "+ Tambah Siswa" atau "Import Excel".'
               : 'Tidak ada siswa yang cocok dengan filter.'}
           </td></tr>`;
+        updateBulkBar();
         return;
       }
 
@@ -958,10 +1294,17 @@
       const pageData = filteredStudents.slice(startIdx, endIdx);
 
       tbody.innerHTML = pageData.map((s, i) => `
-        <tr>
+        <tr class="${selectedIds.has(s.id) ? 'selected' : ''}">
+          <td class="checkbox-cell">
+            <input type="checkbox" class="row-checkbox"
+              data-id="${s.id}"
+              ${selectedIds.has(s.id) ? 'checked' : ''}
+              onchange="toggleRowSelection('${s.id}', this.checked)">
+          </td>
           <td>${startIdx + i + 1}</td>
           <td class="nama-siswa">${escapeHtml(s.name)}</td>
           <td class="email-teks">${escapeHtml(s.email)}</td>
+          <td class="nisn-teks">${s.nisn ? escapeHtml(s.nisn) : '-'}</td>
           <td>
             <span class="status-badge ${s.status === 'active' ? 'status-active' : 'status-inactive'}">
               ${s.status === 'active' ? '✓ Aktif' : '✕ Nonaktif'}
@@ -982,6 +1325,9 @@
           </td>
         </tr>
       `).join('');
+
+      syncCheckAllState();
+      updateBulkBar();
     }
 
     function renderPagination() {
@@ -1070,6 +1416,63 @@
     }
 
     /* ============================================
+       SELEKSI MULTI BARIS
+       ============================================ */
+    function toggleRowSelection(id, checked) {
+      if (checked) selectedIds.add(id);
+      else selectedIds.delete(id);
+      const cb = document.querySelector(`.row-checkbox[data-id="${id}"]`);
+      if (cb) cb.closest('tr').classList.toggle('selected', checked);
+      syncCheckAllState();
+      updateBulkBar();
+    }
+
+    function toggleSelectAll(checked) {
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredStudents.length);
+      const pageData = filteredStudents.slice(startIdx, endIdx);
+
+      pageData.forEach(s => {
+        if (checked) selectedIds.add(s.id);
+        else selectedIds.delete(s.id);
+      });
+      renderTable();
+    }
+
+    function syncCheckAllState() {
+      const checkAll = document.getElementById('checkAll');
+      if (!checkAll) return;
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredStudents.length);
+      const pageData = filteredStudents.slice(startIdx, endIdx);
+
+      if (pageData.length === 0) {
+        checkAll.checked = false;
+        checkAll.indeterminate = false;
+        return;
+      }
+      const selectedOnPage = pageData.filter(s => selectedIds.has(s.id)).length;
+      checkAll.checked = selectedOnPage === pageData.length;
+      checkAll.indeterminate = selectedOnPage > 0 && selectedOnPage < pageData.length;
+    }
+
+    function updateBulkBar() {
+      const count = selectedIds.size;
+      const bar = document.getElementById('bulkBar');
+      document.getElementById('selectedCount').textContent = count;
+      document.getElementById('bulkCountLabel').textContent = count;
+      document.getElementById('btnBulkDelete').disabled = count === 0;
+      if (count > 0) bar.classList.add('active');
+      else bar.classList.remove('active');
+    }
+
+    function clearSelection() {
+      selectedIds.clear();
+      renderTable();
+      updateBulkBar();
+    }
+
+    /* ============================================
        MODAL TAMBAH/EDIT
        ============================================ */
     function openModal(id = null) {
@@ -1086,14 +1489,41 @@
       btnSave.disabled = false;
       btnSave.textContent = 'Simpan';
 
+      // Reset semua field
+      document.getElementById('inputNisn').value = '';
+      document.getElementById('inputNis').value = '';
+      document.getElementById('inputNik').value = '';
+      document.getElementById('inputTempatLahir').value = '';
+      document.getElementById('inputTanggalLahir').value = '';
+      document.getElementById('inputJenisKelamin').value = '';
+      document.getElementById('inputAgama').value = '';
+      document.getElementById('inputAlamat').value = '';
+      document.getElementById('inputNoHp').value = '';
+      document.getElementById('inputNamaAyah').value = '';
+      document.getElementById('inputNamaIbu').value = '';
+      document.getElementById('inputNamaWali').value = '';
+
       if (id) {
         const student = allStudents.find(s => s.id === id);
         if (!student) return;
         title.innerHTML = '<i class="fas fa-user-edit"></i> Edit Siswa';
-        desc.textContent = 'Ubah nama atau email siswa. Password tidak diubah di sini.';
+        desc.textContent = 'Ubah nama, email, atau data kependudukan siswa.';
         inputName.value = student.name || '';
         inputEmail.value = student.email || '';
         passwordField.style.display = 'none';
+
+        document.getElementById('inputNisn').value = student.nisn || '';
+        document.getElementById('inputNis').value = student.nis || '';
+        document.getElementById('inputNik').value = student.nik || '';
+        document.getElementById('inputTempatLahir').value = student.tempat_lahir || '';
+        document.getElementById('inputTanggalLahir').value = student.tanggal_lahir || '';
+        document.getElementById('inputJenisKelamin').value = student.jenis_kelamin || '';
+        document.getElementById('inputAgama').value = student.agama || '';
+        document.getElementById('inputAlamat').value = student.alamat || '';
+        document.getElementById('inputNoHp').value = student.no_hp || '';
+        document.getElementById('inputNamaAyah').value = student.nama_ayah || '';
+        document.getElementById('inputNamaIbu').value = student.nama_ibu || '';
+        document.getElementById('inputNamaWali').value = student.nama_wali || '';
       } else {
         title.innerHTML = '<i class="fas fa-user-plus"></i> Tambah Siswa';
         desc.textContent = 'Akun login dan profil siswa akan dibuat otomatis.';
@@ -1110,6 +1540,23 @@
     function closeModal() {
       document.getElementById('modalForm').classList.remove('active');
       editingId = null;
+    }
+
+    function collectOptionalFields() {
+      return {
+        nisn: document.getElementById('inputNisn').value.trim(),
+        nis: document.getElementById('inputNis').value.trim(),
+        nik: document.getElementById('inputNik').value.trim(),
+        tempat_lahir: document.getElementById('inputTempatLahir').value.trim(),
+        tanggal_lahir: document.getElementById('inputTanggalLahir').value,
+        jenis_kelamin: document.getElementById('inputJenisKelamin').value,
+        agama: document.getElementById('inputAgama').value,
+        alamat: document.getElementById('inputAlamat').value.trim(),
+        no_hp: document.getElementById('inputNoHp').value.trim(),
+        nama_ayah: document.getElementById('inputNamaAyah').value.trim(),
+        nama_ibu: document.getElementById('inputNamaIbu').value.trim(),
+        nama_wali: document.getElementById('inputNamaWali').value.trim(),
+      };
     }
 
     async function saveStudent() {
@@ -1130,7 +1577,24 @@
 
       try {
         if (editingId) {
-          await updateStudent(editingId, { name, email });
+          const optional = collectOptionalFields();
+          const { data, error } = await supabaseClient.from('profiles')
+            .update({ name, email, ...buildCleanUpdate(optional) })
+            .eq('id', editingId)
+            .select()
+            .single();
+
+          if (error) {
+            if (error.code === '23505') {
+              const msg = (error.message || '').toLowerCase();
+              let friendly = 'Data duplikat.';
+              if (msg.includes('nisn')) friendly = '❌ NISN sudah dipakai siswa lain. Gunakan NISN yang berbeda.';
+              else if (msg.includes('nis_unique') || msg.includes('(nis)')) friendly = '❌ NIS sudah dipakai siswa lain.';
+              else if (msg.includes('nik')) friendly = '❌ NIK sudah dipakai siswa lain.';
+              throw new Error(friendly);
+            }
+            throw error;
+          }
           showToast('✅ Data siswa berhasil diperbarui');
         } else {
           const password = document.getElementById('inputPassword').value;
@@ -1142,27 +1606,44 @@
             return;
           }
 
+          const optional = collectOptionalFields();
+          const payload = { email, password, name, schoolId: currentSchoolId, ...optional };
+
           const { data, error } = await supabaseClient.functions.invoke('create-student', {
-            body: { email, password, name, schoolId: currentSchoolId }
+            body: payload
           });
-          if (error) throw error;
+
+          if (error) {
+            let detail = error.message;
+            try {
+              const errBody = await error.context?.json();
+              detail = errBody?.error || errBody?.message || detail;
+            } catch (e) { /* ignore */ }
+            throw new Error(detail);
+          }
           if (data && data.error) throw new Error(data.error);
-          showToast('✅ Siswa berhasil dibuat. Sekarang bisa login.');
+          showToast('✅ ' + (data?.message || 'Siswa berhasil dibuat.'));
         }
 
         closeModal();
         await loadStudents();
       } catch (err) {
         console.error('Save error:', err);
-        let msg = err.message;
-        if (msg.includes('duplicate') || msg.includes('already')) {
-          msg = 'Email sudah terdaftar. Gunakan email lain.';
-        }
-        errBox.textContent = 'Gagal menyimpan: ' + msg;
+        errBox.textContent = 'Gagal menyimpan: ' + (err.message || 'Unknown error');
         errBox.classList.remove('hidden');
         btnSave.disabled = false;
         btnSave.textContent = 'Simpan';
       }
+    }
+
+    function buildCleanUpdate(obj) {
+      const out = {};
+      for (const k of Object.keys(obj)) {
+        if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') {
+          out[k] = obj[k];
+        }
+      }
+      return out;
     }
 
     /* ============================================
@@ -1184,12 +1665,15 @@
 
     function downloadTemplate() {
       const ws = XLSX.utils.aoa_to_sheet([
-        ['Nama', 'Email', 'Password'],
-        ['Ahmad Fauzi', 'ahmad@siswa.sch.id', 'Siswa123!'],
-        ['Siti Nurhaliza', 'siti@siswa.sch.id', 'Siswa123!'],
-        ['Rizky Pratama', 'rizky@siswa.sch.id', 'Siswa123!']
+        ['Nama', 'Email', 'Password', 'NISN', 'NIS', 'NIK', 'Tempat Lahir', 'Tanggal Lahir', 'Jenis Kelamin', 'Agama', 'Alamat', 'No HP', 'Nama Ayah', 'Nama Ibu', 'Nama Wali'],
+        ['Ahmad Fauzi', 'ahmad@siswa.sch.id', 'Siswa123!', '1234567890', '2024001', '', 'Indramayu', '2008-05-15', 'L', 'Islam', 'Jl. Raya No. 1', '081234567890', 'Bapak Ahmad', 'Ibu Siti', ''],
+        ['Siti Nurhaliza', 'siti@siswa.sch.id', 'Siswa123!', '1234567891', '2024002', '', 'Cirebon', '2008-08-20', 'P', 'Islam', 'Jl. Merdeka No. 5', '081234567891', 'Bapak Budi', 'Ibu Ani', '']
       ]);
-      ws['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 15 }];
+      ws['!cols'] = [
+        { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 14 }, { wch: 14 },
+        { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 10 }, { wch: 12 },
+        { wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 20 }
+      ];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Siswa');
       XLSX.writeFile(wb, 'Template_Import_Siswa.xlsx');
@@ -1230,7 +1714,19 @@
           selectedExcelData = valid.map(r => ({
             name: (r.Nama || r.nama || '').toString().trim(),
             email: (r.Email || r.email || '').toString().trim().toLowerCase(),
-            password: (r.Password || r.password || '').toString().trim()
+            password: (r.Password || r.password || '').toString().trim(),
+            nisn: (r.NISN || r.nisn || '').toString().trim(),
+            nis: (r.NIS || r.nis || '').toString().trim(),
+            nik: (r.NIK || r.nik || '').toString().trim(),
+            tempat_lahir: (r['Tempat Lahir'] || r.tempat_lahir || '').toString().trim(),
+            tanggal_lahir: (r['Tanggal Lahir'] || r.tanggal_lahir || '').toString().trim(),
+            jenis_kelamin: (r['Jenis Kelamin'] || r.jenis_kelamin || '').toString().trim().toUpperCase(),
+            agama: (r.Agama || r.agama || '').toString().trim(),
+            alamat: (r.Alamat || r.alamat || '').toString().trim(),
+            no_hp: (r['No HP'] || r.no_hp || '').toString().trim(),
+            nama_ayah: (r['Nama Ayah'] || r.nama_ayah || '').toString().trim(),
+            nama_ibu: (r['Nama Ibu'] || r.nama_ibu || '').toString().trim(),
+            nama_wali: (r['Nama Wali'] || r.nama_wali || '').toString().trim(),
           }));
 
           document.getElementById('fileInfo').innerHTML =
@@ -1281,11 +1777,37 @@
         progressDetail.scrollTop = progressDetail.scrollHeight;
 
         try {
+          const payload = {
+            email: row.email,
+            password: row.password,
+            name: row.name,
+            schoolId: currentSchoolId,
+          };
+          if (row.nisn) payload.nisn = row.nisn;
+          if (row.nis) payload.nis = row.nis;
+          if (row.nik) payload.nik = row.nik;
+          if (row.tempat_lahir) payload.tempat_lahir = row.tempat_lahir;
+          if (row.tanggal_lahir) payload.tanggal_lahir = row.tanggal_lahir;
+          if (row.jenis_kelamin) payload.jenis_kelamin = row.jenis_kelamin;
+          if (row.agama) payload.agama = row.agama;
+          if (row.alamat) payload.alamat = row.alamat;
+          if (row.no_hp) payload.no_hp = row.no_hp;
+          if (row.nama_ayah) payload.nama_ayah = row.nama_ayah;
+          if (row.nama_ibu) payload.nama_ibu = row.nama_ibu;
+          if (row.nama_wali) payload.nama_wali = row.nama_wali;
+
           const { data, error } = await supabaseClient.functions.invoke('create-student', {
-            body: { email: row.email, password: row.password, name: row.name, schoolId: currentSchoolId }
+            body: payload
           });
 
-          if (error) throw new Error(error.message);
+          if (error) {
+            let detail = error.message;
+            try {
+              const errBody = await error.context?.json();
+              detail = errBody?.error || errBody?.message || detail;
+            } catch (e) { /* ignore */ }
+            throw new Error(detail);
+          }
           if (data && data.error) throw new Error(data.error);
 
           success++;
@@ -1321,7 +1843,7 @@
     }
 
     /* ============================================
-       HAPUS SISWA (pakai Edge Function delete-teacher yang generic)
+       HAPUS SISWA (TUNGGAL)
        ============================================ */
     function openDelete(id) {
       deletingId = id;
@@ -1346,15 +1868,22 @@
       btn.textContent = 'Menghapus...';
 
       try {
-        const { data, error } = await supabaseClient.functions.invoke('delete-teacher', {
+        const { data, error } = await supabaseClient.functions.invoke('delete-student', {
           body: { userId: deletingId }
         });
 
-        if (error) throw error;
+        if (error) {
+          let detail = error.message;
+          try {
+            const errBody = await error.context?.json();
+            detail = errBody?.error || errBody?.message || detail;
+          } catch (e) { /* ignore */ }
+          throw new Error(detail);
+        }
         if (data && data.error) throw new Error(data.error);
 
         closeDeleteModal();
-        showToast('🗑️ Siswa berhasil dihapus total (Auth + Profil)');
+        showToast('🗑️ ' + (data?.message || 'Siswa berhasil dihapus total'));
         await loadStudents();
       } catch (err) {
         console.error('Delete error:', err);
@@ -1362,6 +1891,179 @@
       } finally {
         btn.disabled = false;
         btn.textContent = 'Ya, Hapus Total';
+      }
+    }
+
+    /* ============================================
+       HAPUS SISWA (MASSAL) — pakai edge function delete-students
+       ============================================ */
+    function openBulkDelete() {
+      const ids = Array.from(selectedIds);
+      if (ids.length === 0) return;
+
+      bulkDeleteIds = ids;
+      const students = ids
+        .map(id => allStudents.find(s => s.id === id))
+        .filter(Boolean);
+
+      document.getElementById('bulkDeleteCount').textContent = students.length;
+      document.getElementById('bulkDeleteMessage').innerHTML =
+        'Anda akan menghapus <strong>' + students.length + ' siswa</strong> berikut secara permanen:';
+
+      document.getElementById('bulkDeleteList').innerHTML =
+        students.map(s =>
+          '<li><strong>' + escapeHtml(s.name) + '</strong> — ' +
+          escapeHtml(s.email) +
+          (s.nisn ? ' <span style="color:#94a3b8;">(NISN: ' + escapeHtml(s.nisn) + ')</span>' : '') +
+          '</li>'
+        ).join('');
+
+      document.getElementById('bulkProgressBox').classList.add('hidden');
+      document.getElementById('bulkProgressFill').style.width = '0%';
+      document.getElementById('bulkProgressDetail').innerHTML = '';
+      document.getElementById('bulkProgressText').textContent = '0 / 0';
+      document.getElementById('bulkDeleteError').classList.add('hidden');
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      btn.disabled = false;
+      btn.dataset.processing = '0';
+      btn.innerHTML = 'Ya, Hapus Semua';
+      btn.onclick = confirmBulkDelete;
+      document.getElementById('btnBulkCancel').disabled = false;
+
+      document.getElementById('modalBulkDelete').classList.add('active');
+    }
+
+    function closeBulkDelete() {
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      if (btn.disabled && btn.dataset.processing === '1') return;
+
+      document.getElementById('modalBulkDelete').classList.remove('active');
+      bulkDeleteIds = [];
+      btn.onclick = confirmBulkDelete;
+    }
+
+    async function confirmBulkDelete() {
+      if (bulkDeleteIds.length === 0) return;
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      const btnCancel = document.getElementById('btnBulkCancel');
+      btn.disabled = true;
+      btn.dataset.processing = '1';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+      btnCancel.disabled = true;
+
+      const progressBox = document.getElementById('bulkProgressBox');
+      const progressFill = document.getElementById('bulkProgressFill');
+      const progressText = document.getElementById('bulkProgressText');
+      const progressDetail = document.getElementById('bulkProgressDetail');
+      const errorBox = document.getElementById('bulkDeleteError');
+
+      progressBox.classList.remove('hidden');
+      progressDetail.innerHTML = '';
+      errorBox.classList.add('hidden');
+
+      const total = bulkDeleteIds.length;
+      progressText.textContent = '0 / ' + total;
+      progressFill.style.width = '25%';
+
+      const waitingItem = document.createElement('div');
+      waitingItem.textContent = '⏳ Mengirim ' + total + ' siswa ke server...';
+      progressDetail.appendChild(waitingItem);
+
+      try {
+        // 1 REQUEST untuk semua siswa
+        const { data, error } = await supabaseClient.functions.invoke('delete-students', {
+          body: { userIds: bulkDeleteIds }
+        });
+
+        if (error) {
+          let detail = error.message;
+          try {
+            const errBody = await error.context?.json();
+            detail = errBody?.error || errBody?.message || detail;
+          } catch (e) { /* ignore */ }
+          throw new Error(detail);
+        }
+        if (data && data.error) throw new Error(data.error);
+
+        progressFill.style.width = '100%';
+        progressText.textContent = total + ' / ' + total + ' selesai';
+        progressDetail.innerHTML = '';
+
+        const results = data?.results || [];
+        const successIds = [];
+
+        results.forEach(r => {
+          const student = allStudents.find(s => s.id === r.userId);
+          const label = student ? (student.name + ' (' + student.email + ')') : r.userId;
+          const item = document.createElement('div');
+          if (r.success) {
+            item.textContent = '✅ ' + label + ' — ' +
+              (r.mode === 'full-delete' ? 'dihapus total' : 'role siswa dicabut');
+            item.className = 'ok';
+            successIds.push(r.userId);
+          } else {
+            item.textContent = '❌ ' + label + ' — ' + (r.error || 'Gagal');
+            item.className = 'err';
+          }
+          progressDetail.appendChild(item);
+        });
+
+        successIds.forEach(id => selectedIds.delete(id));
+
+        if ((data.failedCount || 0) > 0) {
+          errorBox.innerHTML =
+            '<strong>⚠️ ' + data.failedCount + ' dari ' + total + ' gagal dihapus:</strong><br>' +
+            results.filter(r => !r.success).map(r => {
+              const student = allStudents.find(s => s.id === r.userId);
+              const label = student ? student.email : r.userId;
+              return '• ' + label + ': ' + (r.error || 'Gagal');
+            }).join('<br>');
+          errorBox.classList.remove('hidden');
+        }
+
+        btn.disabled = false;
+        btn.dataset.processing = '0';
+        btnCancel.disabled = false;
+
+        if ((data.failedCount || 0) === 0) {
+          btn.innerHTML = '<i class="fas fa-check"></i> Selesai';
+          showToast('🗑️ ' + (data.successCount || total) + ' siswa berhasil dihapus', 'success');
+          setTimeout(() => {
+            document.getElementById('modalBulkDelete').classList.remove('active');
+            bulkDeleteIds = [];
+            btn.onclick = confirmBulkDelete;
+          }, 800);
+        } else {
+          btn.innerHTML = 'Tutup';
+          btn.onclick = () => {
+            document.getElementById('modalBulkDelete').classList.remove('active');
+            bulkDeleteIds = [];
+            btn.onclick = confirmBulkDelete;
+          };
+          showToast(
+            (data.successCount || 0) + ' dihapus, ' + (data.failedCount || 0) + ' gagal',
+            'error'
+          );
+        }
+
+        await loadStudents();
+        updateBulkBar();
+
+      } catch (err) {
+        console.error('Bulk delete error:', err);
+        progressFill.style.width = '0%';
+        errorBox.innerHTML = '<strong>❌ Gagal:</strong> ' + (err.message || 'Unknown error');
+        errorBox.classList.remove('hidden');
+
+        btn.disabled = false;
+        btn.dataset.processing = '0';
+        btnCancel.disabled = false;
+        btn.innerHTML = 'Ya, Hapus Semua';
+        btn.onclick = confirmBulkDelete;
+
+        showToast('Gagal menghapus massal: ' + (err.message || 'Unknown error'), 'error');
       }
     }
 
@@ -1415,7 +2117,14 @@
           body: { userId: resettingId, newPassword: pw1 }
         });
 
-        if (error) throw error;
+        if (error) {
+          let detail = error.message;
+          try {
+            const errBody = await error.context?.json();
+            detail = errBody?.error || errBody?.message || detail;
+          } catch (e) { /* ignore */ }
+          throw new Error(detail);
+        }
         if (data && data.error) throw new Error(data.error);
 
         closeResetModal();
@@ -1429,9 +2138,7 @@
       }
     }
 
-    /* ============================================
-       UTILS
-       ============================================ */
+    /* UTILS */
     function escapeHtml(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');
@@ -1453,6 +2160,7 @@
         closeImportModal();
         closeDeleteModal();
         closeResetModal();
+        closeBulkDelete();
       }
     });
   </script>

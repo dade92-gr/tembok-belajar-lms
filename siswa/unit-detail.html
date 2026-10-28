@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Unit — Tembok Belajar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- PATCH EMBED MODE -->
+    <script>
+        (function() {
+            function applyEmbedMode() {
+                if (new URLSearchParams(window.location.search).get('embed') === '1') {
+                    document.documentElement.classList.add('tb-embed');
+                    if (document.body) document.body.classList.add('tb-embed');
+                }
+            }
+            applyEmbedMode();
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', applyEmbedMode);
+            }
+            window.addEventListener('load', applyEmbedMode);
+        })();
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scrollbar-gutter: stable; }
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --navy: #1e293b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --siswa-accent: #3b82f6; /* Warna Biru untuk Siswa */
+            --bg: #f1f5f9;
+            --bg-soft: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --header-height: 68px;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+            --transition: all 0.2s ease;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.6;
+            min-height: 100vh; -webkit-font-smoothing: antialiased;
+        }
+
+        /* EMBED MODE */
+        html.tb-embed .page-container, body.tb-embed .page-container {
+            padding-top: calc(var(--header-height) + 1rem);
+            padding-bottom: 2rem;
+        }
+
+        .page-container { max-width: 900px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+
+        /* HEADER UNIT */
+        .unit-hero {
+            background: linear-gradient(135deg, var(--siswa-accent) 0%, #2563eb 100%);
+            border-radius: var(--radius-lg); padding: 2rem; color: white;
+            margin-bottom: 2rem; position: relative; overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+        .unit-hero::after {
+            content: ''; position: absolute; top: -50px; right: -50px;
+            width: 200px; height: 200px; background: rgba(255,255,255,0.1);
+            border-radius: 50%; pointer-events: none;
+        }
+        .unit-hero-content { position: relative; z-index: 1; }
+        .unit-hero h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .unit-hero p { font-size: 0.9rem; opacity: 0.9; }
+        .tp-badge-container { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.5rem; }
+        .tp-badge {
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 12px; border-radius: 8px; font-size: 0.75rem;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        /* BLOCK RENDERING (Gaya Siswa) */
+        .block-card {
+            background: var(--surface); border-radius: var(--radius-lg);
+            border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem; overflow: hidden;
+            transition: var(--transition);
+        }
+        .block-card:hover { box-shadow: var(--shadow-md); border-color: #cbd5e1; }
+        
+        .block-card-header {
+            display: flex; align-items: center; gap: 10px;
+            padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+            background: var(--bg-soft);
+        }
+        .block-card-header i { font-size: 1.2rem; }
+        .block-card-header h3 { font-size: 1rem; font-weight: 700; color: var(--navy); }
+        
+        .block-card-body { padding: 1.5rem; font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; }
+        
+        /* Gaya Khusus per Tipe Blok */
+        .block-materi .block-card-header i { color: #2563eb; }
+        .block-tugas .block-card-header i { color: #ea580c; }
+        .block-kuis .block-card-header i { color: #9333ea; }
+        .block-refleksi .block-card-header i { color: #059669; }
+
+        .block-action-area {
+            margin-top: 1.5rem; padding-top: 1.5rem;
+            border-top: 1px dashed var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 1rem;
+        }
+
+        /* BUTTONS */
+        .btn-action {
+            background: var(--siswa-accent); color: white; border: none;
+            padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer;
+            font-size: 0.85rem; font-weight: 600; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 6px; transition: var(--transition);
+            text-decoration: none;
+        }
+        .btn-action:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-action.success { background: var(--success); }
+        .btn-action.success:hover { background: #047857; }
+        
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+        }
+        .status-done { background: #d1fae5; color: #047857; }
+        .status-pending { background: #fef3c7; color: #b45309; }
+
+        /* FORM REFLEKSI */
+        .form-textarea {
+            width: 100%; padding: 0.8rem; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 0.9rem; font-family: inherit;
+            min-height: 120px; resize: vertical; outline: none; transition: var(--transition);
+        }
+        .form-textarea:focus { border-color: var(--siswa-accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+
+        /* LOADING & TOAST */
+        .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
+        .spinner { width: 40px; height: 40px; margin: 0 auto 1rem; border: 3px solid #dbeafe; border-top-color: var(--siswa-accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: white; padding: 1rem 1.4rem; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); font-size: 0.85rem; display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 3000; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background: var(--danger); }
+        .toast.success { background: var(--success); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <!-- LOADING -->
+        <div id="loading" class="loading-box">
+            <div class="spinner"></div>
+            <p>Memuat materi pembelajaran...</p>
+        </div>
+
+        <!-- CONTENT -->
+        <div id="pageContent" class="hidden">
+            <!-- HERO UNIT -->
+            <div class="unit-hero" id="unitHero">
+                <div class="unit-hero-content">
+                    <h1 id="unitTitle">Memuat Judul...</h1>
+                    <p id="unitDesc">Deskripsi unit...</p>
+                    <div class="tp-badge-container" id="tpContainer">
+                        <!-- Badge TP akan dirender di sini -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- DAFTAR BLOK -->
+            <div id="blocksContainer">
+                <!-- Blok akan dirender di sini -->
+            </div>
+            
+            <!-- TOMBOL KEMBALI -->
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="mapel.html" class="btn-action" style="background:var(--text-muted);">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Daftar Mapel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/supabase.js"></script>
+    <script>
+        let currentUser = null;
+        let activeUnitId = null;
+        let unitData = null;
+        let blocksData = [];
+
+        // ============================================
+        // INIT
+        // ============================================
+        (async () => {
+            initSupabase();
+            // Pastikan user adalah siswa
+            currentUser = await requireAuth('siswa');
+            if (!currentUser) return;
+
+            // Ambil Unit ID dari URL
+            const params = new URLSearchParams(window.location.search);
+            activeUnitId = params.get('unit_id');
+            
+            if (!activeUnitId) {
+                document.getElementById('loading').innerHTML = '<div class="empty-msg" style="color:var(--danger);">Unit tidak ditemukan. Kembali ke daftar mapel.</div>';
+                return;
+            }
+
+            await loadUnitDetail();
+        })();
+
+        // ============================================
+        // LOAD DATA UNIT & BLOK
+        // ============================================
+        async function loadUnitDetail() {
+            const client = initSupabase();
+            try {
+                // 1. Ambil data Unit
+                const { data: unit, error: unitErr } = await client
+                    .from('units')
+                    .select('*')
+                    .eq('id', activeUnitId)
+                    .single();
+                
+                if (unitErr) throw unitErr;
+                unitData = unit;
+
+                // 2. Ambil TP (Tujuan Pembelajaran) yang terkait dengan unit ini
+                const { data: unitObjectives } = await client
+                    .from('unit_objectives')
+                    .select(`
+                        objective_id,
+                        learning_objectives ( code, description )
+                    `)
+                    .eq('unit_id', activeUnitId);
+
+                // Render Hero
+                document.getElementById('unitTitle').textContent = unit.title;
+                document.getElementById('unitDesc').textContent = unit.description || 'Mari kita mulai perjalanan belajar ini!';
+                
+                if (unitObjectives && unitObjectives.length > 0) {
+                    document.getElementById('tpContainer').innerHTML = unitObjectives.map(uo => {
+                        const tp = uo.learning_objectives;
+                        if (!tp) return '';
+                        return `<div class="tp-badge"><i class="fas fa-bullseye"></i> <strong>${esc(tp.code)}</strong>: ${esc(tp.description)}</div>`;
+                    }).join('');
+                } else {
+                    document.getElementById('tpContainer').innerHTML = '<div class="tp-badge">Tidak ada TP spesifik yang dilampirkan.</div>';
+                }
+
+                // 3. Ambil Blocks
+                const { data: blocks, error: blocksErr } = await client
+                    .from('unit_blocks')
+                    .select('*')
+                    .eq('unit_id', activeUnitId)
+                    .order('order_index', { ascending: true });
+
+                if (blocksErr) throw blocksErr;
+                blocksData = blocks || [];
+
+                renderBlocks();
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('pageContent').classList.remove('hidden');
+
+            } catch (err) {
+                console.error('Load Unit Error:', err);
+                document.getElementById('loading').innerHTML = `<div class="empty-msg" style="color:var(--danger);">Gagal memuat materi: ${err.message}</div>`;
+            }
+        }
+
+        // ============================================
+        // RENDER BLOK UNTUK SISWA
+        // ============================================
+        function renderBlocks() {
+            const container = document.getElementById('blocksContainer');
+            
+            if (blocksData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-canvas" style="background:var(--surface); border-radius:var(--radius); padding:3rem; text-align:center;">
+                        <span class="emoji" style="font-size:3rem;">📭</span>
+                        <h3>Belum ada materi di unit ini.</h3>
+                        <p>Tunggu guru Anda menambahkan materi atau tugas.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = blocksData.map((block, index) => {
+                let iconClass = '';
+                let typeClass = '';
+                let actionArea = '';
+
+                // Render Konten (mendukung teks biasa, nanti bisa ditingkatkan ke Markdown)
+                const contentHtml = block.content ? block.content.replace(/\n/g, '<br>') : '<em style="color:var(--text-muted);">Tidak ada konten teks.</em>';
+
+                switch(block.block_type) {
+                    case 'materi':
+                        iconClass = 'fa-book-open';
+                        typeClass = 'block-materi';
+                        actionArea = `
+                            <div class="block-action-area">
+                                <span style="font-size:0.8rem; color:var(--text-muted);"><i class="fas fa-check-circle" style="color:var(--success);"></i> Materi sudah dibaca</span>
+                                <button class="btn-action success" onclick="markAsRead(${block.id}, this)">Tandai Selesai</button>
+                            </div>
+                        `;
+                        break;
+                    case 'tugas':
+                        iconClass = 'fa-tasks';
+                        typeClass = 'block-tugas';
+                        actionArea = `
+                            <div class="block-action-area">
+                                <span class="status-badge status-pending"><i class="fas fa-clock"></i> Belum Dikumpulkan</span>
+                                <button class="btn-action" onclick="submitTugas(${block.id})">Kumpulkan Tugas</button>
+                            </div>
+                        `;
+                        break;
+                    case 'kuis':
+                        iconClass = 'fa-clipboard-list';
+                        typeClass = 'block-kuis';
+                        actionArea = `
+                            <div class="block-action-area">
+                                <span class="status-badge status-pending"><i class="fas fa-clock"></i> Belum Dikerjakan</span>
+                                <button class="btn-action" onclick="startKuis(${block.id})">Mulai Kuis</button>
+                            </div>
+                        `;
+                        break;
+                    case 'refleksi':
+                        iconClass = 'fa-brain';
+                        typeClass = 'block-refleksi';
+                        actionArea = `
+                            <div class="block-action-area" style="flex-direction:column; align-items:stretch;">
+                                <label class="form-label" style="font-weight:600; margin-bottom:0.5rem; color:var(--text);">Tulis Refleksimu:</label>
+                                <textarea class="form-textarea" id="refleksi-${block.id}" placeholder="Apa yang kamu pelajari? Apa yang masih membingungkan?"></textarea>
+                                <button class="btn-action" onclick="submitRefleksi(${block.id})" style="margin-top:1rem; align-self:flex-end;">Kirim Refleksi</button>
+                            </div>
+                        `;
+                        break;
+                }
+
+                return `
+                    <div class="block-card ${typeClass}">
+                        <div class="block-card-header">
+                            <i class="fas ${iconClass}"></i>
+                            <h3>${esc(block.title || 'Tanpa Judul')}</h3>
+                        </div>
+                        <div class="block-card-body">
+                            ${contentHtml}
+                            ${actionArea}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============================================
+        // ACTIONS (Placeholder untuk Fase Berikutnya)
+        // ============================================
+        function markAsRead(blockId, btn) {
+            showToast('Materi ditandai selesai!');
+            btn.disabled = true;
+            btn.textContent = 'Selesai';
+            btn.style.background = '#e2e8f0';
+            btn.style.color = '#64748b';
+        }
+
+        function submitTugas(blockId) {
+            showToast('Fitur pengumpulan tugas akan segera hadir!', 'error');
+        }
+
+        function startKuis(blockId) {
+            showToast('Fitur Kuis Cerdas akan segera hadir!', 'error');
+        }
+
+        function submitRefleksi(blockId) {
+            const text = document.getElementById(`refleksi-${blockId}`).value;
+            if (!text || text.trim() === '') {
+                showToast('Refleksi tidak boleh kosong.', 'error');
+                return;
+            }
+            showToast('Refleksi berhasil dikirim!');
+            document.getElementById(`refleksi-${blockId}`).value = '';
+        }
+
+        // ============================================
+        // UTILS
+        // ============================================
+        function esc(t) {
+            if (t === null || t === undefined) return '';
+            const d = document.createElement('div');
+            d.textContent = String(t);
+            return d.innerHTML;
+        }
+
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+        }
+    </script>
+</body>
+</html>

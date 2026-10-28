@@ -137,6 +137,27 @@
       color: #fca5a5;
     }
 
+    .btn-switch-role {
+      background: rgba(59,130,246,0.2);
+      border: 1px solid rgba(59,130,246,0.4);
+      color: #bfdbfe;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-switch-role:hover {
+      background: rgba(59,130,246,0.35);
+      border-color: rgba(59,130,246,0.6);
+      color: white;
+    }
+
     /* ========== SIDEBAR ========== */
     .app-sidebar {
       position: fixed;
@@ -585,6 +606,7 @@
       .app-school { display: none; }
       .app-user-email { display: none; }
       .btn-logout span { display: none; }
+      .btn-switch-role span { display: none; }
       .sidebar-item { height: 38px; margin: 1px 6px; padding: 0 8px; }
       .sidebar-item i { font-size: 1rem; }
       .content-home { padding: 0.8rem 1rem 2rem; }
@@ -627,6 +649,12 @@
           <div class="app-user-email" id="userEmail">-</div>
         </div>
       </div>
+
+      <button class="btn-switch-role" id="btnSwitchRole" onclick="switchRole()" style="display: none;">
+        <i class="fas fa-users-gear"></i>
+        <span>Ganti Peran</span>
+      </button>
+
       <button class="btn-logout" onclick="doLogout()">
         <i class="fas fa-sign-out-alt"></i>
         <span>Keluar</span>
@@ -652,6 +680,10 @@
     <div class="sidebar-item" data-view="kelas" onclick="navigateTo('kelas')">
       <i class="fas fa-school"></i>
       <span class="label">Manajemen Kelas</span>
+    </div>
+    <div class="sidebar-item" data-view="wali-kelas" onclick="navigateTo('wali-kelas')">
+      <i class="fas fa-users-rectangle"></i>
+      <span class="label">Wali Kelas</span>
     </div>
     <div class="sidebar-item" data-view="mapel" onclick="navigateTo('mapel')">
       <i class="fas fa-book"></i>
@@ -757,6 +789,7 @@
     const VIEW_URLS = {
       siswa: 'siswa.html?embed=1',
       guru: 'guru.html?embed=1',
+      'wali-kelas': 'wali-kelas.html?embed=1',
       kelas: 'kelas.html?embed=1',
       mapel: 'mapel.html?embed=1',
       penugasan: 'penugasan.html?embed=1',
@@ -770,17 +803,28 @@
     sidebar.addEventListener('mouseleave', () => document.body.classList.remove('sidebar-hover'));
 
     // ============================================
+    // STATE NAVIGASI — cegah race condition
+    // ============================================
+    let _navTimeout = null;         // timeout fallback (5 detik)
+    let _currentFrameSrc = '';      // src iframe aktif saat ini
+    let _isHomeView = true;         // apakah sedang di home
+    let _initDone = false;          // ← flag baru: init sudah selesai?
+
+    // ============================================
     // INIT — MULTI-ROLE via requireAuth
     // ============================================
     (async () => {
       initSupabase();
 
-      // ✅ Gunakan requireAuth — otomatis cek user_roles & set active role
       const profile = await requireAuth('operator');
       if (!profile) return;
 
-      // ── Setelah ini: profile.role = 'operator', profile.school_id = 1
-      // ── karena requireAuth set active role ke operator
+      window.currentUser = profile;
+
+      if (profile.roles && profile.roles.length > 1) {
+        const btn = document.getElementById('btnSwitchRole');
+        if (btn) btn.style.display = 'inline-flex';
+      }
 
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('contentHome').classList.remove('hidden');
@@ -791,7 +835,6 @@
       document.getElementById('greeting').textContent = 'Halo, ' + profile.name + '! 👋';
       document.getElementById('subGreeting').textContent = 'Selamat datang kembali di panel operator Tembok Belajar.';
 
-      // Ambil sekolah — pakai profile.school_id (dari active role operator)
       let school = null;
       try {
         if (profile.school_id) {
@@ -806,27 +849,28 @@
         }
       } catch (err) { console.warn('Gagal ambil sekolah:', err); }
 
-      // Statistik — pakai profile.school_id
-      let totalSiswa = 0, totalGuru = 0, totalKelas = 0, totalMapel = 0;
+      let totalSiswa = 0, totalGuru = 0, totalKelas = 0, totalMapel = 0, totalWali = 0;
       if (profile.school_id) {
         try {
-          const [students, teachers, classes, subjects] = await Promise.all([
+          const [students, teachers, classes, subjects, homerooms] = await Promise.all([
             getStudents(profile.school_id),
             getTeachers(profile.school_id),
             getClasses(profile.school_id),
-            getSubjects(profile.school_id)
+            getSubjects(profile.school_id),
+            getHomeroomAssignments(profile.school_id)
           ]);
           totalSiswa = students.length;
           totalGuru = teachers.length;
           totalKelas = classes.length;
           totalMapel = subjects.length;
+          totalWali = homerooms.filter(h => h.status === 'active').length;
         } catch (err) { console.warn('Gagal hitung statistik:', err); }
       }
 
-      // Render stat cards
       const stats = [
         { icon: 'fa-user-graduate', color: 'blue', value: totalSiswa, label: 'Total Siswa' },
         { icon: 'fa-chalkboard-teacher', color: 'purple', value: totalGuru, label: 'Total Guru' },
+        { icon: 'fa-users-rectangle', color: 'orange', value: totalWali, label: 'Wali Kelas' },
         { icon: 'fa-door-open', color: 'green', value: totalKelas, label: 'Total Kelas' },
         { icon: 'fa-book', color: 'orange', value: totalMapel, label: 'Total Mapel' }
       ];
@@ -840,11 +884,11 @@
         </div>
       `).join('');
 
-      // Render quick menu
       const menus = [
         { icon: 'fa-users', label: 'Manajemen Siswa', view: 'siswa' },
         { icon: 'fa-chalkboard-teacher', label: 'Manajemen Guru', view: 'guru' },
         { icon: 'fa-school', label: 'Manajemen Kelas', view: 'kelas' },
+        { icon: 'fa-users-rectangle', label: 'Wali Kelas', view: 'wali-kelas' },
         { icon: 'fa-book', label: 'Manajemen Mapel', view: 'mapel' },
         { icon: 'fa-link', label: 'Penugasan Guru', view: 'penugasan' },
         { icon: 'fa-clipboard-list', label: 'Enrollment Siswa', view: 'enrollment' },
@@ -858,7 +902,6 @@
         </div>
       `).join('');
 
-      // Render info
       const infoItems = [
         { label: 'Nama Sekolah', value: school?.name || '-' },
         { label: 'Alamat', value: school?.address || '-' },
@@ -871,13 +914,66 @@
           <div class="info-value">${escapeHtml(i.value)}</div>
         </div>
       `).join('');
+
+      // === MARK INIT SELESAI ===
+      _initDone = true;
+
+      // === HANDLE HASH SETELAH INIT SELESAI ===
+      // Ini mencegah sidebar aktif duluan sementara konten masih dashboard.
+      const initialHash = window.location.hash.substring(1);
+      if (initialHash && VIEW_URLS[initialHash]) {
+        navigateTo(initialHash);
+      } else {
+        resetFrameToBlank();
+        syncSidebarActive('home');
+      }
     })();
 
-    // ==== NAVIGASI ====
-    function navigateTo(view) {
+    // ============================================
+    // HELPER — reset iframe ke kondisi "kosong"
+    // ============================================
+    function resetFrameToBlank() {
+      const frameEl = document.getElementById('contentFrame');
+      if (!frameEl) return;
+
+      frameEl.onload = null;
+      frameEl.classList.add('hidden');
+      frameEl.src = 'about:blank';
+      frameEl.style.height = '0';
+      frameEl.style.display = 'none';
+
+      _currentFrameSrc = '';
+      _isHomeView = true;
+
+      const appMain = document.getElementById('appMain');
+      if (appMain) appMain.scrollTop = 0;
+    }
+
+    // ============================================
+    // HELPER — sinkronkan sidebar active dengan view
+    // ============================================
+    function syncSidebarActive(view) {
       document.querySelectorAll('.sidebar-item[data-view]').forEach(el => {
         el.classList.toggle('active', el.dataset.view === view);
       });
+    }
+
+    // ============================================
+    // NAVIGASI
+    // ============================================
+    function navigateTo(view) {
+      // Kalau init belum selesai: simpan permintaan di hash saja,
+      // init nanti akan membaca hash & navigate. Ini mencegah sidebar
+      // aktif duluan sebelum contentHome siap dirender.
+      if (!_initDone) {
+        if (history.replaceState) history.replaceState({ view }, '', '#' + view);
+        else window.location.hash = view;
+        return;
+      }
+
+      if (_navTimeout) { clearTimeout(_navTimeout); _navTimeout = null; }
+
+      syncSidebarActive(view);
 
       const homeEl = document.getElementById('contentHome');
       const frameEl = document.getElementById('contentFrame');
@@ -886,42 +982,77 @@
 
       appMain.scrollTop = 0;
 
+      // ============================================
+      // VIEW === HOME
+      // ============================================
       if (view === 'home') {
-        frameEl.classList.add('hidden');
+        resetFrameToBlank();
         loadingEl.classList.remove('active');
-        setTimeout(() => { frameEl.src = 'about:blank'; }, 30);
         homeEl.classList.remove('hidden');
-      } else {
-        const url = VIEW_URLS[view];
-        if (!url) { alert('Modul tidak dikenal: ' + view); return; }
 
-        homeEl.classList.add('hidden');
-        loadingEl.classList.add('active');
-
-        frameEl.src = url;
-
-        frameEl.onload = function() {
-          loadingEl.classList.remove('active');
-          frameEl.classList.remove('hidden');
-          try {
-            const loc = frameEl.contentWindow.location;
-            if (loc.pathname.endsWith('.html') && !loc.search.includes('embed=1')) {
-              frameEl.contentWindow.location.replace(url);
-            }
-          } catch (e) { /* cross-origin */ }
-        };
-
-        setTimeout(() => {
-          loadingEl.classList.remove('active');
-          frameEl.classList.remove('hidden');
-        }, 5000);
+        if (history.pushState) history.pushState({ view }, '', '#' + view);
+        else window.location.hash = view;
+        return;
       }
 
-      if (history.pushState) {
-        history.pushState({ view }, '', '#' + view);
-      } else {
-        window.location.hash = view;
+      // ============================================
+      // VIEW === MODUL
+      // ============================================
+      const url = VIEW_URLS[view];
+      if (!url) { alert('Modul tidak dikenal: ' + view); return; }
+
+      // Skip reload kalau URL sama
+      if (_currentFrameSrc === url && !_isHomeView) {
+        frameEl.classList.remove('hidden');
+        frameEl.style.display = 'block';
+        frameEl.style.height = '';
+        loadingEl.classList.remove('active');
+        if (history.pushState) history.pushState({ view }, '', '#' + view);
+        else window.location.hash = view;
+        return;
       }
+
+      homeEl.classList.add('hidden');
+      loadingEl.classList.add('active');
+
+      frameEl.classList.add('hidden');
+      frameEl.style.display = 'none';
+      frameEl.style.height = '0';
+
+      frameEl.onload = null;
+      frameEl.src = url;
+      _currentFrameSrc = url;
+      _isHomeView = false;
+
+      const thisNavSrc = url;
+      frameEl.onload = function onFrameLoad() {
+        if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
+        if (_isHomeView) return;
+
+        loadingEl.classList.remove('active');
+        frameEl.classList.remove('hidden');
+        frameEl.style.display = 'block';
+        frameEl.style.height = '';
+
+        try {
+          const loc = frameEl.contentWindow.location;
+          if (loc.pathname.endsWith('.html') && !loc.search.includes('embed=1')) {
+            frameEl.contentWindow.location.replace(thisNavSrc);
+          }
+        } catch (e) { /* cross-origin */ }
+      };
+
+      _navTimeout = setTimeout(() => {
+        if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
+        if (_isHomeView) return;
+        loadingEl.classList.remove('active');
+        frameEl.classList.remove('hidden');
+        frameEl.style.display = 'block';
+        frameEl.style.height = '';
+      }, 5000);
+
+      if (history.pushState) history.pushState({ view }, '', '#' + view);
+      else window.location.hash = view;
     }
 
     window.addEventListener('popstate', (e) => {
@@ -929,10 +1060,22 @@
       navigateTo(view);
     });
 
+    // ============================================
+    // DOM READY — TIDAK navigate, biarkan init async yang urus
+    // ============================================
     document.addEventListener('DOMContentLoaded', () => {
       const hash = window.location.hash.substring(1);
-      if (hash && VIEW_URLS[hash]) {
-        setTimeout(() => navigateTo(hash), 500);
+      if (!hash || !VIEW_URLS[hash]) {
+        resetFrameToBlank();
+      }
+      // Kalau ada hash, tunggu init async selesai (lihat di atas)
+    });
+
+    // Saat "pageshow" (browser back-forward cache)
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted && _initDone) {
+        const hash = window.location.hash.substring(1);
+        navigateTo(hash || 'home');
       }
     });
 

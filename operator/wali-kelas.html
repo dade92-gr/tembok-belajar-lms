@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Wali Kelas — Tembok Belajar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #3b82f6; --primary-dark: #2563eb; --primary-light: #dbeafe;
+      --navy: #1e293b; --navy-dark: #0f172a; --success: #10b981;
+      --warning: #f59e0b; --danger: #ef4444; --bg: #f1f5f9;
+      --surface: #ffffff; --text: #0f172a; --text-secondary: #334155;
+      --text-muted: #64748b; --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --pink: #ec4899; --pink-light: #fce7f3; --pink-dark: #be185d;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    body.tb-embed .page-toolbar-left { gap: 0.3rem; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover {
+      background: var(--primary-light); border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--navy); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--pink); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--pink); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--pink-dark); box-shadow: 0 4px 12px rgba(236,72,153,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger {
+      background: var(--danger); color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-outline-pink {
+      background: var(--surface); border: 1.5px solid var(--pink);
+      color: var(--pink); padding: 0.55rem 1.1rem; border-radius: 8px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline-pink:hover { background: var(--pink-light); }
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr auto;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .filter-input, .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--pink); box-shadow: 0 0 0 3px rgba(236,72,153,0.15);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
+    }
+    .btn-reset {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-muted); padding: 0.55rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-reset:hover {
+      background: #fee2e2; border-color: var(--danger); color: var(--danger);
+    }
+    .info-bar {
+      background: var(--pink-light); border-radius: 10px;
+      padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.82rem;
+      color: var(--pink-dark); font-weight: 500; display: flex;
+      align-items: center; gap: 8px; border: 1px solid rgba(236,72,153,0.2);
+      flex-wrap: wrap;
+    }
+    .info-bar i { color: var(--pink); }
+    .info-bar strong { color: var(--navy); }
+    .table-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table thead { background: #f8fafc; }
+    .data-table th {
+      padding: 0.85rem 1rem; text-align: left; font-weight: 600;
+      color: var(--text-muted); border-bottom: 2px solid var(--border);
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.85rem 1rem; border-bottom: 1px solid var(--border);
+      vertical-align: middle; color: var(--text);
+    }
+    .data-table tbody tr:hover { background: #fdf2f8; }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .kelas-nama { font-weight: 700; color: var(--text); font-size: 0.95rem; }
+    .kelas-grade {
+      display: inline-block; padding: 2px 10px; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 700; background: var(--primary-light);
+      color: var(--primary-dark); margin-left: 6px;
+    }
+    .siswa-count {
+      font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;
+    }
+    .siswa-count strong { color: var(--text); }
+    .wali-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 600;
+      background: var(--pink-light); color: var(--pink-dark);
+      border: 1px solid rgba(236,72,153,0.25);
+      margin: 2px 4px 2px 0;
+      white-space: nowrap;
+    }
+    .wali-badge .remove-x {
+      cursor: pointer; font-weight: 700; opacity: 0.6;
+      padding: 0 2px; transition: var(--transition);
+      color: var(--pink-dark);
+    }
+    .wali-badge .remove-x:hover { opacity: 1; color: var(--danger); }
+    .no-wali {
+      font-size: 0.78rem; color: var(--text-muted);
+      font-style: italic;
+    }
+    .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition); font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover {
+      background: var(--pink-light); border-color: var(--pink);
+      color: var(--pink);
+    }
+    .btn-icon.danger:hover {
+      background: #fee2e2; border-color: var(--danger); color: var(--danger);
+    }
+    .empty-row {
+      text-align: center; padding: 3rem 1rem; color: var(--text-muted);
+    }
+    .empty-row .emoji {
+      font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5;
+    }
+    .pagination-bar {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 0.9rem 1.2rem; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    .pagination-info { font-size: 0.8rem; color: var(--text-muted); }
+    .pagination-info strong { color: var(--text); font-weight: 600; }
+    .pagination-controls {
+      display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .page-size-select {
+      padding: 0.4rem 2rem 0.4rem 0.7rem; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 0.8rem; font-family: inherit;
+      background: var(--surface); color: var(--text); cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+    }
+    .page-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); width: 32px; height: 32px;
+      border-radius: 6px; cursor: pointer; font-size: 0.75rem;
+      font-weight: 600; transition: var(--transition);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: inherit;
+    }
+    .page-btn:hover:not(:disabled) {
+      background: var(--pink-light); border-color: var(--pink);
+      color: var(--pink);
+    }
+    .page-btn.active { background: var(--pink); border-color: var(--pink); color: white; }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-numbers { display: flex; gap: 0.3rem; align-items: center; }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem; width: 100%; max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--navy); margin-bottom: 1rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--pink); }
+    .modal-card p.modal-desc {
+      font-size: 0.82rem; color: var(--text-muted);
+      margin-bottom: 1.2rem; line-height: 1.5;
+    }
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .form-label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      margin-bottom: 0.45rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-label .req { color: var(--danger); }
+    .form-input {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.9rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.8rem;
+    }
+    .form-input:focus {
+      border-color: var(--pink); box-shadow: 0 0 0 3px rgba(236,72,153,0.15);
+    }
+    select.form-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 35px; cursor: pointer;
+    }
+    .form-hint {
+      font-size: 0.72rem; color: var(--text-muted);
+      margin-top: -0.4rem; margin-bottom: 0.8rem;
+      padding-left: 4px; line-height: 1.5;
+    }
+    .alert {
+      margin-top: 1rem; padding: 0.75rem 1rem;
+      border-radius: 8px; font-size: 0.83rem; line-height: 1.5;
+    }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .alert-success { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--navy);
+      color: white; padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2); font-size: 0.85rem;
+      font-weight: 500; display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px); transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
+    .toast.warn { background: var(--warning); color: #0f172a; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 900px) {
+      .filter-row { grid-template-columns: 1fr 1fr; }
+      .filter-row .btn-reset { grid-column: 1 / -1; }
+    }
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .pagination-bar { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+      .pagination-controls { justify-content: center; }
+      .data-table th, .data-table td { padding: 0.55rem 0.5rem; font-size: 0.78rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else {
+          document.body.classList.add('tb-embed');
+        }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-users-rectangle"></i>
+          <span>
+            Manajemen Wali Kelas
+            <small>Assign guru sebagai wali kelas — 1 kelas boleh punya lebih dari 1 wali</small>
+          </span>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-outline-pink" onclick="loadData()">
+          <i class="fas fa-rotate"></i> Muat Ulang
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="searchInput"><i class="fas fa-search"></i> Cari</label>
+          <input type="text" id="searchInput" class="filter-input" placeholder="Cari nama kelas atau nama wali..." oninput="applyFilter()">
+        </div>
+        <div class="filter-group">
+          <label for="filterStatus"><i class="fas fa-circle-check"></i> Status Wali</label>
+          <select id="filterStatus" class="filter-select" onchange="applyFilter()">
+            <option value="">Semua Kelas</option>
+            <option value="has">Sudah Punya Wali</option>
+            <option value="none">Belum Punya Wali</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterGrade"><i class="fas fa-layer-group"></i> Tingkat</label>
+          <select id="filterGrade" class="filter-select" onchange="applyFilter()">
+            <option value="">Semua Tingkat</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <button class="btn-reset" onclick="resetFilter()">
+            <i class="fas fa-rotate-left"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-bar">
+      <i class="fas fa-info-circle"></i>
+      <span>Total: <strong id="totalCount">0</strong> kelas ·
+            Sudah punya wali: <strong id="hasWaliCount">0</strong> ·
+            Belum punya wali: <strong id="noWaliCount">0</strong> ·
+            Menampilkan: <strong id="shownCount">0</strong></span>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:50px;">No</th>
+              <th style="width:180px;">Kelas</th>
+              <th style="width:110px;">Siswa</th>
+              <th>Wali Kelas</th>
+              <th style="width:120px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="5" class="empty-row">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-bar">
+        <div class="pagination-info">
+          Menampilkan <strong id="pageStart">0</strong>-<strong id="pageEnd">0</strong> dari <strong id="pageTotal">0</strong> kelas
+        </div>
+        <div class="pagination-controls">
+          <label style="font-size:0.75rem; color:var(--text-muted);">Baris:</label>
+          <select id="pageSize" class="page-size-select" onchange="changePageSize()">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="9999">Semua</option>
+          </select>
+          <button class="page-btn" id="btnPrev" onclick="prevPage()" title="Sebelumnya">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="page-numbers" id="pageNumbers"></div>
+          <button class="page-btn" id="btnNext" onclick="nextPage()" title="Berikutnya">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal Assign Wali Kelas -->
+  <div class="modal-overlay" id="modalAssign">
+    <div class="modal-card">
+      <h2><i class="fas fa-user-plus"></i> Tambah Wali Kelas</h2>
+      <p class="modal-desc">
+        Pilih guru yang akan menjadi wali kelas untuk
+        <strong id="assignClassName">-</strong>.
+        Role <em>wali_kelas</em> akan otomatis ditambahkan ke akun guru.
+      </p>
+
+      <label class="form-label" for="inputTeacher">Pilih Guru <span class="req">*</span></label>
+      <select id="inputTeacher" class="form-input">
+        <option value="">-- Pilih Guru --</option>
+      </select>
+      <p class="form-hint" id="teacherHint">Daftar guru di sekolah ini.</p>
+
+      <div id="assignWarning" class="alert alert-warning hidden"></div>
+      <div id="assignError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeAssignModal()">Batal</button>
+        <button class="btn-primary" id="btnAssignSave" onclick="saveAssign()">
+          <i class="fas fa-check"></i> Tambahkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Ganda -->
+  <div class="modal-overlay" id="modalConfirm">
+    <div class="modal-card">
+      <h2 style="color: var(--warning);"><i class="fas fa-triangle-exclamation"></i> Konfirmasi</h2>
+      <p class="modal-desc" id="confirmMessage"></p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeConfirmModal()">Batal</button>
+        <button class="btn-primary" id="btnConfirmYes" onclick="onConfirmYes()">
+          <i class="fas fa-check"></i> Ya, Lanjutkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Hapus Wali Kelas -->
+  <div class="modal-overlay" id="modalRemove">
+    <div class="modal-card">
+      <h2 style="color: var(--danger);"><i class="fas fa-user-minus"></i> Cabut Wali Kelas?</h2>
+      <p class="modal-desc" id="removeMessage"></p>
+      <p style="font-size: 0.75rem; color: #92400e; background: #fef3c7; padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid var(--warning);">
+        ⚠️ Role <em>wali_kelas</em> akan dinonaktifkan jika guru ini tidak lagi menjadi wali kelas di kelas manapun.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeRemoveModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmRemove" onclick="confirmRemove()">Ya, Cabut</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let allClasses = [];
+    let filteredClasses = [];
+    let allTeachers = [];
+    let currentUser = null;
+    let currentSchoolId = 1;
+    let currentPage = 1;
+    let pageSize = 25;
+
+    let assignClassId = null;
+    let removeAssignmentId = null;
+    let removeTeacherId = null;
+    let pendingConfirmCallback = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('operator');
+      if (!currentUser) return;
+
+      currentSchoolId = currentUser.school_id || 1;
+      await loadData();
+    })();
+
+    async function loadData() {
+      try {
+        document.getElementById('tableBody').innerHTML =
+          '<tr><td colspan="5" class="empty-row">Memuat...</td></tr>';
+
+        const [classes, teachers] = await Promise.all([
+          getClassesWithWaliCount(currentSchoolId),
+          getTeachers(currentSchoolId)
+        ]);
+
+        allClasses = classes || [];
+        allTeachers = teachers || [];
+
+        buildGradeFilter();
+        applyFilter();
+      } catch (err) {
+        console.error('Gagal load data:', err);
+        document.getElementById('tableBody').innerHTML =
+          '<tr><td colspan="5" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + escapeHtml(err.message) + '</td></tr>';
+      }
+    }
+
+    function buildGradeFilter() {
+      const sel = document.getElementById('filterGrade');
+      const current = sel.value;
+      const grades = [...new Set(allClasses.map(c => c.grade).filter(g => g !== null && g !== undefined))].sort((a, b) => {
+        const na = parseInt(a), nb = parseInt(b);
+        if (!isNaN(na) && !isNaN(nb)) return na - nb;
+        return String(a).localeCompare(String(b));
+      });
+      sel.innerHTML = '<option value="">Semua Tingkat</option>';
+      grades.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        opt.textContent = 'Kelas ' + g;
+        sel.appendChild(opt);
+      });
+      if (current) sel.value = current;
+    }
+
+    /* ============================================
+       FILTER & PAGINATION
+       ============================================ */
+    function applyFilter() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const status = document.getElementById('filterStatus').value;
+      const grade = document.getElementById('filterGrade').value;
+
+      filteredClasses = allClasses.filter(c => {
+        const matchKeyword = !keyword ||
+          (c.name || '').toLowerCase().includes(keyword) ||
+          (c.waliList || []).some(w =>
+            (w.profiles?.name || '').toLowerCase().includes(keyword)
+          );
+
+        let matchStatus = true;
+        if (status === 'has') matchStatus = (c.waliList || []).length > 0;
+        else if (status === 'none') matchStatus = (c.waliList || []).length === 0;
+
+        const matchGrade = !grade || String(c.grade) === String(grade);
+
+        return matchKeyword && matchStatus && matchGrade;
+      });
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    function resetFilter() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterGrade').value = '';
+      applyFilter();
+    }
+
+    function renderTable() {
+      const total = allClasses.length;
+      const hasWali = allClasses.filter(c => (c.waliList || []).length > 0).length;
+      document.getElementById('totalCount').textContent = total;
+      document.getElementById('hasWaliCount').textContent = hasWali;
+      document.getElementById('noWaliCount').textContent = total - hasWali;
+      document.getElementById('shownCount').textContent = filteredClasses.length;
+
+      const tbody = document.getElementById('tableBody');
+
+      if (filteredClasses.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="5" class="empty-row">
+            <span class="emoji">🏫</span>
+            ${total === 0
+              ? 'Belum ada kelas. Tambah kelas dulu di menu Kelas.'
+              : 'Tidak ada kelas yang cocok dengan filter.'}
+          </td></tr>`;
+        return;
+      }
+
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredClasses.length);
+      const pageData = filteredClasses.slice(startIdx, endIdx);
+
+      tbody.innerHTML = pageData.map((c, i) => {
+        const waliList = c.waliList || [];
+        const waliBadges = waliList.length === 0
+          ? '<span class="no-wali">Belum ada wali kelas</span>'
+          : waliList.map(w => `
+              <span class="wali-badge" title="${escapeHtml(w.profiles?.email || '')}">
+                <i class="fas fa-chalkboard-teacher"></i>
+                ${escapeHtml(w.profiles?.name || 'Guru')}
+                <span class="remove-x" title="Cabut wali" onclick="openRemove('${w.id}','${w.teacher_id}','${escapeHtml(w.profiles?.name || '')}','${escapeHtml(c.name)}')">✕</span>
+              </span>
+            `).join('');
+
+        return `
+          <tr>
+            <td>${startIdx + i + 1}</td>
+            <td>
+              <span class="kelas-nama">${escapeHtml(c.name)}</span>
+              ${c.grade ? `<span class="kelas-grade">${escapeHtml(c.grade)}</span>` : ''}
+            </td>
+            <td class="siswa-count">
+              <i class="fas fa-user-graduate" style="color:var(--primary);margin-right:4px;"></i>
+              ${c.studentCount ?? 0}
+            </td>
+            <td>${waliBadges}</td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-icon" title="Tambah Wali Kelas" onclick="openAssign('${c.id}','${escapeHtml(c.name)}')">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPagination() {
+      const total = filteredClasses.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIdx = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const endIdx = Math.min(currentPage * pageSize, total);
+
+      document.getElementById('pageStart').textContent = startIdx;
+      document.getElementById('pageEnd').textContent = endIdx;
+      document.getElementById('pageTotal').textContent = total;
+
+      document.getElementById('btnPrev').disabled = currentPage <= 1;
+      document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+      const numbersDiv = document.getElementById('pageNumbers');
+      numbersDiv.innerHTML = '';
+
+      const maxButtons = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+      if (endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+
+      if (startPage > 1) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = '1';
+        btn.onclick = () => goToPage(1);
+        numbersDiv.appendChild(btn);
+        if (startPage > 2) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => goToPage(i);
+        numbersDiv.appendChild(btn);
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = totalPages;
+        btn.onclick = () => goToPage(totalPages);
+        numbersDiv.appendChild(btn);
+      }
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderTable();
+      renderPagination();
+    }
+    function prevPage() { if (currentPage > 1) goToPage(currentPage - 1); }
+    function nextPage() {
+      const totalPages = Math.ceil(filteredClasses.length / pageSize);
+      if (currentPage < totalPages) goToPage(currentPage + 1);
+    }
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('pageSize').value);
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    /* ============================================
+       ASSIGN WALI KELAS
+       ============================================ */
+    function openAssign(classId, className) {
+      assignClassId = classId;
+      document.getElementById('assignClassName').textContent = className;
+
+      const sel = document.getElementById('inputTeacher');
+      sel.innerHTML = '<option value="">-- Pilih Guru --</option>';
+
+      const kelas = allClasses.find(c => String(c.id) === String(classId));
+      const existingIds = new Set((kelas?.waliList || []).map(w => String(w.teacher_id)));
+
+      const available = allTeachers.filter(t => !existingIds.has(String(t.id)));
+
+      if (available.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '-- Semua guru sudah menjadi wali di kelas ini --';
+        sel.appendChild(opt);
+        document.getElementById('btnAssignSave').disabled = true;
+        document.getElementById('teacherHint').textContent =
+          'Tidak ada guru tersisa. Tambah guru dulu di menu Guru atau pilih kelas lain.';
+      } else {
+        available.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = (t.name || '-') + (t.nip ? ' (' + t.nip + ')' : '');
+          sel.appendChild(opt);
+        });
+        document.getElementById('btnAssignSave').disabled = false;
+        document.getElementById('teacherHint').textContent =
+          'Menampilkan ' + available.length + ' guru yang belum menjadi wali di kelas ini.';
+      }
+
+      document.getElementById('assignWarning').classList.add('hidden');
+      document.getElementById('assignError').classList.add('hidden');
+      document.getElementById('btnAssignSave').innerHTML = '<i class="fas fa-check"></i> Tambahkan';
+      document.getElementById('btnAssignSave').disabled = available.length === 0;
+
+      document.getElementById('modalAssign').classList.add('active');
+    }
+
+    function closeAssignModal() {
+      document.getElementById('modalAssign').classList.remove('active');
+      assignClassId = null;
+    }
+
+    async function saveAssign() {
+      const teacherId = document.getElementById('inputTeacher').value;
+      const errBox = document.getElementById('assignError');
+      const warnBox = document.getElementById('assignWarning');
+      const btn = document.getElementById('btnAssignSave');
+
+      errBox.classList.add('hidden');
+      warnBox.classList.add('hidden');
+
+      if (!teacherId) {
+        errBox.textContent = 'Pilih guru terlebih dahulu.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (!assignClassId) {
+        errBox.textContent = 'Kelas tidak valid. Tutup modal dan coba lagi.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+      try {
+        const otherClasses = await getTeacherOtherHomerooms(
+          teacherId, assignClassId, currentSchoolId
+        );
+
+        if (otherClasses.length > 0) {
+          const kelas = allClasses.find(c => String(c.id) === String(assignClassId));
+          const teacherName = allTeachers.find(t => String(t.id) === String(teacherId))?.name || 'Guru ini';
+          const otherList = otherClasses.map(o => o.class_name).join(', ');
+
+          openConfirm(
+            `<strong>${escapeHtml(teacherName)}</strong> sudah menjadi wali kelas di:
+             <br><strong style="color:var(--pink-dark);">${escapeHtml(otherList)}</strong>.
+             <br><br>Tetap tambahkan sebagai wali kelas di
+             <strong style="color:var(--pink-dark);">${escapeHtml(kelas?.name || '')}</strong>?`,
+            async () => {
+              await doAssign(teacherId);
+            }
+          );
+
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-check"></i> Tambahkan';
+          return;
+        }
+
+        await doAssign(teacherId);
+      } catch (err) {
+        console.error('Assign error:', err);
+        errBox.textContent = 'Gagal: ' + (err.message || 'Unknown error');
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Tambahkan';
+      }
+    }
+
+    async function doAssign(teacherId) {
+      const errBox = document.getElementById('assignError');
+      const btn = document.getElementById('btnAssignSave');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+      try {
+        const result = await assignHomeroomTeacher(assignClassId, teacherId, currentSchoolId);
+
+        if (result.roleAdded) {
+          showToast('✅ Wali kelas ditambahkan. Role wali_kelas diaktifkan di akun guru.', 'success');
+        } else {
+          showToast('✅ Wali kelas ditambahkan.', 'success');
+        }
+
+        closeAssignModal();
+        closeConfirmModal();
+        await loadData();
+      } catch (err) {
+        console.error('Assign fatal:', err);
+        if (err.code === '23505') {
+          errBox.textContent = 'Guru ini sudah menjadi wali kelas di kelas ini.';
+        } else {
+          errBox.textContent = 'Gagal menambahkan: ' + (err.message || 'Unknown error');
+        }
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Tambahkan';
+      }
+    }
+
+    /* ============================================
+       REMOVE WALI KELAS
+       ============================================ */
+    function openRemove(assignmentId, teacherId, teacherName, className) {
+      removeAssignmentId = assignmentId;
+      removeTeacherId = teacherId;
+
+      document.getElementById('removeMessage').innerHTML =
+        `Cabut <strong>${escapeHtml(teacherName)}</strong> sebagai wali kelas dari
+         <strong>${escapeHtml(className)}</strong>?`;
+
+      document.getElementById('modalRemove').classList.add('active');
+    }
+
+    function closeRemoveModal() {
+      document.getElementById('modalRemove').classList.remove('active');
+      removeAssignmentId = null;
+      removeTeacherId = null;
+    }
+
+    async function confirmRemove() {
+      if (!removeAssignmentId) return;
+      const btn = document.getElementById('btnConfirmRemove');
+      btn.disabled = true;
+      btn.textContent = 'Memproses...';
+
+      try {
+        const result = await removeHomeroomAssignment(
+          removeAssignmentId, removeTeacherId, currentSchoolId
+        );
+
+        if (result.roleDeactivated) {
+          showToast('🗑️ Wali kelas dicabut. Role wali_kelas dinonaktifkan.', 'success');
+        } else {
+          showToast('🗑️ Wali kelas dicabut. Guru masih wali kelas di kelas lain.', 'success');
+        }
+
+        closeRemoveModal();
+        await loadData();
+      } catch (err) {
+        console.error('Remove error:', err);
+        showToast('Gagal mencabut: ' + (err.message || 'Unknown error'), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Ya, Cabut';
+      }
+    }
+
+    /* ============================================
+       GENERIC CONFIRM
+       ============================================ */
+    function openConfirm(message, onYes) {
+      document.getElementById('confirmMessage').innerHTML = message;
+      pendingConfirmCallback = onYes;
+      document.getElementById('modalConfirm').classList.add('active');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('modalConfirm').classList.remove('active');
+      pendingConfirmCallback = null;
+    }
+
+    async function onConfirmYes() {
+      if (typeof pendingConfirmCallback === 'function') {
+        const cb = pendingConfirmCallback;
+        pendingConfirmCallback = null;
+        await cb();
+        document.getElementById('modalConfirm').classList.remove('active');
+      }
+    }
+
+    /* UTILS */
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : type === 'warn' ? 'warn' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeAssignModal();
+        closeRemoveModal();
+        closeConfirmModal();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cetak Rapor — Wali Kelas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #ec4899; --primary-dark: #be185d; --primary-light: #fce7f3;
+      --primary-lighter: #fdf2f8;
+      --navy: #1e293b; --navy-dark: #0f172a;
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+      --blue: #3b82f6;
+      --bg: #f1f5f9; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    body.tb-embed .page-toolbar-left { gap: 0.3rem; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--navy); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .btn-primary {
+      background: var(--primary); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark); box-shadow: 0 4px 12px rgba(236,72,153,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--primary);
+      color: var(--primary); padding: 0.55rem 1.1rem; border-radius: 8px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--primary-light); }
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 1fr 1fr auto;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .filter-input, .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(236,72,153,0.15);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
+    }
+    .info-bar {
+      background: var(--primary-light); border-radius: 10px;
+      padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.82rem;
+      color: var(--primary-dark); font-weight: 500; display: flex;
+      align-items: center; gap: 8px; border: 1px solid rgba(236,72,153,0.2);
+      flex-wrap: wrap;
+    }
+    .info-bar i { color: var(--primary); }
+    .info-bar strong { color: var(--navy); }
+    /* RAPOR */
+    .rapor-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: var(--shadow-sm); margin-bottom: 1rem;
+    }
+    .rapor-header {
+      padding: 1.5rem 1.8rem;
+      background: linear-gradient(135deg, var(--primary-lighter), var(--primary-light));
+      border-bottom: 3px solid var(--primary);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .rapor-header-left h2 {
+      font-size: 1.3rem; color: var(--navy); margin-bottom: 0.2rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .rapor-header-left h2 i { color: var(--primary); }
+    .rapor-header-left p { font-size: 0.82rem; color: var(--text-muted); }
+    .rapor-header-right {
+      text-align: right; font-size: 0.82rem; color: var(--text-secondary);
+    }
+    .rapor-header-right strong { display: block; font-size: 0.95rem; color: var(--text); }
+    /* SISWA INFO */
+    .siswa-info {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem; padding: 1.2rem 1.8rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-soft, #f8fafc);
+    }
+    .siswa-info-item {
+      padding: 0.6rem 0.9rem; background: white;
+      border-radius: 8px; border-left: 3px solid var(--primary);
+    }
+    .siswa-info-label {
+      font-size: 0.68rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px;
+    }
+    .siswa-info-value { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+    /* SECTION */
+    .rapor-section { padding: 1.4rem 1.8rem; border-bottom: 1px solid var(--border); }
+    .rapor-section:last-child { border-bottom: none; }
+    .rapor-section-title {
+      font-size: 0.95rem; font-weight: 800; color: var(--navy);
+      margin-bottom: 0.9rem; display: flex; align-items: center; gap: 8px;
+      padding-bottom: 0.5rem; border-bottom: 2px solid var(--primary-light);
+    }
+    .rapor-section-title i { color: var(--primary); }
+    /* TABLE */
+    .rapor-table {
+      width: 100%; border-collapse: collapse; font-size: 0.85rem;
+    }
+    .rapor-table thead { background: var(--primary-lighter); }
+    .rapor-table th {
+      padding: 0.7rem 0.9rem; text-align: left; font-weight: 700;
+      color: var(--primary-dark); font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      border-bottom: 2px solid var(--primary-light); white-space: nowrap;
+    }
+    .rapor-table td {
+      padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .rapor-table tbody tr:last-child td { border-bottom: none; }
+    .rapor-table tbody tr:hover { background: var(--primary-lighter); }
+    .nilai-cell { font-weight: 700; text-align: center; }
+    .nilai-good { color: var(--success); }
+    .nilai-mid { color: var(--warning); }
+    .nilai-low { color: var(--danger); }
+    .nilai-empty { color: var(--text-muted); font-weight: 400; font-style: italic; }
+    .avg-cell { font-weight: 800; color: var(--primary-dark); text-align: center; background: var(--primary-lighter); }
+    /* ABSENSI GRID */
+    .absen-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 0.7rem;
+    }
+    .absen-item {
+      padding: 0.8rem; border-radius: 8px; text-align: center;
+      border-left: 3px solid;
+    }
+    .absen-item.hadir { background: #d1fae5; border-left-color: var(--success); }
+    .absen-item.sakit { background: #fef3c7; border-left-color: var(--warning); }
+    .absen-item.izin { background: #dbeafe; border-left-color: var(--blue); }
+    .absen-item.alfa { background: #fee2e2; border-left-color: var(--danger); }
+    .absen-item-label { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; opacity: 0.8; }
+    .absen-item-value { font-size: 1.4rem; font-weight: 800; }
+    /* EMPTY / LOADING */
+    .empty-row { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    .empty-row .emoji { font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
+    .spinner {
+      width: 32px; height: 32px; margin: 0 auto 0.8rem;
+      border: 3px solid var(--primary-light); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+    /* PRINT */
+    @media print {
+      body { background: white; }
+      .page-toolbar, .filter-card, .info-bar, .btn-back, .no-print { display: none !important; }
+      .page-container { padding: 0; max-width: 100%; }
+      body.tb-embed .page-container { padding-top: 0; }
+      .rapor-card { box-shadow: none; border: 1px solid #ccc; page-break-after: always; }
+      .rapor-card:last-child { page-break-after: auto; }
+      .rapor-header { background: white !important; border-bottom: 2px solid black; }
+      .rapor-section-title { color: black; }
+      .rapor-section-title i { color: black; }
+      .rapor-table thead { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    @media (max-width: 900px) {
+      .filter-row { grid-template-columns: 1fr 1fr; }
+      .filter-row .btn-outline { grid-column: 1 / -1; }
+    }
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .rapor-header { padding: 1rem; }
+      .rapor-header-left h2 { font-size: 1.1rem; }
+      .rapor-section { padding: 1rem; }
+      .siswa-info { padding: 1rem; grid-template-columns: 1fr 1fr; }
+      .rapor-table th, .rapor-table td { padding: 0.5rem 0.4rem; font-size: 0.75rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+    <div class="page-toolbar no-print">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-file-lines"></i>
+          <span>
+            Cetak Rapor
+            <small>Rekap nilai semua mapel, absensi, dan jurnal siswa</small>
+          </span>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-outline" onclick="printRapor()">
+          <i class="fas fa-print"></i> Cetak / PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-card no-print">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="filterKelas"><i class="fas fa-school"></i> Kelas Walian</label>
+          <select id="filterKelas" class="filter-select" onchange="onKelasChange()">
+            <option value="">-- Pilih Kelas --</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterSiswa"><i class="fas fa-user"></i> Siswa</label>
+          <select id="filterSiswa" class="filter-select" onchange="onSiswaChange()">
+            <option value="">-- Pilih Siswa --</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <button class="btn-outline" onclick="loadRapor()">
+            <i class="fas fa-search"></i> Tampilkan Rapor
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-bar no-print">
+      <i class="fas fa-info-circle"></i>
+      <span>Kelas: <strong id="infoKelas">-</strong> ·
+            Siswa: <strong id="infoSiswa">-</strong> ·
+            Mapel: <strong id="infoMapel">0</strong> ·
+            Total Aktivitas: <strong id="infoAktivitas">0</strong></span>
+    </div>
+
+    <div id="raporContainer">
+      <div class="rapor-card">
+        <div class="empty-row">
+          <span class="emoji">📄</span>
+          Pilih kelas dan siswa untuk menampilkan rapor.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let homeroomClasses = [];
+    let allStudentsMap = {};
+    let currentRapor = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('wali_kelas');
+      if (!currentUser) return;
+
+      await loadHomeroomClasses();
+    })();
+
+    async function loadHomeroomClasses() {
+      try {
+        homeroomClasses = await getMyHomeroomClasses(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load kelas:', err);
+        homeroomClasses = [];
+      }
+
+      const sel = document.getElementById('filterKelas');
+      sel.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+
+      if (homeroomClasses.length === 0) {
+        sel.innerHTML = '<option value="">(Belum jadi wali kelas)</option>';
+        sel.disabled = true;
+        return;
+      }
+
+      homeroomClasses.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.class_id;
+        opt.textContent = c.class_name + (c.grade ? ' (' + c.grade + ')' : '');
+        sel.appendChild(opt);
+      });
+
+      // Pre-load siswa
+      for (const c of homeroomClasses) {
+        try {
+          const students = await getStudentsInClass(c.class_id);
+          allStudentsMap[c.class_id] = (students || [])
+            .map(s => s.profiles)
+            .filter(Boolean)
+            .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        } catch (err) {
+          allStudentsMap[c.class_id] = [];
+        }
+      }
+
+      // Auto-select dari URL
+      const urlClassId = new URLSearchParams(window.location.search).get('classId');
+      if (urlClassId && homeroomClasses.find(c => String(c.class_id) === String(urlClassId))) {
+        sel.value = urlClassId;
+        onKelasChange();
+      }
+    }
+
+    function onKelasChange() {
+      const kelasId = document.getElementById('filterKelas').value;
+      const siswaSel = document.getElementById('filterSiswa');
+      siswaSel.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+      document.getElementById('raporContainer').innerHTML = `
+        <div class="rapor-card">
+          <div class="empty-row">
+            <span class="emoji">📄</span>
+            Pilih siswa untuk menampilkan rapor.
+          </div>
+        </div>`;
+
+      if (!kelasId) return;
+      const students = allStudentsMap[kelasId] || [];
+      students.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        siswaSel.appendChild(opt);
+      });
+    }
+
+    function onSiswaChange() {
+      const siswaId = document.getElementById('filterSiswa').value;
+      if (siswaId) loadRapor();
+    }
+
+    async function loadRapor() {
+      const kelasId = document.getElementById('filterKelas').value;
+      const siswaId = document.getElementById('filterSiswa').value;
+      const container = document.getElementById('raporContainer');
+
+      if (!kelasId || !siswaId) {
+        container.innerHTML = `
+          <div class="rapor-card">
+            <div class="empty-row">
+              <span class="emoji">📄</span>
+              Pilih kelas dan siswa terlebih dahulu.
+            </div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="rapor-card">
+          <div class="empty-row"><div class="spinner"></div>Memuat rapor...</div>
+        </div>`;
+
+      try {
+        const siswa = (allStudentsMap[kelasId] || []).find(s => String(s.id) === String(siswaId));
+        const kelas = homeroomClasses.find(c => String(c.class_id) === String(kelasId));
+
+        if (!siswa) throw new Error('Siswa tidak ditemukan');
+
+        const client = initSupabase();
+
+        // 1. Ambil semua mapel yang diajar di kelas ini
+        const { data: assigns } = await client
+          .from('teacher_assign')
+          .select(`
+            subject_id, teacher_id,
+            subjects (id, name, code),
+            profiles!teacher_assign_teacher_id_fkey (name)
+          `)
+          .eq('class_id', parseInt(kelasId));
+
+        // Group by subject
+        const subjectMap = {};
+        (assigns || []).forEach(a => {
+          if (!a.subjects) return;
+          if (!subjectMap[a.subject_id]) {
+            subjectMap[a.subject_id] = {
+              subject: a.subjects,
+              teachers: []
+            };
+          }
+          if (a.profiles?.name) subjectMap[a.subject_id].teachers.push(a.profiles.name);
+        });
+
+        const subjectIds = Object.keys(subjectMap);
+
+        // 2. Ambil semua aktivitas per mapel
+        const { data: activities } = await client
+          .from('activities')
+          .select('id, subject_id, title, type, max_score, created_at')
+          .eq('class_id', parseInt(kelasId))
+          .order('created_at', { ascending: true });
+
+        // 3. Ambil semua submission siswa ini
+        const activityIds = (activities || []).map(a => a.id);
+        let submissions = [];
+        if (activityIds.length > 0) {
+          const { data: subs } = await client
+            .from('submissions')
+            .select('id, activity_id')
+            .eq('student_id', siswaId)
+            .in('activity_id', activityIds);
+          submissions = subs || [];
+        }
+
+        // 4. Ambil semua grade siswa ini
+        let grades = [];
+        if (submissions.length > 0) {
+          const subIds = submissions.map(s => s.id);
+          const { data: grs } = await client
+            .from('grades')
+            .select('submission_id, score')
+            .in('submission_id', subIds);
+          grades = grs || [];
+        }
+
+        // 5. Ambil absensi bulan ini
+        const firstOfMonth = new Date();
+        firstOfMonth.setDate(1);
+        const firstStr = firstOfMonth.toISOString().slice(0, 10);
+        const { data: absData } = await client
+          .from('absensi')
+          .select('status')
+          .eq('student_id', siswaId)
+          .eq('class_id', parseInt(kelasId))
+          .gte('tanggal', firstStr);
+
+        const absCount = { hadir: 0, sakit: 0, izin: 0, alfa: 0 };
+        (absData || []).forEach(r => {
+          if (absCount[r.status] !== undefined) absCount[r.status]++;
+        });
+
+        // 6. Ambil jurnal siswa ini
+        const { data: jurnalData } = await client
+          .from('jurnal_wali_kelas')
+          .select('tanggal, kategori, judul, deskripsi')
+          .eq('student_id', siswaId)
+          .eq('class_id', parseInt(kelasId))
+          .order('tanggal', { ascending: false })
+          .limit(5);
+
+        // Build rapor data
+        currentRapor = {
+          siswa, kelas,
+          subjects: subjectMap,
+          activities: activities || [],
+          submissions, grades,
+          absensi: absCount,
+          jurnal: jurnalData || []
+        };
+
+        renderRapor(currentRapor);
+
+        document.getElementById('infoKelas').textContent = kelas?.class_name || '-';
+        document.getElementById('infoSiswa').textContent = siswa.name;
+        document.getElementById('infoMapel').textContent = subjectIds.length;
+        document.getElementById('infoAktivitas').textContent = (activities || []).length;
+      } catch (err) {
+        console.error('Load rapor error:', err);
+        container.innerHTML = `
+          <div class="rapor-card">
+            <div class="empty-row" style="color:var(--danger);">
+              Gagal memuat rapor: ${escapeHtml(err.message)}
+            </div>
+          </div>`;
+      }
+    }
+
+    function renderRapor(data) {
+      const { siswa, kelas, subjects, activities, submissions, grades, absensi, jurnal } = data;
+
+      // Map submissions by activity_id
+      const subMap = {};
+      submissions.forEach(s => { subMap[s.activity_id] = s; });
+
+      // Map grades by submission_id
+      const gradeMap = {};
+      grades.forEach(g => { gradeMap[g.submission_id] = g.score; });
+
+      // Header
+      const today = new Date().toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
+
+      // Build table rows per mapel
+      const subjectRows = Object.entries(subjects).map(([subjId, info]) => {
+        const subjActivities = activities.filter(a => String(a.subject_id) === String(subjId));
+
+        let totalScore = 0, totalMax = 0, scoredCount = 0;
+        const nilaiCells = subjActivities.map(a => {
+          const sub = subMap[a.id];
+          if (!sub) return `<td class="nilai-cell nilai-empty">-</td>`;
+          const score = gradeMap[sub.id];
+          if (score === undefined || score === null) return `<td class="nilai-cell nilai-empty">-</td>`;
+          const numScore = parseFloat(score);
+          totalScore += numScore;
+          totalMax += parseFloat(a.max_score || 100);
+          scoredCount++;
+          const pct = (numScore / (a.max_score || 100)) * 100;
+          const cls = pct >= 80 ? 'nilai-good' : pct >= 60 ? 'nilai-mid' : 'nilai-low';
+          return `<td class="nilai-cell ${cls}">${numScore.toFixed(0)}</td>`;
+        });
+
+        const avg = scoredCount > 0 && totalMax > 0
+          ? ((totalScore / totalMax) * 100).toFixed(1)
+          : '-';
+
+        return {
+          subject: info.subject,
+          teachers: info.teachers,
+          activities: subjActivities,
+          nilaiCells,
+          avg
+        };
+      });
+
+      // Hitung rata-rata keseluruhan
+      const validAvgs = subjectRows.filter(r => r.avg !== '-').map(r => parseFloat(r.avg));
+      const overallAvg = validAvgs.length > 0
+        ? (validAvgs.reduce((s, v) => s + v, 0) / validAvgs.length).toFixed(1)
+        : '-';
+
+      // Build HTML
+      const html = `
+        <div class="rapor-card">
+          <div class="rapor-header">
+            <div class="rapor-header-left">
+              <h2><i class="fas fa-graduation-cap"></i> Rapor Siswa</h2>
+              <p>Rekap nilai semua mapel · Semester berjalan</p>
+            </div>
+            <div class="rapor-header-right">
+              <strong>${escapeHtml(kelas?.class_name || '-')}</strong>
+              Tahun Ajaran ${escapeHtml(currentUser.school_id ? '2025/2026' : '-')}<br>
+              <small>Dicetak: ${today}</small>
+            </div>
+          </div>
+
+          <div class="siswa-info">
+            <div class="siswa-info-item">
+              <div class="siswa-info-label">Nama Siswa</div>
+              <div class="siswa-info-value">${escapeHtml(siswa.name)}</div>
+            </div>
+            <div class="siswa-info-item">
+              <div class="siswa-info-label">NISN</div>
+              <div class="siswa-info-value">${escapeHtml(siswa.nisn || '-')}</div>
+            </div>
+            <div class="siswa-info-item">
+              <div class="siswa-info-label">NIS</div>
+              <div class="siswa-info-value">${escapeHtml(siswa.nis || '-')}</div>
+            </div>
+            <div class="siswa-info-item">
+              <div class="siswa-info-label">Jenis Kelamin</div>
+              <div class="siswa-info-value">${siswa.jenis_kelamin === 'L' ? 'Laki-laki' : siswa.jenis_kelamin === 'P' ? 'Perempuan' : '-'}</div>
+            </div>
+          </div>
+
+          <div class="rapor-section">
+            <div class="rapor-section-title">
+              <i class="fas fa-book"></i> Nilai Per Mata Pelajaran
+            </div>
+            ${subjectRows.length === 0 ? `
+              <div class="empty-row" style="padding:1.5rem;">Belum ada mapel di kelas ini.</div>
+            ` : `
+              <div style="overflow-x:auto;">
+                <table class="rapor-table">
+                  <thead>
+                    <tr>
+                      <th style="min-width:160px;">Mata Pelajaran</th>
+                      <th style="min-width:140px;">Guru</th>
+                      <th style="text-align:center; min-width:60px;">Aktivitas</th>
+                      <th style="text-align:center; min-width:60px;">Dinilai</th>
+                      <th style="text-align:center; min-width:80px;">Rata-rata</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${subjectRows.map(r => `
+                      <tr>
+                        <td><strong>${escapeHtml(r.subject.name)}</strong>${r.subject.code ? ` <small style="color:var(--text-muted);">(${escapeHtml(r.subject.code)})</small>` : ''}</td>
+                        <td>${escapeHtml(r.teachers.join(', ') || '-')}</td>
+                        <td style="text-align:center;">${r.activities.length}</td>
+                        <td style="text-align:center;">${r.nilaiCells.filter(c => !c.includes('nilai-empty')).length}</td>
+                        <td class="avg-cell">${r.avg}</td>
+                      </tr>
+                    `).join('')}
+                    <tr style="background:var(--primary-light); font-weight:800;">
+                      <td colspan="4" style="text-align:right; color:var(--primary-dark);">Rata-rata Keseluruhan</td>
+                      <td class="avg-cell" style="font-size:1rem;">${overallAvg}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+
+          <div class="rapor-section">
+            <div class="rapor-section-title">
+              <i class="fas fa-clipboard-check"></i> Rekap Absensi Bulan Ini
+            </div>
+            <div class="absen-grid">
+              <div class="absen-item hadir">
+                <div class="absen-item-label">Hadir</div>
+                <div class="absen-item-value">${absensi.hadir}</div>
+              </div>
+              <div class="absen-item sakit">
+                <div class="absen-item-label">Sakit</div>
+                <div class="absen-item-value">${absensi.sakit}</div>
+              </div>
+              <div class="absen-item izin">
+                <div class="absen-item-label">Izin</div>
+                <div class="absen-item-value">${absensi.izin}</div>
+              </div>
+              <div class="absen-item alfa">
+                <div class="absen-item-label">Alfa</div>
+                <div class="absen-item-value">${absensi.alfa}</div>
+              </div>
+            </div>
+          </div>
+
+          ${jurnal.length > 0 ? `
+            <div class="rapor-section">
+              <div class="rapor-section-title">
+                <i class="fas fa-book-open"></i> Catatan Jurnal (5 Terakhir)
+              </div>
+              <div style="display:flex; flex-direction:column; gap:0.6rem;">
+                ${jurnal.map(j => `
+                  <div style="padding:0.8rem; background:var(--primary-lighter); border-radius:8px; border-left:3px solid var(--primary);">
+                    <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:0.3rem;">
+                      <strong>${formatTanggalIndo(j.tanggal)}</strong> · ${escapeHtml(j.kategori)}
+                    </div>
+                    <div style="font-weight:700; font-size:0.85rem; margin-bottom:0.3rem;">${escapeHtml(j.judul)}</div>
+                    <div style="font-size:0.8rem; color:var(--text-secondary);">${escapeHtml(j.deskripsi)}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="rapor-section" style="display:flex; justify-content:space-between; gap:2rem; flex-wrap:wrap;">
+            <div style="text-align:center;">
+              <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:3rem;">Wali Kelas</div>
+              <div style="font-weight:700; border-top:1px solid #333; padding-top:0.3rem; min-width:180px;">
+                ${escapeHtml(currentUser.name)}
+              </div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:3rem;">Orang Tua/Wali</div>
+              <div style="font-weight:700; border-top:1px solid #333; padding-top:0.3rem; min-width:180px;">
+                ${escapeHtml(siswa.nama_ayah || siswa.nama_wali || '...................')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('raporContainer').innerHTML = html;
+    }
+
+    function printRapor() {
+      if (!currentRapor) {
+        alert('Tampilkan rapor terlebih dahulu sebelum mencetak.');
+        return;
+      }
+      window.print();
+    }
+
+    function formatTanggalIndo(tgl) {
+      if (!tgl) return '-';
+      try {
+        const d = new Date(tgl + 'T00:00:00');
+        if (isNaN(d.getTime())) return tgl;
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch { return tgl; }
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

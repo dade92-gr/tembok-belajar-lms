@@ -73,7 +73,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* PATCH 2 */
     html.tb-embed .btn-back,
     body.tb-embed .btn-back { display: none !important; }
     html.tb-embed .page-container,
@@ -146,7 +145,6 @@
 
     .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 
-    /* BUTTONS */
     .btn-primary {
       background: var(--purple);
       color: white;
@@ -263,7 +261,6 @@
       color: var(--danger);
     }
 
-    /* INFO BAR */
     .info-bar {
       background: var(--purple-lighter);
       border-radius: 10px;
@@ -280,6 +277,76 @@
     }
     .info-bar i { color: var(--purple); }
     .info-bar strong { color: var(--navy); }
+
+    /* BULK ACTION BAR */
+    .bulk-bar {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 1rem;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.2s ease;
+    }
+    .bulk-bar.active { display: flex; }
+    .bulk-info {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bulk-info strong { color: #78350f; font-size: 1rem; }
+    .bulk-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn-bulk-clear {
+      background: transparent;
+      border: 1px solid #92400e;
+      color: #92400e;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-bulk-clear:hover { background: #fef3c7; }
+    .btn-bulk-delete {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-bulk-delete:hover { background: #dc2626; transform: translateY(-1px); }
+    .btn-bulk-delete:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Checkbox */
+    .row-checkbox, #checkAll {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--purple);
+    }
+    .checkbox-cell { text-align: center; width: 40px; }
+    .data-table tbody tr.selected { background: var(--purple-lighter) !important; }
+    .data-table tbody tr.selected:hover { background: #e9d5ff !important; }
 
     /* TABLE */
     .table-card {
@@ -396,7 +463,6 @@
     }
     .empty-row strong { color: var(--text); }
 
-    /* PAGINATION */
     .pagination-bar {
       background: var(--surface);
       border-top: 1px solid var(--border);
@@ -477,6 +543,8 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       animation: fadeInUp 0.25s ease;
       margin: auto;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     .modal-card h2 {
       font-size: 1.2rem;
@@ -545,6 +613,47 @@
     .alert-error { background: var(--danger-light); color: #b91c1c; border: 1px solid #fecaca; }
     .alert-warning { background: var(--warning-light); color: #92400e; border: 1px solid #fde68a; }
 
+    /* BULK PROGRESS */
+    .bulk-progress {
+      margin-top: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .bulk-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    .bulk-progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .bulk-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--danger), #b91c1c);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .bulk-progress-detail {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      max-height: 140px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+    }
+    .bulk-progress-detail .ok { color: var(--success); }
+    .bulk-progress-detail .err { color: var(--danger); }
+    .bulk-progress-detail .skip { color: var(--warning); }
+
     /* TOAST */
     .toast {
       position: fixed;
@@ -571,7 +680,6 @@
     .toast.error { background: var(--danger); }
     .toast.success { background: var(--success); }
 
-    /* LOADING */
     .loading-box {
       text-align: center;
       padding: 4rem 1rem;
@@ -595,7 +703,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* BACK NAV */
     .back-nav {
       text-align: center;
       margin-top: 2rem;
@@ -620,7 +727,6 @@
       color: var(--purple-dark);
     }
 
-    /* RESPONSIVE */
     @media (max-width: 768px) {
       :root { --header-height: 60px; }
       .page-container { padding: 1rem 1rem 2rem; }
@@ -660,16 +766,13 @@
       </div>
     </div>
 
-    <!-- LOADING -->
     <div id="loading" class="loading-box">
       <div class="spinner"></div>
       <p>Memuat sekolah...</p>
     </div>
 
-    <!-- CONTENT -->
     <div id="pageContent" class="hidden">
 
-      <!-- Filter -->
       <div class="filter-card">
         <div class="filter-row">
           <div class="filter-group">
@@ -684,7 +787,6 @@
         </div>
       </div>
 
-      <!-- Info Bar -->
       <div class="info-bar">
         <i class="fas fa-info-circle"></i>
         <span>Total: <strong id="totalCount">0</strong> sekolah ·
@@ -692,12 +794,30 @@
               Halaman: <strong id="currentPageInfo">1</strong> dari <strong id="totalPagesInfo">1</strong></span>
       </div>
 
-      <!-- Table -->
+      <!-- BULK ACTION BAR -->
+      <div class="bulk-bar" id="bulkBar">
+        <div class="bulk-info">
+          <i class="fas fa-check-square"></i>
+          <strong id="selectedCountLabel">0</strong> sekolah dipilih
+        </div>
+        <div class="bulk-actions">
+          <button class="btn-bulk-clear" onclick="clearSelection()">
+            <i class="fas fa-xmark"></i> Batal Pilih
+          </button>
+          <button class="btn-bulk-delete" id="btnBulkDelete" onclick="openBulkDelete()">
+            <i class="fas fa-trash"></i> Hapus <span id="bulkCountLabel">0</span> Sekolah
+          </button>
+        </div>
+      </div>
+
       <div class="table-card">
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
+                <th class="checkbox-cell">
+                  <input type="checkbox" id="checkAll" onchange="toggleSelectAll(this.checked)" title="Pilih semua di halaman ini">
+                </th>
                 <th style="width:50px;">No</th>
                 <th>Nama Sekolah</th>
                 <th style="width:140px;">Tahun Ajaran</th>
@@ -706,7 +826,7 @@
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="5" class="empty-row">Memuat...</td></tr>
+              <tr><td colspan="6" class="empty-row">Memuat...</td></tr>
             </tbody>
           </table>
         </div>
@@ -768,7 +888,7 @@
     </div>
   </div>
 
-  <!-- Modal Konfirmasi Hapus -->
+  <!-- Modal Konfirmasi Hapus Tunggal -->
   <div class="modal-overlay" id="modalDelete">
     <div class="modal-card">
       <h2 style="color: var(--danger);"><i class="fas fa-trash"></i> Hapus Sekolah?</h2>
@@ -784,6 +904,46 @@
     </div>
   </div>
 
+  <!-- Modal Konfirmasi Hapus Massal -->
+  <div class="modal-overlay" id="modalBulkDelete">
+    <div class="modal-card">
+      <h2 style="color: var(--danger);">
+        <i class="fas fa-trash"></i> Hapus <span id="bulkDeleteCount">0</span> Sekolah Sekaligus?
+      </h2>
+      <p id="bulkDeleteMessage" style="color: var(--text); margin-bottom: 0.8rem;"></p>
+
+      <div style="max-height: 220px; overflow-y: auto; background: var(--bg-soft); border-radius: 8px; padding: 0.7rem; margin-bottom: 1rem; font-size: 0.78rem;">
+        <ol id="bulkDeleteList" style="margin: 0 0 0 1.2rem; padding: 0;"></ol>
+      </div>
+
+      <div style="background: #fef3c7; border-left: 3px solid var(--warning); padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.78rem; color: #92400e; margin-bottom: 1rem; line-height: 1.5;">
+        ⚠️ <strong>Perhatian:</strong> Sekolah yang masih memiliki <strong>guru, siswa, kelas, atau mapel</strong> akan <strong>otomatis dilewati</strong> (tidak dihapus). Hanya sekolah kosong yang dihapus.
+      </div>
+
+      <div id="bulkPreflightBox" class="alert alert-warning hidden" style="margin-bottom: 1rem;"></div>
+
+      <div id="bulkProgressBox" class="bulk-progress hidden">
+        <div class="bulk-progress-label">
+          <span>Memproses...</span>
+          <span id="bulkProgressText">0 / 0</span>
+        </div>
+        <div class="bulk-progress-bar">
+          <div class="bulk-progress-fill" id="bulkProgressFill"></div>
+        </div>
+        <div class="bulk-progress-detail" id="bulkProgressDetail"></div>
+      </div>
+
+      <div id="bulkDeleteError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnBulkCancel" onclick="closeBulkDelete()">Batal</button>
+        <button class="btn-danger" id="btnConfirmBulkDelete" onclick="confirmBulkDelete()">
+          Ya, Hapus Semua
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="../assets/js/config.js"></script>
@@ -791,11 +951,13 @@
   <script>
     let allSchools = [];
     let filteredSchools = [];
-    let schoolStatsMap = {}; // { school_id: { guru, siswa, kelas } }
+    let schoolStatsMap = {};
     let editingId = null;
     let deletingId = null;
     let currentPage = 1;
     let pageSize = 25;
+    let selectedIds = new Set();
+    let bulkDeleteIds = [];
 
     // ============================================
     // INIT
@@ -804,7 +966,6 @@
       initSupabase();
       const client = initSupabase();
 
-      // Auth check
       const { data: { session } } = await client.auth.getSession();
       if (!session || !session.user) {
         window.location.href = '../login.html';
@@ -840,14 +1001,17 @@
         if (error) throw error;
         allSchools = schools || [];
 
-        // Hitung statistik per sekolah (batch)
         await loadSchoolStats();
+
+        // Buang ID terpilih yang sudah tidak ada
+        const validIds = new Set(allSchools.map(s => String(s.id)));
+        selectedIds.forEach(id => { if (!validIds.has(id)) selectedIds.delete(id); });
 
         applyFilter();
       } catch (err) {
         console.error('loadSchools error:', err);
         document.getElementById('tableBody').innerHTML =
-          `<tr><td colspan="5" class="empty-row" style="color:var(--danger);">Gagal memuat: ${esc(err.message)}</td></tr>`;
+          `<tr><td colspan="6" class="empty-row" style="color:var(--danger);">Gagal memuat: ${esc(err.message)}</td></tr>`;
       }
     }
 
@@ -860,7 +1024,6 @@
       const schoolIds = allSchools.map(s => s.id);
 
       try {
-        // Query parallel: guru, siswa, kelas per sekolah
         const [teachersRes, studentsRes, classesRes] = await Promise.all([
           client.from('profiles').select('school_id').eq('role', 'guru').in('school_id', schoolIds),
           client.from('profiles').select('school_id').eq('role', 'siswa').in('school_id', schoolIds),
@@ -917,12 +1080,13 @@
 
       if (filteredSchools.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="5" class="empty-row">
+          <tr><td colspan="6" class="empty-row">
             <span class="emoji">🏫</span>
             ${allSchools.length === 0
               ? '<strong>Belum ada sekolah.</strong><br>Klik "+ Tambah Sekolah" untuk memulai.'
               : 'Tidak ada sekolah yang cocok dengan pencarian.'}
           </td></tr>`;
+        updateBulkBar();
         return;
       }
 
@@ -932,9 +1096,17 @@
 
       tbody.innerHTML = pageData.map((s, i) => {
         const stats = schoolStatsMap[s.id] || { guru: 0, siswa: 0, kelas: 0 };
+        const sid = String(s.id);
+        const isChecked = selectedIds.has(sid);
 
         return `
-          <tr>
+          <tr class="${isChecked ? 'selected' : ''}">
+            <td class="checkbox-cell">
+              <input type="checkbox" class="row-checkbox"
+                data-id="${sid}"
+                ${isChecked ? 'checked' : ''}
+                onchange="toggleRowSelection('${sid}', this.checked)">
+            </td>
             <td>${startIdx + i + 1}</td>
             <td>
               <div class="nama-sekolah">${esc(s.name)}</div>
@@ -965,6 +1137,9 @@
           </tr>
         `;
       }).join('');
+
+      syncCheckAllState();
+      updateBulkBar();
     }
 
     function renderPagination() {
@@ -1049,6 +1224,65 @@
       currentPage = 1;
       renderTable();
       renderPagination();
+    }
+
+    // ============================================
+    // SELEKSI MULTI BARIS
+    // ============================================
+    function toggleRowSelection(id, checked) {
+      const sid = String(id);
+      if (checked) selectedIds.add(sid);
+      else selectedIds.delete(sid);
+      const cb = document.querySelector(`.row-checkbox[data-id="${sid}"]`);
+      if (cb) cb.closest('tr').classList.toggle('selected', checked);
+      syncCheckAllState();
+      updateBulkBar();
+    }
+
+    function toggleSelectAll(checked) {
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredSchools.length);
+      const pageData = filteredSchools.slice(startIdx, endIdx);
+
+      pageData.forEach(s => {
+        const sid = String(s.id);
+        if (checked) selectedIds.add(sid);
+        else selectedIds.delete(sid);
+      });
+      renderTable();
+    }
+
+    function syncCheckAllState() {
+      const checkAll = document.getElementById('checkAll');
+      if (!checkAll) return;
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredSchools.length);
+      const pageData = filteredSchools.slice(startIdx, endIdx);
+
+      if (pageData.length === 0) {
+        checkAll.checked = false;
+        checkAll.indeterminate = false;
+        return;
+      }
+      const selectedOnPage = pageData.filter(s => selectedIds.has(String(s.id))).length;
+      checkAll.checked = selectedOnPage === pageData.length;
+      checkAll.indeterminate = selectedOnPage > 0 && selectedOnPage < pageData.length;
+    }
+
+    function updateBulkBar() {
+      const count = selectedIds.size;
+      const bar = document.getElementById('bulkBar');
+      document.getElementById('selectedCountLabel').textContent = count;
+      document.getElementById('bulkCountLabel').textContent = count;
+      document.getElementById('btnBulkDelete').disabled = count === 0;
+      if (count > 0) bar.classList.add('active');
+      else bar.classList.remove('active');
+    }
+
+    function clearSelection() {
+      selectedIds.clear();
+      renderTable();
+      updateBulkBar();
     }
 
     // ============================================
@@ -1140,7 +1374,7 @@
     }
 
     // ============================================
-    // HAPUS SEKOLAH
+    // HAPUS SEKOLAH (TUNGGAL)
     // ============================================
     async function openDelete(id) {
       deletingId = id;
@@ -1150,7 +1384,6 @@
       document.getElementById('deleteMessage').innerHTML =
         'Anda yakin ingin menghapus sekolah <strong>' + esc(school.name) + '</strong>?';
 
-      // Cek dulu apakah ada data terkait
       const warnEl = document.getElementById('deleteWarning');
       const btnConfirm = document.getElementById('btnConfirmDelete');
       warnEl.classList.add('hidden');
@@ -1159,27 +1392,8 @@
 
       document.getElementById('modalDelete').classList.add('active');
 
-      // Validasi data terkait
       try {
-        const client = initSupabase();
-        const [teachersRes, studentsRes, classesRes, subjectsRes] = await Promise.all([
-          client.from('profiles').select('id', { count: 'exact', head: true }).eq('school_id', id).eq('role', 'guru'),
-          client.from('profiles').select('id', { count: 'exact', head: true }).eq('school_id', id).eq('role', 'siswa'),
-          client.from('classes').select('id', { count: 'exact', head: true }).eq('school_id', id),
-          client.from('subjects').select('id', { count: 'exact', head: true }).eq('school_id', id)
-        ]);
-
-        const gurus = teachersRes.count || 0;
-        const siswas = studentsRes.count || 0;
-        const kelass = classesRes.count || 0;
-        const mapels = subjectsRes.count || 0;
-
-        const blockers = [];
-        if (gurus > 0) blockers.push(gurus + ' guru');
-        if (siswas > 0) blockers.push(siswas + ' siswa');
-        if (kelass > 0) blockers.push(kelass + ' kelas');
-        if (mapels > 0) blockers.push(mapels + ' mapel');
-
+        const blockers = await getSchoolBlockers(id);
         if (blockers.length > 0) {
           warnEl.innerHTML = `
             <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>
@@ -1193,6 +1407,26 @@
       } catch (err) {
         console.warn('Validasi error:', err);
       }
+    }
+
+    // Helper: cek sekolah yang masih punya data terkait
+    async function getSchoolBlockers(schoolId) {
+      const client = initSupabase();
+      const [teachersRes, studentsRes, classesRes, subjectsRes, operatorsRes] = await Promise.all([
+        client.from('profiles').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'guru'),
+        client.from('profiles').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'siswa'),
+        client.from('classes').select('id', { count: 'exact', head: true }).eq('school_id', schoolId),
+        client.from('subjects').select('id', { count: 'exact', head: true }).eq('school_id', schoolId),
+        client.from('user_roles').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'operator')
+      ]);
+
+      const blockers = [];
+      if ((teachersRes.count || 0) > 0) blockers.push(teachersRes.count + ' guru');
+      if ((studentsRes.count || 0) > 0) blockers.push(studentsRes.count + ' siswa');
+      if ((classesRes.count || 0) > 0) blockers.push(classesRes.count + ' kelas');
+      if ((subjectsRes.count || 0) > 0) blockers.push(subjectsRes.count + ' mapel');
+      if ((operatorsRes.count || 0) > 0) blockers.push(operatorsRes.count + ' operator');
+      return blockers;
     }
 
     function closeDeleteModal() {
@@ -1224,6 +1458,206 @@
     }
 
     // ============================================
+    // HAPUS SEKOLAH (MASSAL) — validasi per sekolah
+    // ============================================
+    async function openBulkDelete() {
+      const ids = Array.from(selectedIds);
+      if (ids.length === 0) return;
+
+      bulkDeleteIds = ids;
+      const schools = ids
+        .map(id => allSchools.find(s => String(s.id) === String(id)))
+        .filter(Boolean);
+
+      document.getElementById('bulkDeleteCount').textContent = schools.length;
+      document.getElementById('bulkDeleteMessage').innerHTML =
+        'Anda akan menghapus <strong>' + schools.length + ' sekolah</strong> berikut:';
+
+      document.getElementById('bulkDeleteList').innerHTML =
+        schools.map(s =>
+          '<li><strong>' + esc(s.name) + '</strong>' +
+          (s.academic_year ? ' <span style="color:#94a3b8;">(' + esc(s.academic_year) + ')</span>' : '') +
+          '</li>'
+        ).join('');
+
+      document.getElementById('bulkProgressBox').classList.add('hidden');
+      document.getElementById('bulkProgressFill').style.width = '0%';
+      document.getElementById('bulkProgressDetail').innerHTML = '';
+      document.getElementById('bulkProgressText').textContent = '0 / 0';
+      document.getElementById('bulkDeleteError').classList.add('hidden');
+
+      const preflightBox = document.getElementById('bulkPreflightBox');
+      preflightBox.classList.add('hidden');
+      preflightBox.innerHTML = '';
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      btn.disabled = true;
+      btn.dataset.processing = '0';
+      btn.innerHTML = 'Memeriksa...';
+      btn.onclick = confirmBulkDelete;
+      document.getElementById('btnBulkCancel').disabled = false;
+
+      document.getElementById('modalBulkDelete').classList.add('active');
+
+      // Pre-flight: cek sekolah mana yang tidak bisa dihapus
+      try {
+        const blocked = [];
+        for (const s of schools) {
+          const blockers = await getSchoolBlockers(s.id);
+          if (blockers.length > 0) {
+            blocked.push({ school: s, blockers });
+          }
+        }
+
+        const deletableCount = schools.length - blocked.length;
+
+        if (blocked.length > 0) {
+          preflightBox.innerHTML =
+            '<i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>' +
+            '<strong>' + blocked.length + ' sekolah akan dilewati</strong> (masih punya data terkait):<br>' +
+            blocked.map(b =>
+              '• ' + esc(b.school.name) + ' — ' + b.blockers.join(', ')
+            ).join('<br>') +
+            '<br><br><strong>' + deletableCount + ' sekolah</strong> siap dihapus.';
+          preflightBox.classList.remove('hidden');
+        }
+
+        if (deletableCount === 0) {
+          btn.innerHTML = 'Tidak Ada yang Bisa Dihapus';
+          btn.disabled = true;
+        } else {
+          btn.innerHTML = 'Ya, Hapus ' + deletableCount + ' Sekolah';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        console.warn('Preflight error:', err);
+        btn.innerHTML = 'Ya, Hapus Semua';
+        btn.disabled = false;
+      }
+    }
+
+    function closeBulkDelete() {
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      if (btn.disabled && btn.dataset.processing === '1') return;
+
+      document.getElementById('modalBulkDelete').classList.remove('active');
+      bulkDeleteIds = [];
+      btn.onclick = confirmBulkDelete;
+    }
+
+    async function confirmBulkDelete() {
+      if (bulkDeleteIds.length === 0) return;
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      const btnCancel = document.getElementById('btnBulkCancel');
+      btn.disabled = true;
+      btn.dataset.processing = '1';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+      btnCancel.disabled = true;
+
+      const progressBox = document.getElementById('bulkProgressBox');
+      const progressFill = document.getElementById('bulkProgressFill');
+      const progressText = document.getElementById('bulkProgressText');
+      const progressDetail = document.getElementById('bulkProgressDetail');
+      const errorBox = document.getElementById('bulkDeleteError');
+
+      progressBox.classList.remove('hidden');
+      progressDetail.innerHTML = '';
+      errorBox.classList.add('hidden');
+
+      const client = initSupabase();
+      const total = bulkDeleteIds.length;
+      let success = 0, failed = 0, skipped = 0;
+      const errors = [];
+      const successIds = [];
+
+      for (let i = 0; i < total; i++) {
+        const id = bulkDeleteIds[i];
+        const school = allSchools.find(s => String(s.id) === String(id));
+        const label = school ? school.name : String(id);
+
+        progressText.textContent = (i + 1) + ' / ' + total;
+        progressFill.style.width = (((i + 1) / total) * 100) + '%';
+
+        const detailItem = document.createElement('div');
+        detailItem.textContent = '⏳ Memeriksa: ' + label;
+        progressDetail.appendChild(detailItem);
+        progressDetail.scrollTop = progressDetail.scrollHeight;
+
+        try {
+          // Cek dulu ada data terkait?
+          const blockers = await getSchoolBlockers(id);
+          if (blockers.length > 0) {
+            skipped++;
+            errors.push(label + ': dilewati (masih ada ' + blockers.join(', ') + ')');
+            detailItem.textContent = '⚠️ ' + label + ' — dilewati (' + blockers.join(', ') + ')';
+            detailItem.className = 'skip';
+            continue;
+          }
+
+          // Hapus sekolah
+          const { error } = await client.from('schools').delete().eq('id', id);
+          if (error) throw error;
+
+          success++;
+          successIds.push(String(id));
+          detailItem.textContent = '✅ ' + label + ' — berhasil dihapus';
+          detailItem.className = 'ok';
+        } catch (err) {
+          failed++;
+          const msg = err.message || 'Unknown error';
+          errors.push(label + ': ' + msg);
+          detailItem.textContent = '❌ ' + label + ' — ' + msg;
+          detailItem.className = 'err';
+        }
+
+        // Throttle ringan
+        if (i < total - 1) {
+          await new Promise(r => setTimeout(r, 100));
+        }
+      }
+
+      progressText.textContent = total + ' / ' + total + ' selesai';
+
+      successIds.forEach(id => selectedIds.delete(id));
+
+      if ((failed + skipped) > 0) {
+        errorBox.innerHTML =
+          '<strong>⚠️ ' + (failed + skipped) + ' dari ' + total + ' tidak terhapus:</strong><br>' +
+          errors.map(e => '• ' + esc(e)).join('<br>');
+        errorBox.classList.remove('hidden');
+      }
+
+      btn.disabled = false;
+      btn.dataset.processing = '0';
+      btnCancel.disabled = false;
+
+      if ((failed + skipped) === 0) {
+        btn.innerHTML = '<i class="fas fa-check"></i> Selesai';
+        showToast('🗑️ ' + success + ' sekolah berhasil dihapus', 'success');
+        setTimeout(() => {
+          document.getElementById('modalBulkDelete').classList.remove('active');
+          bulkDeleteIds = [];
+          btn.onclick = confirmBulkDelete;
+        }, 800);
+      } else {
+        btn.innerHTML = 'Tutup';
+        btn.onclick = () => {
+          document.getElementById('modalBulkDelete').classList.remove('active');
+          bulkDeleteIds = [];
+          btn.onclick = confirmBulkDelete;
+        };
+        showToast(
+          success + ' dihapus, ' + (failed + skipped) + ' gagal/dilewati',
+          'error'
+        );
+      }
+
+      await loadSchools();
+      updateBulkBar();
+    }
+
+    // ============================================
     // UTILS
     // ============================================
     function esc(t) {
@@ -1245,6 +1679,7 @@
       if (e.key === 'Escape') {
         closeModal();
         closeDeleteModal();
+        closeBulkDelete();
       }
     });
   </script>

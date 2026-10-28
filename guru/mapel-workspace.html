@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workspace Mapel — Tembok Belajar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #10b981;
+      --green-dark: #047857;
+      --green-light: #d1fae5;
+      --green-lighter: #ecfdf5;
+      --primary: #3b82f6;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-height: 68px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem);
+      padding-bottom: 2rem;
+    }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--green); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+    .btn-primary {
+      background: var(--green); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--green-dark);
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger {
+      background: var(--danger); color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--green);
+      color: var(--green); padding: 0.55rem 1.1rem; border-radius: 8px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--green-light); }
+
+    /* ANNUAL PLAN TABS */
+    .plan-tabs {
+      display: flex; gap: 0.5rem; overflow-x: auto; margin-bottom: 1rem;
+      padding-bottom: 0.3rem; border-bottom: 2px solid var(--border);
+    }
+    .plan-tab {
+      background: transparent; border: none;
+      padding: 0.7rem 1.1rem; border-radius: 8px 8px 0 0;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      color: var(--text-muted); font-family: inherit;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: var(--transition); white-space: nowrap;
+      display: flex; flex-direction: column; gap: 2px;
+      align-items: start;
+    }
+    .plan-tab:hover { color: var(--text); background: var(--bg-soft); }
+    .plan-tab.active {
+      color: var(--green-dark);
+      border-bottom-color: var(--green);
+      background: var(--green-lighter);
+    }
+    .plan-tab-class { font-size: 0.9rem; font-weight: 800; }
+    .plan-tab-meta { font-size: 0.7rem; color: var(--text-muted); font-weight: 500; }
+    .plan-tab.active .plan-tab-meta { color: var(--green); }
+
+    /* INFO BAR */
+    .info-bar {
+      background: var(--green-lighter); border-radius: 10px;
+      padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.82rem;
+      color: var(--green-dark); font-weight: 500; display: flex;
+      align-items: center; gap: 8px;
+      border: 1px solid rgba(16,185,129,0.2); flex-wrap: wrap;
+    }
+    .info-bar i { color: var(--green); }
+    .info-bar strong { color: var(--text); }
+
+    /* UNIT GRID */
+    .unit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .unit-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.3rem;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .unit-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: var(--green);
+      opacity: 0.4;
+    }
+    .unit-card.status-published::before { background: var(--green); opacity: 1; }
+    .unit-card.status-draft::before { background: var(--warning); opacity: 1; }
+    .unit-card.status-archived::before { background: #94a3b8; opacity: 1; }
+    .unit-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--green);
+    }
+    .unit-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 0.6rem;
+      margin-bottom: 0.7rem;
+    }
+    .unit-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.3;
+      flex: 1;
+    }
+    .unit-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .unit-status.published { background: var(--green-light); color: var(--green-dark); }
+    .unit-status.draft { background: #fef3c7; color: #92400e; }
+    .unit-status.archived { background: #e2e8f0; color: #475569; }
+    .unit-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 0.9rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 2.4em;
+    }
+    .unit-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--border);
+      margin-bottom: 0.9rem;
+      flex-wrap: wrap;
+    }
+    .unit-meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .unit-meta i { color: var(--green); font-size: 0.7rem; }
+    .unit-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.4rem;
+    }
+    .btn-unit {
+      padding: 0.5rem 0.6rem;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: 1px solid;
+    }
+    .btn-unit.edit {
+      background: white;
+      color: var(--green);
+      border-color: var(--green);
+    }
+    .btn-unit.edit:hover { background: var(--green); color: white; }
+    .btn-unit.preview {
+      background: white;
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    .btn-unit.preview:hover { background: var(--primary); color: white; }
+    .btn-unit.publish {
+      background: white;
+      color: var(--warning);
+      border-color: var(--warning);
+    }
+    .btn-unit.publish:hover { background: var(--warning); color: white; }
+    .btn-unit.unpublish {
+      background: white;
+      color: #64748b;
+      border-color: #64748b;
+    }
+    .btn-unit.unpublish:hover { background: #64748b; color: white; }
+    .btn-unit.delete {
+      background: white;
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+    .btn-unit.delete:hover { background: var(--danger); color: white; }
+
+    /* EMPTY */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 1.5rem;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 2px dashed var(--border);
+    }
+    .empty-state .emoji {
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 1rem;
+      opacity: 0.6;
+    }
+    .empty-state h3 { font-size: 1.2rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 0.85rem; line-height: 1.6; max-width: 450px; margin: 0 auto 1.2rem; color: var(--text-muted); }
+
+    /* LOADING */
+    .loading-box {
+      text-align: center; padding: 4rem 1rem; color: var(--text-muted);
+    }
+    .spinner {
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem; width: 100%; max-width: 540px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--text); margin-bottom: 1rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--green); }
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem;
+    }
+    .form-label {
+      display: block; font-size: 0.75rem; font-weight: 700;
+      margin-bottom: 0.45rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-label .req { color: var(--danger); }
+    .form-input, .form-textarea {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.9rem;
+    }
+    .form-input:focus, .form-textarea:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+    .form-hint {
+      font-size: 0.72rem; color: var(--text-muted);
+      margin-top: -0.5rem; margin-bottom: 0.9rem;
+      padding-left: 4px; line-height: 1.5;
+    }
+    .alert {
+      margin-top: 1rem; padding: 0.75rem 1rem;
+      border-radius: 8px; font-size: 0.83rem; line-height: 1.5;
+    }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-success { background: var(--green-light); color: var(--green-dark); border: 1px solid #a7f3d0; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--text); color: white;
+      padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--danger); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .unit-grid { grid-template-columns: 1fr; }
+      .unit-actions { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#mapel';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+        <h1>
+          <i class="fas fa-book-open"></i>
+          <span>
+            <span id="subjectTitle">Workspace Mapel</span>
+            <small id="subjectSubtitle">Kelola unit pembelajaran untuk mapel ini</small>
+          </span>
+        </h1>
+      </div>
+      <div class="toolbar-actions" id="toolbarActions" style="display:none;">
+        <button class="btn-primary" onclick="openCreateUnitModal()">
+          <i class="fas fa-plus"></i> Buat Unit Baru
+        </button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat workspace...</p>
+    </div>
+
+    <div id="pageContent" class="hidden">
+      <!-- TABS: annual plans (1 per kelas/semester) -->
+      <div id="planTabsContainer" style="display:none;">
+        <div class="plan-tabs" id="planTabs"></div>
+      </div>
+
+      <!-- Info bar -->
+      <div class="info-bar">
+        <i class="fas fa-info-circle"></i>
+        <span>
+          Kelas: <strong id="infoKelas">-</strong> ·
+          Semester: <strong id="infoSemester">-</strong> ·
+          Total: <strong id="infoTotal">0</strong> unit ·
+          Published: <strong id="infoPublished">0</strong>
+        </span>
+      </div>
+
+      <!-- Unit grid -->
+      <div id="unitGrid" class="unit-grid"></div>
+    </div>
+
+    <!-- Modal Buat Unit Baru -->
+    <div class="modal-overlay" id="modalCreateUnit">
+      <div class="modal-card">
+        <h2><i class="fas fa-plus"></i> Buat Unit Baru</h2>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">
+          Unit adalah bab/topik besar yang berisi kumpulan aktivitas (materi, LKPD, asesmen, refleksi, diskusi).
+        </p>
+
+        <label class="form-label" for="inputUnitTitle">Judul Unit <span class="req">*</span></label>
+        <input type="text" id="inputUnitTitle" class="form-input" placeholder="Contoh: Ekosistem dan Interaksi Makhluk Hidup" maxlength="150">
+
+        <label class="form-label" for="inputUnitDesc">Deskripsi <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(opsional)</span></label>
+        <textarea id="inputUnitDesc" class="form-textarea" placeholder="Ringkasan singkat tentang unit ini..." maxlength="500"></textarea>
+
+        <div id="modalError" class="alert alert-error hidden"></div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="closeCreateUnitModal()">Batal</button>
+          <button class="btn-primary" id="btnSaveUnit" onclick="saveNewUnit()">
+            <i class="fas fa-save"></i> Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus Unit -->
+    <div class="modal-overlay" id="modalDeleteUnit">
+      <div class="modal-card">
+        <h2 style="color:var(--danger);"><i class="fas fa-trash"></i> Hapus Unit?</h2>
+        <p id="deleteUnitMessage" style="color:var(--text); margin-bottom:0.8rem;"></p>
+        <p style="font-size:0.75rem; color:#92400e; background:#fef3c7; padding:0.6rem 0.8rem; border-radius:8px; margin-bottom:1rem; border-left:3px solid var(--warning);">
+          ⚠️ Semua aktivitas, komponen, dan asesmen di dalam unit ini akan ikut terhapus permanen.
+        </p>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="closeDeleteUnitModal()">Batal</button>
+          <button class="btn-danger" id="btnConfirmDeleteUnit" onclick="confirmDeleteUnit()">Ya, Hapus</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let currentSubject = null;
+    let subjectIdFromUrl = null;
+    let allPlans = [];          // annual_plans untuk subject ini
+    let activePlanId = null;    // plan yang aktif di tab
+    let currentUnits = [];      // unit dari plan aktif
+    let deletingUnitId = null;
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+
+      subjectIdFromUrl = new URLSearchParams(window.location.search).get('subjectId');
+      if (!subjectIdFromUrl) {
+        document.getElementById('loading').innerHTML = '<p style="color:var(--danger);">Parameter subjectId tidak ditemukan.</p>';
+        return;
+      }
+
+      await loadWorkspace();
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    async function loadWorkspace() {
+      try {
+        // Ambil info subject
+        const assignments = await getMyTeachingAssignments(currentUser.id);
+        const subjectAssign = assignments.find(a => String(a.subject_id) === String(subjectIdFromUrl));
+        if (!subjectAssign || !subjectAssign.subjects) {
+          throw new Error('Mapel tidak ditemukan atau Anda tidak mengampu mapel ini.');
+        }
+        currentSubject = subjectAssign.subjects;
+        document.getElementById('subjectTitle').textContent = currentSubject.name;
+
+        // Ambil semua annual plans untuk subject ini
+        const allMyPlans = await getMyAnnualPlans(currentUser.id);
+        allPlans = allMyPlans.filter(p => String(p.subject_id) === String(subjectIdFromUrl));
+
+        if (allPlans.length === 0) {
+          document.getElementById('toolbarActions').style.display = 'none';
+          document.getElementById('planTabsContainer').style.display = 'none';
+          document.getElementById('unitGrid').innerHTML = renderNoPlanState();
+          return;
+        }
+
+        // Kalau ada >1 plan → tampilkan tabs
+        if (allPlans.length > 1) {
+          document.getElementById('planTabsContainer').style.display = 'block';
+          renderPlanTabs();
+        }
+
+        // Default aktif = plan pertama
+        activePlanId = allPlans[0].id;
+        await loadUnitsForPlan(activePlanId);
+        document.getElementById('toolbarActions').style.display = 'flex';
+      } catch (err) {
+        console.error('Load workspace error:', err);
+        document.getElementById('unitGrid').innerHTML =
+          `<div class="empty-state" style="color:var(--danger);">
+             <span class="emoji">⚠️</span>
+             <h3>Gagal Memuat</h3>
+             <p>${escapeHtml(err.message)}</p>
+           </div>`;
+      }
+    }
+
+    function renderPlanTabs() {
+      const tabs = document.getElementById('planTabs');
+      tabs.innerHTML = allPlans.map(p => {
+        const kelasName = p.classes?.name || '-';
+        const semester = p.semester ? 'Semester ' + p.semester : '';
+        const year = p.academic_year || '';
+        const meta = [semester, year].filter(Boolean).join(' · ') || '-';
+        const isActive = String(p.id) === String(activePlanId);
+        return `
+          <button class="plan-tab ${isActive ? 'active' : ''}" onclick="switchPlan('${p.id}')">
+            <span class="plan-tab-class">${escapeHtml(kelasName)}</span>
+            <span class="plan-tab-meta">${escapeHtml(meta)}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    async function switchPlan(planId) {
+      if (String(planId) === String(activePlanId)) return;
+      activePlanId = planId;
+      renderPlanTabs();
+      await loadUnitsForPlan(planId);
+    }
+
+    async function loadUnitsForPlan(planId) {
+      const plan = allPlans.find(p => String(p.id) === String(planId));
+      if (!plan) return;
+
+      document.getElementById('infoKelas').textContent = plan.classes?.name || '-';
+      document.getElementById('infoSemester').textContent = plan.semester || '-';
+
+      const grid = document.getElementById('unitGrid');
+      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem;"><div class="spinner"></div><p>Memuat unit...</p></div>';
+
+      try {
+        currentUnits = await getUnits(planId);
+        renderUnitGrid();
+      } catch (err) {
+        console.error('Load units error:', err);
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1; color:var(--danger);">
+          <span class="emoji">⚠️</span>
+          <h3>Gagal Memuat Unit</h3>
+          <p>${escapeHtml(err.message)}</p>
+        </div>`;
+      }
+    }
+
+    function renderUnitGrid() {
+      document.getElementById('infoTotal').textContent = currentUnits.length;
+      document.getElementById('infoPublished').textContent =
+        currentUnits.filter(u => u.status === 'published').length;
+
+      const grid = document.getElementById('unitGrid');
+
+      if (currentUnits.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1;">
+            <span class="emoji">📖</span>
+            <h3>Belum Ada Unit</h3>
+            <p>Mulai dengan membuat unit pertama. Unit adalah bab/topik besar yang berisi kumpulan aktivitas pembelajaran.</p>
+            <button class="btn-primary" onclick="openCreateUnitModal()">
+              <i class="fas fa-plus"></i> Buat Unit Pertama
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = currentUnits.map(u => {
+        const statusClass = u.status || 'draft';
+        const statusLabel = {
+          draft: '📝 Draft',
+          published: '✅ Published',
+          archived: '📦 Archived'
+        }[statusClass] || statusClass;
+
+        const publishAction = statusClass === 'published'
+          ? `<button class="btn-unit unpublish" onclick="changeStatus('${u.id}','archived')" title="Arsipkan">
+               <i class="fas fa-box-archive"></i> Arsip
+             </button>`
+          : `<button class="btn-unit publish" onclick="changeStatus('${u.id}','published')" title="Publish">
+               <i class="fas fa-globe"></i> Publish
+             </button>`;
+
+        return `
+          <div class="unit-card status-${statusClass}">
+            <div class="unit-card-header">
+              <div class="unit-title">${escapeHtml(u.title)}</div>
+              <span class="unit-status ${statusClass}">${statusLabel}</span>
+            </div>
+            <div class="unit-desc">${escapeHtml(u.description || 'Belum ada deskripsi.')}</div>
+            <div class="unit-meta">
+              <span><i class="fas fa-calendar"></i> ${formatTanggal(u.created_at)}</span>
+              <span><i class="fas fa-layer-group"></i> ${u.kktp_type || 'Unit'}</span>
+            </div>
+            <div class="unit-actions">
+              <button class="btn-unit edit" onclick="editUnit('${u.id}')" title="Edit konten">
+                <i class="fas fa-pen"></i> Edit
+              </button>
+              <button class="btn-unit preview" onclick="previewUnit('${u.id}')" title="Preview sebagai siswa">
+                <i class="fas fa-eye"></i> Preview
+              </button>
+              ${publishAction}
+            </div>
+            <div style="margin-top:0.4rem; text-align:right;">
+              <button class="btn-unit delete" style="font-size:0.68rem; padding:3px 8px;" onclick="openDeleteUnit('${u.id}')">
+                <i class="fas fa-trash"></i> Hapus Unit
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderNoPlanState() {
+      return `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <span class="emoji">📋</span>
+          <h3>Belum Ada Perencanaan Tahunan</h3>
+          <p>Unit harus berada dalam perencanaan tahunan (annual plan). Buat dulu di menu "Perencanaan TP" untuk mapel ${escapeHtml(currentSubject?.name || '')}.</p>
+          <button class="btn-primary" onclick="goToPerencanaan()">
+            <i class="fas fa-arrow-right"></i> Buka Perencanaan TP
+          </button>
+        </div>
+      `;
+    }
+
+    function goToPerencanaan() {
+      if (window.self !== window.top) {
+        window.parent.postMessage({ type: 'GURU_NAVIGATE', view: 'perencanaan' }, '*');
+      }
+    }
+
+    // ============================================
+    // CREATE UNIT
+    // ============================================
+    function openCreateUnitModal() {
+      if (!activePlanId) {
+        showToast('Belum ada annual plan. Buat dulu di Perencanaan TP.', 'error');
+        return;
+      }
+      document.getElementById('inputUnitTitle').value = '';
+      document.getElementById('inputUnitDesc').value = '';
+      document.getElementById('modalError').classList.add('hidden');
+      document.getElementById('btnSaveUnit').disabled = false;
+      document.getElementById('btnSaveUnit').innerHTML = '<i class="fas fa-save"></i> Simpan';
+      document.getElementById('modalCreateUnit').classList.add('active');
+      setTimeout(() => document.getElementById('inputUnitTitle').focus(), 100);
+    }
+
+    function closeCreateUnitModal() {
+      document.getElementById('modalCreateUnit').classList.remove('active');
+    }
+
+    async function saveNewUnit() {
+      const title = document.getElementById('inputUnitTitle').value.trim();
+      const description = document.getElementById('inputUnitDesc').value.trim();
+      const errBox = document.getElementById('modalError');
+      const btn = document.getElementById('btnSaveUnit');
+
+      errBox.classList.add('hidden');
+      if (!title) {
+        errBox.textContent = 'Judul unit wajib diisi.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        const newUnit = await createUnit({
+          annualPlanId: activePlanId,
+          title: title,
+          description: description || null
+        });
+        closeCreateUnitModal();
+        showToast('✅ Unit berhasil dibuat', 'success');
+        await loadUnitsForPlan(activePlanId);
+
+        // Auto open editor? Optional
+        // editUnit(newUnit.id);
+      } catch (err) {
+        console.error('Save unit error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + (err.message || 'Unknown error');
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+      }
+    }
+
+    // ============================================
+    // ACTIONS
+    // ============================================
+    function editUnit(unitId) {
+      if (window.self !== window.top) {
+        window.parent.postMessage({
+          type: 'GURU_GOTO',
+          target: 'editor',
+          params: { unitId }
+        }, '*');
+      } else {
+        window.location.href = 'unit-editor.html?embed=1&unitId=' + unitId;
+      }
+    }
+
+    function previewUnit(unitId) {
+      if (window.self !== window.top) {
+        window.parent.postMessage({
+          type: 'GURU_GOTO',
+          target: 'preview',
+          params: { unitId },
+          from: 'workspace'
+        }, '*');
+      } else {
+        window.location.href = 'unit-preview.html?embed=1&unitId=' + unitId;
+      }
+    }
+
+    async function changeStatus(unitId, newStatus) {
+      const labels = { draft: 'Draft', published: 'Published', archived: 'Archived' };
+      const confirmMsg = newStatus === 'published'
+        ? 'Publish unit ini? Siswa akan bisa melihat kontennya.'
+        : 'Arsipkan unit ini? Siswa tidak akan bisa melihatnya lagi (tapi data tetap ada).';
+
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        await updateUnitStatus(unitId, newStatus);
+        showToast(`✅ Unit di-${labels[newStatus].toLowerCase()}`, 'success');
+        await loadUnitsForPlan(activePlanId);
+      } catch (err) {
+        console.error('Change status error:', err);
+        showToast('Gagal mengubah status: ' + (err.message || 'Unknown error'), 'error');
+      }
+    }
+
+    // ============================================
+    // DELETE UNIT
+    // ============================================
+    function openDeleteUnit(unitId) {
+      const unit = currentUnits.find(u => String(u.id) === String(unitId));
+      if (!unit) return;
+      deletingUnitId = unitId;
+      document.getElementById('deleteUnitMessage').innerHTML =
+        `Hapus unit <strong>${escapeHtml(unit.title)}</strong>?`;
+      document.getElementById('modalDeleteUnit').classList.add('active');
+    }
+
+    function closeDeleteUnitModal() {
+      document.getElementById('modalDeleteUnit').classList.remove('active');
+      deletingUnitId = null;
+    }
+
+    async function confirmDeleteUnit() {
+      if (!deletingUnitId) return;
+      const btn = document.getElementById('btnConfirmDeleteUnit');
+      btn.disabled = true;
+      btn.textContent = 'Menghapus...';
+
+      try {
+        await deleteUnit(deletingUnitId);
+        closeDeleteUnitModal();
+        showToast('🗑️ Unit berhasil dihapus', 'success');
+        await loadUnitsForPlan(activePlanId);
+      } catch (err) {
+        console.error('Delete unit error:', err);
+        showToast('Gagal menghapus: ' + (err.message || 'Unknown error'), 'error');
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus';
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function formatTanggal(tgl) {
+      if (!tgl) return '-';
+      try {
+        const d = new Date(tgl);
+        if (isNaN(d.getTime())) return tgl;
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch { return tgl; }
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeCreateUnitModal();
+        closeDeleteUnitModal();
+      }
+    });
+  </script>
+</body>
+</html>

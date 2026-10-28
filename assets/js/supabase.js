@@ -1,5 +1,6 @@
 // ============================================
 // SUPABASE CLIENT & HELPER — TEMBOK BELAJAR
+// v2.0 — Tambah modul Guru (Units/Assessments)
 // ============================================
 
 let supabaseClient = null;
@@ -18,10 +19,6 @@ function initSupabase() {
 // AUTH — Multi-Role Support
 // ============================================
 
-/**
- * Ambil semua role user dari user_roles
- * Return: array of { role, school_id, status, school_name }
- */
 async function getUserRoles(userId) {
   const client = initSupabase();
   const { data, error } = await client
@@ -48,27 +45,17 @@ async function getUserRoles(userId) {
   }));
 }
 
-/**
- * Ambil profil user + semua role + role aktif
- * Role aktif: dari sessionStorage['active_role'] (kalau valid) 
- *            atau role pertama dari user_roles
- * Properti `role` dan `school_id` di-override sesuai active role
- * → kode lama yang pakai `profile.role` TETAP JALAN
- */
 async function getProfile() {
   const client = initSupabase();
   const { data: { user } } = await client.auth.getUser();
   if (!user) return null;
 
-  // Ambil profil dasar
   const { data: profile, error } = await client
     .from('profiles').select('*').eq('id', user.id).single();
   if (error) { console.error('getProfile error:', error); return null; }
 
-  // Ambil semua role dari user_roles
   const roles = await getUserRoles(user.id);
 
-  // Tentukan role aktif
   let activeRole = null;
   try {
     const stored = sessionStorage.getItem('active_role');
@@ -87,7 +74,6 @@ async function getProfile() {
     activeRole = { role: roles[0].role, school_id: roles[0].school_id };
   }
 
-  // Fallback ke profiles.role kalau user_roles kosong (data lama belum migrasi)
   if (roles.length === 0 && profile.role) {
     activeRole = { role: profile.role, school_id: profile.school_id };
   }
@@ -96,7 +82,6 @@ async function getProfile() {
     ...profile,
     roles: roles.length > 0 ? roles : [{ role: profile.role, school_id: profile.school_id }],
     activeRole,
-    // Override `role` dan `school_id` sesuai role aktif
     role: activeRole?.role || profile.role,
     school_id: activeRole?.school_id ?? profile.school_id
   };
@@ -105,15 +90,10 @@ async function getProfile() {
 async function doLogout() {
   const client = initSupabase();
   await client.auth.signOut();
-  sessionStorage.clear(); // include active_role
+  sessionStorage.clear();
   window.location.href = '../login.html';
 }
 
-/**
- * Redirect user berdasarkan role
- * Kalau >1 role → tampil modal pilih role
- * Kalau 1 role → redirect langsung
- */
 function redirectByRole(roleOrProfile) {
   const profile = typeof roleOrProfile === 'string'
     ? { role: roleOrProfile, roles: [{ role: roleOrProfile, school_id: null, school_name: null }] }
@@ -123,9 +103,9 @@ function redirectByRole(roleOrProfile) {
     || window.location.pathname.includes('/guru/')
     || window.location.pathname.includes('/siswa/')
     || window.location.pathname.includes('/admin/')
+    || window.location.pathname.includes('/wali-kelas/')
     ? '../' : '';
 
-  // Kalau user punya >1 role → tampil modal
   if (profile.roles && profile.roles.length > 1) {
     showRolePicker(profile.roles, base);
     return;
@@ -135,23 +115,22 @@ function redirectByRole(roleOrProfile) {
   if (role === 'admin') window.location.href = base + 'admin/dashboard.html';
   else if (role === 'operator') window.location.href = base + 'operator/dashboard.html';
   else if (role === 'guru') window.location.href = base + 'guru/dashboard.html';
+  else if (role === 'wali_kelas') window.location.href = base + 'wali-kelas/dashboard.html';
   else if (role === 'siswa') window.location.href = base + 'siswa/dashboard.html';
   else window.location.href = base + 'login.html';
 }
 
-/**
- * Modal pilih role (muncul kalau user punya >1 role)
- */
 function showRolePicker(roles, base) {
   const old = document.getElementById('rolePickerModal');
   if (old) old.remove();
 
-  const roleLabels = {
-    admin: { label: 'Super Admin', icon: 'fa-crown', color: '#8b5cf6', desc: 'Kelola semua sekolah' },
-    operator: { label: 'Operator', icon: 'fa-user-shield', color: '#3b82f6', desc: 'Kelola guru, siswa, kelas, mapel' },
-    guru: { label: 'Guru', icon: 'fa-chalkboard-teacher', color: '#10b981', desc: 'Kelola materi, aktivitas, nilai' },
-    siswa: { label: 'Siswa', icon: 'fa-user-graduate', color: '#f59e0b', desc: 'Belajar, kerjakan tugas, lihat nilai' }
-  };
+const roleLabels = {
+  admin: { label: 'Super Admin', icon: 'fa-crown', color: '#8b5cf6', desc: 'Kelola semua sekolah' },
+  operator: { label: 'Operator', icon: 'fa-user-shield', color: '#3b82f6', desc: 'Kelola guru, siswa, kelas, mapel' },
+  guru: { label: 'Guru', icon: 'fa-chalkboard-teacher', color: '#10b981', desc: 'Kelola materi, aktivitas, nilai' },
+  wali_kelas: { label: 'Wali Kelas', icon: 'fa-users-rectangle', color: '#ec4899', desc: 'Pantau siswa, nilai, dan forum kelas walian' },
+  siswa: { label: 'Siswa', icon: 'fa-user-graduate', color: '#f59e0b', desc: 'Belajar, kerjakan tugas, lihat nilai' }
+};
 
   const modal = document.createElement('div');
   modal.id = 'rolePickerModal';
@@ -241,16 +220,12 @@ function showRolePicker(roles, base) {
       if (role === 'admin') window.location.href = base + 'admin/dashboard.html';
       else if (role === 'operator') window.location.href = base + 'operator/dashboard.html';
       else if (role === 'guru') window.location.href = base + 'guru/dashboard.html';
+      else if (role === 'wali_kelas') window.location.href = base + 'wali-kelas/dashboard.html';
       else if (role === 'siswa') window.location.href = base + 'siswa/dashboard.html';
     });
   });
 }
 
-/**
- * Cek auth + role
- * Kalau user punya role yang diharapkan (di user_roles), tapi bukan active role
- * → otomatis set active role ke role yang match
- */
 async function requireAuth(expectedRole) {
   const profile = await getProfile();
   if (!profile) {
@@ -259,7 +234,6 @@ async function requireAuth(expectedRole) {
     return null;
   }
 
-  // Cek apakah user punya role yang diharapkan
   const hasRole = profile.roles && profile.roles.some(r => r.role === expectedRole);
 
   if (expectedRole && !hasRole) {
@@ -268,7 +242,6 @@ async function requireAuth(expectedRole) {
     return null;
   }
 
-  // Kalau punya role tapi bukan active → set active
   if (expectedRole && profile.role !== expectedRole) {
     const matchingRole = profile.roles.find(r => r.role === expectedRole);
     if (matchingRole) {
@@ -285,10 +258,6 @@ async function requireAuth(expectedRole) {
   return profile;
 }
 
-/**
- * Ganti role aktif (dipanggil dari tombol "Ganti Peran" di topbar)
- * Hapus active_role → tampil modal picker
- */
 async function switchRole() {
   const profile = await getProfile();
   if (!profile || !profile.roles || profile.roles.length <= 1) {
@@ -401,17 +370,11 @@ async function deleteClass(id) {
 }
 
 /* ============================================================
-   GURU — Multi-Role Aware (PATCHED)
-   ============================================================
-   Sumber guru = gabungan:
-   1) user_roles.role = 'guru' (multi-role, data baru)
-   2) profiles.role = 'guru'  (legacy, data lama)
-   → guru lama tidak hilang, guru baru (via create-teacher multi-role) muncul
+   GURU — Multi-Role Aware
    ============================================================ */
 async function getTeachers(schoolId) {
   const client = initSupabase();
 
-  // 1) Dari user_roles (multi-role)
   let roleQuery = client
     .from('user_roles')
     .select('user_id')
@@ -424,27 +387,22 @@ async function getTeachers(schoolId) {
 
   const roleUserIds = new Set((roleRows || []).map(r => r.user_id));
 
-  // 2) Dari profiles.role (legacy)
   let profQuery = client.from('profiles').select('*').eq('role', 'guru');
   if (schoolId) profQuery = profQuery.eq('school_id', schoolId);
   const { data: legacyProfiles, error: profErr } = await profQuery;
   if (profErr) throw profErr;
 
   const legacyIds = new Set((legacyProfiles || []).map(p => p.id));
-
-  // 3) Ambil profil user dari user_roles yang belum ada di legacyProfiles
   const missingIds = [...roleUserIds].filter(id => !legacyIds.has(id));
+
   let extraProfiles = [];
   if (missingIds.length > 0) {
     const { data: extra, error: e2 } = await client
-      .from('profiles')
-      .select('*')
-      .in('id', missingIds);
+      .from('profiles').select('*').in('id', missingIds);
     if (e2) throw e2;
     extraProfiles = extra || [];
   }
 
-  // 4) Gabung + dedupe by id + urut nama
   const all = [...(legacyProfiles || []), ...extraProfiles];
   const map = new Map();
   all.forEach(p => map.set(p.id, p));
@@ -478,21 +436,51 @@ async function deleteTeacher(id) {
 }
 
 /* ============================================================
-   SISWA
+   SISWA — Multi-Role Aware
    ============================================================ */
 async function getStudents(schoolId) {
   const client = initSupabase();
-  let q = client.from('profiles').select('*').eq('role', 'siswa').order('name', { ascending: true });
-  if (schoolId) q = q.eq('school_id', schoolId);
-  const { data, error } = await q;
-  if (error) throw error;
-  return data || [];
+
+  let roleQuery = client
+    .from('user_roles')
+    .select('user_id')
+    .eq('role', 'siswa')
+    .eq('status', 'active');
+  if (schoolId) roleQuery = roleQuery.eq('school_id', schoolId);
+
+  const { data: roleRows, error: roleErr } = await roleQuery;
+  if (roleErr) throw roleErr;
+
+  const roleUserIds = new Set((roleRows || []).map(r => r.user_id));
+
+  let profQuery = client.from('profiles').select('*').eq('role', 'siswa');
+  if (schoolId) profQuery = profQuery.eq('school_id', schoolId);
+  const { data: legacyProfiles, error: profErr } = await profQuery;
+  if (profErr) throw profErr;
+
+  const legacyIds = new Set((legacyProfiles || []).map(p => p.id));
+  const missingIds = [...roleUserIds].filter(id => !legacyIds.has(id));
+
+  let extraProfiles = [];
+  if (missingIds.length > 0) {
+    const { data: extra, error: e2 } = await client
+      .from('profiles').select('*').in('id', missingIds);
+    if (e2) throw e2;
+    extraProfiles = extra || [];
+  }
+
+  const all = [...(legacyProfiles || []), ...extraProfiles];
+  const map = new Map();
+  all.forEach(p => map.set(p.id, p));
+  return [...map.values()].sort((a, b) =>
+    (a.name || '').localeCompare(b.name || '')
+  );
 }
 
 async function updateStudent(id, { name, email }) {
   const client = initSupabase();
   const { data, error } = await client.from('profiles')
-    .update({ name, email }).eq('id', id).eq('role', 'siswa').select().single();
+    .update({ name, email }).eq('id', id).select().single();
   if (error) throw error;
   return data;
 }
@@ -611,7 +599,7 @@ async function getClassSubjects(classId) {
 async function getMyTeachingAssignments(teacherId) {
   const client = initSupabase();
   const { data, error } = await client.from('teacher_assign')
-    .select(`id, subjects (id, name, code), classes (id, name, grade, room)`)
+    .select(`id, subject_id, class_id, school_id, created_at, subjects (id, name, code), classes (id, name, grade, room)`)
     .eq('teacher_id', teacherId);
   if (error) throw error;
   return data || [];
@@ -633,14 +621,14 @@ async function getClassStudentCounts(classIds) {
 async function getStudentsInClass(classId) {
   const client = initSupabase();
   const { data, error } = await client.from('enrollments')
-    .select(`id, student_id, status, profiles!enrollments_student_id_fkey (id, name, email)`)
+    .select(`id, student_id, status, profiles!enrollments_student_id_fkey (id, name, email, status, nisn, nis, nik, jenis_kelamin, tempat_lahir, tanggal_lahir, agama, alamat, no_hp, nama_ayah, nama_ibu, nama_wali)`)
     .eq('class_id', classId).eq('status', 'active');
   if (error) throw error;
   return data || [];
 }
 
 /* ============================================================
-   PAGES & BLOCKS
+   PAGES & BLOCKS (legacy — dipakai wali-kelas/rapor)
    ============================================================ */
 async function getPages(classId, subjectId) {
   const client = initSupabase();
@@ -722,7 +710,7 @@ async function deleteBlock(id) {
 }
 
 /* ============================================================
-   AKTIVITAS
+   AKTIVITAS (legacy)
    ============================================================ */
 async function getActivities(classId, subjectId) {
   const client = initSupabase();
@@ -751,7 +739,7 @@ async function deleteActivity(id) {
 }
 
 /* ============================================================
-   SUBMISSIONS & GRADES
+   SUBMISSIONS & GRADES (legacy — dipakai wali-kelas/rapor)
    ============================================================ */
 async function getSubmissionsByActivity(activityId) {
   const client = initSupabase();
@@ -850,7 +838,7 @@ async function getGradeBook(classId) {
 }
 
 /* ============================================================
-   FORUM
+   FORUM (legacy — class+subject)
    ============================================================ */
 async function getForumPosts(classId, subjectId) {
   const client = initSupabase();
@@ -890,7 +878,7 @@ async function deleteForumPost(id) {
 }
 
 /* ============================================================
-   PROGRESS SISWA (Guru)
+   PROGRESS SISWA (legacy — dipakai wali-kelas)
    ============================================================ */
 async function getStudentProgress(classId, subjectId) {
   const client = initSupabase();
@@ -1048,7 +1036,6 @@ async function getMasterReport(schoolId) {
 /* ============================================================
    SISWA-SPECIFIC HELPERS
    ============================================================ */
-
 async function getMyEnrolledSubjects(studentId) {
   const client = initSupabase();
   const { data: enrolls, error: e1 } = await client.from('enrollments')
@@ -1243,4 +1230,1254 @@ async function getMyProgress(studentId) {
     });
   }
   return result;
+}
+
+/* ============================================================
+   WALI KELAS — Homeroom Teachers (Many-to-Many)
+   ============================================================ */
+
+async function getHomeroomAssignments(schoolId) {
+  const client = initSupabase();
+  let q = client.from('homeroom_teachers').select(`
+    id, teacher_id, class_id, school_id, status, created_at,
+    profiles!homeroom_teachers_teacher_id_fkey (id, name, email),
+    classes (id, name, grade)
+  `).order('created_at', { ascending: false });
+  if (schoolId) q = q.eq('school_id', schoolId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+async function getClassesWithWaliCount(schoolId) {
+  const client = initSupabase();
+
+  let cq = client.from('classes').select('id, name, grade, room').order('name');
+  if (schoolId) cq = cq.eq('school_id', schoolId);
+  const { data: classes, error: ce } = await cq;
+  if (ce) throw ce;
+
+  const assigns = await getHomeroomAssignments(schoolId);
+
+  const byClass = {};
+  assigns.forEach(a => {
+    if (!byClass[a.class_id]) byClass[a.class_id] = [];
+    byClass[a.class_id].push(a);
+  });
+
+  return (classes || []).map(c => ({
+    ...c,
+    waliCount: (byClass[c.id] || []).filter(a => a.status === 'active').length,
+    waliList: (byClass[c.id] || []).filter(a => a.status === 'active')
+  }));
+}
+
+async function getTeacherOtherHomerooms(teacherId, excludeClassId, schoolId) {
+  const client = initSupabase();
+  let q = client.from('homeroom_teachers')
+    .select(`id, class_id, classes (id, name)`)
+    .eq('teacher_id', teacherId)
+    .eq('status', 'active');
+  if (schoolId) q = q.eq('school_id', schoolId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data || [])
+    .filter(r => String(r.class_id) !== String(excludeClassId))
+    .map(r => ({ class_id: r.class_id, class_name: r.classes?.name || '-' }));
+}
+
+async function assignHomeroomTeacher(classId, teacherId, schoolId) {
+  const client = initSupabase();
+
+  const { data: assignment, error: assignErr } = await client
+    .from('homeroom_teachers')
+    .insert([{ 
+      teacher_id: teacherId, 
+      class_id: classId, 
+      school_id: schoolId, 
+      status: 'active' 
+    }])
+    .select()
+    .single();
+  if (assignErr) throw assignErr;
+
+  let roleAdded = false;
+  try {
+    const { data: existing } = await client
+      .from('user_roles')
+      .select('id, status')
+      .eq('user_id', teacherId)
+      .eq('role', 'wali_kelas')
+      .eq('school_id', schoolId)
+      .maybeSingle();
+
+    if (existing) {
+      if (existing.status !== 'active') {
+        await client.from('user_roles')
+          .update({ status: 'active' })
+          .eq('id', existing.id);
+        roleAdded = true;
+      }
+    } else {
+      const { error: roleErr } = await client.from('user_roles').insert([{
+        user_id: teacherId,
+        role: 'wali_kelas',
+        school_id: schoolId,
+        status: 'active'
+      }]);
+      if (roleErr) throw roleErr;
+      roleAdded = true;
+    }
+  } catch (e) {
+    console.warn('Gagal upsert role wali_kelas (assignment tetap tersimpan):', e);
+  }
+
+  return { assignment, roleAdded };
+}
+
+async function removeHomeroomAssignment(assignmentId, teacherId, schoolId) {
+  const client = initSupabase();
+
+  const { error: delErr } = await client
+    .from('homeroom_teachers')
+    .delete()
+    .eq('id', assignmentId);
+  if (delErr) throw delErr;
+
+  let roleDeactivated = false;
+  try {
+    const { data: remaining } = await client
+      .from('homeroom_teachers')
+      .select('id')
+      .eq('teacher_id', teacherId)
+      .eq('school_id', schoolId)
+      .eq('status', 'active')
+      .limit(1);
+
+    if (!remaining || remaining.length === 0) {
+      await client.from('user_roles')
+        .update({ status: 'inactive' })
+        .eq('user_id', teacherId)
+        .eq('role', 'wali_kelas')
+        .eq('school_id', schoolId);
+      roleDeactivated = true;
+    }
+  } catch (e) {
+    console.warn('Gagal update status role wali_kelas (assignment sudah dihapus):', e);
+  }
+
+  return { success: true, roleDeactivated };
+}
+
+async function getMyHomeroomClasses(teacherId) {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('homeroom_teachers')
+    .select(`id, class_id, classes (id, name, grade, room)`)
+    .eq('teacher_id', teacherId)
+    .eq('status', 'active');
+  if (error) throw error;
+  return (data || []).map(r => ({
+    assignment_id: r.id,
+    class_id: r.class_id,
+    class_name: r.classes?.name || '-',
+    grade: r.classes?.grade,
+    room: r.classes?.room
+  }));
+}
+
+/* ============================================================
+   ============================================================
+   MODUL GURU — NEW SYSTEM (v2.0)
+   Annual Plan → Learning Objectives → Units → Activities
+   → Components → Assessments → Submissions → Grades
+   ============================================================
+   ============================================================ */
+
+/* ---------- ANNUAL PLANS ---------- */
+
+async function getMyAnnualPlans(teacherId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('annual_plans')
+    .select(`
+      id, teacher_id, subject_id, class_id, academic_year, semester, cp_text, created_at,
+      subjects (id, name, code),
+      classes (id, name, grade, room)
+    `)
+    .eq('teacher_id', teacherId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getAnnualPlanById(id) {
+  const client = initSupabase();
+  const { data, error } = await client.from('annual_plans')
+    .select(`
+      id, teacher_id, subject_id, class_id, academic_year, semester, cp_text, created_at,
+      subjects (id, name, code),
+      classes (id, name, grade, room)
+    `)
+    .eq('id', id).single();
+  if (error) throw error;
+  return data;
+}
+
+async function createAnnualPlan({ teacherId, subjectId, classId, academicYear, semester, cpText }) {
+  const client = initSupabase();
+  const { data, error } = await client.from('annual_plans')
+    .insert([{
+      teacher_id: teacherId,
+      subject_id: subjectId,
+      class_id: classId,
+      academic_year: academicYear,
+      semester: semester,
+      cp_text: cpText || null
+    }]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateAnnualPlan(id, updates) {
+  const client = initSupabase();
+  const payload = {};
+  ['academic_year','semester','cp_text'].forEach(k => {
+    if (updates[k] !== undefined) payload[k] = updates[k];
+  });
+  const { data, error } = await client.from('annual_plans')
+    .update(payload).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteAnnualPlan(id) {
+  const client = initSupabase();
+  const { error } = await client.from('annual_plans').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---------- LEARNING OBJECTIVES (TP) ---------- */
+
+async function getLearningObjectives(annualPlanId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('learning_objectives')
+    .select('*').eq('annual_plan_id', annualPlanId)
+    .order('order_index', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function createLearningObjective({ annualPlanId, code, description, orderIndex }) {
+  const client = initSupabase();
+  let nextOrder = orderIndex;
+  if (nextOrder === undefined || nextOrder === null) {
+    const { data: last } = await client.from('learning_objectives')
+      .select('order_index').eq('annual_plan_id', annualPlanId)
+      .order('order_index', { ascending: false }).limit(1);
+    nextOrder = (last && last[0] ? last[0].order_index : 0) + 1;
+  }
+  const { data, error } = await client.from('learning_objectives')
+    .insert([{ annual_plan_id: annualPlanId, code, description, order_index: nextOrder }])
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateLearningObjective(id, updates) {
+  const client = initSupabase();
+  const payload = {};
+  ['code','description','order_index'].forEach(k => {
+    if (updates[k] !== undefined) payload[k] = updates[k];
+  });
+  const { data, error } = await client.from('learning_objectives')
+    .update(payload).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteLearningObjective(id) {
+  const client = initSupabase();
+  const { error } = await client.from('learning_objectives').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---------- UNITS ---------- */
+
+async function getUnits(annualPlanId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('units')
+    .select('*').eq('annual_plan_id', annualPlanId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getUnitsPublishedByClass(classId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('units')
+    .select(`
+      id, annual_plan_id, title, description, kktp_type, kktp_config, status, created_at,
+      annual_plans!inner (id, class_id, subject_id, academic_year, semester, subjects (id, name, code))
+    `)
+    .eq('status', 'published')
+    .eq('annual_plans.class_id', classId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getUnitById(id) {
+  const client = initSupabase();
+  const { data, error } = await client.from('units')
+    .select(`
+      *,
+      annual_plans (id, teacher_id, subject_id, class_id, academic_year, semester, cp_text,
+        subjects (id, name, code), classes (id, name, grade, room))
+    `)
+    .eq('id', id).single();
+  if (error) throw error;
+  return data;
+}
+
+async function createUnit({ annualPlanId, title, description, kktpType, kktpConfig }) {
+  const client = initSupabase();
+  const { data, error } = await client.from('units')
+    .insert([{
+      annual_plan_id: annualPlanId,
+      title, description: description || null,
+      kktp_type: kktpType || null,
+      kktp_config: kktpConfig || null,
+      status: 'draft'
+    }]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateUnit(id, updates) {
+  const client = initSupabase();
+  const payload = {};
+  ['title','description','kktp_type','kktp_config','status'].forEach(k => {
+    if (updates[k] !== undefined) payload[k] = updates[k];
+  });
+  const { data, error } = await client.from('units')
+    .update(payload).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateUnitStatus(id, status) {
+  const client = initSupabase();
+  const { data, error } = await client.from('units')
+    .update({ status }).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteUnit(id) {
+  const client = initSupabase();
+  const { error } = await client.from('units').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---------- UNIT OBJECTIVES (relasi Unit ↔ TP) ---------- */
+
+async function getUnitObjectives(unitId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('unit_objectives')
+    .select(`id, unit_id, objective_id, learning_objectives (id, code, description, order_index)`)
+    .eq('unit_id', unitId);
+  if (error) throw error;
+  return data || [];
+}
+
+async function addUnitObjective({ unitId, objectiveId }) {
+  const client = initSupabase();
+  const { data, error } = await client.from('unit_objectives')
+    .insert([{ unit_id: unitId, objective_id: objectiveId }]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function removeUnitObjective(id) {
+  const client = initSupabase();
+  const { error } = await client.from('unit_objectives').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---------- UNIT ACTIVITIES ---------- */
+
+async function getUnitActivities(unitId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('unit_activities')
+    .select('*').eq('unit_id', unitId)
+    .order('order_index', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getActivityById(id) {
+  const client = initSupabase();
+  const { data, error } = await client.from('unit_activities')
+    .select(`*, units (id, title, annual_plan_id, annual_plans (id, teacher_id, subject_id, class_id))`)
+    .eq('id', id).single();
+  if (error) throw error;
+  return data;
+}
+
+async function createUnitActivity({ unitId, title, type, orderIndex }) {
+  const client = initSupabase();
+  let nextOrder = orderIndex;
+  if (nextOrder === undefined || nextOrder === null) {
+    const { data: last } = await client.from('unit_activities')
+      .select('order_index').eq('unit_id', unitId)
+      .order('order_index', { ascending: false }).limit(1);
+    nextOrder = (last && last[0] ? last[0].order_index : 0) + 1;
+  }
+  const { data, error } = await client.from('unit_activities')
+    .insert([{ unit_id: unitId, title, type: type || 'materi', order_index: nextOrder }])
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateUnitActivity(id, updates) {
+  const client = initSupabase();
+  const payload = {};
+  ['title','type','order_index'].forEach(k => {
+    if (updates[k] !== undefined) payload[k] = updates[k];
+  });
+  const { data, error } = await client.from('unit_activities')
+    .update(payload).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteUnitActivity(id) {
+  const client = initSupabase();
+  const { error } = await client.from('unit_activities').delete().eq('id', id);
+  if (error) throw error;
+}
+
+async function reorderUnitActivities(items) {
+  const client = initSupabase();
+  const promises = items.map(it =>
+    client.from('unit_activities').update({ order_index: it.order_index }).eq('id', it.id)
+  );
+  const results = await Promise.all(promises);
+  const firstErr = results.find(r => r.error);
+  if (firstErr) throw firstErr.error;
+  return true;
+}
+
+/* ---------- ACTIVITY COMPONENTS (Page Builder) ---------- */
+
+async function getActivityComponents(activityId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('activity_components')
+    .select('*').eq('activity_id', activityId)
+    .order('order_index', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getActivityComponentById(id) {
+  const client = initSupabase();
+  const { data, error } = await client.from('activity_components')
+    .select('*').eq('id', id).single();
+  if (error) throw error;
+  return data;
+}
+
+async function createActivityComponent({ activityId, componentType, componentData, orderIndex }) {
+  const client = initSupabase();
+  let nextOrder = orderIndex;
+  if (nextOrder === undefined || nextOrder === null) {
+    const { data: last } = await client.from('activity_components')
+      .select('order_index').eq('activity_id', activityId)
+      .order('order_index', { ascending: false }).limit(1);
+    nextOrder = (last && last[0] ? last[0].order_index : 0) + 1;
+  }
+  const { data, error } = await client.from('activity_components')
+    .insert([{
+      activity_id: activityId,
+      component_type: componentType,
+      component_data: componentData || {},
+      order_index: nextOrder
+    }]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateActivityComponent(id, updates) {
+  const client = initSupabase();
+  const payload = {};
+  if (updates.component_type !== undefined) payload.component_type = updates.component_type;
+  if (updates.component_data !== undefined) payload.component_data = updates.component_data;
+  if (updates.order_index !== undefined) payload.order_index = updates.order_index;
+  const { data, error } = await client.from('activity_components')
+    .update(payload).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteActivityComponent(id) {
+  const client = initSupabase();
+  const { error } = await client.from('activity_components').delete().eq('id', id);
+  if (error) throw error;
+}
+
+async function reorderActivityComponents(items) {
+  const client = initSupabase();
+  const promises = items.map(it =>
+    client.from('activity_components').update({ order_index: it.order_index }).eq('id', it.id)
+  );
+  const results = await Promise.all(promises);
+  const firstErr = results.find(r => r.error);
+  if (firstErr) throw firstErr.error;
+  return true;
+}
+
+async function bulkCreateActivityComponents(items) {
+  if (!items || items.length === 0) return [];
+  const client = initSupabase();
+  const payload = items.map((it, idx) => ({
+    activity_id: it.activityId,
+    component_type: it.componentType,
+    component_data: it.componentData || {},
+    order_index: it.orderIndex !== undefined ? it.orderIndex : idx
+  }));
+  const { data, error } = await client.from('activity_components')
+    .insert(payload).select();
+  if (error) throw error;
+  return data || [];
+}
+
+/* ---------- ASSESSMENTS ---------- */
+
+async function getAssessmentsByUnit(unitId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('assessments')
+    .select('*').eq('unit_id', unitId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getAssessmentByActivity(activityId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('assessments')
+    .select('*').eq('activity_id', activityId).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function createAssessment({ unitId, activityId, title, description, type, durationMinutes, dueDate, autoGrade }) {
+  const client = initSupabase();
+  const { data, error } = await client.from('assessments')
+    .insert([{
+      unit_id: unitId || null,
+      activity_id: activityId || null,
+      title,
+      description: description || null,
+      type: type || null,
+      duration_minutes: durationMinutes || null,
+      due_date: dueDate || null,
+      auto_grade: autoGrade !== undefined ? autoGrade : false
+    }]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateAssessment(id, updates) {
+  const client = initSupabase();
+  const payload = {};
+  ['title','description','type','duration_minutes','due_date','auto_grade'].forEach(k => {
+    if (updates[k] !== undefined) payload[k] = updates[k];
+  });
+  const { data, error } = await client.from('assessments')
+    .update(payload).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteAssessment(id) {
+  const client = initSupabase();
+  const { error } = await client.from('assessments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---------- ASSESSMENT QUESTIONS ---------- */
+
+async function getAssessmentQuestions(assessmentId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('assessment_questions')
+    .select('*').eq('assessment_id', assessmentId)
+    .order('order_index', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function createAssessmentQuestion({ assessmentId, questionType, questionText, points, orderIndex, options, correctAnswer, feedbackText }) {
+  const client = initSupabase();
+  let nextOrder = orderIndex;
+  if (nextOrder === undefined || nextOrder === null) {
+    const { data: last } = await client.from('assessment_questions')
+      .select('order_index').eq('assessment_id', assessmentId)
+      .order('order_index', { ascending: false }).limit(1);
+    nextOrder = (last && last[0] ? last[0].order_index : 0) + 1;
+  }
+  const { data, error } = await client.from('assessment_questions')
+    .insert([{
+      assessment_id: assessmentId,
+      question_type: questionType,
+      question_text: questionText,
+      points: points || 0,
+      order_index: nextOrder,
+      options: options || null,
+      correct_answer: correctAnswer || null,
+      feedback_text: feedbackText || null
+    }]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateAssessmentQuestion(id, updates) {
+  const client = initSupabase();
+  const payload = {};
+  ['question_type','question_text','points','order_index','options','correct_answer','feedback_text'].forEach(k => {
+    if (updates[k] !== undefined) payload[k] = updates[k];
+  });
+  const { data, error } = await client.from('assessment_questions')
+    .update(payload).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteAssessmentQuestion(id) {
+  const client = initSupabase();
+  const { error } = await client.from('assessment_questions').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---------- SUBMISSIONS ---------- */
+
+async function getSubmissionsByAssessment(assessmentId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('submissions')
+    .select(`
+      id, assessment_id, activity_id, student_id, status, answers, score, teacher_feedback, submitted_at, created_at,
+      profiles!submissions_student_id_fkey (id, name, email, nisn)
+    `)
+    .eq('assessment_id', assessmentId)
+    .order('submitted_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getSubmissionsByActivity(activityId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('submissions')
+    .select(`
+      id, assessment_id, activity_id, student_id, status, answers, score, teacher_feedback, submitted_at, created_at,
+      profiles!submissions_student_id_fkey (id, name, email, nisn)
+    `)
+    .eq('activity_id', activityId)
+    .order('submitted_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getSubmissionById(id) {
+  const client = initSupabase();
+  const { data, error } = await client.from('submissions')
+    .select(`
+      *,
+      profiles!submissions_student_id_fkey (id, name, email, nisn),
+      assessments (id, title, type, duration_minutes, due_date, auto_grade)
+    `)
+    .eq('id', id).single();
+  if (error) throw error;
+  return data;
+}
+
+async function getSubmissionsByStudent(studentId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('submissions')
+    .select(`
+      id, assessment_id, activity_id, status, answers, score, teacher_feedback, submitted_at,
+      assessments (id, title, type, unit_id)
+    `)
+    .eq('student_id', studentId)
+    .order('submitted_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function submitAssessment({ assessmentId, studentId, answers }) {
+  const client = initSupabase();
+  const { data: existing } = await client.from('submissions')
+    .select('id').eq('assessment_id', assessmentId).eq('student_id', studentId).maybeSingle();
+
+  if (existing) {
+    const { data, error } = await client.from('submissions')
+      .update({ answers, submitted_at: new Date().toISOString(), status: 'submitted' })
+      .eq('id', existing.id).select().single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await client.from('submissions')
+      .insert([{ assessment_id: assessmentId, student_id: studentId, answers, status: 'submitted' }])
+      .select().single();
+    if (error) throw error;
+    return data;
+  }
+}
+
+async function submitActivityAnswers({ activityId, studentId, answers }) {
+  const client = initSupabase();
+  const { data: existing } = await client.from('submissions')
+    .select('id').eq('activity_id', activityId).eq('student_id', studentId).maybeSingle();
+
+  if (existing) {
+    const { data, error } = await client.from('submissions')
+      .update({ answers, submitted_at: new Date().toISOString(), status: 'submitted' })
+      .eq('id', existing.id).select().single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await client.from('submissions')
+      .insert([{ activity_id: activityId, student_id: studentId, answers, status: 'submitted' }])
+      .select().single();
+    if (error) throw error;
+    return data;
+  }
+}
+
+async function updateSubmission(id, updates) {
+  const client = initSupabase();
+  const payload = {};
+  ['status','answers','score','teacher_feedback'].forEach(k => {
+    if (updates[k] !== undefined) payload[k] = updates[k];
+  });
+  const { data, error } = await client.from('submissions')
+    .update(payload).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function gradeSubmission({ submissionId, score, teacherFeedback }) {
+  const client = initSupabase();
+  const { data, error } = await client.from('submissions')
+    .update({
+      score,
+      teacher_feedback: teacherFeedback || null,
+      status: 'graded'
+    }).eq('id', submissionId).select().single();
+  if (error) throw error;
+  return data;
+}
+
+/* ---------- GRADES (opsional tabel terpisah) ---------- */
+
+async function getGradesByStudent(studentId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('grades')
+    .select(`
+      id, submission_id, student_id, score, feedback, graded_by, graded_at,
+      submissions (id, assessment_id, activity_id)
+    `)
+    .eq('student_id', studentId)
+    .order('graded_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+/* ---------- REFLECTIONS ---------- */
+
+async function getReflectionsByActivity(activityId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('reflections')
+    .select(`
+      id, activity_id, student_id, answers, submitted_at, created_at,
+      profiles!reflections_student_id_fkey (id, name, email)
+    `)
+    .eq('activity_id', activityId)
+    .order('submitted_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getReflectionByStudent(activityId, studentId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('reflections')
+    .select('*').eq('activity_id', activityId).eq('student_id', studentId).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function submitReflection({ activityId, studentId, answers }) {
+  const client = initSupabase();
+  const { data, error } = await client.from('reflections')
+    .upsert([{
+      activity_id: activityId,
+      student_id: studentId,
+      answers,
+      submitted_at: new Date().toISOString()
+    }], { onConflict: 'activity_id,student_id' }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteReflection(id) {
+  const client = initSupabase();
+  const { error } = await client.from('reflections').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---------- FORUM (Unit & Activity) ---------- */
+
+async function getForumPostsByUnit(unitId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('forum_posts')
+    .select(`
+      id, unit_id, activity_id, class_id, subject_id, title, body, parent_id, created_at, author_id,
+      profiles!forum_posts_author_id_fkey (id, name, role)
+    `)
+    .eq('unit_id', unitId).is('parent_id', null)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getForumPostsByActivity(activityId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('forum_posts')
+    .select(`
+      id, unit_id, activity_id, class_id, subject_id, title, body, parent_id, created_at, author_id,
+      profiles!forum_posts_author_id_fkey (id, name, role)
+    `)
+    .eq('activity_id', activityId).is('parent_id', null)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function createUnitForumPost({ unitId, activityId, classId, subjectId, authorId, title, body, parentId }) {
+  const client = initSupabase();
+  const { data, error } = await client.from('forum_posts')
+    .insert([{
+      unit_id: unitId || null,
+      activity_id: activityId || null,
+      class_id: classId || null,
+      subject_id: subjectId || null,
+      author_id: authorId,
+      title,
+      body: body || null,
+      parent_id: parentId || null
+    }]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+/* ---------- PROGRESS (Unit/Activity) ---------- */
+
+async function getProgressByStudent(studentId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('progress')
+    .select(`
+      id, student_id, unit_id, activity_id, status, completed_at,
+      units (id, title),
+      unit_activities (id, title, type)
+    `)
+    .eq('student_id', studentId)
+    .order('completed_at', { ascending: false, nullsFirst: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getProgressByUnit(unitId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('progress')
+    .select(`
+      id, student_id, unit_id, activity_id, status, completed_at,
+      profiles!progress_student_id_fkey (id, name, email),
+      unit_activities (id, title, type)
+    `)
+    .eq('unit_id', unitId)
+    .order('student_id', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getProgressByActivity(activityId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('progress')
+    .select(`
+      id, student_id, unit_id, activity_id, status, completed_at,
+      profiles!progress_student_id_fkey (id, name, email)
+    `)
+    .eq('activity_id', activityId)
+    .order('student_id', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function upsertProgress({ studentId, unitId, activityId, status, completedAt }) {
+  const client = initSupabase();
+  const { data, error } = await client.from('progress')
+    .upsert([{
+      student_id: studentId,
+      unit_id: unitId || null,
+      activity_id: activityId || null,
+      status: status || 'in_progress',
+      completed_at: completedAt || null,
+      last_update: new Date().toISOString()
+    }], { onConflict: 'student_id,activity_id' }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function getStudentProgressSummary(studentId, annualPlanId) {
+  const client = initSupabase();
+  // Ambil semua unit di annual_plan
+  const units = await getUnits(annualPlanId);
+  if (units.length === 0) return { units: [], summary: { total: 0, completed: 0, percent: 0 } };
+
+  const unitIds = units.map(u => u.id);
+  const { data: acts } = await client.from('unit_activities')
+    .select('id, unit_id').in('unit_id', unitIds);
+  const actIds = (acts || []).map(a => a.id);
+
+  let progressRows = [];
+  if (actIds.length > 0) {
+    const { data } = await client.from('progress')
+      .select('activity_id, status, completed_at')
+      .eq('student_id', studentId).in('activity_id', actIds);
+    progressRows = data || [];
+  }
+
+  const progressMap = {};
+  progressRows.forEach(p => { progressMap[p.activity_id] = p; });
+
+  const byUnit = units.map(u => {
+    const unitActs = (acts || []).filter(a => a.unit_id === u.id);
+    const completed = unitActs.filter(a => progressMap[a.id]?.status === 'completed').length;
+    return {
+      unit: u,
+      totalActivities: unitActs.length,
+      completed,
+      percent: unitActs.length > 0 ? Math.round((completed / unitActs.length) * 100) : 0
+    };
+  });
+
+  const total = (acts || []).length;
+  const completed = progressRows.filter(p => p.status === 'completed').length;
+  return {
+    units: byUnit,
+    summary: {
+      total,
+      completed,
+      percent: total > 0 ? Math.round((completed / total) * 100) : 0
+    }
+  };
+}
+
+/* ---------- CUSTOM COMPONENTS ---------- */
+
+async function getMyCustomComponents() {
+  const client = initSupabase();
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await client.from('custom_components')
+    .select('*').eq('created_by', user.id)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function createCustomComponent({ name, componentSchema, isPublic }) {
+  const client = initSupabase();
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) throw new Error('Tidak terautentikasi');
+
+  const { data: profile } = await client.from('profiles')
+    .select('school_id').eq('id', user.id).single();
+
+  const { data, error } = await client.from('custom_components')
+    .insert([{
+      name,
+      component_schema: componentSchema,
+      created_by: user.id,
+      school_id: profile?.school_id || null,
+      is_public: isPublic || false
+    }]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateCustomComponent(id, updates) {
+  const client = initSupabase();
+  const payload = {};
+  ['name','component_schema','is_public'].forEach(k => {
+    if (updates[k] !== undefined) payload[k] = updates[k];
+  });
+  payload.updated_at = new Date().toISOString();
+  const { data, error } = await client.from('custom_components')
+    .update(payload).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteCustomComponent(id) {
+  const client = initSupabase();
+  const { error } = await client.from('custom_components').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---------- DASHBOARD GURU ---------- */
+
+async function getTeacherDashboardStats(teacherId) {
+  const client = initSupabase();
+
+  // Annual plans
+  const plans = await getMyAnnualPlans(teacherId);
+  const planIds = plans.map(p => p.id);
+
+  // Units
+  let units = [];
+  if (planIds.length > 0) {
+    const { data } = await client.from('units')
+      .select('id, title, status, annual_plan_id')
+      .in('annual_plan_id', planIds);
+    units = data || [];
+  }
+  const unitIds = units.map(u => u.id);
+
+  // Activities
+  let activities = [];
+  if (unitIds.length > 0) {
+    const { data } = await client.from('unit_activities')
+      .select('id, title, type, unit_id').in('unit_id', unitIds);
+    activities = data || [];
+  }
+  const activityIds = activities.map(a => a.id);
+
+  // Pending submissions (belum dinilai)
+  let pendingSubs = [];
+  if (activityIds.length > 0) {
+    const { data } = await client.from('submissions')
+      .select('id, activity_id, assessment_id, status, submitted_at, student_id, profiles!submissions_student_id_fkey (name)')
+      .in('activity_id', activityIds)
+      .eq('status', 'submitted')
+      .order('submitted_at', { ascending: false })
+      .limit(20);
+    pendingSubs = data || [];
+  }
+
+  return {
+    totalAnnualPlans: plans.length,
+    totalUnits: units.length,
+    publishedUnits: units.filter(u => u.status === 'published').length,
+    draftUnits: units.filter(u => u.status === 'draft').length,
+    archivedUnits: units.filter(u => u.status === 'archived').length,
+    totalActivities: activities.length,
+    pendingSubmissions: pendingSubs.length,
+    pendingSubmissionsList: pendingSubs,
+    plans
+  };
+}
+/* ============================================================
+   MULTI-KELAS UNIT (v3.0)
+   ============================================================ */
+
+// Ambil daftar kelas yang terkait dengan unit
+async function getUnitClasses(unitId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('unit_classes')
+    .select(`
+      id, unit_id, class_id, is_published, published_at,
+      classes (id, name, grade, room)
+    `)
+    .eq('unit_id', unitId)
+    .order('added_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// Set kelas untuk unit (tambah/hapus). classIds = array of class_id final
+async function setUnitClasses(unitId, classIds) {
+  const client = initSupabase();
+
+  // Ambil yang ada sekarang
+  const { data: existing, error: e1 } = await client.from('unit_classes')
+    .select('id, class_id').eq('unit_id', unitId);
+  if (e1) throw e1;
+
+  const existingClassIds = new Set((existing || []).map(r => String(r.class_id)));
+  const targetClassIds = new Set(classIds.map(String));
+
+  // Kelas yang perlu ditambah
+  const toAdd = [...targetClassIds].filter(id => !existingClassIds.has(id));
+  // Kelas yang perlu dihapus
+  const toRemove = (existing || []).filter(r => !targetClassIds.has(String(r.class_id)));
+
+  // Tambah
+  if (toAdd.length > 0) {
+    const rows = toAdd.map(cid => ({ unit_id: unitId, class_id: parseInt(cid) }));
+    const { error } = await client.from('unit_classes').insert(rows);
+    if (error) throw error;
+  }
+  // Hapus
+  if (toRemove.length > 0) {
+    const ids = toRemove.map(r => r.id);
+    const { error } = await client.from('unit_classes').delete().in('id', ids);
+    if (error) throw error;
+  }
+
+  return { added: toAdd.length, removed: toRemove.length };
+}
+
+// Publish unit ke kelas tertentu (snapshot konten saat ini)
+// snapshot = { activities: [...], components: { activityId: [...] } }
+async function publishUnitToClasses(unitId, classIds, snapshot) {
+  const client = initSupabase();
+  const now = new Date().toISOString();
+  const payload = {
+    published_version: snapshot,
+    published_at: now,
+    is_published: true
+  };
+  const { data, error } = await client.from('unit_classes')
+    .update(payload)
+    .eq('unit_id', unitId)
+    .in('class_id', classIds.map(c => parseInt(c)))
+    .select();
+  if (error) throw error;
+
+  // Update status units ke published (kalau belum)
+  await client.from('units').update({ status: 'published' }).eq('id', unitId);
+  return data || [];
+}
+
+// Unpublish dari kelas tertentu
+async function unpublishUnitFromClasses(unitId, classIds) {
+  const client = initSupabase();
+  const { data, error } = await client.from('unit_classes')
+    .update({ is_published: false })
+    .eq('unit_id', unitId)
+    .in('class_id', classIds.map(c => parseInt(c)))
+    .select();
+  if (error) throw error;
+
+  // Cek apakah masih ada kelas yang published
+  const { data: remaining } = await client.from('unit_classes')
+    .select('id', { count: 'exact', head: true })
+    .eq('unit_id', unitId).eq('is_published', true);
+
+  if (!remaining || remaining.length === 0) {
+    await client.from('units').update({ status: 'draft' }).eq('id', unitId);
+  }
+  return data || [];
+}
+
+// Ambil snapshot published untuk kelas tertentu (dipakai siswa/preview)
+async function getPublishedUnitForClass(unitId, classId) {
+  const client = initSupabase();
+  const { data, error } = await client.from('unit_classes')
+    .select('published_version, published_at, is_published')
+    .eq('unit_id', unitId)
+    .eq('class_id', classId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Simpan snapshot saat ini ke units.current_version
+async function saveUnitDraft(unitId, snapshot) {
+  const client = initSupabase();
+  const { data, error } = await client.from('units')
+    .update({ current_version: snapshot })
+    .eq('id', unitId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Ambil unit dengan kelas + snapshot
+async function getUnitWithClasses(unitId) {
+  const client = initSupabase();
+  const unit = await getUnitById(unitId);
+  const classes = await getUnitClasses(unitId);
+  return { ...unit, classes };
+}
+
+// Duplikasi unit (full copy: unit + activities + components) ke kelas baru
+async function duplicateUnit(sourceUnitId, targetClassIds) {
+  const client = initSupabase();
+
+  // 1. Ambil unit sumber
+  const sourceUnit = await getUnitById(sourceUnitId);
+  if (!sourceUnit) throw new Error('Unit sumber tidak ditemukan');
+
+  // 2. Ambil activities + components
+  const sourceActs = await getUnitActivities(sourceUnitId);
+  const compMap = {};
+  for (const act of sourceActs) {
+    compMap[act.id] = await getActivityComponents(act.id);
+  }
+
+  // 3. Buat unit baru (untuk annual_plan pertama dari target)
+  //    Ambil annual_plan untuk target kelas pertama
+  const firstClassId = parseInt(targetClassIds[0]);
+  const { data: plans } = await client.from('annual_plans')
+    .select('id')
+    .eq('teacher_id', sourceUnit.annual_plans.teacher_id)
+    .eq('subject_id', sourceUnit.annual_plans.subject_id)
+    .eq('class_id', firstClassId)
+    .limit(1);
+  
+  if (!plans || plans.length === 0) {
+    throw new Error('Tidak ada annual_plan untuk kelas tujuan. Buat dulu perencanaan di kelas tersebut.');
+  }
+  const targetPlanId = plans[0].id;
+
+  // 4. Insert unit baru
+  const { data: newUnit, error: e1 } = await client.from('units').insert([{
+    annual_plan_id: targetPlanId,
+    title: sourceUnit.title + ' (Copy)',
+    description: sourceUnit.description,
+    kktp_type: sourceUnit.kktp_type,
+    kktp_config: sourceUnit.kktp_config,
+    status: 'draft',
+    current_version: sourceUnit.current_version || {}
+  }]).select().single();
+  if (e1) throw e1;
+
+  // 5. Copy activities + components
+  for (const act of sourceActs) {
+    const { data: newAct, error: e2 } = await client.from('unit_activities').insert([{
+      unit_id: newUnit.id,
+      title: act.title,
+      type: act.type,
+      order_index: act.order_index
+    }]).select().single();
+    if (e2) { console.error('copy act err', e2); continue; }
+
+    const comps = compMap[act.id] || [];
+    if (comps.length > 0) {
+      const compRows = comps.map(c => ({
+        activity_id: newAct.id,
+        component_type: c.component_type,
+        component_data: c.component_data,
+        order_index: c.order_index
+      }));
+      await client.from('activity_components').insert(compRows);
+    }
+  }
+
+  // 6. Set unit_classes untuk semua target kelas
+  await setUnitClasses(newUnit.id, targetClassIds);
+
+  return newUnit;
 }

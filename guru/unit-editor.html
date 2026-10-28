@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor Unit — Tembok Belajar</title>
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #10b981; --green-dark: #047857; --green-light: #d1fae5; --green-lighter: #ecfdf5;
+      --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.5;
+      -webkit-font-smoothing: antialiased; overflow: hidden;
+    }
+
+    /* TOP BAR */
+    .editor-topbar {
+      height: 60px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 1rem;
+      gap: 0.6rem; box-shadow: var(--shadow-sm); z-index: 50;
+      overflow-x: auto; overflow-y: hidden;
+    }
+    .editor-topbar::-webkit-scrollbar { height: 3px; }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      width: 36px; height: 36px; border-radius: 8px;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition); font-size: 0.9rem; color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .btn-icon:hover { background: var(--green-light); border-color: var(--green); color: var(--green); }
+    .editor-title-block { flex: 1; min-width: 200px; display: flex; flex-direction: column; }
+    .editor-title {
+      font-size: 1rem; font-weight: 800; color: var(--text);
+      line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .editor-subtitle { font-size: 0.72rem; color: var(--text-muted); line-height: 1.2; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
+    }
+    .status-badge.draft { background: #fef3c7; color: #92400e; }
+    .status-badge.published { background: var(--green-light); color: var(--green-dark); }
+    .status-badge.archived { background: #e2e8f0; color: #475569; }
+
+    .btn-primary {
+      background: var(--green); color: white; border: none;
+      padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 700; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--green-dark); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--green); color: var(--green);
+      padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 700; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-outline:hover { background: var(--green-light); }
+    .btn-kelas {
+      background: var(--surface); border: 1.5px solid var(--primary); color: var(--primary);
+      padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 700; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-kelas:hover { background: #dbeafe; }
+
+    .editor-layout { display: flex; height: calc(100vh - 60px); overflow: hidden; }
+
+    /* LEFT PANEL */
+    .panel-left {
+      width: 280px; background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .panel-header {
+      padding: 0.9rem 1rem; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+    }
+    .panel-header-title {
+      font-size: 0.85rem; font-weight: 800; color: var(--text);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .panel-header-title i { color: var(--green); }
+    .panel-header-count { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+    .activity-list { flex: 1; overflow-y: auto; padding: 0.6rem; }
+    .activity-list::-webkit-scrollbar { width: 6px; }
+    .activity-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .activity-item {
+      background: var(--bg-soft); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.7rem 0.8rem; margin-bottom: 0.5rem;
+      cursor: pointer; transition: var(--transition);
+      display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    .activity-item:hover { border-color: var(--green); background: var(--green-lighter); }
+    .activity-item.active { border-color: var(--green); background: var(--green-lighter); box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
+    .activity-item-top { display: flex; justify-content: space-between; align-items: start; gap: 0.4rem; }
+    .activity-order {
+      font-size: 0.65rem; font-weight: 700; color: var(--green-dark);
+      background: white; padding: 1px 6px; border-radius: 4px;
+      border: 1px solid var(--green-light); flex-shrink: 0;
+    }
+    .activity-title {
+      font-size: 0.82rem; font-weight: 700; color: var(--text);
+      line-height: 1.3; flex: 1; word-break: break-word;
+    }
+    .activity-type-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 7px; border-radius: 4px;
+      font-size: 0.62rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.3px; align-self: flex-start;
+    }
+    .activity-type-badge.materi { background: #dbeafe; color: #1e40af; }
+    .activity-type-badge.lkpd { background: #fef3c7; color: #92400e; }
+    .activity-type-badge.asesmen { background: #ede9fe; color: #6d28d9; }
+    .activity-type-badge.refleksi { background: #fce7f3; color: #be185d; }
+    .activity-type-badge.diskusi { background: #d1fae5; color: #047857; }
+    .activity-type-badge.custom { background: #f1f5f9; color: #475569; }
+    .activity-item-actions { display: flex; gap: 3px; margin-top: 0.3rem; justify-content: flex-end; }
+    .activity-mini-btn {
+      background: white; border: 1px solid var(--border);
+      width: 24px; height: 24px; border-radius: 5px;
+      cursor: pointer; font-size: 0.65rem; color: var(--text-secondary);
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+    .activity-mini-btn:hover { background: var(--green-light); border-color: var(--green); color: var(--green); }
+    .activity-mini-btn.danger:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+    .activity-mini-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .empty-activity { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.8rem; line-height: 1.6; }
+    .empty-activity .emoji { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; opacity: 0.5; }
+
+    /* CENTER */
+    .panel-center { flex: 1; overflow-y: auto; padding: 1.5rem; background: var(--bg); }
+    .panel-center::-webkit-scrollbar { width: 8px; }
+    .panel-center::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .canvas-header {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 1rem 1.2rem; margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .canvas-header-title { flex: 1; min-width: 0; }
+    .canvas-header-title h2 {
+      font-size: 1.1rem; font-weight: 800; color: var(--text);
+      line-height: 1.3; margin-bottom: 0.2rem;
+    }
+    .canvas-header-meta { font-size: 0.75rem; color: var(--text-muted); }
+    .canvas-header-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .components-container { display: flex; flex-direction: column; gap: 1rem; }
+    .component-wrapper {
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: var(--radius); position: relative;
+      transition: var(--transition);
+    }
+    .component-wrapper:hover { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+    .component-toolbar {
+      position: absolute; top: -12px; right: 8px;
+      display: flex; gap: 4px; background: var(--surface);
+      padding: 3px; border-radius: 6px;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+      z-index: 2; opacity: 0; transition: var(--transition);
+    }
+    .component-wrapper:hover .component-toolbar { opacity: 1; }
+    .component-toolbar .activity-mini-btn { width: 26px; height: 26px; font-size: 0.7rem; }
+    .component-type-label {
+      position: absolute; top: -9px; left: 12px;
+      background: var(--green); color: white;
+      font-size: 0.6rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      z-index: 2; opacity: 0; transition: var(--transition);
+    }
+    .component-wrapper:hover .component-type-label { opacity: 1; }
+    .component-content { padding: 1.2rem 1.4rem; }
+
+    /* Quill */
+    .ql-container { font-family: inherit; font-size: 0.95rem; }
+    .ql-editor { min-height: 80px; padding: 0; }
+    .ql-editor.ql-blank::before { font-style: italic; color: #94a3b8; }
+    .ql-toolbar { border-radius: 8px 8px 0 0; border-color: var(--border) !important; }
+    .ql-container.ql-snow { border-color: var(--border) !important; border-radius: 0 0 8px 8px; }
+
+    .heading-preview {
+      padding: 0.6rem 0.8rem; border-radius: 8px;
+      cursor: pointer; transition: var(--transition);
+      border: 2px dashed transparent; min-height: 2.2rem;
+      display: flex; align-items: center;
+    }
+    .heading-preview:hover { border-color: var(--green-light); background: var(--green-lighter); }
+    .heading-preview-inner { width: 100%; font-weight: 800; line-height: 1.3; }
+    .heading-preview-inner.h1 { font-size: 1.8rem; }
+    .heading-preview-inner.h2 { font-size: 1.4rem; }
+    .heading-preview-inner.h3 { font-size: 1.15rem; }
+    .heading-placeholder { color: #94a3b8; font-style: italic; font-weight: 400; font-size: 1rem; }
+
+    .empty-canvas {
+      text-align: center; padding: 4rem 1rem;
+      color: var(--text-muted); background: var(--surface);
+      border-radius: var(--radius); border: 2px dashed var(--border);
+    }
+    .empty-canvas .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-canvas h3 { font-size: 1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-canvas p { font-size: 0.82rem; line-height: 1.6; max-width: 350px; margin: 0 auto; }
+
+    /* RIGHT PANEL */
+    .panel-right {
+      width: 260px; background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      flex-shrink: 0; overflow-y: auto;
+    }
+    .panel-right::-webkit-scrollbar { width: 6px; }
+    .panel-right::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .component-tools { padding: 0.8rem; }
+    .tool-section-title {
+      font-size: 0.65rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 0.5rem; padding: 0 0.4rem;
+    }
+    .tool-section { margin-bottom: 1rem; }
+    .tool-btn {
+      width: 100%; background: var(--bg-soft); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.55rem 0.7rem; cursor: pointer;
+      font-family: inherit; font-size: 0.78rem; font-weight: 600;
+      color: var(--text); display: flex; align-items: center;
+      gap: 8px; margin-bottom: 4px; transition: var(--transition);
+      text-align: left;
+    }
+    .tool-btn:hover:not(:disabled) {
+      background: var(--green-lighter); border-color: var(--green);
+      color: var(--green-dark); transform: translateX(2px);
+    }
+    .tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .tool-btn i { width: 18px; text-align: center; color: var(--green); font-size: 0.85rem; flex-shrink: 0; }
+    .panel-right-footer {
+      padding: 0.8rem; border-top: 1px solid var(--border);
+      background: var(--bg-soft); font-size: 0.7rem;
+      color: var(--text-muted); line-height: 1.5;
+    }
+    .panel-right-footer i { color: var(--green); }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 1.6rem; width: 100%; max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      margin: auto; max-height: 90vh; overflow-y: auto;
+      animation: fadeInUp 0.25s ease;
+    }
+    .modal-card h2 {
+      font-size: 1.1rem; color: var(--text); margin-bottom: 1rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--green); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; flex-wrap: wrap; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger {
+      background: var(--danger); color: white; border: none;
+      padding: 0.55rem 1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-danger:hover { background: #dc2626; }
+    .form-label {
+      display: block; font-size: 0.72rem; font-weight: 700;
+      margin-bottom: 0.4rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-label .req { color: var(--danger); }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; padding: 0.6rem 0.85rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.8rem;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 35px; cursor: pointer;
+    }
+    .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+    .alert { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 8px; font-size: 0.8rem; line-height: 1.5; }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-success { background: var(--green-light); color: var(--green-dark); border: 1px solid #a7f3d0; }
+    .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* COLOR PICKER */
+    .color-preset-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-bottom: 1rem; }
+    .color-swatch {
+      aspect-ratio: 1; border-radius: 6px; cursor: pointer;
+      border: 2px solid transparent; transition: var(--transition);
+    }
+    .color-swatch:hover { transform: scale(1.15); box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 2; }
+    .color-picker-row {
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-bottom: 0.8rem; padding-top: 0.8rem;
+      border-top: 1px solid var(--border);
+    }
+    .color-picker-row label { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); flex: 1; }
+    .color-picker-row input[type="color"] {
+      width: 50px; height: 36px; border: 1px solid var(--border);
+      border-radius: 6px; cursor: pointer; padding: 2px; background: white;
+    }
+
+    .heading-live-preview {
+      padding: 0.8rem 1rem; background: var(--bg-soft);
+      border-radius: 8px; border-left: 4px solid var(--green);
+      margin-bottom: 0.9rem; min-height: 60px;
+      display: flex; align-items: center; line-height: 1.3; word-break: break-word;
+    }
+
+    /* TABLE EDITOR (resize-able) */
+    .table-editor-wrapper {
+      overflow: auto; margin-bottom: 0.8rem;
+      background: var(--bg-soft); border-radius: 8px; padding: 0.6rem;
+      max-height: 60vh;
+    }
+    .table-editor-table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      width: 100%;
+      min-width: 400px;
+    }
+    .table-editor-table th,
+    .table-editor-table td {
+      padding: 0; border: 1px solid var(--border);
+      position: relative; vertical-align: top;
+    }
+    .table-editor-table input {
+      width: 100%; border: none; outline: none;
+      padding: 0.4rem 0.5rem; font-size: 0.8rem;
+      font-family: inherit; background: transparent;
+      box-sizing: border-box;
+    }
+    .table-editor-table th { background: var(--green-lighter); }
+    .table-editor-table th input { font-weight: 700; color: var(--green-dark); }
+    .table-editor-table input:focus { background: #fffbea; }
+    /* Resize handle */
+    .col-resize-handle {
+      position: absolute; top: 0; right: 0; bottom: 0;
+      width: 6px; cursor: col-resize;
+      background: transparent; transition: background 0.15s;
+    }
+    .col-resize-handle:hover, .col-resize-handle.resizing { background: var(--green); }
+    .table-editor-table th .btn-col-del,
+    .table-editor-table td .btn-col-del {
+      position: absolute; top: 2px; right: 8px;
+      width: 16px; height: 16px; border-radius: 3px;
+      border: none; background: rgba(239,68,68,0.15);
+      color: var(--danger); cursor: pointer; font-size: 0.55rem;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0;
+    }
+    .table-editor-table th .btn-col-del:hover,
+    .table-editor-table td .btn-col-del:hover { background: var(--danger); color: white; }
+    .btn-row-del {
+      width: 28px; height: 28px; border-radius: 6px;
+      border: 1px solid var(--border); background: white;
+      color: var(--text-secondary); cursor: pointer;
+      font-size: 0.65rem; display: flex; align-items: center; justify-content: center;
+    }
+    .btn-row-del:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+    .table-actions-row {
+      display: flex; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap;
+    }
+
+    /* ACCORDION EDITOR */
+    .accordion-item-editor {
+      background: var(--bg-soft); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.7rem; margin-bottom: 0.5rem;
+    }
+    .accordion-item-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .accordion-item-num {
+      font-size: 0.7rem; font-weight: 700; color: var(--green-dark);
+      background: var(--green-lighter); padding: 1px 8px; border-radius: 4px;
+    }
+
+    /* KELAS LIST (modal publish) */
+    .kelas-checklist { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.8rem; }
+    .kelas-check-item {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.6rem 0.8rem; background: var(--bg-soft);
+      border-radius: 8px; border: 1px solid var(--border);
+      cursor: pointer; transition: var(--transition);
+    }
+    .kelas-check-item:hover { background: var(--green-lighter); border-color: var(--green-light); }
+    .kelas-check-item.checked { background: var(--green-lighter); border-color: var(--green); }
+    .kelas-check-item input[type="checkbox"] {
+      width: 18px; height: 18px; cursor: pointer;
+      accent-color: var(--green); flex-shrink: 0;
+    }
+    .kelas-check-info { flex: 1; }
+    .kelas-check-name { font-weight: 700; font-size: 0.85rem; color: var(--text); }
+    .kelas-check-status {
+      display: inline-block; margin-top: 2px;
+      font-size: 0.68rem; padding: 1px 6px; border-radius: 4px;
+      font-weight: 600;
+    }
+    .kelas-check-status.published { background: var(--green-light); color: var(--green-dark); }
+    .kelas-check-status.draft { background: #fef3c7; color: #92400e; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--text);
+      color: white; padding: 0.9rem 1.2rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.82rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000; max-width: 380px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--danger); }
+
+    .loading-box {
+      display: flex; align-items: center; justify-content: center;
+      height: 100vh; flex-direction: column; gap: 1rem;
+      color: var(--text-muted); font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    .spinner-sm {
+      width: 20px; height: 20px;
+      border: 2px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      display: inline-block; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 1024px) {
+      .panel-left { width: 240px; }
+      .panel-right { width: 220px; }
+    }
+    @media (max-width: 768px) {
+      .editor-layout { flex-direction: column; height: auto; }
+      .panel-left, .panel-right { width: 100%; border: none; border-bottom: 1px solid var(--border); max-height: 300px; }
+      .panel-center { padding: 1rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div id="loadingScreen" class="loading-box">
+    <div class="spinner"></div>
+    <p>Memuat editor...</p>
+  </div>
+
+  <div id="editorScreen" class="hidden">
+    <div class="editor-topbar">
+      <button class="btn-icon" onclick="goBack()" title="Kembali ke workspace">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <div class="editor-title-block">
+        <div class="editor-title" id="editorTitle">Memuat...</div>
+        <div class="editor-subtitle" id="editorSubtitle">-</div>
+      </div>
+      <span class="status-badge draft" id="statusBadge">Draft</span>
+      <button class="btn-kelas" onclick="openKelolaKelasModal()" title="Kelola kelas yang melihat unit ini">
+        <i class="fas fa-users"></i> <span id="kelasCountLabel">Kelas</span>
+      </button>
+      <button class="btn-outline" onclick="openPreview()"><i class="fas fa-eye"></i> Preview</button>
+      <button class="btn-primary" id="btnPublish" onclick="openPublishModal()"><i class="fas fa-globe"></i> Publish</button>
+    </div>
+
+    <div class="editor-layout">
+      <aside class="panel-left">
+        <div class="panel-header">
+          <div class="panel-header-title"><i class="fas fa-list-check"></i> Aktivitas</div>
+          <span class="panel-header-count" id="activityCount">0</span>
+        </div>
+        <div style="padding: 0.6rem; border-bottom: 1px solid var(--border);">
+          <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="openAddActivityModal()">
+            <i class="fas fa-plus"></i> Tambah Aktivitas
+          </button>
+        </div>
+        <div class="activity-list" id="activityList">
+          <div style="padding: 1rem; text-align: center; font-size: 0.8rem; color: var(--text-muted);">Memuat...</div>
+        </div>
+      </aside>
+
+      <main class="panel-center" id="panelCenter">
+        <div class="empty-canvas">
+          <span class="emoji">👈</span>
+          <h3>Pilih Aktivitas</h3>
+          <p>Klik salah satu aktivitas di panel kiri untuk mulai mengedit.</p>
+        </div>
+      </main>
+
+      <aside class="panel-right">
+        <div class="component-tools">
+          <div class="tool-section">
+            <div class="tool-section-title">Teks & Judul</div>
+            <button class="tool-btn" onclick="addComponent('text')" disabled id="toolText"><i class="fas fa-paragraph"></i> Teks (Rich)</button>
+            <button class="tool-btn" onclick="addComponent('heading')" disabled id="toolHeading"><i class="fas fa-heading"></i> Judul / Heading</button>
+          </div>
+          <div class="tool-section">
+            <div class="tool-section-title">Media</div>
+            <button class="tool-btn" onclick="addComponent('image')" disabled id="toolImage"><i class="fas fa-image"></i> Gambar</button>
+            <button class="tool-btn" onclick="addComponent('video')" disabled id="toolVideo"><i class="fas fa-video"></i> Video</button>
+            <button class="tool-btn" onclick="addComponent('audio')" disabled id="toolAudio"><i class="fas fa-volume-high"></i> Audio</button>
+            <button class="tool-btn" onclick="addComponent('table')" disabled id="toolTable"><i class="fas fa-table"></i> Tabel</button>
+          </div>
+          <div class="tool-section">
+            <div class="tool-section-title">Lainnya</div>
+            <button class="tool-btn" onclick="addComponent('note')" disabled id="toolNote"><i class="fas fa-note-sticky"></i> Note Box</button>
+            <button class="tool-btn" onclick="addComponent('accordion')" disabled id="toolAccordion"><i class="fas fa-list"></i> Accordion</button>
+            <button class="tool-btn" onclick="addComponent('file')" disabled id="toolFile"><i class="fas fa-file-arrow-down"></i> File Download</button>
+            <button class="tool-btn" onclick="addComponent('embed')" disabled id="toolEmbed"><i class="fas fa-code"></i> Embed / Iframe</button>
+          </div>
+        </div>
+        <div class="panel-right-footer">
+          <i class="fas fa-circle-info"></i>
+          <strong>Tips:</strong> Klik heading untuk edit warna. Gambar Drive otomatis dikonversi.
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD ACTIVITY -->
+  <div class="modal-overlay" id="modalAddActivity">
+    <div class="modal-card">
+      <h2><i class="fas fa-plus"></i> Tambah Aktivitas</h2>
+      <label class="form-label">Tipe Aktivitas <span class="req">*</span></label>
+      <select id="inputActType" class="form-select">
+        <option value="materi">📖 Materi</option>
+        <option value="lkpd">📝 LKPD</option>
+        <option value="asesmen">✍️ Asesmen</option>
+        <option value="refleksi">💭 Refleksi</option>
+        <option value="diskusi">💬 Diskusi</option>
+        <option value="custom">🔧 Custom</option>
+      </select>
+      <label class="form-label">Judul <span class="req">*</span></label>
+      <input type="text" id="inputActTitle" class="form-input" placeholder="Contoh: Pengenalan Ekosistem" maxlength="150">
+      <div id="addActivityError" class="alert alert-error hidden"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeAddActivityModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveActivity" onclick="saveActivity()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT ACTIVITY -->
+  <div class="modal-overlay" id="modalEditActivity">
+    <div class="modal-card">
+      <h2><i class="fas fa-pen"></i> Edit Aktivitas</h2>
+      <label class="form-label">Judul <span class="req">*</span></label>
+      <input type="text" id="editActTitle" class="form-input" maxlength="150">
+      <label class="form-label">Tipe</label>
+      <select id="editActType" class="form-select">
+        <option value="materi">Materi</option>
+        <option value="lkpd">LKPD</option>
+        <option value="asesmen">Asesmen</option>
+        <option value="refleksi">Refleksi</option>
+        <option value="diskusi">Diskusi</option>
+        <option value="custom">Custom</option>
+      </select>
+      <div id="editActivityError" class="alert alert-error hidden"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeEditActivityModal()">Batal</button>
+        <button class="btn-primary" id="btnUpdateActivity" onclick="updateActivityInfo()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DELETE ACTIVITY -->
+  <div class="modal-overlay" id="modalDeleteActivity">
+    <div class="modal-card" style="max-width:440px;">
+      <h2 style="color:var(--danger);"><i class="fas fa-trash"></i> Hapus Aktivitas?</h2>
+      <p id="deleteActivityMessage" style="color:var(--text); margin-bottom:0.8rem;"></p>
+      <p style="font-size:0.75rem; color:#92400e; background:#fef3c7; padding:0.6rem 0.8rem; border-radius:8px; margin-bottom:1rem; border-left:3px solid var(--warning);">
+        ⚠️ Semua komponen di dalam aktivitas ini akan ikut terhapus.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteActivityModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmDeleteActivity" onclick="confirmDeleteActivity()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: COLOR PICKER -->
+  <div class="modal-overlay" id="modalColorPicker">
+    <div class="modal-card" style="max-width: 460px;">
+      <h2><i class="fas fa-palette"></i> <span id="colorPickerTitle">Pilih Warna</span></h2>
+      <div class="form-label" style="margin-top:0.5rem;">Warna Preset</div>
+      <div class="color-preset-grid" id="colorPresetGrid"></div>
+      <div class="color-picker-row">
+        <label for="customColorInput">Warna Custom:</label>
+        <input type="color" id="customColorInput" value="#10b981">
+        <button class="btn-primary" onclick="applyCustomColor()" style="padding:0.4rem 0.8rem; font-size:0.78rem;">Apply</button>
+      </div>
+      <div class="color-picker-row" style="border-top:none; padding-top:0;">
+        <label>Hapus format warna:</label>
+        <button class="btn-secondary" onclick="removeColorFormat()" style="padding:0.4rem 0.8rem; font-size:0.78rem;"><i class="fas fa-eraser"></i> Hapus Warna</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeColorPicker()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HEADING -->
+  <div class="modal-overlay" id="modalHeadingEditor">
+    <div class="modal-card" style="max-width: 520px;">
+      <h2><i class="fas fa-heading"></i> Edit Judul</h2>
+      <label class="form-label">Teks Judul <span class="req">*</span></label>
+      <input type="text" id="headingTextInput" class="form-input" placeholder="Tulis judul..." maxlength="200">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+        <div>
+          <label class="form-label">Ukuran</label>
+          <select id="headingLevelSelect" class="form-select">
+            <option value="h1">H1 (Besar)</option>
+            <option value="h2" selected>H2 (Sedang)</option>
+            <option value="h3">H3 (Kecil)</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Perataan</label>
+          <select id="headingAlignSelect" class="form-select">
+            <option value="left">Kiri</option>
+            <option value="center">Tengah</option>
+            <option value="right">Kanan</option>
+          </select>
+        </div>
+      </div>
+      <label class="form-label">Warna Teks</label>
+      <div style="display:flex; align-items:center; gap: 0.6rem; margin-bottom: 0.8rem;">
+        <input type="color" id="headingColorInput" value="#0f172a" style="width:50px; height:36px; border:1px solid var(--border); border-radius:6px; cursor:pointer; padding:2px;">
+        <button type="button" class="btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.75rem;" onclick="resetHeadingColor()"><i class="fas fa-eraser"></i> Reset</button>
+        <span id="headingColorHex" style="font-size:0.75rem; color:var(--text-muted); font-family:monospace;">#0f172a</span>
+      </div>
+      <label class="form-label">Preview</label>
+      <div class="heading-live-preview" id="headingLivePreview">
+        <span style="color: #94a3b8; font-style: italic;">Preview akan tampil di sini</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeHeadingModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveHeading" onclick="saveHeading()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: IMAGE -->
+  <div class="modal-overlay" id="modalImageEditor">
+    <div class="modal-card" style="max-width: 560px;">
+      <h2><i class="fas fa-image"></i> Edit Gambar</h2>
+      <label class="form-label">URL Gambar <span class="req">*</span></label>
+      <input type="text" id="imageUrlInput" class="form-input" placeholder="https://... atau https://drive.google.com/file/d/xxx/view">
+      <div class="alert alert-info" style="margin-top:-0.4rem; margin-bottom:0.8rem;">
+        💡 <strong>Google Drive</strong>: URL <code>/file/d/ID/view</code> otomatis dikonversi ke thumbnail. File harus di-share "Anyone with link".
+        <br>💡 <strong>Web biasa</strong>: harus URL gambar langsung (akhiran .jpg / .png / .webp).
+      </div>
+      <label class="form-label">Alt Text (aksesibilitas)</label>
+      <input type="text" id="imageAltInput" class="form-input" placeholder="Deskripsi gambar" maxlength="200">
+      <label class="form-label">Caption</label>
+      <input type="text" id="imageCaptionInput" class="form-input" placeholder="Keterangan di bawah gambar" maxlength="200">
+      <label class="form-label">Perataan</label>
+      <select id="imageAlignSelect" class="form-select">
+        <option value="left">Kiri</option>
+        <option value="center" selected>Tengah</option>
+        <option value="right">Kanan</option>
+      </select>
+      <label class="form-label">Preview</label>
+      <div style="padding:0.8rem; background:var(--bg-soft); border-radius:8px; text-align:center; min-height:80px;">
+        <img id="imagePreviewImg" src="" alt="" style="max-width:100%; max-height:200px; border-radius:8px; display:none;" referrerpolicy="no-referrer">
+        <p id="imagePreviewEmpty" style="color:var(--text-muted); font-size:0.8rem; font-style:italic; margin:0;">Preview di sini</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeImageModal()">Batal</button>
+        <button class="btn-primary" onclick="saveImageComponent()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VIDEO -->
+  <div class="modal-overlay" id="modalVideoEditor">
+    <div class="modal-card" style="max-width: 560px;">
+      <h2><i class="fas fa-video"></i> Edit Video</h2>
+      <label class="form-label">URL Video <span class="req">*</span></label>
+      <input type="text" id="videoUrlInput" class="form-input" placeholder="https://www.youtube.com/watch?v=xxx atau https://drive.google.com/file/d/xxx/view">
+      <div class="alert alert-info" style="margin-top:-0.4rem; margin-bottom:0.8rem;">
+        💡 <strong>YouTube</strong>: watch / youtu.be / shorts → auto embed.
+        <br>💡 <strong>Vimeo</strong>: auto embed.
+        <br>💡 <strong>Google Drive</strong>: otomatis dikonversi ke preview player.
+      </div>
+      <label class="form-label">Caption</label>
+      <input type="text" id="videoCaptionInput" class="form-input" placeholder="Deskripsi video" maxlength="200">
+      <label class="form-label">Preview</label>
+      <div id="videoPreviewContainer" style="padding:0.8rem; background:var(--bg-soft); border-radius:8px; min-height:120px;">
+        <p style="color:var(--text-muted); font-size:0.8rem; font-style:italic; text-align:center; margin:0;">Preview di sini</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeVideoModal()">Batal</button>
+        <button class="btn-primary" onclick="saveVideoComponent()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AUDIO -->
+  <div class="modal-overlay" id="modalAudioEditor">
+    <div class="modal-card" style="max-width: 560px;">
+      <h2><i class="fas fa-volume-high"></i> Edit Audio</h2>
+      <label class="form-label">URL Audio <span class="req">*</span></label>
+      <input type="text" id="audioUrlInput" class="form-input" placeholder="https://contoh.com/audio.mp3">
+      <p style="font-size:0.72rem; color:var(--text-muted); margin-top:-0.5rem; margin-bottom:0.8rem;">MP3 / WAV / OGG direct link.</p>
+      <label class="form-label">Caption</label>
+      <input type="text" id="audioCaptionInput" class="form-input" placeholder="Deskripsi audio" maxlength="200">
+      <label class="form-label">Preview</label>
+      <div style="padding:0.8rem; background:var(--bg-soft); border-radius:8px;">
+        <audio id="audioPreviewPlayer" controls style="width:100%; display:none;"><source src=""></audio>
+        <p id="audioPreviewEmpty" style="color:var(--text-muted); font-size:0.8rem; font-style:italic; text-align:center; margin:0;">Preview di sini</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeAudioModal()">Batal</button>
+        <button class="btn-primary" onclick="saveAudioComponent()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TABLE (resize-able) -->
+  <div class="modal-overlay" id="modalTableEditor">
+    <div class="modal-card" style="max-width: 880px;">
+      <h2><i class="fas fa-table"></i> Edit Tabel</h2>
+      <div class="table-actions-row">
+        <button class="btn-primary" onclick="addTableColumn()" style="padding:0.4rem 0.8rem; font-size:0.78rem;"><i class="fas fa-plus"></i> Kolom</button>
+        <button class="btn-primary" onclick="addTableRow()" style="padding:0.4rem 0.8rem; font-size:0.78rem;"><i class="fas fa-plus"></i> Baris</button>
+        <span style="font-size:0.72rem; color:var(--text-muted); align-self:center;">
+          💡 Geser garis kanan header untuk mengatur lebar kolom
+        </span>
+      </div>
+      <div class="table-editor-wrapper" id="tableEditorWrapper">
+        <div id="tableEditorContainer"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeTableModal()">Batal</button>
+        <button class="btn-primary" onclick="saveTableComponent()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NOTE -->
+  <div class="modal-overlay" id="modalNoteEditor">
+    <div class="modal-card" style="max-width: 520px;">
+      <h2><i class="fas fa-note-sticky"></i> Edit Note Box</h2>
+      <label class="form-label">Varian</label>
+      <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:0.5rem; margin-bottom:0.9rem;">
+        <label style="cursor:pointer; padding:0.6rem; border-radius:8px; background:#dbeafe; display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:600; color:#1e40af;">
+          <input type="radio" name="noteVariant" value="info" checked onchange="updateNotePreview()" style="accent-color:#3b82f6;"> <i class="fas fa-circle-info"></i> Info
+        </label>
+        <label style="cursor:pointer; padding:0.6rem; border-radius:8px; background:#d1fae5; display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:600; color:#047857;">
+          <input type="radio" name="noteVariant" value="success" onchange="updateNotePreview()" style="accent-color:#10b981;"> <i class="fas fa-circle-check"></i> Success
+        </label>
+        <label style="cursor:pointer; padding:0.6rem; border-radius:8px; background:#fef3c7; display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:600; color:#92400e;">
+          <input type="radio" name="noteVariant" value="warning" onchange="updateNotePreview()" style="accent-color:#f59e0b;"> <i class="fas fa-triangle-exclamation"></i> Warning
+        </label>
+        <label style="cursor:pointer; padding:0.6rem; border-radius:8px; background:#fee2e2; display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:600; color:#b91c1c;">
+          <input type="radio" name="noteVariant" value="danger" onchange="updateNotePreview()" style="accent-color:#ef4444;"> <i class="fas fa-circle-xmark"></i> Danger
+        </label>
+      </div>
+      <label class="form-label">Judul (opsional)</label>
+      <input type="text" id="noteTitleInput" class="form-input" placeholder="Perhatian Penting" maxlength="100" oninput="updateNotePreview()">
+      <label class="form-label">Teks <span class="req">*</span></label>
+      <textarea id="noteTextInput" class="form-input" placeholder="Isi pesan..." maxlength="1000" style="min-height:100px; resize:vertical;" oninput="updateNotePreview()"></textarea>
+      <label class="form-label">Preview</label>
+      <div id="notePreviewContainer" style="padding:0.9rem 1.1rem; background:#dbeafe; border-left:4px solid #3b82f6; border-radius:8px; color:#1e40af; min-height:60px;">
+        <div style="font-size:0.85rem; font-style:italic; opacity:0.7;">Preview...</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeNoteModal()">Batal</button>
+        <button class="btn-primary" onclick="saveNoteComponent()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ACCORDION -->
+  <div class="modal-overlay" id="modalAccordionEditor">
+    <div class="modal-card" style="max-width: 640px;">
+      <h2><i class="fas fa-list"></i> Edit Accordion</h2>
+      <button class="btn-primary" onclick="addAccordionItem()" style="margin-bottom:0.8rem;"><i class="fas fa-plus"></i> Tambah Item</button>
+      <div id="accordionEditorContainer"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeAccordionModal()">Batal</button>
+        <button class="btn-primary" onclick="saveAccordionComponent()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FILE -->
+  <div class="modal-overlay" id="modalFileEditor">
+    <div class="modal-card" style="max-width: 520px;">
+      <h2><i class="fas fa-file-arrow-down"></i> Edit File Download</h2>
+      <label class="form-label">URL File <span class="req">*</span></label>
+      <input type="text" id="fileUrlInput" class="form-input" placeholder="https://drive.google.com/file/d/xxx">
+      <label class="form-label">Label Tombol <span class="req">*</span></label>
+      <input type="text" id="fileLabelInput" class="form-input" placeholder="Download LKPD" maxlength="100">
+      <label class="form-label">Deskripsi (opsional)</label>
+      <input type="text" id="fileDescInput" class="form-input" placeholder="PDF, 2.4 MB" maxlength="150">
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeFileModal()">Batal</button>
+        <button class="btn-primary" onclick="saveFileComponent()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EMBED -->
+  <div class="modal-overlay" id="modalEmbedEditor">
+    <div class="modal-card" style="max-width: 520px;">
+      <h2><i class="fas fa-code"></i> Edit Embed / Iframe</h2>
+      <label class="form-label">URL Embed <span class="req">*</span></label>
+      <input type="text" id="embedUrlInput" class="form-input" placeholder="https://docs.google.com/.../embed">
+      <p style="font-size:0.72rem; color:var(--text-muted); margin-top:-0.5rem; margin-bottom:0.8rem;">
+        Google Docs/Sheet/Slide, Figma, CodePen, dll. Gunakan URL <code>embed</code>.
+      </p>
+      <label class="form-label">Tinggi (pixel)</label>
+      <input type="number" id="embedHeightInput" class="form-input" value="500" min="200" max="1200">
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeEmbedModal()">Batal</button>
+        <button class="btn-primary" onclick="saveEmbedComponent()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: KELOLA KELAS -->
+  <div class="modal-overlay" id="modalKelolaKelas">
+    <div class="modal-card" style="max-width: 520px;">
+      <h2><i class="fas fa-users"></i> Kelola Kelas</h2>
+      <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">
+        Unit ini akan tampil ke siswa di kelas yang dicentang. Perubahan konten baru terlihat setelah <strong>Publish</strong>.
+      </p>
+      <div id="kelolaKelasList" class="kelas-checklist"></div>
+      <div id="kelolaKelasError" class="alert alert-error hidden"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeKelolaKelasModal()">Batal</button>
+        <button class="btn-primary" onclick="saveKelolaKelas()"><i class="fas fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PUBLISH (pilih kelas) -->
+  <div class="modal-overlay" id="modalPublish">
+    <div class="modal-card" style="max-width: 520px;">
+      <h2><i class="fas fa-globe"></i> Publish ke Kelas</h2>
+      <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">
+        Konten terbaru akan di-publish ke kelas yang dicentang. Kelas yang tidak dicentang tetap melihat versi sebelumnya.
+      </p>
+      <div id="publishKelasList" class="kelas-checklist"></div>
+      <div id="publishError" class="alert alert-error hidden"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closePublishModal()">Batal</button>
+        <button class="btn-primary" onclick="confirmPublish()"><i class="fas fa-check"></i> Publish</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let currentUnit = null;
+    let unitClasses = [];        // dari unit_classes
+    let availableClasses = [];   // semua kelas yang guru ampu untuk mapel ini
+    let activities = [];
+    let activeActivityId = null;
+    let components = [];
+    let editingActivityId = null;
+    let deletingActivityId = null;
+    let editingHeadingId = null;
+    let editingCompId = null;
+    let currentColorTarget = null;
+    let tableEditorState = null;
+    let accordionEditorState = null;
+    let selectedKelolaKelas = new Set();
+    let selectedPublishKelas = new Set();
+    const quillInstances = {};
+
+    const ACTIVITY_TYPE_LABEL = {
+      materi: '📖 Materi', lkpd: '📝 LKPD', asesmen: '✍️ Asesmen',
+      refleksi: '💭 Refleksi', diskusi: '💬 Diskusi', custom: '🔧 Custom'
+    };
+
+    const PRESET_COLORS = [
+      '#fecaca', '#fed7aa', '#fef08a', '#bbf7d0', '#a7f3d0',
+      '#bae6fd', '#c7d2fe', '#ddd6fe', '#fbcfe8', '#e2e8f0',
+      '#ef4444', '#f97316', '#eab308', '#22c55e', '#10b981',
+      '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#64748b',
+      '#7f1d1d', '#7c2d12', '#713f12', '#14532d', '#064e3b',
+      '#1e3a8a', '#312e81', '#4c1d95', '#831843', '#0f172a'
+    ];
+
+    const COMPONENT_TYPE_LABEL = {
+      text: 'Teks', heading: 'Judul', image: 'Gambar', video: 'Video',
+      audio: 'Audio', table: 'Tabel', note: 'Note Box', accordion: 'Accordion',
+      file: 'File Download', embed: 'Embed'
+    };
+
+    // ============================================
+    // DRIVE URL CONVERTER
+    // ============================================
+    function extractDriveId(url) {
+      if (!url) return null;
+      const patterns = [
+        /\/file\/d\/([a-zA-Z0-9_-]+)/,
+        /\/d\/([a-zA-Z0-9_-]+)/,
+        /[?&]id=([a-zA-Z0-9_-]+)/
+      ];
+      for (const p of patterns) {
+        const m = url.match(p);
+        if (m) return m[1];
+      }
+      return null;
+    }
+
+    function convertDriveUrl(url, type = 'image') {
+      if (!url) return '';
+      const id = extractDriveId(url);
+      if (!id) return url;
+      if (type === 'image') {
+        return `https://drive.google.com/thumbnail?id=${id}&sz=w1600`;
+      }
+      if (type === 'video') {
+        return `https://drive.google.com/file/d/${id}/preview`;
+      }
+      return url;
+    }
+
+    function toEmbedVideoUrl(url) {
+      if (!url) return '';
+      const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+      const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+      if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+      // Drive
+      const driveId = extractDriveId(url);
+      if (driveId) return `https://drive.google.com/file/d/${driveId}/preview`;
+      if (url.includes('embed') || url.includes('/iframe')) return url;
+      return '';
+    }
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+
+      const unitId = new URLSearchParams(window.location.search).get('unitId');
+      if (!unitId) { alert('Parameter unitId tidak ditemukan.'); goBack(); return; }
+
+      try {
+        currentUnit = await getUnitById(unitId);
+        if (!currentUnit) throw new Error('Unit tidak ditemukan.');
+
+        const teacherId = currentUnit.annual_plans?.teacher_id;
+        if (String(teacherId) !== String(currentUser.id)) {
+          throw new Error('Anda tidak berhak mengedit unit ini.');
+        }
+
+        document.getElementById('editorTitle').textContent = currentUnit.title;
+        document.getElementById('editorSubtitle').textContent =
+          (currentUnit.annual_plans?.classes?.name || '-') + ' · ' +
+          (currentUnit.annual_plans?.subjects?.name || '-');
+        updateStatusBadge(currentUnit.status);
+
+        // Load kelas terkait + kelas yang tersedia
+        await loadUnitClassesData();
+
+        await loadActivities();
+
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('editorScreen').classList.remove('hidden');
+      } catch (err) {
+        console.error('Init error:', err);
+        document.getElementById('loadingScreen').innerHTML =
+          `<div style="text-align:center; color:var(--danger); padding:2rem;">
+            <i class="fas fa-triangle-exclamation" style="font-size:2rem; margin-bottom:1rem;"></i>
+            <p>${escapeHtml(err.message)}</p>
+            <button class="btn-primary" onclick="goBack()" style="margin-top:1rem;"><i class="fas fa-arrow-left"></i> Kembali</button>
+          </div>`;
+      }
+    })();
+
+    async function loadUnitClassesData() {
+      try {
+        unitClasses = await getUnitClasses(currentUnit.id);
+        // Kelas yang guru ampu untuk mapel ini
+        const assignments = await getMyTeachingAssignments(currentUser.id);
+        const myClassMap = {};
+        assignments
+          .filter(a => String(a.subject_id) === String(currentUnit.annual_plans?.subject_id))
+          .forEach(a => {
+            if (a.classes) myClassMap[String(a.class_id)] = a.classes;
+          });
+        availableClasses = Object.values(myClassMap);
+        updateKelasLabel();
+      } catch (err) {
+        console.error('Load kelas data error:', err);
+      }
+    }
+
+    function updateKelasLabel() {
+      const n = unitClasses.length;
+      document.getElementById('kelasCountLabel').textContent = 'Kelas (' + n + ')';
+    }
+
+    // ============================================
+    // ACTIVITIES
+    // ============================================
+    async function loadActivities() {
+      const list = document.getElementById('activityList');
+      list.innerHTML = '<div style="padding:1rem; text-align:center;"><span class="spinner-sm"></span></div>';
+      try {
+        activities = await getUnitActivities(currentUnit.id);
+        renderActivities();
+        if (activeActivityId) {
+          const exists = activities.find(a => String(a.id) === String(activeActivityId));
+          if (exists) await loadComponents(activeActivityId);
+          else { activeActivityId = null; renderEmptyCanvas(); }
+        }
+      } catch (err) {
+        list.innerHTML = `<div style="padding:1rem; color:var(--danger); font-size:0.8rem;">Gagal memuat: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function renderActivities() {
+      document.getElementById('activityCount').textContent = activities.length;
+      const list = document.getElementById('activityList');
+      if (activities.length === 0) {
+        list.innerHTML = `<div class="empty-activity"><span class="emoji">📭</span><p>Belum ada aktivitas.<br>Klik <strong>Tambah Aktivitas</strong>.</p></div>`;
+        return;
+      }
+      list.innerHTML = activities.map((a, idx) => {
+        const isActive = String(a.id) === String(activeActivityId);
+        const canUp = idx > 0;
+        const canDown = idx < activities.length - 1;
+        return `
+          <div class="activity-item ${isActive ? 'active' : ''}" onclick="selectActivity('${a.id}')">
+            <div class="activity-item-top">
+              <span class="activity-order">#${idx + 1}</span>
+              <span class="activity-title">${escapeHtml(a.title)}</span>
+            </div>
+            <span class="activity-type-badge ${a.type}">${ACTIVITY_TYPE_LABEL[a.type] || a.type}</span>
+            <div class="activity-item-actions">
+              <button class="activity-mini-btn" title="Naik" ${canUp ? '' : 'disabled'} onclick="event.stopPropagation(); moveActivity('${a.id}', -1)"><i class="fas fa-arrow-up"></i></button>
+              <button class="activity-mini-btn" title="Turun" ${canDown ? '' : 'disabled'} onclick="event.stopPropagation(); moveActivity('${a.id}', 1)"><i class="fas fa-arrow-down"></i></button>
+              <button class="activity-mini-btn" title="Edit" onclick="event.stopPropagation(); openEditActivityModal('${a.id}')"><i class="fas fa-pen"></i></button>
+              <button class="activity-mini-btn danger" title="Hapus" onclick="event.stopPropagation(); openDeleteActivityModal('${a.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function selectActivity(activityId) {
+      if (String(activityId) === String(activeActivityId)) return;
+      activeActivityId = activityId;
+      renderActivities();
+      await loadComponents(activityId);
+      enableToolButtons(true);
+    }
+
+    async function moveActivity(activityId, direction) {
+      const idx = activities.findIndex(a => String(a.id) === String(activityId));
+      if (idx < 0) return;
+      const swapIdx = idx + direction;
+      if (swapIdx < 0 || swapIdx >= activities.length) return;
+      const tmp = activities[idx];
+      activities[idx] = activities[swapIdx];
+      activities[swapIdx] = tmp;
+      try {
+        await reorderUnitActivities(activities.map((a, i) => ({ id: a.id, order_index: i + 1 })));
+        activities.forEach((a, i) => { a.order_index = i + 1; });
+        renderActivities();
+      } catch (err) { showToast('Gagal ubah urutan', 'error'); await loadActivities(); }
+    }
+
+    function openAddActivityModal() {
+      document.getElementById('inputActType').value = 'materi';
+      document.getElementById('inputActTitle').value = '';
+      document.getElementById('addActivityError').classList.add('hidden');
+      document.getElementById('btnSaveActivity').disabled = false;
+      document.getElementById('btnSaveActivity').innerHTML = '<i class="fas fa-save"></i> Simpan';
+      document.getElementById('modalAddActivity').classList.add('active');
+      setTimeout(() => document.getElementById('inputActTitle').focus(), 100);
+    }
+    function closeAddActivityModal() { document.getElementById('modalAddActivity').classList.remove('active'); }
+
+    async function saveActivity() {
+      const type = document.getElementById('inputActType').value;
+      const title = document.getElementById('inputActTitle').value.trim();
+      const errBox = document.getElementById('addActivityError');
+      const btn = document.getElementById('btnSaveActivity');
+      errBox.classList.add('hidden');
+      if (!title) { errBox.textContent = 'Judul wajib diisi.'; errBox.classList.remove('hidden'); return; }
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+      try {
+        await createUnitActivity({ unitId: currentUnit.id, title, type });
+        closeAddActivityModal();
+        showToast('✅ Aktivitas ditambahkan', 'success');
+        await loadActivities();
+      } catch (err) {
+        errBox.textContent = 'Gagal: ' + err.message;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+      }
+    }
+
+    function openEditActivityModal(activityId) {
+      const a = activities.find(x => String(x.id) === String(activityId));
+      if (!a) return;
+      editingActivityId = activityId;
+      document.getElementById('editActTitle').value = a.title;
+      document.getElementById('editActType').value = a.type;
+      document.getElementById('editActivityError').classList.add('hidden');
+      document.getElementById('btnUpdateActivity').disabled = false;
+      document.getElementById('btnUpdateActivity').innerHTML = '<i class="fas fa-save"></i> Simpan';
+      document.getElementById('modalEditActivity').classList.add('active');
+    }
+    function closeEditActivityModal() { document.getElementById('modalEditActivity').classList.remove('active'); editingActivityId = null; }
+
+    async function updateActivityInfo() {
+      if (!editingActivityId) return;
+      const title = document.getElementById('editActTitle').value.trim();
+      const type = document.getElementById('editActType').value;
+      const errBox = document.getElementById('editActivityError');
+      const btn = document.getElementById('btnUpdateActivity');
+      errBox.classList.add('hidden');
+      if (!title) { errBox.textContent = 'Judul wajib diisi.'; errBox.classList.remove('hidden'); return; }
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+      try {
+        await updateUnitActivity(editingActivityId, { title, type });
+        closeEditActivityModal();
+        showToast('✅ Aktivitas diperbarui', 'success');
+        await loadActivities();
+      } catch (err) {
+        errBox.textContent = 'Gagal: ' + err.message;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+      }
+    }
+
+    function openDeleteActivityModal(activityId) {
+      const a = activities.find(x => String(x.id) === String(activityId));
+      if (!a) return;
+      deletingActivityId = activityId;
+      document.getElementById('deleteActivityMessage').innerHTML =
+        `Hapus aktivitas <strong>${escapeHtml(a.title)}</strong>?`;
+      document.getElementById('modalDeleteActivity').classList.add('active');
+    }
+    function closeDeleteActivityModal() { document.getElementById('modalDeleteActivity').classList.remove('active'); deletingActivityId = null; }
+
+    async function confirmDeleteActivity() {
+      if (!deletingActivityId) return;
+      const btn = document.getElementById('btnConfirmDeleteActivity');
+      btn.disabled = true;
+      btn.textContent = 'Menghapus...';
+      try {
+        await deleteUnitActivity(deletingActivityId);
+        if (String(deletingActivityId) === String(activeActivityId)) {
+          activeActivityId = null; components = [];
+          renderEmptyCanvas(); enableToolButtons(false);
+        }
+        closeDeleteActivityModal();
+        showToast('🗑️ Aktivitas dihapus', 'success');
+        await loadActivities();
+      } catch (err) {
+        showToast('Gagal: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus';
+      }
+    }
+
+    // ============================================
+    // COMPONENTS
+    // ============================================
+    async function loadComponents(activityId) {
+      const center = document.getElementById('panelCenter');
+      center.innerHTML = '<div style="text-align:center; padding:2rem;"><span class="spinner-sm"></span></div>';
+      try {
+        components = await getActivityComponents(activityId);
+        renderCanvas();
+      } catch (err) {
+        center.innerHTML = `<div style="padding:2rem; color:var(--danger);">Gagal: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function renderCanvas() {
+      const activity = activities.find(a => String(a.id) === String(activeActivityId));
+      const center = document.getElementById('panelCenter');
+      if (!activity) { renderEmptyCanvas(); return; }
+      Object.keys(quillInstances).forEach(k => delete quillInstances[k]);
+
+      const header = `
+        <div class="canvas-header">
+          <div class="canvas-header-title">
+            <h2>${escapeHtml(activity.title)}</h2>
+            <div class="canvas-header-meta">
+              <span class="activity-type-badge ${activity.type}" style="font-size:0.65rem;">${ACTIVITY_TYPE_LABEL[activity.type] || activity.type}</span>
+              &nbsp;·&nbsp; ${components.length} komponen
+            </div>
+          </div>
+          <div class="canvas-header-actions">
+            <button class="btn-icon" onclick="openEditActivityModal('${activity.id}')" title="Edit info"><i class="fas fa-pen"></i></button>
+          </div>
+        </div>`;
+
+      if (components.length === 0) {
+        center.innerHTML = header + `<div class="empty-canvas"><span class="emoji">📄</span><h3>Belum Ada Komponen</h3><p>Klik tombol di panel kanan untuk menambahkan komponen pertama.</p></div>`;
+        return;
+      }
+      center.innerHTML = header + `<div class="components-container">${components.map((c, idx) => renderComponentWrapper(c, idx)).join('')}</div>`;
+      components.forEach(c => { if (c.component_type === 'text') initQuillEditor(c); });
+    }
+
+    function renderComponentWrapper(comp, idx) {
+      const canUp = idx > 0;
+      const canDown = idx < components.length - 1;
+      const typeLabel = COMPONENT_TYPE_LABEL[comp.component_type] || comp.component_type;
+      return `
+        <div class="component-wrapper" data-comp-id="${comp.id}">
+          <div class="component-type-label">${typeLabel}</div>
+          <div class="component-toolbar">
+            <button class="activity-mini-btn" title="Naik" ${canUp ? '' : 'disabled'} onclick="moveComponent('${comp.id}', -1)"><i class="fas fa-arrow-up"></i></button>
+            <button class="activity-mini-btn" title="Turun" ${canDown ? '' : 'disabled'} onclick="moveComponent('${comp.id}', 1)"><i class="fas fa-arrow-down"></i></button>
+            <button class="activity-mini-btn danger" title="Hapus" onclick="removeComponent('${comp.id}')"><i class="fas fa-trash"></i></button>
+          </div>
+          <div class="component-content">${renderComponentContent(comp)}</div>
+        </div>`;
+    }
+
+    function renderComponentContent(comp) {
+      const data = comp.component_data || {};
+      const isPlaceholder = (txt) => `<span style="color:#94a3b8;font-style:italic;">${txt}</span>`;
+
+      if (comp.component_type === 'text') return `<div id="quill-${comp.id}" class="quill-editor-container"></div>`;
+
+      if (comp.component_type === 'heading') {
+        const level = data.level || 'h2';
+        const text = data.text || '';
+        const color = data.color || '';
+        const align = data.align || 'left';
+        const styleArr = [];
+        if (color) styleArr.push('color: ' + color);
+        styleArr.push('text-align: ' + align);
+        const innerContent = text ? escapeHtml(text) : '<span class="heading-placeholder">Klik untuk edit judul...</span>';
+        return `<div class="heading-preview" onclick="openHeadingModal('${comp.id}')"><div class="heading-preview-inner ${level}" style="${styleArr.join('; ')}">${innerContent}</div></div>`;
+      }
+
+      if (comp.component_type === 'image') {
+        const url = data.url || '';
+        const alt = data.alt || '';
+        const caption = data.caption || '';
+        const align = data.align || 'center';
+        if (!url) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openImageModal('${comp.id}')"><i class="fas fa-image" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan gambar')}</p></div>`;
+        const displayUrl = convertDriveUrl(url, 'image');
+        const alignMap = { left: 'flex-start', center: 'center', right: 'flex-end' };
+        return `<div style="display:flex; flex-direction:column; align-items:${alignMap[align]}; cursor:pointer;" onclick="openImageModal('${comp.id}')">
+          <img src="${escapeHtml(displayUrl)}" alt="${escapeHtml(alt)}" style="max-width:100%; border-radius:8px; margin-bottom:0.4rem;" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div style="display:none; padding:0.8rem; background:#fef3c7; color:#92400e; border-radius:8px; font-size:0.8rem; margin-bottom:0.4rem;">⚠️ Gambar gagal dimuat. Pastikan URL valid & file di-share "Anyone with link".</div>
+          ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; font-style:italic;">${escapeHtml(caption)}</div>` : ''}
+        </div>`;
+      }
+
+      if (comp.component_type === 'video') {
+        const url = data.url || '';
+        const caption = data.caption || '';
+        if (!url) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openVideoModal('${comp.id}')"><i class="fas fa-video" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan video')}</p></div>`;
+        const embedUrl = toEmbedVideoUrl(url);
+        return `<div style="cursor:pointer;" onclick="openVideoModal('${comp.id}')">
+          ${embedUrl 
+            ? `<div style="position:relative; padding-bottom:56.25%; height:0; border-radius:8px; overflow:hidden; background:#000;"><iframe src="${escapeHtml(embedUrl)}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
+            : `<div style="padding:1rem; background:#fef3c7; color:#92400e; border-radius:8px; font-size:0.85rem;">⚠️ URL tidak dikenali</div>`}
+          ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-top:0.4rem; font-style:italic;">${escapeHtml(caption)}</div>` : ''}
+        </div>`;
+      }
+
+      if (comp.component_type === 'audio') {
+        const url = data.url || '';
+        const caption = data.caption || '';
+        if (!url) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openAudioModal('${comp.id}')"><i class="fas fa-volume-high" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan audio')}</p></div>`;
+        return `<div style="cursor:pointer;" onclick="openAudioModal('${comp.id}')">
+          <audio controls style="width:100%; margin-bottom:0.4rem;"><source src="${escapeHtml(url)}" type="audio/mpeg"></audio>
+          ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; font-style:italic;">${escapeHtml(caption)}</div>` : ''}
+        </div>`;
+      }
+
+      if (comp.component_type === 'table') {
+        const columns = data.columns || [];
+        const rows = data.rows || [];
+        const widths = data.widths || [];
+        if (columns.length === 0) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openTableModal('${comp.id}')"><i class="fas fa-table" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan tabel')}</p></div>`;
+        return `<div style="cursor:pointer; overflow-x:auto;" onclick="openTableModal('${comp.id}')">
+          <table style="width:100%; border-collapse:collapse; font-size:0.85rem; table-layout:fixed;">
+            <thead><tr style="background:var(--green-lighter);">${columns.map((c, i) => `<th style="padding:0.5rem 0.7rem; border:1px solid var(--border); text-align:left; font-weight:700; color:var(--green-dark); ${widths[i] ? 'width:' + widths[i] + '%' : ''}">${escapeHtml(c)}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map(row => `<tr>${columns.map((_, i) => `<td style="padding:0.5rem 0.7rem; border:1px solid var(--border); word-break:break-word;">${escapeHtml(row[i] || '')}</td>`).join('')}</tr>`).join('')}</tbody>
+          </table>
+        </div>`;
+      }
+
+      if (comp.component_type === 'note') {
+        const variant = data.variant || 'info';
+        const title = data.title || '';
+        const text = data.text || '';
+        const variantMap = {
+          info: { bg: '#dbeafe', color: '#1e40af', border: '#3b82f6', icon: 'fa-circle-info' },
+          success: { bg: '#d1fae5', color: '#047857', border: '#10b981', icon: 'fa-circle-check' },
+          warning: { bg: '#fef3c7', color: '#92400e', border: '#f59e0b', icon: 'fa-triangle-exclamation' },
+          danger: { bg: '#fee2e2', color: '#b91c1c', border: '#ef4444', icon: 'fa-circle-xmark' }
+        };
+        const v = variantMap[variant] || variantMap.info;
+        if (!title && !text) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openNoteModal('${comp.id}')"><i class="fas fa-note-sticky" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan note')}</p></div>`;
+        return `<div style="cursor:pointer;" onclick="openNoteModal('${comp.id}')">
+          <div style="padding:0.9rem 1.1rem; background:${v.bg}; border-left:4px solid ${v.border}; border-radius:8px; color:${v.color};">
+            ${title ? `<div style="font-weight:800; margin-bottom:0.3rem; display:flex; align-items:center; gap:6px;"><i class="fas ${v.icon}"></i> ${escapeHtml(title)}</div>` : ''}
+            <div style="font-size:0.88rem; line-height:1.6; white-space:pre-wrap;">${escapeHtml(text)}</div>
+          </div>
+        </div>`;
+      }
+
+      if (comp.component_type === 'accordion') {
+        const items = data.items || [];
+        if (items.length === 0) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openAccordionModal('${comp.id}')"><i class="fas fa-list" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan accordion')}</p></div>`;
+        return `<div style="cursor:pointer;" onclick="openAccordionModal('${comp.id}')">
+          ${items.map(it => `<details style="margin-bottom:0.5rem; background:var(--bg-soft); border-radius:8px; border:1px solid var(--border);">
+            <summary style="padding:0.7rem 1rem; cursor:pointer; font-weight:700; font-size:0.88rem; color:var(--text);">${escapeHtml(it.title || 'Tanpa judul')}</summary>
+            <div style="padding:0.8rem 1rem; border-top:1px solid var(--border); font-size:0.85rem; color:var(--text-secondary); line-height:1.6; white-space:pre-wrap;">${escapeHtml(it.content || '')}</div>
+          </details>`).join('')}
+        </div>`;
+      }
+
+      if (comp.component_type === 'file') {
+        const url = data.url || '';
+        const label = data.label || 'Download File';
+        const description = data.description || '';
+        if (!url) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openFileModal('${comp.id}')"><i class="fas fa-file-arrow-down" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan file download')}</p></div>`;
+        return `<div style="cursor:pointer;" onclick="openFileModal('${comp.id}')">
+          <div style="display:flex; align-items:center; gap:0.9rem; padding:0.9rem 1.1rem; background:var(--green-lighter); border:1px solid var(--green-light); border-radius:8px;">
+            <div style="width:44px; height:44px; background:var(--green); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;"><i class="fas fa-file-arrow-down"></i></div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:700; font-size:0.88rem; color:var(--green-dark);">${escapeHtml(label)}</div>
+              ${description ? `<div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(description)}</div>` : ''}
+            </div>
+            <i class="fas fa-download" style="color:var(--green);"></i>
+          </div>
+        </div>`;
+      }
+
+      if (comp.component_type === 'embed') {
+        const url = data.url || '';
+        const height = data.height || 500;
+        if (!url) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openEmbedModal('${comp.id}')"><i class="fas fa-code" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan embed')}</p></div>`;
+        return `<div style="cursor:pointer;" onclick="openEmbedModal('${comp.id}')"><iframe src="${escapeHtml(url)}" style="width:100%; height:${height}px; border:1px solid var(--border); border-radius:8px; background:white;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+      }
+
+      return `<p style="color:var(--text-muted); font-size:0.85rem;">Tipe tidak dikenal: ${escapeHtml(comp.component_type)}</p>`;
+    }
+
+    // ============================================
+    // QUILL
+    // ============================================
+    function initQuillEditor(comp) {
+      const container = document.getElementById('quill-' + comp.id);
+      if (!container) return;
+      const toolbarOptions = [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['blockquote', 'code-block'],
+        ['link'],
+        ['clean']
+      ];
+      const quill = new Quill(container, {
+        theme: 'snow',
+        modules: { toolbar: toolbarOptions },
+        placeholder: 'Tulis konten materi...'
+      });
+      const html = (comp.component_data || {}).html || '';
+      if (html) quill.clipboard.dangerouslyPasteHTML(html);
+      const toolbar = quill.getModule('toolbar');
+      toolbar.addHandler('color', () => openColorPicker(quill, 'color'));
+      toolbar.addHandler('background', () => openColorPicker(quill, 'background'));
+      let saveTimer = null;
+      quill.on('text-change', () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(async () => {
+          try {
+            const newHtml = quill.root.innerHTML;
+            await updateActivityComponent(comp.id, { component_data: { html: newHtml } });
+            const c = components.find(x => String(x.id) === String(comp.id));
+            if (c) c.component_data = { html: newHtml };
+          } catch (err) { showToast('Gagal menyimpan teks', 'error'); }
+        }, 800);
+      });
+      quillInstances[comp.id] = quill;
+    }
+
+    function openColorPicker(quill, type) {
+      currentColorTarget = { quill, type };
+      document.getElementById('colorPickerTitle').textContent = type === 'color' ? 'Warna Teks' : 'Warna Highlight';
+      const grid = document.getElementById('colorPresetGrid');
+      grid.innerHTML = PRESET_COLORS.map(c => `<div class="color-swatch" style="background:${c};" title="${c}" onclick="applyColor('${c}')"></div>`).join('');
+      document.getElementById('modalColorPicker').classList.add('active');
+    }
+    function closeColorPicker() { document.getElementById('modalColorPicker').classList.remove('active'); currentColorTarget = null; }
+    function applyColor(color) {
+      if (!currentColorTarget) return;
+      currentColorTarget.quill.format(currentColorTarget.type === 'color' ? 'color' : 'background', color, 'user');
+      closeColorPicker();
+    }
+    function applyCustomColor() { applyColor(document.getElementById('customColorInput').value); }
+    function removeColorFormat() {
+      if (!currentColorTarget) return;
+      currentColorTarget.quill.format(currentColorTarget.type === 'color' ? 'color' : 'background', false, 'user');
+      closeColorPicker();
+    }
+
+    // ============================================
+    // HEADING
+    // ============================================
+    function openHeadingModal(compId) {
+      const comp = components.find(c => String(c.id) === String(compId));
+      if (!comp) return;
+      editingHeadingId = compId;
+      const data = comp.component_data || {};
+      document.getElementById('headingTextInput').value = data.text || '';
+      document.getElementById('headingLevelSelect').value = data.level || 'h2';
+      document.getElementById('headingAlignSelect').value = data.align || 'left';
+      document.getElementById('headingColorInput').value = data.color || '#0f172a';
+      document.getElementById('headingColorHex').textContent = data.color || '#0f172a';
+      updateHeadingPreview();
+      document.getElementById('modalHeadingEditor').classList.add('active');
+      setTimeout(() => document.getElementById('headingTextInput').focus(), 100);
+    }
+    function closeHeadingModal() { document.getElementById('modalHeadingEditor').classList.remove('active'); editingHeadingId = null; }
+    function resetHeadingColor() {
+      document.getElementById('headingColorInput').value = '#0f172a';
+      updateHeadingPreview();
+    }
+    function updateHeadingPreview() {
+      const text = document.getElementById('headingTextInput').value || '(Judul kosong)';
+      const level = document.getElementById('headingLevelSelect').value;
+      const align = document.getElementById('headingAlignSelect').value;
+      const color = document.getElementById('headingColorInput').value;
+      document.getElementById('headingColorHex').textContent = color;
+      const preview = document.getElementById('headingLivePreview');
+      const sizeMap = { h1: '1.6rem', h2: '1.3rem', h3: '1.05rem' };
+      preview.innerHTML = `<div style="width:100%;font-size:${sizeMap[level]};font-weight:800;color:${color};text-align:${align};line-height:1.3;word-break:break-word;">${escapeHtml(text)}</div>`;
+    }
+    async function saveHeading() {
+      if (!editingHeadingId) return;
+      const comp = components.find(c => String(c.id) === String(editingHeadingId));
+      if (!comp) return;
+      const text = document.getElementById('headingTextInput').value.trim();
+      const level = document.getElementById('headingLevelSelect').value;
+      const align = document.getElementById('headingAlignSelect').value;
+      const color = document.getElementById('headingColorInput').value;
+      const btn = document.getElementById('btnSaveHeading');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+      try {
+        const newData = { text, level, align, color };
+        await updateActivityComponent(editingHeadingId, { component_data: newData });
+        comp.component_data = newData;
+        closeHeadingModal();
+        renderCanvas();
+        showToast('✅ Judul diperbarui', 'success');
+      } catch (err) {
+        showToast('Gagal: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+      }
+    }
+
+    // ============================================
+    // IMAGE
+    // ============================================
+    function openImageModal(compId) {
+      const comp = components.find(c => String(c.id) === String(compId));
+      if (!comp) return;
+      editingCompId = compId;
+      const data = comp.component_data || {};
+      document.getElementById('imageUrlInput').value = data.url || '';
+      document.getElementById('imageAltInput').value = data.alt || '';
+      document.getElementById('imageCaptionInput').value = data.caption || '';
+      document.getElementById('imageAlignSelect').value = data.align || 'center';
+      updateImagePreview();
+      document.getElementById('modalImageEditor').classList.add('active');
+    }
+    function closeImageModal() { document.getElementById('modalImageEditor').classList.remove('active'); editingCompId = null; }
+    function updateImagePreview() {
+      const rawUrl = document.getElementById('imageUrlInput').value.trim();
+      const img = document.getElementById('imagePreviewImg');
+      const empty = document.getElementById('imagePreviewEmpty');
+      if (rawUrl) {
+        const displayUrl = convertDriveUrl(rawUrl, 'image');
+        img.src = displayUrl;
+        img.style.display = 'block';
+        empty.style.display = 'none';
+        img.onerror = () => { 
+          img.style.display = 'none'; 
+          empty.style.display = 'block'; 
+          empty.innerHTML = '⚠️ <strong>Gagal memuat gambar.</strong><br><span style="font-size:0.72rem;">Pastikan URL gambar langsung (.jpg/.png) atau file Google Drive di-share "Anyone with link".</span>';
+        };
+        img.onload = () => { empty.style.display = 'none'; };
+      } else {
+        img.style.display = 'none';
+        empty.style.display = 'block';
+        empty.textContent = 'Preview di sini';
+      }
+    }
+    async function saveImageComponent() {
+      if (!editingCompId) return;
+      const url = document.getElementById('imageUrlInput').value.trim();
+      if (!url) { showToast('URL gambar wajib diisi.', 'error'); return; }
+      const newData = {
+        url,
+        alt: document.getElementById('imageAltInput').value.trim(),
+        caption: document.getElementById('imageCaptionInput').value.trim(),
+        align: document.getElementById('imageAlignSelect').value
+      };
+      try {
+        await updateActivityComponent(editingCompId, { component_data: newData });
+        closeImageModal();
+        await loadComponents(activeActivityId);
+        showToast('✅ Gambar diperbarui', 'success');
+      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    // ============================================
+    // VIDEO
+    // ============================================
+    function openVideoModal(compId) {
+      const comp = components.find(c => String(c.id) === String(compId));
+      if (!comp) return;
+      editingCompId = compId;
+      const data = comp.component_data || {};
+      document.getElementById('videoUrlInput').value = data.url || '';
+      document.getElementById('videoCaptionInput').value = data.caption || '';
+      updateVideoPreview();
+      document.getElementById('modalVideoEditor').classList.add('active');
+    }
+    function closeVideoModal() { document.getElementById('modalVideoEditor').classList.remove('active'); editingCompId = null; }
+    function updateVideoPreview() {
+      const url = document.getElementById('videoUrlInput').value.trim();
+      const container = document.getElementById('videoPreviewContainer');
+      if (!url) {
+        container.innerHTML = '<p style="color:var(--text-muted); font-size:0.8rem; font-style:italic; text-align:center; margin:0;">Preview di sini</p>';
+        return;
+      }
+      const embedUrl = toEmbedVideoUrl(url);
+      if (embedUrl) {
+        container.innerHTML = `<div style="position:relative; padding-bottom:56.25%; height:0; border-radius:8px; overflow:hidden; background:#000;"><iframe src="${escapeHtml(embedUrl)}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+      } else {
+        container.innerHTML = '<p style="color:var(--danger); font-size:0.8rem; text-align:center; margin:0;">⚠️ URL tidak dikenali. Gunakan YouTube, Vimeo, atau Google Drive.</p>';
+      }
+    }
+    async function saveVideoComponent() {
+      if (!editingCompId) return;
+      const url = document.getElementById('videoUrlInput').value.trim();
+      if (!url) { showToast('URL video wajib diisi.', 'error'); return; }
+      const newData = { url, caption: document.getElementById('videoCaptionInput').value.trim() };
+      try {
+        await updateActivityComponent(editingCompId, { component_data: newData });
+        closeVideoModal();
+        await loadComponents(activeActivityId);
+        showToast('✅ Video diperbarui', 'success');
+      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    // ============================================
+    // AUDIO
+    // ============================================
+    function openAudioModal(compId) {
+      const comp = components.find(c => String(c.id) === String(compId));
+      if (!comp) return;
+      editingCompId = compId;
+      const data = comp.component_data || {};
+      document.getElementById('audioUrlInput').value = data.url || '';
+      document.getElementById('audioCaptionInput').value = data.caption || '';
+      updateAudioPreview();
+      document.getElementById('modalAudioEditor').classList.add('active');
+    }
+    function closeAudioModal() { document.getElementById('modalAudioEditor').classList.remove('active'); editingCompId = null; }
+    function updateAudioPreview() {
+      const url = document.getElementById('audioUrlInput').value.trim();
+      const player = document.getElementById('audioPreviewPlayer');
+      const empty = document.getElementById('audioPreviewEmpty');
+      if (url) {
+        player.querySelector('source').src = url;
+        player.load();
+        player.style.display = 'block';
+        empty.style.display = 'none';
+      } else {
+        player.style.display = 'none';
+        empty.style.display = 'block';
+      }
+    }
+    async function saveAudioComponent() {
+      if (!editingCompId) return;
+      const url = document.getElementById('audioUrlInput').value.trim();
+      if (!url) { showToast('URL audio wajib diisi.', 'error'); return; }
+      const newData = { url, caption: document.getElementById('audioCaptionInput').value.trim() };
+      try {
+        await updateActivityComponent(editingCompId, { component_data: newData });
+        closeAudioModal();
+        await loadComponents(activeActivityId);
+        showToast('✅ Audio diperbarui', 'success');
+      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    // ============================================
+    // TABLE (RESIZE-ABLE)
+    // ============================================
+    function openTableModal(compId) {
+      const comp = components.find(c => String(c.id) === String(compId));
+      if (!comp) return;
+      editingCompId = compId;
+      const data = comp.component_data || {};
+      tableEditorState = {
+        columns: [...(data.columns || [])],
+        rows: (data.rows || []).map(r => [...r]),
+        widths: [...(data.widths || [])]
+      };
+      if (tableEditorState.columns.length === 0) {
+        tableEditorState.columns = ['Kolom 1', 'Kolom 2'];
+        tableEditorState.rows = [['', ''], ['', '']];
+        tableEditorState.widths = [50, 50];
+      }
+      // Pastikan widths length = columns length
+      while (tableEditorState.widths.length < tableEditorState.columns.length) {
+        tableEditorState.widths.push(100 / tableEditorState.columns.length);
+      }
+      renderTableEditor();
+      document.getElementById('modalTableEditor').classList.add('active');
+    }
+    function closeTableModal() { document.getElementById('modalTableEditor').classList.remove('active'); editingCompId = null; tableEditorState = null; }
+    
+    function renderTableEditor() {
+      const container = document.getElementById('tableEditorContainer');
+      if (!tableEditorState || tableEditorState.columns.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:1rem;">Belum ada kolom</p>';
+        return;
+      }
+      let html = '<table class="table-editor-table"><thead><tr>';
+      tableEditorState.columns.forEach((col, ci) => {
+        html += `<th style="width:${tableEditorState.widths[ci]}%" data-col="${ci}">
+          <input type="text" class="table-header-input" value="${escapeHtml(col)}" onchange="updateTableColumn(${ci}, this.value)" placeholder="Kolom ${ci+1}">
+          ${tableEditorState.columns.length > 1 ? `<button type="button" class="btn-col-del" onclick="deleteTableColumn(${ci})" title="Hapus kolom"><i class="fas fa-xmark"></i></button>` : ''}
+          <div class="col-resize-handle" data-col="${ci}"></div>
+        </th>`;
+      });
+      html += '</tr></thead><tbody>';
+      tableEditorState.rows.forEach((row, ri) => {
+        html += '<tr>';
+        tableEditorState.columns.forEach((_, ci) => {
+          html += `<td><input type="text" value="${escapeHtml(row[ci] || '')}" onchange="updateTableCell(${ri}, ${ci}, this.value)" placeholder="Isi..."></td>`;
+        });
+        html += '</tr>';
+      });
+      // Row delete row (right after table body via a column of buttons)
+      html += '</tbody></table>';
+      container.innerHTML = html;
+
+      // Setup resize handles
+      container.querySelectorAll('.col-resize-handle').forEach(handle => {
+        let startX = 0;
+        let startWidth = 0;
+        let colIndex = 0;
+        let tableWidth = 0;
+        
+        handle.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          colIndex = parseInt(handle.dataset.col);
+          const th = handle.parentElement;
+          const table = th.closest('table');
+          tableWidth = table.offsetWidth;
+          startX = e.pageX;
+          startWidth = th.offsetWidth;
+          handle.classList.add('resizing');
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+
+          const onMove = (ev) => {
+            const delta = ev.pageX - startX;
+            const newWidth = Math.max(60, startWidth + delta);
+            const newPct = (newWidth / tableWidth) * 100;
+            tableEditorState.widths[colIndex] = newPct;
+            // Apply langsung ke th
+            th.style.width = newPct + '%';
+          };
+          const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            handle.classList.remove('resizing');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+          };
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+      });
+    }
+
+    function addTableColumn() {
+      if (!tableEditorState) return;
+      tableEditorState.columns.push('Kolom ' + (tableEditorState.columns.length + 1));
+      tableEditorState.rows.forEach(r => r.push(''));
+      // Recalculate widths: bagi rata
+      const n = tableEditorState.columns.length;
+      tableEditorState.widths = new Array(n).fill(100 / n);
+      renderTableEditor();
+    }
+    function addTableRow() {
+      if (!tableEditorState) return;
+      tableEditorState.rows.push(new Array(tableEditorState.columns.length).fill(''));
+      renderTableEditor();
+    }
+    function updateTableColumn(ci, value) { if (tableEditorState) tableEditorState.columns[ci] = value; }
+    function updateTableCell(ri, ci, value) { if (tableEditorState) tableEditorState.rows[ri][ci] = value; }
+    function deleteTableColumn(ci) {
+      if (!tableEditorState || tableEditorState.columns.length <= 1) { showToast('Minimal 1 kolom', 'error'); return; }
+      tableEditorState.columns.splice(ci, 1);
+      tableEditorState.widths.splice(ci, 1);
+      tableEditorState.rows.forEach(r => r.splice(ci, 1));
+      renderTableEditor();
+    }
+    function deleteTableRow(ri) {
+      if (!tableEditorState) return;
+      tableEditorState.rows.splice(ri, 1);
+      renderTableEditor();
+    }
+    async function saveTableComponent() {
+      if (!editingCompId || !tableEditorState) return;
+      try {
+        await updateActivityComponent(editingCompId, { component_data: tableEditorState });
+        closeTableModal();
+        await loadComponents(activeActivityId);
+        showToast('✅ Tabel diperbarui', 'success');
+      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    // ============================================
+    // NOTE
+    // ============================================
+    function openNoteModal(compId) {
+      const comp = components.find(c => String(c.id) === String(compId));
+      if (!comp) return;
+      editingCompId = compId;
+      const data = comp.component_data || {};
+      document.getElementById('noteTitleInput').value = data.title || '';
+      document.getElementById('noteTextInput').value = data.text || '';
+      const radios = document.querySelectorAll('input[name="noteVariant"]');
+      radios.forEach(r => { r.checked = (r.value === (data.variant || 'info')); });
+      updateNotePreview();
+      document.getElementById('modalNoteEditor').classList.add('active');
+    }
+    function closeNoteModal() { document.getElementById('modalNoteEditor').classList.remove('active'); editingCompId = null; }
+    function updateNotePreview() {
+      const variant = document.querySelector('input[name="noteVariant"]:checked')?.value || 'info';
+      const title = document.getElementById('noteTitleInput').value;
+      const text = document.getElementById('noteTextInput').value;
+      const variantMap = {
+        info: { bg: '#dbeafe', color: '#1e40af', border: '#3b82f6', icon: 'fa-circle-info' },
+        success: { bg: '#d1fae5', color: '#047857', border: '#10b981', icon: 'fa-circle-check' },
+        warning: { bg: '#fef3c7', color: '#92400e', border: '#f59e0b', icon: 'fa-triangle-exclamation' },
+        danger: { bg: '#fee2e2', color: '#b91c1c', border: '#ef4444', icon: 'fa-circle-xmark' }
+      };
+      const v = variantMap[variant];
+      const container = document.getElementById('notePreviewContainer');
+      container.style.background = v.bg;
+      container.style.borderLeftColor = v.border;
+      container.style.color = v.color;
+      if (!title && !text) {
+        container.innerHTML = `<div style="font-size:0.85rem; font-style:italic; opacity:0.7;">Preview...</div>`;
+      } else {
+        container.innerHTML = `
+          ${title ? `<div style="font-weight:800; margin-bottom:0.3rem; display:flex; align-items:center; gap:6px;"><i class="fas ${v.icon}"></i> ${escapeHtml(title)}</div>` : ''}
+          <div style="font-size:0.88rem; line-height:1.6; white-space:pre-wrap;">${escapeHtml(text)}</div>
+        `;
+      }
+    }
+    async function saveNoteComponent() {
+      if (!editingCompId) return;
+      const variant = document.querySelector('input[name="noteVariant"]:checked')?.value || 'info';
+      const title = document.getElementById('noteTitleInput').value.trim();
+      const text = document.getElementById('noteTextInput').value.trim();
+      if (!title && !text) { showToast('Isi judul atau teks note.', 'error'); return; }
+      try {
+        await updateActivityComponent(editingCompId, { component_data: { variant, title, text } });
+        closeNoteModal();
+        await loadComponents(activeActivityId);
+        showToast('✅ Note diperbarui', 'success');
+      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    // ============================================
+    // ACCORDION
+    // ============================================
+    function openAccordionModal(compId) {
+      const comp = components.find(c => String(c.id) === String(compId));
+      if (!comp) return;
+      editingCompId = compId;
+      const data = comp.component_data || {};
+      accordionEditorState = { items: (data.items || []).map(it => ({ title: it.title || '', content: it.content || '' })) };
+      if (accordionEditorState.items.length === 0) {
+        accordionEditorState.items = [{ title: '', content: '' }];
+      }
+      renderAccordionEditor();
+      document.getElementById('modalAccordionEditor').classList.add('active');
+    }
+    function closeAccordionModal() { document.getElementById('modalAccordionEditor').classList.remove('active'); editingCompId = null; accordionEditorState = null; }
+    function renderAccordionEditor() {
+      const container = document.getElementById('accordionEditorContainer');
+      if (!accordionEditorState) { container.innerHTML = ''; return; }
+      container.innerHTML = accordionEditorState.items.map((it, i) => `
+        <div class="accordion-item-editor">
+          <div class="accordion-item-header">
+            <span class="accordion-item-num">Item #${i+1}</span>
+            <button class="activity-mini-btn danger" onclick="deleteAccordionItem(${i})" title="Hapus"><i class="fas fa-trash"></i></button>
+          </div>
+          <label class="form-label">Judul</label>
+          <input type="text" class="form-input" value="${escapeHtml(it.title)}" placeholder="Judul item..." onchange="updateAccordionTitle(${i}, this.value)" style="margin-bottom:0.5rem;">
+          <label class="form-label">Konten</label>
+          <textarea class="form-input" placeholder="Konten item..." onchange="updateAccordionContent(${i}, this.value)" style="margin-bottom:0.5rem; min-height:60px;">${escapeHtml(it.content)}</textarea>
+        </div>
+      `).join('');
+    }
+    function addAccordionItem() {
+      if (!accordionEditorState) return;
+      accordionEditorState.items.push({ title: '', content: '' });
+      renderAccordionEditor();
+    }
+    function deleteAccordionItem(i) {
+      if (!accordionEditorState) return;
+      if (accordionEditorState.items.length <= 1) { showToast('Minimal 1 item', 'error'); return; }
+      accordionEditorState.items.splice(i, 1);
+      renderAccordionEditor();
+    }
+    function updateAccordionTitle(i, v) { if (accordionEditorState) accordionEditorState.items[i].title = v; }
+    function updateAccordionContent(i, v) { if (accordionEditorState) accordionEditorState.items[i].content = v; }
+    async function saveAccordionComponent() {
+      if (!editingCompId || !accordionEditorState) return;
+      if (accordionEditorState.items.every(it => !it.title.trim() && !it.content.trim())) {
+        showToast('Isi minimal 1 item.', 'error'); return;
+      }
+      try {
+        await updateActivityComponent(editingCompId, { component_data: accordionEditorState });
+        closeAccordionModal();
+        await loadComponents(activeActivityId);
+        showToast('✅ Accordion diperbarui', 'success');
+      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    // ============================================
+    // FILE
+    // ============================================
+    function openFileModal(compId) {
+      const comp = components.find(c => String(c.id) === String(compId));
+      if (!comp) return;
+      editingCompId = compId;
+      const data = comp.component_data || {};
+      document.getElementById('fileUrlInput').value = data.url || '';
+      document.getElementById('fileLabelInput').value = data.label || 'Download File';
+      document.getElementById('fileDescInput').value = data.description || '';
+      document.getElementById('modalFileEditor').classList.add('active');
+    }
+    function closeFileModal() { document.getElementById('modalFileEditor').classList.remove('active'); editingCompId = null; }
+    async function saveFileComponent() {
+      if (!editingCompId) return;
+      const url = document.getElementById('fileUrlInput').value.trim();
+      const label = document.getElementById('fileLabelInput').value.trim();
+      if (!url) { showToast('URL file wajib diisi.', 'error'); return; }
+      if (!label) { showToast('Label wajib diisi.', 'error'); return; }
+      const newData = { url, label, description: document.getElementById('fileDescInput').value.trim() };
+      try {
+        await updateActivityComponent(editingCompId, { component_data: newData });
+        closeFileModal();
+        await loadComponents(activeActivityId);
+        showToast('✅ File diperbarui', 'success');
+      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    // ============================================
+    // EMBED
+    // ============================================
+    function openEmbedModal(compId) {
+      const comp = components.find(c => String(c.id) === String(compId));
+      if (!comp) return;
+      editingCompId = compId;
+      const data = comp.component_data || {};
+      document.getElementById('embedUrlInput').value = data.url || '';
+      document.getElementById('embedHeightInput').value = data.height || 500;
+      document.getElementById('modalEmbedEditor').classList.add('active');
+    }
+    function closeEmbedModal() { document.getElementById('modalEmbedEditor').classList.remove('active'); editingCompId = null; }
+    async function saveEmbedComponent() {
+      if (!editingCompId) return;
+      const url = document.getElementById('embedUrlInput').value.trim();
+      const height = parseInt(document.getElementById('embedHeightInput').value) || 500;
+      if (!url) { showToast('URL embed wajib diisi.', 'error'); return; }
+      try {
+        await updateActivityComponent(editingCompId, { component_data: { url, height } });
+        closeEmbedModal();
+        await loadComponents(activeActivityId);
+        showToast('✅ Embed diperbarui', 'success');
+      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    // ============================================
+    // ADD / MOVE / REMOVE COMPONENT
+    // ============================================
+    async function addComponent(type) {
+      if (!activeActivityId) { showToast('Pilih aktivitas dulu.', 'error'); return; }
+      let defaultData = {};
+      if (type === 'text') defaultData = { html: '' };
+      else if (type === 'heading') defaultData = { text: '', level: 'h2', align: 'left', color: '#0f172a' };
+      else if (type === 'image') defaultData = { url: '', alt: '', caption: '', align: 'center' };
+      else if (type === 'video') defaultData = { url: '', caption: '' };
+      else if (type === 'audio') defaultData = { url: '', caption: '' };
+      else if (type === 'table') defaultData = { columns: [], rows: [], widths: [] };
+      else if (type === 'note') defaultData = { variant: 'info', title: '', text: '' };
+      else if (type === 'accordion') defaultData = { items: [] };
+      else if (type === 'file') defaultData = { url: '', label: 'Download File', description: '' };
+      else if (type === 'embed') defaultData = { url: '', height: 500 };
+      try {
+        const created = await createActivityComponent({
+          activityId: activeActivityId, componentType: type, componentData: defaultData
+        });
+        showToast('✅ Komponen ditambahkan', 'success');
+        await loadComponents(activeActivityId);
+        setTimeout(() => {
+          if (type === 'heading') openHeadingModal(created.id);
+          else if (type === 'image') openImageModal(created.id);
+          else if (type === 'video') openVideoModal(created.id);
+          else if (type === 'audio') openAudioModal(created.id);
+          else if (type === 'table') openTableModal(created.id);
+          else if (type === 'note') openNoteModal(created.id);
+          else if (type === 'accordion') openAccordionModal(created.id);
+          else if (type === 'file') openFileModal(created.id);
+          else if (type === 'embed') openEmbedModal(created.id);
+        }, 300);
+      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    async function moveComponent(compId, direction) {
+      const idx = components.findIndex(c => String(c.id) === String(compId));
+      if (idx < 0) return;
+      const swapIdx = idx + direction;
+      if (swapIdx < 0 || swapIdx >= components.length) return;
+      const tmp = components[idx];
+      components[idx] = components[swapIdx];
+      components[swapIdx] = tmp;
+      try {
+        await reorderActivityComponents(components.map((c, i) => ({ id: c.id, order_index: i + 1 })));
+        components.forEach((c, i) => { c.order_index = i + 1; });
+        renderCanvas();
+      } catch (err) { showToast('Gagal ubah urutan', 'error'); await loadComponents(activeActivityId); }
+    }
+
+    async function removeComponent(compId) {
+      if (!confirm('Hapus komponen ini?')) return;
+      try {
+        await deleteActivityComponent(compId);
+        showToast('🗑️ Komponen dihapus', 'success');
+        await loadComponents(activeActivityId);
+      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    // ============================================
+    // KELOLA KELAS
+    // ============================================
+    function openKelolaKelasModal() {
+      selectedKelolaKelas = new Set(unitClasses.map(uc => String(uc.class_id)));
+      renderKelolaKelasList();
+      document.getElementById('kelolaKelasError').classList.add('hidden');
+      document.getElementById('modalKelolaKelas').classList.add('active');
+    }
+    function closeKelolaKelasModal() { document.getElementById('modalKelolaKelas').classList.remove('active'); }
+
+    function renderKelolaKelasList() {
+      const container = document.getElementById('kelolaKelasList');
+      if (availableClasses.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Anda belum mengampu mapel ini di kelas manapun.</p>';
+        return;
+      }
+      container.innerHTML = availableClasses.map(c => {
+        const cid = String(c.id);
+        const isChecked = selectedKelolaKelas.has(cid);
+        const uc = unitClasses.find(u => String(u.class_id) === cid);
+        const statusLabel = uc
+          ? (uc.is_published ? '<span class="kelas-check-status published">✓ Published</span>' : '<span class="kelas-check-status draft">○ Draft</span>')
+          : '';
+        return `<label class="kelas-check-item ${isChecked ? 'checked' : ''}">
+          <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleKelolaKelas('${cid}', this.checked)">
+          <div class="kelas-check-info">
+            <div class="kelas-check-name">${escapeHtml(c.name)}${c.grade ? ' — ' + escapeHtml(c.grade) : ''}</div>
+            ${statusLabel}
+          </div>
+        </label>`;
+      }).join('');
+    }
+
+    function toggleKelolaKelas(classId, checked) {
+      if (checked) selectedKelolaKelas.add(String(classId));
+      else selectedKelolaKelas.delete(String(classId));
+      renderKelolaKelasList();
+    }
+
+    async function saveKelolaKelas() {
+      const errBox = document.getElementById('kelolaKelasError');
+      errBox.classList.add('hidden');
+      if (selectedKelolaKelas.size === 0) {
+        errBox.textContent = 'Pilih minimal 1 kelas.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      try {
+        const classIds = Array.from(selectedKelolaKelas).map(c => parseInt(c));
+        await setUnitClasses(currentUnit.id, classIds);
+        closeKelolaKelasModal();
+        showToast('✅ Kelas diperbarui', 'success');
+        await loadUnitClassesData();
+      } catch (err) {
+        console.error('Save kelas error:', err);
+        errBox.textContent = 'Gagal: ' + err.message;
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    // ============================================
+    // PUBLISH
+    // ============================================
+    async function openPublishModal() {
+      // Refresh status kelas
+      await loadUnitClassesData();
+      selectedPublishKelas = new Set();
+      renderPublishList();
+      document.getElementById('publishError').classList.add('hidden');
+      document.getElementById('modalPublish').classList.add('active');
+    }
+    function closePublishModal() { document.getElementById('modalPublish').classList.remove('active'); }
+
+    function renderPublishList() {
+      const container = document.getElementById('publishKelasList');
+      if (unitClasses.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning">Unit ini belum terkait ke kelas manapun. Klik "Kelas" di topbar dulu untuk memilih kelas.</div>';
+        return;
+      }
+      container.innerHTML = unitClasses.map(uc => {
+        const cid = String(uc.class_id);
+        const isChecked = selectedPublishKelas.has(cid);
+        return `<label class="kelas-check-item ${isChecked ? 'checked' : ''}">
+          <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePublishKelas('${cid}', this.checked)">
+          <div class="kelas-check-info">
+            <div class="kelas-check-name">${escapeHtml(uc.classes?.name || '-')}${uc.classes?.grade ? ' — ' + escapeHtml(uc.classes.grade) : ''}</div>
+            ${uc.is_published 
+              ? `<span class="kelas-check-status published">✓ Terakhir publish: ${formatDate(uc.published_at)}</span>`
+              : '<span class="kelas-check-status draft">Belum pernah publish</span>'}
+          </div>
+        </label>`;
+      }).join('');
+    }
+
+    function togglePublishKelas(classId, checked) {
+      if (checked) selectedPublishKelas.add(String(classId));
+      else selectedPublishKelas.delete(String(classId));
+      renderPublishList();
+    }
+
+    async function confirmPublish() {
+      const errBox = document.getElementById('publishError');
+      errBox.classList.add('hidden');
+      if (selectedPublishKelas.size === 0) {
+        errBox.textContent = 'Pilih minimal 1 kelas untuk publish.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        // Bangun snapshot dari data terkini (activities + components)
+        const snapshot = await buildUnitSnapshot();
+        const classIds = Array.from(selectedPublishKelas).map(c => parseInt(c));
+        await publishUnitToClasses(currentUnit.id, classIds, snapshot);
+        closePublishModal();
+        showToast('✅ Berhasil di-publish ke ' + classIds.length + ' kelas', 'success');
+        // Reload status
+        currentUnit = await getUnitById(currentUnit.id);
+        updateStatusBadge(currentUnit.status);
+        await loadUnitClassesData();
+      } catch (err) {
+        console.error('Publish error:', err);
+        errBox.textContent = 'Gagal publish: ' + err.message;
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    async function buildUnitSnapshot() {
+      // Ambil semua activities + components terbaru dari DB
+      const acts = await getUnitActivities(currentUnit.id);
+      const snapshot = {
+        unit: {
+          title: currentUnit.title,
+          description: currentUnit.description,
+          kktp_type: currentUnit.kktp_type,
+          kktp_config: currentUnit.kktp_config
+        },
+        activities: []
+      };
+      for (const act of acts) {
+        const comps = await getActivityComponents(act.id);
+        snapshot.activities.push({
+          id: act.id,
+          title: act.title,
+          type: act.type,
+          order_index: act.order_index,
+          components: comps.map(c => ({
+            id: c.id,
+            component_type: c.component_type,
+            component_data: c.component_data,
+            order_index: c.order_index
+          }))
+        });
+      }
+      return snapshot;
+    }
+
+    // ============================================
+    // HELPERS
+    // ============================================
+    function renderEmptyCanvas() {
+      document.getElementById('panelCenter').innerHTML = `<div class="empty-canvas"><span class="emoji">👈</span><h3>Pilih Aktivitas</h3><p>Klik aktivitas di panel kiri untuk mulai mengedit.</p></div>`;
+    }
+
+    function enableToolButtons(enabled) {
+      ['toolText', 'toolHeading', 'toolImage', 'toolVideo', 'toolAudio', 
+       'toolTable', 'toolNote', 'toolAccordion', 'toolFile', 'toolEmbed'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.disabled = !enabled;
+      });
+    }
+
+    function updateStatusBadge(status) {
+      const badge = document.getElementById('statusBadge');
+      badge.className = 'status-badge ' + (status || 'draft');
+      badge.textContent = { draft: 'Draft', published: 'Published', archived: 'Archived' }[status] || status;
+    }
+
+    function openPreview() {
+      if (window.self !== window.top) {
+        window.parent.postMessage({ type: 'GURU_GOTO', target: 'preview', params: { unitId: currentUnit.id }, from: 'editor' }, '*');
+      } else {
+        window.location.href = 'unit-preview.html?embed=1&unitId=' + currentUnit.id;
+      }
+    }
+
+    function goBack() {
+      if (window.self !== window.top) {
+        window.parent.postMessage({ type: 'GURU_BACK', view: 'workspace' }, '*');
+      } else {
+        window.location.href = 'mapel-workspace.html?embed=1&subjectId=' + (currentUnit?.annual_plans?.subject_id || '');
+      }
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '-';
+      try {
+        return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch { return '-'; }
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    document.addEventListener('input', e => {
+      if (['headingTextInput','headingLevelSelect','headingAlignSelect','headingColorInput'].includes(e.target.id)) updateHeadingPreview();
+      if (e.target.id === 'imageUrlInput') updateImagePreview();
+      if (e.target.id === 'videoUrlInput') updateVideoPreview();
+      if (e.target.id === 'audioUrlInput') updateAudioPreview();
+    });
+    document.addEventListener('change', e => {
+      if (e.target.id === 'headingLevelSelect' || e.target.id === 'headingAlignSelect' || e.target.id === 'headingColorInput') updateHeadingPreview();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeAddActivityModal(); closeEditActivityModal(); closeDeleteActivityModal();
+        closeColorPicker(); closeHeadingModal(); closeImageModal(); closeVideoModal();
+        closeAudioModal(); closeTableModal(); closeNoteModal(); closeAccordionModal();
+        closeFileModal(); closeEmbedModal(); closeKelolaKelasModal(); closePublishModal();
+      }
+    });
+  </script>
+</body>
+</html>

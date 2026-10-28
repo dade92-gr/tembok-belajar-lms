@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jurnal Wali Kelas — Tembok Belajar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #ec4899; --primary-dark: #be185d; --primary-light: #fce7f3;
+      --primary-lighter: #fdf2f8;
+      --navy: #1e293b; --navy-dark: #0f172a;
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+      --blue: #3b82f6;
+      --bg: #f1f5f9; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    body.tb-embed .page-toolbar-left { gap: 0.3rem; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--navy); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--primary); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark); box-shadow: 0 4px 12px rgba(236,72,153,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-danger {
+      background: var(--danger); color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--primary);
+      color: var(--primary); padding: 0.55rem 1.1rem; border-radius: 8px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--primary-light); }
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .filter-input, .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(236,72,153,0.15);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
+    }
+    .btn-reset {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-muted); padding: 0.55rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-reset:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+    .info-bar {
+      background: var(--primary-light); border-radius: 10px;
+      padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.82rem;
+      color: var(--primary-dark); font-weight: 500; display: flex;
+      align-items: center; gap: 8px; border: 1px solid rgba(236,72,153,0.2);
+      flex-wrap: wrap;
+    }
+    .info-bar i { color: var(--primary); }
+    .info-bar strong { color: var(--navy); }
+    /* TABLE */
+    .table-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table thead { background: #f8fafc; }
+    .data-table th {
+      padding: 0.85rem 1rem; text-align: left; font-weight: 600;
+      color: var(--text-muted); border-bottom: 2px solid var(--border);
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+      vertical-align: middle; color: var(--text);
+    }
+    .data-table tbody tr { transition: var(--transition); cursor: pointer; }
+    .data-table tbody tr:hover { background: var(--primary-lighter); }
+    .data-table tbody tr.expanded { background: var(--primary-lighter); }
+    .data-table tbody tr.detail-row { cursor: default; background: var(--primary-lighter); }
+    .data-table tbody tr.detail-row:hover { background: var(--primary-lighter); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .nama-siswa { font-weight: 700; color: var(--text); }
+    .nisn-teks { color: var(--text-secondary); font-size: 0.78rem; font-family: 'Courier New', monospace; }
+    .count-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 32px; height: 28px; padding: 0 10px;
+      border-radius: 999px; font-weight: 700; font-size: 0.78rem;
+      background: var(--primary-light); color: var(--primary-dark);
+    }
+    .count-badge.zero { background: var(--bg); color: var(--text-muted); }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition); font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+    /* DETAIL EXPAND */
+    .detail-expand {
+      background: white; border-radius: 8px; padding: 1rem;
+      margin: 0.5rem 0;
+    }
+    .detail-expand-title {
+      font-size: 0.8rem; font-weight: 700; color: var(--primary-dark);
+      margin-bottom: 0.7rem; display: flex; align-items: center; gap: 6px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .detail-jurnal-list {
+      display: flex; flex-direction: column; gap: 0.6rem;
+      max-height: 400px; overflow-y: auto;
+    }
+    .detail-jurnal-item {
+      background: var(--primary-lighter); border-radius: 8px;
+      padding: 0.7rem 0.9rem; border-left: 3px solid var(--primary);
+      display: flex; justify-content: space-between; gap: 1rem;
+      align-items: start; flex-wrap: wrap;
+    }
+    .detail-jurnal-content { flex: 1; min-width: 200px; }
+    .detail-jurnal-head {
+      display: flex; gap: 0.5rem; align-items: center;
+      margin-bottom: 0.3rem; flex-wrap: wrap;
+    }
+    .detail-jurnal-date {
+      font-size: 0.72rem; font-weight: 700; color: var(--primary-dark);
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 999px;
+      font-size: 0.65rem; font-weight: 700;
+    }
+    .badge-kategori.akademik { background: #dbeafe; color: #1e40af; }
+    .badge-kategori.perilaku { background: #fef3c7; color: #92400e; }
+    .badge-kategori.kesehatan { background: #fee2e2; color: #b91c1c; }
+    .badge-kategori.keluarga { background: #ede9fe; color: #5b21b6; }
+    .badge-kategori.prestasi { background: #d1fae5; color: #047857; }
+    .badge-kategori.lainnya { background: #f1f5f9; color: #475569; }
+    .badge-private { background: #1e293b; color: white; }
+    .detail-jurnal-judul { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.2rem; }
+    .detail-jurnal-desc { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+    .detail-jurnal-tindak {
+      font-size: 0.75rem; color: var(--primary-dark);
+      margin-top: 0.3rem; padding-top: 0.3rem;
+      border-top: 1px dashed var(--border);
+    }
+    .detail-jurnal-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .btn-icon-sm {
+      background: transparent; border: 1px solid var(--border);
+      width: 26px; height: 26px; border-radius: 6px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: var(--text-secondary);
+      transition: var(--transition);
+    }
+    .btn-icon-sm:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+    .btn-icon-sm.danger:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+    .empty-row { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    .empty-row .emoji { font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
+    .pagination-bar {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 0.9rem 1.2rem; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    .pagination-info { font-size: 0.8rem; color: var(--text-muted); }
+    .pagination-info strong { color: var(--text); font-weight: 600; }
+    .pagination-controls { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .page-size-select {
+      padding: 0.4rem 2rem 0.4rem 0.7rem; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 0.8rem; font-family: inherit;
+      background: var(--surface); color: var(--text); cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+    }
+    .page-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); width: 32px; height: 32px;
+      border-radius: 6px; cursor: pointer; font-size: 0.75rem;
+      font-weight: 600; transition: var(--transition);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: inherit;
+    }
+    .page-btn:hover:not(:disabled) {
+      background: var(--primary-light); border-color: var(--primary); color: var(--primary);
+    }
+    .page-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-numbers { display: flex; gap: 0.3rem; align-items: center; }
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem; width: 100%; max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--navy); margin-bottom: 1rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--primary); }
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .form-label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      margin-bottom: 0.45rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-label .req { color: var(--danger); }
+    .form-input, .form-textarea {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.8rem;
+    }
+    .form-input:focus, .form-textarea:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(236,72,153,0.15);
+    }
+    .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+    select.form-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 35px; cursor: pointer;
+    }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+    .checkbox-wrap {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.7rem 0.9rem; background: var(--primary-lighter);
+      border-radius: 8px; margin-bottom: 0.8rem;
+      border: 1px solid var(--primary-light); cursor: pointer;
+    }
+    .checkbox-wrap input[type="checkbox"] {
+      width: 18px; height: 18px; cursor: pointer;
+      accent-color: var(--primary);
+    }
+    .checkbox-wrap label {
+      flex: 1; font-size: 0.8rem; color: var(--text-secondary);
+      cursor: pointer; line-height: 1.4; margin: 0;
+    }
+    .checkbox-wrap label strong { color: var(--text); }
+    .alert { margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.83rem; line-height: 1.5; }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-success { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--navy);
+      color: white; padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2); font-size: 0.85rem;
+      font-weight: 500; display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px); transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
+    .hidden { display: none !important; }
+    .spinner {
+      width: 32px; height: 32px; margin: 0 auto 0.8rem;
+      border: 3px solid var(--primary-light); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 900px) {
+      .filter-row { grid-template-columns: 1fr 1fr; }
+      .filter-row .btn-reset { grid-column: 1 / -1; }
+    }
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .pagination-bar { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+      .pagination-controls { justify-content: center; }
+      .form-row-2 { grid-template-columns: 1fr; }
+      .data-table th, .data-table td { padding: 0.55rem 0.5rem; font-size: 0.78rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-book-open"></i>
+          <span>
+            Jurnal Wali Kelas
+            <small>Rekap jurnal per siswa — klik baris untuk lihat detail</small>
+          </span>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-primary" onclick="openJurnalModal()">
+          <i class="fas fa-plus"></i> Tambah Jurnal
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="filterKelas"><i class="fas fa-school"></i> Kelas</label>
+          <select id="filterKelas" class="filter-select" onchange="onKelasChange()">
+            <option value="">Semua Kelas</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterKategori"><i class="fas fa-tag"></i> Kategori</label>
+          <select id="filterKategori" class="filter-select" onchange="applyFilter()">
+            <option value="">Semua Kategori</option>
+            <option value="akademik">Akademik</option>
+            <option value="perilaku">Perilaku</option>
+            <option value="kesehatan">Kesehatan</option>
+            <option value="keluarga">Keluarga</option>
+            <option value="prestasi">Prestasi</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterSiswa"><i class="fas fa-user"></i> Cari Siswa</label>
+          <input type="text" id="filterSiswa" class="filter-input" placeholder="Nama siswa..." oninput="applyFilter()">
+        </div>
+        <div class="filter-group">
+          <label for="filterBulan"><i class="fas fa-calendar"></i> Bulan</label>
+          <input type="month" id="filterBulan" class="filter-input" onchange="applyFilter()">
+        </div>
+        <div class="filter-group">
+          <button class="btn-reset" onclick="resetFilter()">
+            <i class="fas fa-rotate-left"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-bar">
+      <i class="fas fa-info-circle"></i>
+      <span>Total siswa: <strong id="totalSiswa">0</strong> ·
+            Siswa dengan jurnal: <strong id="shownCount">0</strong> ·
+            Total jurnal: <strong id="totalJurnal">0</strong></span>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:50px;">No</th>
+              <th>Nama Siswa</th>
+              <th style="width:120px;">NISN</th>
+              <th style="width:100px; text-align:center;">Jumlah Jurnal</th>
+              <th style="width:200px;">Jurnal Terakhir</th>
+              <th style="width:80px; text-align:center;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="6" class="empty-row"><div class="spinner"></div>Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-bar" id="paginationBar" style="display:none;">
+        <div class="pagination-info">
+          Menampilkan <strong id="pageStart">0</strong>-<strong id="pageEnd">0</strong> dari <strong id="pageTotal">0</strong> siswa
+        </div>
+        <div class="pagination-controls">
+          <label style="font-size:0.75rem; color:var(--text-muted);">Baris:</label>
+          <select id="pageSize" class="page-size-select" onchange="changePageSize()">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+          </select>
+          <button class="page-btn" id="btnPrev" onclick="prevPage()">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="page-numbers" id="pageNumbers"></div>
+          <button class="page-btn" id="btnNext" onclick="nextPage()">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah/Edit Jurnal -->
+  <div class="modal-overlay" id="modalJurnal">
+    <div class="modal-card">
+      <h2 id="modalTitle"><i class="fas fa-plus"></i> Tambah Jurnal</h2>
+
+      <label class="form-label" for="inputKelasModal">Kelas <span class="req">*</span></label>
+      <select id="inputKelasModal" class="form-input" onchange="onModalKelasChange()">
+        <option value="">-- Pilih Kelas --</option>
+      </select>
+
+      <label class="form-label" for="inputSiswaModal">Siswa</label>
+      <select id="inputSiswaModal" class="form-input">
+        <option value="">-- Umum (tidak spesifik siswa) --</option>
+      </select>
+      <p style="font-size:0.72rem; color:var(--text-muted); margin-top:-0.4rem; margin-bottom:0.8rem; padding-left:4px;">
+        Kosongkan jika jurnal bersifat umum untuk kelas.
+      </p>
+
+      <div class="form-row-2">
+        <div>
+          <label class="form-label" for="inputTanggalModal">Tanggal <span class="req">*</span></label>
+          <input type="date" id="inputTanggalModal" class="form-input">
+        </div>
+        <div>
+          <label class="form-label" for="inputKategoriModal">Kategori <span class="req">*</span></label>
+          <select id="inputKategoriModal" class="form-input">
+            <option value="akademik">Akademik</option>
+            <option value="perilaku">Perilaku</option>
+            <option value="kesehatan">Kesehatan</option>
+            <option value="keluarga">Keluarga</option>
+            <option value="prestasi">Prestasi</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="form-label" for="inputJudulModal">Judul <span class="req">*</span></label>
+      <input type="text" id="inputJudulModal" class="form-input" placeholder="Ringkasan singkat kejadian" maxlength="150">
+
+      <label class="form-label" for="inputDeskripsiModal">Deskripsi <span class="req">*</span></label>
+      <textarea id="inputDeskripsiModal" class="form-textarea" placeholder="Ceritakan detail kejadian, kasus, atau hal penting..." maxlength="2000"></textarea>
+
+      <label class="form-label" for="inputTindakModal">Tindak Lanjut</label>
+      <textarea id="inputTindakModal" class="form-textarea" placeholder="Apa tindakan/solusi yang sudah/akan dilakukan?" maxlength="1000" style="min-height:60px;"></textarea>
+
+      <label class="checkbox-wrap">
+        <input type="checkbox" id="inputPrivateModal">
+        <label for="inputPrivateModal">
+          <strong>Jurnal privat</strong> — hanya bisa dilihat oleh Anda (wali kelas pembuat) dan operator.
+        </label>
+      </label>
+
+      <div id="modalError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeJurnalModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveJurnal" onclick="saveJurnal()">
+          <i class="fas fa-save"></i> Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus -->
+  <div class="modal-overlay" id="modalDelete">
+    <div class="modal-card">
+      <h2 style="color:var(--danger);"><i class="fas fa-trash"></i> Hapus Jurnal?</h2>
+      <p style="font-size:0.85rem; color:var(--text); margin-bottom:1rem;">
+        Anda yakin ingin menghapus jurnal <strong id="deleteJurnalJudul">-</strong>?
+        Tindakan ini tidak dapat dibatalkan.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+        let currentUser = null;
+    let homeroomClasses = [];
+    let allStudents = [];       // [{ ...profile, class_id, class_name }]
+    let allJurnal = [];         // semua jurnal di kelas walian
+    let filteredStudents = [];  // setelah filter
+    let jurnalByStudent = {};   // { student_id: [jurnal, ...] }
+    let expandedStudentId = null;
+    let editingId = null;
+    let deletingId = null;
+    let currentPage = 1;
+    let pageSize = 25;
+
+    const KATEGORI_LABELS = {
+      akademik: 'Akademik',
+      perilaku: 'Perilaku',
+      kesehatan: 'Kesehatan',
+      keluarga: 'Keluarga',
+      prestasi: 'Prestasi',
+      lainnya: 'Lainnya'
+    };
+
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('wali_kelas');
+      if (!currentUser) return;
+
+      await loadHomeroomClasses();
+      await loadStudentsAndJurnal();
+    })();
+
+    /* ============================================
+       LOAD DATA
+       ============================================ */
+    async function loadHomeroomClasses() {
+      try {
+        homeroomClasses = await getMyHomeroomClasses(currentUser.id);
+      } catch (err) {
+        console.error('Gagal load kelas:', err);
+        homeroomClasses = [];
+      }
+
+      const filterSel = document.getElementById('filterKelas');
+      const modalSel = document.getElementById('inputKelasModal');
+
+      filterSel.innerHTML = '<option value="">Semua Kelas</option>';
+      modalSel.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+
+      if (homeroomClasses.length === 0) {
+        document.getElementById('tableBody').innerHTML = `
+          <tr><td colspan="6" class="empty-row">
+            <span class="emoji">🏫</span>
+            Anda belum ditugaskan sebagai wali kelas.<br>
+            Hubungi operator sekolah.
+          </td></tr>`;
+        document.getElementById('paginationBar').style.display = 'none';
+        return;
+      }
+
+      homeroomClasses.forEach(c => {
+        const label = c.class_name + (c.grade ? ' (' + c.grade + ')' : '');
+
+        const opt1 = document.createElement('option');
+        opt1.value = c.class_id;
+        opt1.textContent = label;
+        filterSel.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = c.class_id;
+        opt2.textContent = label;
+        modalSel.appendChild(opt2);
+      });
+    }
+
+    async function loadStudentsAndJurnal() {
+      if (homeroomClasses.length === 0) return;
+
+      document.getElementById('tableBody').innerHTML =
+        '<tr><td colspan="6" class="empty-row"><div class="spinner"></div>Memuat data...</td></tr>';
+
+      try {
+        const client = initSupabase();
+
+        // 1. Ambil semua siswa per kelas walian
+        allStudents = [];
+        for (const c of homeroomClasses) {
+          try {
+            const enrollments = await getStudentsInClass(c.class_id);
+            (enrollments || []).forEach(e => {
+              if (e.profiles) {
+                allStudents.push({
+                  ...e.profiles,
+                  class_id: c.class_id,
+                  class_name: c.class_name
+                });
+              }
+            });
+          } catch (err) {
+            console.warn('Load siswa kelas ' + c.class_id + ':', err);
+          }
+        }
+
+        // 2. Ambil semua jurnal di kelas walian
+        const classIds = homeroomClasses.map(c => c.class_id);
+        const { data: jurnalData, error } = await client
+          .from('jurnal_wali_kelas')
+          .select(`
+            id, student_id, class_id, tanggal, kategori, judul,
+            deskripsi, tindak_lanjut, is_private, recorded_by,
+            created_at, updated_at
+          `)
+          .in('class_id', classIds)
+          .order('tanggal', { ascending: false })
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        allJurnal = jurnalData || [];
+
+        // 3. Group jurnal per siswa
+        jurnalByStudent = {};
+        allJurnal.forEach(j => {
+          if (!j.student_id) return;
+          if (!jurnalByStudent[j.student_id]) jurnalByStudent[j.student_id] = [];
+          jurnalByStudent[j.student_id].push(j);
+        });
+
+        applyFilter();
+      } catch (err) {
+        console.error('Load data error:', err);
+        document.getElementById('tableBody').innerHTML =
+          '<tr><td colspan="6" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + escapeHtml(err.message) + '</td></tr>';
+      }
+    }
+
+    /* ============================================
+       FILTER
+       ============================================ */
+    function onKelasChange() {
+      applyFilter();
+    }
+
+    function applyFilter() {
+      const kelasVal = document.getElementById('filterKelas').value;
+      const kategoriVal = document.getElementById('filterKategori').value;
+      const keyword = (document.getElementById('filterSiswa').value || '').toLowerCase().trim();
+      const bulanVal = document.getElementById('filterBulan').value;
+
+      // Filter jurnal dulu (untuk hitung jumlah per siswa sesuai filter)
+      let filteredJurnal = allJurnal;
+
+      if (kelasVal) filteredJurnal = filteredJurnal.filter(j => String(j.class_id) === String(kelasVal));
+      if (kategoriVal) filteredJurnal = filteredJurnal.filter(j => j.kategori === kategoriVal);
+      if (bulanVal) filteredJurnal = filteredJurnal.filter(j => j.tanggal && j.tanggal.startsWith(bulanVal));
+
+      // Rebuild jurnalByStudent sesuai filter
+      const filteredByStudent = {};
+      filteredJurnal.forEach(j => {
+        if (!j.student_id) return;
+        if (!filteredByStudent[j.student_id]) filteredByStudent[j.student_id] = [];
+        filteredByStudent[j.student_id].push(j);
+      });
+
+      // Filter siswa
+      let students = allStudents;
+      if (kelasVal) students = students.filter(s => String(s.class_id) === String(kelasVal));
+      if (keyword) {
+        students = students.filter(s =>
+          (s.name || '').toLowerCase().includes(keyword) ||
+          (s.nisn || '').toLowerCase().includes(keyword)
+        );
+      }
+
+      // Kalau ada filter kategori/bulan, sembunyikan siswa tanpa jurnal
+      if (kategoriVal || bulanVal) {
+        students = students.filter(s => filteredByStudent[s.id] && filteredByStudent[s.id].length > 0);
+      }
+
+      // Sort by name
+      students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+      // Simpan untuk dipakai di render
+      filteredStudents = students;
+      window._filteredByStudent = filteredByStudent;
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    function resetFilter() {
+      document.getElementById('filterKelas').value = '';
+      document.getElementById('filterKategori').value = '';
+      document.getElementById('filterSiswa').value = '';
+      document.getElementById('filterBulan').value = '';
+      applyFilter();
+    }
+
+    /* ============================================
+       RENDER TABEL
+       ============================================ */
+    function renderTable() {
+      const totalJurnalFiltered = Object.values(window._filteredByStudent || {})
+        .reduce((sum, arr) => sum + arr.length, 0);
+
+      document.getElementById('totalSiswa').textContent = allStudents.length;
+      document.getElementById('shownCount').textContent = filteredStudents.length;
+      document.getElementById('totalJurnal').textContent = totalJurnalFiltered;
+
+      const tbody = document.getElementById('tableBody');
+
+      if (filteredStudents.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="6" class="empty-row">
+            <span class="emoji">📓</span>
+            ${allStudents.length === 0
+              ? 'Belum ada siswa di kelas walian Anda.'
+              : 'Tidak ada siswa yang cocok dengan filter.'}
+          </td></tr>`;
+        return;
+      }
+
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredStudents.length);
+      const pageData = filteredStudents.slice(startIdx, endIdx);
+
+      let html = '';
+
+      pageData.forEach((s, i) => {
+        const jurnalList = (window._filteredByStudent || {})[s.id] || [];
+        const count = jurnalList.length;
+        const isExpanded = expandedStudentId === s.id;
+
+        // Jurnal terakhir
+        const last = jurnalList[0];
+        const lastInfo = last
+          ? `<div style="font-size:0.75rem;color:var(--text-muted);">
+               <i class="fas fa-calendar" style="color:var(--primary);"></i>
+               ${formatTanggalIndo(last.tanggal)}
+               <br>
+               <span style="color:var(--text-secondary);">${escapeHtml(truncate(last.judul, 50))}</span>
+             </div>`
+          : `<span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">Belum ada jurnal</span>`;
+
+        html += `
+          <tr class="${isExpanded ? 'expanded' : ''}" onclick="toggleExpand('${s.id}')">
+            <td>${startIdx + i + 1}</td>
+            <td class="nama-siswa">${escapeHtml(s.name)}</td>
+            <td class="nisn-teks">${s.nisn ? escapeHtml(s.nisn) : '-'}</td>
+            <td style="text-align:center;">
+              <span class="count-badge ${count === 0 ? 'zero' : ''}">${count}</span>
+            </td>
+            <td>${lastInfo}</td>
+            <td style="text-align:center;">
+              <button class="btn-icon" title="${isExpanded ? 'Tutup' : 'Lihat Jurnal'}" onclick="event.stopPropagation(); toggleExpand('${s.id}')">
+                <i class="fas fa-${isExpanded ? 'chevron-up' : 'chevron-down'}"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+
+        if (isExpanded) {
+          html += renderExpandRow(s, jurnalList);
+        }
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    function renderExpandRow(student, jurnalList) {
+      let content;
+
+      if (jurnalList.length === 0) {
+        content = `
+          <div class="detail-expand">
+            <div class="detail-expand-title">
+              <i class="fas fa-book-open"></i> Jurnal ${escapeHtml(student.name)}
+            </div>
+            <div style="text-align:center; padding:1.5rem; color:var(--text-muted); font-size:0.85rem; font-style:italic;">
+              Belum ada jurnal untuk siswa ini.
+            </div>
+            <div style="text-align:center; margin-top:0.5rem;">
+              <button class="btn-primary" style="padding:0.4rem 0.9rem; font-size:0.78rem;" onclick="event.stopPropagation(); openJurnalForStudent('${student.id}','${student.class_id}')">
+                <i class="fas fa-plus"></i> Tambah Jurnal Pertama
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        content = `
+          <div class="detail-expand">
+            <div class="detail-expand-title">
+              <i class="fas fa-book-open"></i> Semua Jurnal ${escapeHtml(student.name)} (${jurnalList.length})
+            </div>
+            <div class="detail-jurnal-list">
+              ${jurnalList.map(j => renderJurnalItem(j)).join('')}
+            </div>
+            <div style="text-align:right; margin-top:0.7rem;">
+              <button class="btn-primary" style="padding:0.4rem 0.9rem; font-size:0.78rem;" onclick="event.stopPropagation(); openJurnalForStudent('${student.id}','${student.class_id}')">
+                <i class="fas fa-plus"></i> Tambah Jurnal Baru
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      return `<tr class="detail-row"><td colspan="6">${content}</td></tr>`;
+    }
+
+    function renderJurnalItem(j) {
+      const isOwner = String(j.recorded_by) === String(currentUser.id);
+      const kategoriLabel = KATEGORI_LABELS[j.kategori] || j.kategori;
+
+      return `
+        <div class="detail-jurnal-item">
+          <div class="detail-jurnal-content">
+            <div class="detail-jurnal-head">
+              <span class="detail-jurnal-date"><i class="fas fa-calendar"></i> ${formatTanggalIndo(j.tanggal)}</span>
+              <span class="badge badge-kategori ${escapeHtml(j.kategori)}">${escapeHtml(kategoriLabel)}</span>
+              ${j.is_private ? '<span class="badge badge-private"><i class="fas fa-lock"></i> Privat</span>' : ''}
+            </div>
+            <div class="detail-jurnal-judul">${escapeHtml(j.judul)}</div>
+            <div class="detail-jurnal-desc">${escapeHtml(j.deskripsi)}</div>
+            ${j.tindak_lanjut ? `<div class="detail-jurnal-tindak"><strong>Tindak lanjut:</strong> ${escapeHtml(j.tindak_lanjut)}</div>` : ''}
+          </div>
+          ${isOwner ? `
+            <div class="detail-jurnal-actions">
+              <button class="btn-icon-sm" title="Edit" onclick="event.stopPropagation(); openEditJurnal('${j.id}')">
+                <i class="fas fa-pen"></i>
+              </button>
+              <button class="btn-icon-sm danger" title="Hapus" onclick="event.stopPropagation(); openDelete('${j.id}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function toggleExpand(studentId) {
+      expandedStudentId = (expandedStudentId === studentId) ? null : studentId;
+      renderTable();
+    }
+
+    /* ============================================
+       PAGINATION
+       ============================================ */
+    function renderPagination() {
+      const total = filteredStudents.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIdx = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const endIdx = Math.min(currentPage * pageSize, total);
+
+      document.getElementById('pageStart').textContent = startIdx;
+      document.getElementById('pageEnd').textContent = endIdx;
+      document.getElementById('pageTotal').textContent = total;
+
+      const bar = document.getElementById('paginationBar');
+      if (total === 0) { bar.style.display = 'none'; return; }
+      bar.style.display = 'flex';
+
+      document.getElementById('btnPrev').disabled = currentPage <= 1;
+      document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+      const numbersDiv = document.getElementById('pageNumbers');
+      numbersDiv.innerHTML = '';
+
+      const maxButtons = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+      if (endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => goToPage(i);
+        numbersDiv.appendChild(btn);
+      }
+    }
+
+    function goToPage(page) { currentPage = page; renderTable(); renderPagination(); }
+    function prevPage() { if (currentPage > 1) goToPage(currentPage - 1); }
+    function nextPage() {
+      const totalPages = Math.ceil(filteredStudents.length / pageSize);
+      if (currentPage < totalPages) goToPage(currentPage + 1);
+    }
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('pageSize').value);
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    /* ============================================
+       MODAL TAMBAH/EDIT JURNAL
+       ============================================ */
+    function openJurnalModal() {
+      editingId = null;
+      document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Tambah Jurnal';
+      document.getElementById('inputKelasModal').value = '';
+      document.getElementById('inputSiswaModal').innerHTML = '<option value="">-- Umum (tidak spesifik siswa) --</option>';
+      document.getElementById('inputTanggalModal').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('inputKategoriModal').value = 'akademik';
+      document.getElementById('inputJudulModal').value = '';
+      document.getElementById('inputDeskripsiModal').value = '';
+      document.getElementById('inputTindakModal').value = '';
+      document.getElementById('inputPrivateModal').checked = false;
+      document.getElementById('modalError').classList.add('hidden');
+      document.getElementById('btnSaveJurnal').disabled = false;
+      document.getElementById('btnSaveJurnal').innerHTML = '<i class="fas fa-save"></i> Simpan';
+
+      document.getElementById('modalJurnal').classList.add('active');
+      setTimeout(() => document.getElementById('inputKelasModal').focus(), 100);
+    }
+
+    function openJurnalForStudent(studentId, classId) {
+      openJurnalModal();
+      setTimeout(() => {
+        document.getElementById('inputKelasModal').value = classId;
+        onModalKelasChange();
+        document.getElementById('inputSiswaModal').value = studentId;
+      }, 200);
+    }
+
+    function openEditJurnal(id) {
+      const j = allJurnal.find(x => String(x.id) === String(id));
+      if (!j) return;
+      if (String(j.recorded_by) !== String(currentUser.id)) {
+        showToast('Anda hanya bisa edit jurnal yang Anda buat sendiri.', 'error');
+        return;
+      }
+      editingId = id;
+      document.getElementById('modalTitle').innerHTML = '<i class="fas fa-pen"></i> Edit Jurnal';
+      document.getElementById('inputKelasModal').value = j.class_id;
+      onModalKelasChange();
+      document.getElementById('inputSiswaModal').value = j.student_id || '';
+      document.getElementById('inputTanggalModal').value = j.tanggal || '';
+      document.getElementById('inputKategoriModal').value = j.kategori || 'akademik';
+      document.getElementById('inputJudulModal').value = j.judul || '';
+      document.getElementById('inputDeskripsiModal').value = j.deskripsi || '';
+      document.getElementById('inputTindakModal').value = j.tindak_lanjut || '';
+      document.getElementById('inputPrivateModal').checked = !!j.is_private;
+      document.getElementById('modalError').classList.add('hidden');
+      document.getElementById('btnSaveJurnal').disabled = false;
+      document.getElementById('btnSaveJurnal').innerHTML = '<i class="fas fa-save"></i> Simpan';
+
+      document.getElementById('modalJurnal').classList.add('active');
+    }
+
+    function onModalKelasChange() {
+      const kelasId = document.getElementById('inputKelasModal').value;
+      const siswaSel = document.getElementById('inputSiswaModal');
+      siswaSel.innerHTML = '<option value="">-- Umum (tidak spesifik siswa) --</option>';
+      if (!kelasId) return;
+      const students = allStudents.filter(s => String(s.class_id) === String(kelasId));
+      students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      students.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        siswaSel.appendChild(opt);
+      });
+    }
+
+    function closeJurnalModal() {
+      document.getElementById('modalJurnal').classList.remove('active');
+      editingId = null;
+    }
+
+    async function saveJurnal() {
+      const kelasId = document.getElementById('inputKelasModal').value;
+      const siswaId = document.getElementById('inputSiswaModal').value || null;
+      const tanggal = document.getElementById('inputTanggalModal').value;
+      const kategori = document.getElementById('inputKategoriModal').value;
+      const judul = document.getElementById('inputJudulModal').value.trim();
+      const deskripsi = document.getElementById('inputDeskripsiModal').value.trim();
+      const tindak = document.getElementById('inputTindakModal').value.trim() || null;
+      const isPrivate = document.getElementById('inputPrivateModal').checked;
+
+      const errBox = document.getElementById('modalError');
+      const btn = document.getElementById('btnSaveJurnal');
+
+      if (!kelasId) { errBox.textContent = 'Pilih kelas.'; errBox.classList.remove('hidden'); return; }
+      if (!tanggal) { errBox.textContent = 'Isi tanggal.'; errBox.classList.remove('hidden'); return; }
+      if (!judul) { errBox.textContent = 'Isi judul jurnal.'; errBox.classList.remove('hidden'); return; }
+      if (!deskripsi) { errBox.textContent = 'Isi deskripsi.'; errBox.classList.remove('hidden'); return; }
+
+      errBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        const client = initSupabase();
+        const payload = {
+          student_id: siswaId,
+          class_id: parseInt(kelasId),
+          school_id: currentUser.school_id,
+          tanggal,
+          kategori,
+          judul,
+          deskripsi,
+          tindak_lanjut: tindak,
+          is_private: isPrivate
+        };
+
+        if (editingId) {
+          const { error } = await client
+            .from('jurnal_wali_kelas')
+            .update(payload)
+            .eq('id', editingId);
+          if (error) throw error;
+          showToast('✅ Jurnal berhasil diperbarui.', 'success');
+        } else {
+          payload.recorded_by = currentUser.id;
+          const { error } = await client
+            .from('jurnal_wali_kelas')
+            .insert([payload]);
+          if (error) throw error;
+          showToast('✅ Jurnal berhasil ditambahkan.', 'success');
+          // Auto-expand siswa yang baru ditambahi jurnal
+          if (siswaId) expandedStudentId = siswaId;
+        }
+
+        closeJurnalModal();
+        await loadStudentsAndJurnal();
+      } catch (err) {
+        console.error('Save jurnal error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + (err.message || 'Unknown error');
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+      }
+    }
+
+    /* ============================================
+       HAPUS
+       ============================================ */
+    function openDelete(id) {
+      const j = allJurnal.find(x => String(x.id) === String(id));
+      if (!j) return;
+      if (String(j.recorded_by) !== String(currentUser.id)) {
+        showToast('Anda hanya bisa hapus jurnal yang Anda buat sendiri.', 'error');
+        return;
+      }
+      deletingId = id;
+      document.getElementById('deleteJurnalJudul').textContent = j.judul;
+      document.getElementById('modalDelete').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('modalDelete').classList.remove('active');
+      deletingId = null;
+    }
+
+    async function confirmDelete() {
+      if (!deletingId) return;
+      const btn = document.getElementById('btnConfirmDelete');
+      btn.disabled = true;
+      btn.textContent = 'Menghapus...';
+
+      try {
+        const client = initSupabase();
+        const { error } = await client
+          .from('jurnal_wali_kelas')
+          .delete()
+          .eq('id', deletingId);
+        if (error) throw error;
+
+        closeDeleteModal();
+        showToast('🗑️ Jurnal berhasil dihapus.', 'success');
+        await loadStudentsAndJurnal();
+      } catch (err) {
+        console.error('Delete error:', err);
+        showToast('Gagal menghapus: ' + (err.message || 'Unknown error'), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus';
+      }
+    }
+
+    /* ============================================
+       UTILS
+       ============================================ */
+    function formatTanggalIndo(tgl) {
+      if (!tgl) return '-';
+      try {
+        const d = new Date(tgl + 'T00:00:00');
+        if (isNaN(d.getTime())) return tgl;
+        return d.toLocaleDateString('id-ID', {
+          day: 'numeric', month: 'short', year: 'numeric'
+        });
+      } catch { return tgl; }
+    }
+
+    function truncate(str, len) {
+      if (!str) return '';
+      if (str.length <= len) return str;
+      return str.slice(0, len) + '...';
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeJurnalModal();
+        closeDeleteModal();
+      }
+    });
+  </script>
+</body>
+</html>

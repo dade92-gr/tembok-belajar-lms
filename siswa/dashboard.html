@@ -12,581 +12,106 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scrollbar-gutter: stable; }
-
     :root {
-      --header-height: 68px;
-      --sidebar-width: 72px;
-      --sidebar-width-expanded: 240px;
-
-      --header-bg: #1e293b;
-      --header-bg-dark: #0f172a;
-      --header-text: #ffffff;
-      --header-text-muted: #94a3b8;
-
-      --primary: #3b82f6;
-      --primary-dark: #2563eb;
-      --primary-light: #dbeafe;
-      --primary-lighter: #eff6ff;
-
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-
-      --bg: #f1f5f9;
-      --bg-soft: #f8fafc;
-      --surface: #ffffff;
-      --text: #0f172a;
-      --text-secondary: #334155;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-
-      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
-
-      --radius: 12px;
-      --radius-lg: 16px;
-      --transition: all 0.2s ease;
+      --header-height: 68px; --sidebar-width: 72px; --sidebar-width-expanded: 240px;
+      --header-bg: #1e293b; --header-bg-dark: #0f172a; --header-text: #ffffff; --header-text-muted: #94a3b8;
+      --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --siswa-accent: #f59e0b;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff; --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b; --border: #e2e8f0;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04); --shadow-sm: 0 1px 3px rgba(0,0,0,0.06); --shadow-md: 0 10px 15px rgba(0,0,0,0.06);
+      --radius: 12px; --radius-lg: 16px; --transition: all 0.2s ease;
     }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; overflow: hidden; }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-      overflow: hidden;
-    }
-
-    /* ========== HEADER ========== */
-    .app-header {
-      background: var(--header-bg);
-      padding: 0 1.5rem 0 calc(var(--sidebar-width) + 1rem);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: var(--header-height);
-      z-index: 100;
-      box-shadow: 0 2px 8px rgba(15,23,42,0.15);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      transition: padding-left 0.25s ease;
-    }
-
-    body.sidebar-hover .app-header {
-      padding-left: calc(var(--sidebar-width-expanded) + 1rem);
-    }
-
+    /* HEADER */
+    .app-header { background: var(--header-bg); padding: 0 1.5rem 0 calc(var(--sidebar-width) + 1rem); display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.06); transition: padding-left 0.25s ease; }
+    body.sidebar-hover .app-header { padding-left: calc(var(--sidebar-width-expanded) + 1rem); }
     .app-brand { display: flex; align-items: center; gap: 12px; }
-    .app-brand img { height: 44px; width: auto; object-fit: contain; }
+    .app-brand img { height: 44px; width: auto; }
     .app-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-    .app-brand-title {
-      font-size: 1.05rem; font-weight: 800; color: var(--header-text);
-      letter-spacing: -0.4px;
-    }
-    .app-brand-role {
-      font-size: 0.65rem; font-weight: 600; color: #60a5fa;
-      text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;
-    }
-
+    .app-brand-title { font-size: 1.05rem; font-weight: 800; color: var(--header-text); }
+    .app-brand-role { font-size: 0.65rem; font-weight: 600; color: #fcd34d; text-transform: uppercase; letter-spacing: 1px; }
     .app-user { display: flex; align-items: center; gap: 12px; }
-    .app-school {
-      display: flex; align-items: center; gap: 8px;
-      padding: 0.4rem 0.9rem; background: rgba(255,255,255,0.1);
-      border-radius: 999px; font-size: 0.75rem; font-weight: 600;
-      color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1);
-    }
-    .app-school i { font-size: 0.85rem; color: #60a5fa; }
-    .app-user-info {
-      display: flex; align-items: center; gap: 10px;
-      padding: 0.3rem 0.6rem 0.3rem 0.3rem;
-      border-radius: 999px; transition: var(--transition);
-    }
-    .app-user-info:hover { background: rgba(255,255,255,0.08); }
-    .avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: linear-gradient(135deg, #64748b 0%, #334155 100%);
-      color: white; display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.95rem; flex-shrink: 0;
-      border: 2px solid rgba(255,255,255,0.15);
-    }
-    .app-user-text { display: flex; flex-direction: column; line-height: 1.25; }
+    .app-school { display: flex; align-items: center; gap: 8px; padding: 0.4rem 0.9rem; background: rgba(255,255,255,0.1); border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: #e2e8f0; }
+    .app-user-info { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; }
     .app-user-name { font-size: 0.82rem; font-weight: 600; color: var(--header-text); }
     .app-user-email { font-size: 0.68rem; color: var(--header-text-muted); }
 
-    .btn-logout {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.15);
-      color: #e2e8f0;
-      padding: 0.45rem 0.9rem;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 0.75rem;
-      font-weight: 600;
-      font-family: inherit;
+    .btn-logout, .btn-switch-role {
+      padding: 0.45rem 0.9rem; border-radius: 999px; cursor: pointer;
+      font-size: 0.75rem; font-weight: 600; border: none; font-family: inherit;
+      display: inline-flex; align-items: center; gap: 6px;
       transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
     }
-    .btn-logout:hover {
-      background: rgba(239,68,68,0.2);
-      border-color: rgba(239,68,68,0.4);
-      color: #fca5a5;
-    }
+    .btn-logout { background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); }
+    .btn-logout:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+    .btn-switch-role { background: rgba(245,158,11,0.2); color: #fde68a; border: 1px solid rgba(245,158,11,0.4); display: none; }
+    .btn-switch-role:hover { background: rgba(245,158,11,0.35); border-color: rgba(245,158,11,0.6); color: white; }
 
-    /* ========== SIDEBAR ========== */
-    .app-sidebar {
-      position: fixed;
-      top: var(--header-height);
-      left: 0;
-      bottom: 0;
-      width: var(--sidebar-width);
-      background: var(--header-bg-dark);
-      display: flex;
-      flex-direction: column;
-      padding: 0.8rem 0;
-      z-index: 110;
-      border-right: 1px solid rgba(255,255,255,0.05);
-      overflow-y: auto;
-      overflow-x: hidden;
-      transition: width 0.25s ease, box-shadow 0.25s ease;
-    }
-    .app-sidebar:hover {
-      width: var(--sidebar-width-expanded);
-      box-shadow: 4px 0 20px rgba(0,0,0,0.2);
-    }
-    .app-sidebar::-webkit-scrollbar { width: 0; }
-    .app-sidebar { scrollbar-width: none; }
-
-    .sidebar-item {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      height: 44px;
-      margin: 2px 10px;
-      padding: 0 12px;
-      border-radius: 8px;
-      color: #94a3b8;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease;
-      flex-shrink: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-decoration: none;
-    }
+    /* SIDEBAR */
+    .app-sidebar { position: fixed; top: var(--header-height); left: 0; bottom: 0; width: var(--sidebar-width); background: var(--header-bg-dark); display: flex; flex-direction: column; padding: 0.8rem 0; z-index: 110; overflow-y: auto; transition: width 0.25s ease; }
+    .app-sidebar:hover { width: var(--sidebar-width-expanded); box-shadow: 4px 0 20px rgba(0,0,0,0.2); }
+    .sidebar-item { position: relative; display: flex; align-items: center; gap: 14px; height: 44px; margin: 2px 10px; padding: 0 12px; border-radius: 8px; color: #94a3b8; font-size: 1rem; cursor: pointer; text-decoration: none; transition: background 0.15s, color 0.15s; }
     .sidebar-item:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; }
-    .sidebar-item.active { background: rgba(59,130,246,0.15); color: #60a5fa; }
-    .sidebar-item.active::before {
-      content: '';
-      position: absolute;
-      left: -10px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 20px;
-      background: #60a5fa;
-      border-radius: 0 3px 3px 0;
-    }
-    .sidebar-item i {
-      width: 22px;
-      text-align: center;
-      flex-shrink: 0;
-      font-size: 1.05rem;
-    }
-    .sidebar-item .label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      white-space: nowrap;
-      opacity: 0;
-      transition: opacity 0.15s ease;
-      pointer-events: none;
-    }
-    .app-sidebar:hover .sidebar-item .label {
-      opacity: 1;
-      transition-delay: 0.05s;
-    }
-    .sidebar-divider {
-      height: 1px;
-      background: rgba(255,255,255,0.1);
-      margin: 0.5rem 10px;
-      flex-shrink: 0;
-    }
+    .sidebar-item.active { background: rgba(245,158,11,0.15); color: #fcd34d; }
+    .sidebar-item i { width: 22px; text-align: center; font-size: 1.05rem; }
+    .sidebar-item .label { font-size: 0.85rem; font-weight: 600; opacity: 0; transition: opacity 0.15s; pointer-events: none; white-space: nowrap; }
+    .app-sidebar:hover .sidebar-item .label { opacity: 1; }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 0.5rem 10px; }
     .sidebar-item.logout { margin-top: auto; }
     .sidebar-item.logout:hover { background: rgba(239,68,68,0.2); color: #fca5a5; }
 
-    /* ========== MAIN ========== */
-    .app-main {
-      margin-top: var(--header-height);
-      margin-left: var(--sidebar-width);
-      height: calc(100vh - var(--header-height));
-      overflow-y: auto;
-      overflow-x: hidden;
-      transition: margin-left 0.25s ease;
-      position: relative;
-      background: var(--bg);
-    }
-    .app-main::-webkit-scrollbar { width: 8px; }
-    .app-main::-webkit-scrollbar-track { background: var(--bg); }
-    .app-main::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    .app-main::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-    .content-frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-      background: var(--bg);
-    }
+    /* MAIN */
+    .app-main { margin-top: var(--header-height); margin-left: var(--sidebar-width); height: calc(100vh - var(--header-height)); overflow-y: auto; background: var(--bg); position: relative; transition: margin-left 0.25s ease; }
+    .content-frame { width: 100%; height: 100%; border: none; display: block; background: var(--bg); }
     .content-frame.hidden { display: none !important; visibility: hidden !important; }
+    .content-home { padding: 1.5rem; max-width: 1280px; margin: 0 auto; }
 
-    .content-home {
-      padding: 1.5rem 1.5rem 3rem;
-      max-width: 1280px;
-      margin: 0 auto;
-    }
+    /* HERO & STATS */
+    .dash-hero { background: var(--surface); border-radius: var(--radius-lg); padding: 1.8rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); border-left: 4px solid var(--siswa-accent); }
+    .dash-hero h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.35rem; }
+    .dash-hero-sub { font-size: 0.9rem; color: var(--text-muted); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--surface); border-radius: var(--radius); padding: 1.3rem; border: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
+    .stat-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; } .stat-icon.purple { background: #f3e8ff; color: #9333ea; } .stat-icon.orange { background: #fed7aa; color: #ea580c; } .stat-icon.green { background: #d1fae5; color: #059669; }
+    .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1.1; }
+    .stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
 
-    /* ========== HERO ========== */
-    .dash-hero {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      padding: 1.8rem 2rem;
-      color: var(--text);
-      margin-bottom: 1.5rem;
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border);
-    }
-    .dash-hero::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 4px; height: 100%;
-      background: linear-gradient(to bottom, var(--primary), var(--primary-light));
-    }
-    .dash-hero::after {
-      content: '';
-      position: absolute;
-      top: -100px; right: -100px;
-      width: 300px; height: 300px;
-      background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-    }
-    .dash-hero-content { position: relative; z-index: 1; padding-left: 0.8rem; }
-    .dash-hero-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--primary-lighter);
-      color: var(--primary-dark);
-      padding: 0.3rem 0.8rem;
-      border-radius: 999px;
-      font-size: 0.68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 0.8rem;
-      border: 1px solid var(--primary-light);
-    }
-    .dash-hero-eyebrow i { color: var(--primary); }
-    .dash-hero h1 {
-      font-size: 1.75rem;
-      font-weight: 800;
-      margin-bottom: 0.35rem;
-      letter-spacing: -0.5px;
-      line-height: 1.2;
-      color: var(--text);
-    }
-    .dash-hero-sub { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-    .dash-hero-school {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.82rem;
-      font-weight: 500;
-      color: var(--primary-dark);
-      margin-top: 0.6rem;
-      padding: 0.4rem 0.9rem;
-      background: var(--primary-lighter);
-      border-radius: 8px;
-      border: 1px solid var(--primary-light);
-    }
-    .dash-hero-school i { color: var(--primary); }
-
-    /* ========== STAT ========== */
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .stat-card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 1.3rem 1.4rem;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-xs);
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 4px; height: 100%;
-      background: var(--primary);
-      opacity: 0;
-      transition: var(--transition);
-    }
-    .stat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--primary);
-    }
-    .stat-card:hover::before { opacity: 1; }
-    .stat-icon {
-      width: 52px; height: 52px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      flex-shrink: 0;
-    }
-    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
-    .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
-    .stat-icon.green { background: #d1fae5; color: #059669; }
-    .stat-icon.orange { background: #fed7aa; color: #ea580c; }
-    .stat-info { flex: 1; min-width: 0; }
-    .stat-value {
-      font-size: 1.75rem;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.1;
-      letter-spacing: -0.5px;
-    }
-    .stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
-
-    /* ========== PANEL ========== */
-    .dash-panel {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      margin-bottom: 1.5rem;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-xs);
-      overflow: hidden;
-    }
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.1rem 1.4rem;
-      background: var(--bg-soft);
-      border-bottom: 2px solid var(--primary-light);
-      position: relative;
-    }
-    .panel-header::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 1rem;
-      bottom: 1rem;
-      width: 3px;
-      background: var(--primary);
-      border-radius: 0 3px 3px 0;
-    }
-    .panel-header > div { display: flex; flex-direction: column; padding-left: 0.6rem; }
-    .panel-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .panel-title i { color: var(--primary); font-size: 1rem; }
-    .panel-subtitle { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    /* PANEL */
+    .dash-panel { background: var(--surface); border-radius: var(--radius-lg); margin-bottom: 1.5rem; border: 1px solid var(--border); overflow: hidden; }
+    .panel-header { padding: 1.1rem 1.4rem; background: var(--bg-soft); border-bottom: 2px solid #fef3c7; }
+    .panel-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .panel-title i { color: var(--siswa-accent); }
     .panel-body { padding: 1.4rem; }
 
-    /* ========== QUICK MENU ========== */
-    .quick-menu {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-      gap: 0.9rem;
-    }
-    .quick-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.1rem 0.9rem;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 0.6rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .quick-item::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, var(--primary-lighter) 0%, transparent 100%);
-      opacity: 0;
-      transition: var(--transition);
-      pointer-events: none;
-    }
-    .quick-item:hover {
-      transform: translateY(-4px);
-      border-color: var(--primary);
-      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
-    }
-    .quick-item:hover::before { opacity: 1; }
-    .quick-icon-wrap {
-      width: 52px; height: 52px;
-      background: var(--bg-soft);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      position: relative;
-      z-index: 1;
-      transition: var(--transition);
-      color: var(--primary);
-      border: 1px solid var(--border);
-    }
-    .quick-item:hover .quick-icon-wrap {
-      background: white;
-      border-color: var(--primary-light);
-      transform: scale(1.08);
-    }
-    .quick-label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text);
-      position: relative;
-      z-index: 1;
-      line-height: 1.3;
-    }
+    /* QUICK MENU */
+    .quick-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.9rem; }
+    .quick-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 0.9rem; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; align-items: center; gap: 0.6rem; text-align: center; }
+    .quick-item:hover { transform: translateY(-4px); border-color: var(--siswa-accent); box-shadow: 0 8px 20px rgba(245,158,11,0.15); }
+    .quick-icon-wrap { width: 52px; height: 52px; background: var(--bg-soft); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--siswa-accent); border: 1px solid var(--border); }
+    .quick-label { font-size: 0.8rem; font-weight: 600; color: var(--text); }
 
-    /* ========== INFO ========== */
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-    .info-item {
-      padding: 1rem 1.2rem;
-      background: var(--bg-soft);
-      border-radius: 10px;
-      border-left: 3px solid var(--primary);
-      transition: var(--transition);
-    }
-    .info-item:hover {
-      background: var(--primary-lighter);
-      border-left-color: var(--primary-dark);
-      transform: translateX(2px);
-    }
-    .info-label {
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.3rem;
-    }
-    .info-value { font-size: 0.9rem; font-weight: 600; color: var(--text); }
-
-    /* ========== LOADING ========== */
-    .loading-box {
-      text-align: center;
-      padding: 4rem 1rem;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-    .spinner {
-      width: 40px; height: 40px;
-      margin: 0 auto 1rem;
-      border: 3px solid var(--primary-light);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
+    /* LOADING */
+    .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
+    .spinner { width: 40px; height: 40px; margin: 0 auto 1rem; border: 3px solid #fef3c7; border-top-color: var(--siswa-accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .hidden { display: none !important; }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .content-home > * { animation: fadeInUp 0.3s ease; }
-
-    .module-loading {
-      position: absolute;
-      inset: 0;
-      background: rgba(241, 245, 249, 0.95);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 1rem;
-      z-index: 50;
-      backdrop-filter: blur(2px);
-    }
+    .module-loading { position: absolute; inset: 0; background: rgba(241,245,249,0.95); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; z-index: 50; }
     .module-loading.active { display: flex; }
-    .module-loading p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
+    .module-loading p { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
 
-    /* ========== RESPONSIVE ========== */
     @media (max-width: 768px) {
-      :root {
-        --sidebar-width: 60px;
-        --sidebar-width-expanded: 200px;
-        --header-height: 60px;
-      }
-      .app-header { padding: 0 1rem 0 calc(var(--sidebar-width) + 0.5rem); }
-      .app-brand img { height: 32px; }
+      :root { --header-height: 60px; --sidebar-width: 60px; --sidebar-width-expanded: 200px; }
       .app-brand-title { font-size: 0.95rem; }
       .app-school { display: none; }
       .app-user-email { display: none; }
       .btn-logout span { display: none; }
-      .sidebar-item { height: 40px; margin: 2px 6px; padding: 0 8px; }
-      .sidebar-item i { font-size: 1rem; }
-      .content-home { padding: 0.8rem 1rem 2rem; }
-      .dash-hero { padding: 1.3rem; }
-      .dash-hero h1 { font-size: 1.35rem; }
-      .stat-grid { grid-template-columns: repeat(2, 1fr); }
-      .stat-icon { width: 42px; height: 42px; font-size: 1.15rem; }
-      .stat-value { font-size: 1.35rem; }
-      .quick-menu { grid-template-columns: repeat(2, 1fr); }
-      .quick-item { padding: 1rem 0.7rem; }
-      .quick-icon-wrap { width: 44px; height: 44px; font-size: 1.2rem; }
-      .quick-label { font-size: 0.75rem; }
-    }
-    @media (max-width: 420px) {
-      .stat-grid { grid-template-columns: 1fr; }
+      .btn-switch-role span { display: none; }
     }
   </style>
 </head>
 <body>
-
   <header class="app-header">
     <div class="app-brand">
       <img src="../assets/img/logo.png" alt="Tembok Belajar" onerror="this.style.display='none'">
@@ -596,143 +121,63 @@
       </div>
     </div>
     <div class="app-user">
-      <div class="app-school" id="schoolBadge">
-        <i class="fas fa-school"></i>
-        <span id="schoolName">-</span>
-      </div>
+      <div class="app-school" id="schoolBadge"><i class="fas fa-school"></i> <span id="schoolName">-</span></div>
       <div class="app-user-info">
         <div class="avatar" id="userAvatar">?</div>
-        <div class="app-user-text">
+        <div>
           <div class="app-user-name" id="userName">Memuat...</div>
           <div class="app-user-email" id="userEmail">-</div>
         </div>
       </div>
-      <button class="btn-logout" onclick="doLogout()">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Keluar</span>
+      <button class="btn-switch-role" id="btnSwitchRole" onclick="switchRole()">
+        <i class="fas fa-users-gear"></i> <span>Ganti Peran</span>
       </button>
+      <button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> <span>Keluar</span></button>
     </div>
   </header>
 
   <aside class="app-sidebar" id="appSidebar">
-    <div class="sidebar-item active" data-view="home" onclick="navigateTo('home')">
-      <i class="fas fa-home"></i>
-      <span class="label">Beranda</span>
-    </div>
+    <div class="sidebar-item active" data-view="home" onclick="navigateTo('home')"><i class="fas fa-home"></i><span class="label">Beranda</span></div>
     <div class="sidebar-divider"></div>
-
-    <div class="sidebar-item" data-view="mapel" onclick="navigateTo('mapel')">
-      <i class="fas fa-book"></i>
-      <span class="label">Mapel Saya</span>
-    </div>
-    <div class="sidebar-item" data-view="materi" onclick="navigateTo('materi')">
-      <i class="fas fa-file-alt"></i>
-      <span class="label">Materi Belajar</span>
-    </div>
-    <div class="sidebar-item" data-view="tugas" onclick="navigateTo('tugas')">
-      <i class="fas fa-tasks"></i>
-      <span class="label">Tugas & Kuis</span>
-    </div>
+    <div class="sidebar-item" data-view="mapel" onclick="navigateTo('mapel')"><i class="fas fa-book"></i><span class="label">Mapel Saya</span></div>
+    <div class="sidebar-item" data-view="unit" onclick="navigateTo('unit')"><i class="fas fa-layer-group"></i><span class="label">Unit Pembelajaran</span></div>
+    <div class="sidebar-item" data-view="tugas" onclick="navigateTo('tugas')"><i class="fas fa-tasks"></i><span class="label">Tugas & Kuis</span></div>
     <div class="sidebar-divider"></div>
-
-    <div class="sidebar-item" data-view="nilai" onclick="navigateTo('nilai')">
-      <i class="fas fa-star"></i>
-      <span class="label">Nilai Saya</span>
-    </div>
-    <div class="sidebar-item" data-view="progress" onclick="navigateTo('progress')">
-      <i class="fas fa-chart-line"></i>
-      <span class="label">Progress Belajar</span>
-    </div>
+    <div class="sidebar-item" data-view="nilai" onclick="navigateTo('nilai')"><i class="fas fa-star"></i><span class="label">Nilai Saya</span></div>
+    <div class="sidebar-item" data-view="progress" onclick="navigateTo('progress')"><i class="fas fa-chart-line"></i><span class="label">Progress & Jurnal</span></div>
     <div class="sidebar-divider"></div>
-
-    <div class="sidebar-item" data-view="forum" onclick="navigateTo('forum')">
-      <i class="fas fa-comments"></i>
-      <span class="label">Forum Diskusi</span>
-    </div>
-    <div class="sidebar-item" data-view="profil" onclick="navigateTo('profil')">
-      <i class="fas fa-user-cog"></i>
-      <span class="label">Profil</span>
-    </div>
+    <div class="sidebar-item" data-view="forum" onclick="navigateTo('forum')"><i class="fas fa-comments"></i><span class="label">Forum Diskusi</span></div>
+    <div class="sidebar-item" data-view="profil" onclick="navigateTo('profil')"><i class="fas fa-user-cog"></i><span class="label">Profil</span></div>
     <div class="sidebar-divider"></div>
-
-    <div class="sidebar-item logout" onclick="doLogout()">
-      <i class="fas fa-sign-out-alt"></i>
-      <span class="label">Keluar</span>
-    </div>
+    <div class="sidebar-item logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i><span class="label">Keluar</span></div>
   </aside>
 
   <main class="app-main" id="appMain">
+    <div class="module-loading" id="moduleLoading"><div class="spinner"></div><p>Memuat modul...</p></div>
 
-    <div class="module-loading" id="moduleLoading">
-      <div class="spinner"></div>
-      <p>Memuat modul...</p>
-    </div>
-
-    <div id="loading" class="loading-box">
-      <div class="spinner"></div>
-      <p>Memuat dashboard...</p>
-    </div>
+    <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat dashboard...</p></div>
 
     <div id="contentHome" class="content-home hidden">
       <div class="dash-hero">
-        <div class="dash-hero-content">
-          <div class="dash-hero-eyebrow">
-            <i class="fas fa-user-graduate"></i>
-            Panel Siswa
-          </div>
-          <h1 id="greeting">Halo!</h1>
-          <p class="dash-hero-sub" id="subGreeting"></p>
-          <div class="dash-hero-school" id="schoolInfo" style="display:none;">
-            <i class="fas fa-school"></i>
-            <span>-</span>
-          </div>
-        </div>
+        <h1 id="greeting">Halo!</h1>
+        <p class="dash-hero-sub" id="subGreeting"></p>
       </div>
-
       <div class="stat-grid" id="statsGrid"></div>
-
       <div class="dash-panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">
-              <i class="fas fa-bolt"></i>
-              Menu Cepat
-            </div>
-            <div class="panel-subtitle">Akses cepat semua modul belajar</div>
-          </div>
-        </div>
-        <div class="panel-body">
-          <div class="quick-menu" id="quickMenu"></div>
-        </div>
-      </div>
-
-      <div class="dash-panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">
-              <i class="fas fa-info-circle"></i>
-              Info Belajar
-            </div>
-            <div class="panel-subtitle">Ringkasan aktivitas belajar Anda</div>
-          </div>
-        </div>
-        <div class="panel-body">
-          <div class="info-grid" id="infoGrid"></div>
-        </div>
+        <div class="panel-header"><div class="panel-title"><i class="fas fa-bolt"></i> Menu Cepat</div></div>
+        <div class="panel-body"><div class="quick-menu" id="quickMenu"></div></div>
       </div>
     </div>
 
     <iframe id="contentFrame" class="content-frame hidden" src="about:blank"></iframe>
-
   </main>
 
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
-    // ===== VIEW URLS — 7 modul + profil =====
     const VIEW_URLS = {
       mapel: 'mapel.html?embed=1',
-      materi: 'materi.html?embed=1',
+      unit: 'mapel.html?embed=1',  // halaman unit juga pakai mapel.html
       tugas: 'tugas.html?embed=1',
       nilai: 'nilai.html?embed=1',
       progress: 'progress.html?embed=1',
@@ -745,6 +190,14 @@
     sidebar.addEventListener('mouseleave', () => document.body.classList.remove('sidebar-hover'));
 
     // ============================================
+    // STATE NAVIGASI
+    // ============================================
+    let _navTimeout = null;
+    let _currentFrameSrc = '';
+    let _isHomeView = true;
+    let _initDone = false;
+
+    // ============================================
     // INIT
     // ============================================
     (async () => {
@@ -752,82 +205,37 @@
       const profile = await requireAuth('siswa');
       if (!profile) return;
 
+      window.currentUser = profile;
+
+      // ✅ Tampilkan tombol Ganti Peran kalau >1 role
+      if (profile.roles && profile.roles.length > 1) {
+        document.getElementById('btnSwitchRole').style.display = 'inline-flex';
+      }
+
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('contentHome').classList.remove('hidden');
 
       document.getElementById('userName').textContent = profile.name;
       document.getElementById('userEmail').textContent = profile.email;
-      document.getElementById('userAvatar').textContent = profile.name.charAt(0).toUpperCase();
+      document.getElementById('userAvatar').textContent = (profile.name || '?').charAt(0).toUpperCase();
       document.getElementById('greeting').textContent = 'Halo, ' + profile.name + '! 👋';
       document.getElementById('subGreeting').textContent = 'Selamat datang kembali di panel siswa Tembok Belajar.';
 
-      // Ambil sekolah
-      let school = null;
+      // Tampilkan nama sekolah kalau ada
       try {
-        school = await getSchool(profile.school_id);
-        if (school) {
-          document.getElementById('schoolName').textContent = school.name;
-          const schoolInfo = document.getElementById('schoolInfo');
-          schoolInfo.style.display = 'inline-flex';
-          schoolInfo.querySelector('span').textContent =
-            school.name + (school.academic_year ? ' · Tahun Ajaran ' + school.academic_year : '');
+        if (profile.school_id && typeof getSchool === 'function') {
+          const school = await getSchool(profile.school_id);
+          if (school) document.getElementById('schoolName').textContent = school.name;
         }
-      } catch (err) { console.warn('Sekolah:', err); }
-
-      // Statistik
-      let totalKelas = 0, totalMapel = 0, totalTugas = 0, totalNilai = 0;
-      try {
-        const enrolls = await getStudentClasses(profile.id);
-        totalKelas = (enrolls || []).length;
-
-        const enrolledSubs = await getMyEnrolledSubjects(profile.id);
-        const subjectSet = new Set();
-        const classSet = new Set();
-        (enrolledSubs || []).forEach(a => {
-          if (a.subjects) subjectSet.add(a.subjects.id);
-          if (a.classes) classSet.add(a.classes.id);
-        });
-        totalMapel = subjectSet.size;
-        totalKelas = classSet.size || totalKelas;
-
-        try {
-          const myGrades = await getMyGrades(profile.id);
-          totalNilai = (myGrades || []).length;
-        } catch (e) { console.warn('getMyGrades error:', e); }
-
-        // Hitung tugas belum dikerjakan (aktif)
-        for (const a of (enrolledSubs || [])) {
-          if (!a.subjects || !a.classes) continue;
-          try {
-            const acts = await getMyActivities(profile.id, a.classes.id, a.subjects.id);
-            totalTugas += (acts || []).filter(x => !x.submission).length;
-          } catch (e) { /* skip */ }
-        }
-      } catch (err) { console.warn('Statistik error:', err); }
-
-      const stats = [
-        { icon: 'fa-door-open', color: 'blue', value: totalKelas, label: 'Kelas Diikuti' },
-        { icon: 'fa-book', color: 'purple', value: totalMapel, label: 'Mapel' },
-        { icon: 'fa-tasks', color: 'orange', value: totalTugas, label: 'Tugas Belum' },
-        { icon: 'fa-star', color: 'green', value: totalNilai, label: 'Nilai Diterima' }
-      ];
-      document.getElementById('statsGrid').innerHTML = stats.map(s => `
-        <div class="stat-card">
-          <div class="stat-icon ${s.color}"><i class="fas ${s.icon}"></i></div>
-          <div class="stat-info">
-            <div class="stat-value">${s.value}</div>
-            <div class="stat-label">${s.label}</div>
-          </div>
-        </div>
-      `).join('');
+      } catch (e) { /* ignore */ }
 
       // Quick menu
       const menus = [
         { icon: 'fa-book', label: 'Mapel Saya', view: 'mapel' },
-        { icon: 'fa-file-alt', label: 'Materi Belajar', view: 'materi' },
+        { icon: 'fa-layer-group', label: 'Unit Pembelajaran', view: 'unit' },
         { icon: 'fa-tasks', label: 'Tugas & Kuis', view: 'tugas' },
         { icon: 'fa-star', label: 'Nilai Saya', view: 'nilai' },
-        { icon: 'fa-chart-line', label: 'Progress', view: 'progress' },
+        { icon: 'fa-chart-line', label: 'Progress & Jurnal', view: 'progress' },
         { icon: 'fa-comments', label: 'Forum Diskusi', view: 'forum' }
       ];
       document.getElementById('quickMenu').innerHTML = menus.map(m => `
@@ -837,44 +245,68 @@
         </div>
       `).join('');
 
-      // Info panel
-      const infoItems = [
-        { label: 'Nama Sekolah', value: school?.name || '-' },
-        { label: 'Tahun Ajaran', value: school?.academic_year || '-' },
-        { label: 'Kelas & Mapel', value: totalKelas + ' kelas · ' + totalMapel + ' mapel' },
-        { label: 'Nilai Diterima', value: totalNilai + ' nilai' }
-      ];
-      document.getElementById('infoGrid').innerHTML = infoItems.map(i => `
-        <div class="info-item">
-          <div class="info-label">${i.label}</div>
-          <div class="info-value">${escapeHtml(i.value)}</div>
-        </div>
-      `).join('');
+      // Statistik placeholder
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-door-open"></i></div><div><div class="stat-value">-</div><div class="stat-label">Kelas</div></div></div>
+        <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-book"></i></div><div><div class="stat-value">-</div><div class="stat-label">Mapel</div></div></div>
+        <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-tasks"></i></div><div><div class="stat-value">-</div><div class="stat-label">Tugas</div></div></div>
+      `;
+
+      // === MARK INIT SELESAI ===
+      _initDone = true;
+
+      // === HANDLE HASH SETELAH INIT SELESAI ===
+      const initialHash = window.location.hash.substring(1);
+      if (initialHash && VIEW_URLS[initialHash]) {
+        navigateTo(initialHash);
+      } else {
+        resetFrameToBlank();
+        syncSidebarActive('home');
+      }
     })();
 
     // ============================================
-    // LISTENER PESAN DARI IFRAME MODUL
+    // HELPER — reset iframe total
     // ============================================
-    window.addEventListener('message', (e) => {
-      if (!e.data || typeof e.data !== 'object') return;
+    function resetFrameToBlank() {
+      const frameEl = document.getElementById('contentFrame');
+      if (!frameEl) return;
 
-      // Modul siswa minta navigasi ke modul lain
-      if (e.data.type === 'SISWA_NAVIGATE' && e.data.view) {
-        if (e.data.context) {
-          sessionStorage.setItem('siswa_context', JSON.stringify(e.data.context));
-        }
-        navigateTo(e.data.view);
-        return;
-      }
-    });
+      frameEl.onload = null;
+      frameEl.classList.add('hidden');
+      frameEl.src = 'about:blank';
+      frameEl.style.height = '0';
+      frameEl.style.display = 'none';
+
+      _currentFrameSrc = '';
+      _isHomeView = true;
+
+      const appMain = document.getElementById('appMain');
+      if (appMain) appMain.scrollTop = 0;
+    }
+
+    // ============================================
+    // HELPER — sinkronkan sidebar active
+    // ============================================
+    function syncSidebarActive(view) {
+      document.querySelectorAll('.sidebar-item[data-view]').forEach(el => {
+        el.classList.toggle('active', el.dataset.view === view);
+      });
+    }
 
     // ============================================
     // NAVIGASI
     // ============================================
     function navigateTo(view) {
-      document.querySelectorAll('.sidebar-item[data-view]').forEach(el => {
-        el.classList.toggle('active', el.dataset.view === view);
-      });
+      if (!_initDone) {
+        if (history.replaceState) history.replaceState({ view }, '', '#' + view);
+        else window.location.hash = view;
+        return;
+      }
+
+      if (_navTimeout) { clearTimeout(_navTimeout); _navTimeout = null; }
+
+      syncSidebarActive(view);
 
       const homeEl = document.getElementById('contentHome');
       const frameEl = document.getElementById('contentFrame');
@@ -883,62 +315,174 @@
 
       appMain.scrollTop = 0;
 
+      // === HOME ===
       if (view === 'home') {
-        frameEl.classList.add('hidden');
+        resetFrameToBlank();
         loadingEl.classList.remove('active');
-        setTimeout(() => { frameEl.src = 'about:blank'; }, 30);
         homeEl.classList.remove('hidden');
-      } else {
-        const url = VIEW_URLS[view];
-        if (!url) { alert('Modul tidak dikenal: ' + view); return; }
 
-        homeEl.classList.add('hidden');
-        loadingEl.classList.add('active');
-
-        frameEl.src = url;
-
-        frameEl.onload = function() {
-          loadingEl.classList.remove('active');
-          frameEl.classList.remove('hidden');
-          try {
-            const loc = frameEl.contentWindow.location;
-            if (loc.pathname.endsWith('.html') && !loc.search.includes('embed=1')) {
-              frameEl.contentWindow.location.replace(url);
-            }
-          } catch (e) { /* cross-origin */ }
-        };
-
-        setTimeout(() => {
-          loadingEl.classList.remove('active');
-          frameEl.classList.remove('hidden');
-        }, 5000);
+        if (history.pushState) history.pushState({ view }, '', '#' + view);
+        else window.location.hash = view;
+        return;
       }
 
+      // === MODUL ===
+      const url = VIEW_URLS[view];
+      if (!url) { alert('Modul tidak dikenal: ' + view); return; }
+
+      // Skip reload kalau URL sama
+      if (_currentFrameSrc === url && !_isHomeView) {
+        frameEl.classList.remove('hidden');
+        frameEl.style.display = 'block';
+        frameEl.style.height = '';
+        loadingEl.classList.remove('active');
+        if (history.pushState) history.pushState({ view }, '', '#' + view);
+        else window.location.hash = view;
+        return;
+      }
+
+      homeEl.classList.add('hidden');
+      loadingEl.classList.add('active');
+
+      frameEl.classList.add('hidden');
+      frameEl.style.display = 'none';
+      frameEl.style.height = '0';
+
+      frameEl.onload = null;
+      frameEl.src = url;
+      _currentFrameSrc = url;
+      _isHomeView = false;
+
+      const thisNavSrc = url;
+      frameEl.onload = function onFrameLoad() {
+        if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
+        if (_isHomeView) return;
+
+        loadingEl.classList.remove('active');
+        frameEl.classList.remove('hidden');
+        frameEl.style.display = 'block';
+        frameEl.style.height = '';
+      };
+
+      _navTimeout = setTimeout(() => {
+        if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
+        if (_isHomeView) return;
+        loadingEl.classList.remove('active');
+        frameEl.classList.remove('hidden');
+        frameEl.style.display = 'block';
+        frameEl.style.height = '';
+      }, 5000);
+
+      if (history.pushState) history.pushState({ view }, '', '#' + view);
+      else window.location.hash = view;
+    }
+
+    // ============================================
+    // LOAD UNIT DETAIL (dari pesan iframe)
+    // ============================================
+    function loadUnitDetail(unitId) {
+      if (!unitId) return;
+      if (_navTimeout) { clearTimeout(_navTimeout); _navTimeout = null; }
+
+      const frameEl = document.getElementById('contentFrame');
+      const loadingEl = document.getElementById('moduleLoading');
+      const homeEl = document.getElementById('contentHome');
+
+      // Sinkronkan sidebar (anggap "unit" masih aktif)
+      syncSidebarActive('unit');
+
+      homeEl.classList.add('hidden');
+      loadingEl.classList.add('active');
+
+      frameEl.classList.add('hidden');
+      frameEl.style.display = 'none';
+      frameEl.style.height = '0';
+
+      frameEl.onload = null;
+      const url = `unit-detail.html?unit_id=${unitId}&embed=1`;
+      frameEl.src = url;
+      _currentFrameSrc = url;
+      _isHomeView = false;
+
+      const thisNavSrc = url;
+      frameEl.onload = function onFrameLoad() {
+        if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
+        if (_isHomeView) return;
+
+        loadingEl.classList.remove('active');
+        frameEl.classList.remove('hidden');
+        frameEl.style.display = 'block';
+        frameEl.style.height = '';
+      };
+
+      _navTimeout = setTimeout(() => {
+        if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
+        if (_isHomeView) return;
+        loadingEl.classList.remove('active');
+        frameEl.classList.remove('hidden');
+        frameEl.style.display = 'block';
+        frameEl.style.height = '';
+      }, 5000);
+
       if (history.pushState) {
-        history.pushState({ view }, '', '#' + view);
-      } else {
-        window.location.hash = view;
+        history.pushState({ view: 'unit-detail', unitId }, '', '#unit-detail/' + unitId);
       }
     }
 
+    // ============================================
+    // LISTENER PESAN DARI IFRAME
+    // ============================================
+    window.addEventListener('message', (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+
+      if (e.data.type === 'SISWA_OPEN_UNIT_DETAIL' && e.data.unitId) {
+        loadUnitDetail(e.data.unitId);
+        return;
+      }
+
+      if (e.data.type === 'SISWA_NAVIGATE' && e.data.view) {
+        if (e.data.context) sessionStorage.setItem('siswa_context', JSON.stringify(e.data.context));
+        navigateTo(e.data.view);
+        return;
+      }
+    });
+
+    // ============================================
+    // POPSTATE & PAGESHOW
+    // ============================================
     window.addEventListener('popstate', (e) => {
-      const view = (e.state && e.state.view) || window.location.hash.substring(1) || 'home';
+      const state = e.state || {};
+      const hash = window.location.hash.substring(1);
+
+      if (state.view === 'unit-detail' && state.unitId) {
+        loadUnitDetail(state.unitId);
+        return;
+      }
+      if (hash.startsWith('unit-detail/')) {
+        loadUnitDetail(hash.substring('unit-detail/'.length));
+        return;
+      }
+
+      const view = state.view || hash || 'home';
       navigateTo(view);
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const hash = window.location.hash.substring(1);
-      if (hash && VIEW_URLS[hash]) {
-        setTimeout(() => navigateTo(hash), 500);
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted && _initDone) {
+        const hash = window.location.hash.substring(1);
+        navigateTo(hash || 'home');
       }
     });
 
-    function escapeHtml(t) {
-      if (t === null || t === undefined) return '';
-      const d = document.createElement('div');
-      d.textContent = String(t);
-      return d.innerHTML;
-    }
+    // ============================================
+    // DOM READY — kalau tanpa hash, reset iframe
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash.substring(1);
+      if (!hash || !VIEW_URLS[hash]) {
+        resetFrameToBlank();
+      }
+    });
   </script>
 </body>
 </html>

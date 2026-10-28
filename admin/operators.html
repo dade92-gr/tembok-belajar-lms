@@ -287,6 +287,76 @@
     .info-bar i { color: var(--purple); }
     .info-bar strong { color: var(--navy); }
 
+    /* ===== BULK ACTION BAR ===== */
+    .bulk-bar {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 1rem;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.2s ease;
+    }
+    .bulk-bar.active { display: flex; }
+    .bulk-info {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bulk-info strong { color: #78350f; font-size: 1rem; }
+    .bulk-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn-bulk-clear {
+      background: transparent;
+      border: 1px solid #92400e;
+      color: #92400e;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-bulk-clear:hover { background: #fef3c7; }
+    .btn-bulk-delete {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-bulk-delete:hover { background: #dc2626; transform: translateY(-1px); }
+    .btn-bulk-delete:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Checkbox styling */
+    .row-checkbox, #checkAll {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--purple);
+    }
+    .checkbox-cell { text-align: center; width: 40px; }
+    .data-table tbody tr.selected { background: var(--purple-lighter) !important; }
+    .data-table tbody tr.selected:hover { background: #e9d5ff !important; }
+
     .table-card {
       background: var(--surface);
       border-radius: var(--radius-lg);
@@ -497,6 +567,8 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       animation: fadeInUp 0.25s ease;
       margin: auto;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     .modal-card h2 {
       font-size: 1.2rem;
@@ -572,6 +644,46 @@
     }
     .alert-error { background: var(--danger-light); color: #b91c1c; border: 1px solid #fecaca; }
     .alert-success { background: var(--success-light); color: #047857; border: 1px solid #a7f3d0; }
+
+    /* BULK PROGRESS */
+    .bulk-progress {
+      margin-top: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .bulk-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    .bulk-progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .bulk-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--danger), #b91c1c);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .bulk-progress-detail {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      max-height: 120px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+    }
+    .bulk-progress-detail .ok { color: var(--success); }
+    .bulk-progress-detail .err { color: var(--danger); }
 
     .toast {
       position: fixed;
@@ -723,11 +835,30 @@
               Halaman: <strong id="currentPageInfo">1</strong> dari <strong id="totalPagesInfo">1</strong></span>
       </div>
 
+      <!-- BULK ACTION BAR -->
+      <div class="bulk-bar" id="bulkBar">
+        <div class="bulk-info">
+          <i class="fas fa-check-square"></i>
+          <strong id="selectedCountLabel">0</strong> operator dipilih
+        </div>
+        <div class="bulk-actions">
+          <button class="btn-bulk-clear" onclick="clearSelection()">
+            <i class="fas fa-xmark"></i> Batal Pilih
+          </button>
+          <button class="btn-bulk-delete" id="btnBulkDelete" onclick="openBulkDelete()">
+            <i class="fas fa-trash"></i> Hapus <span id="bulkCountLabel">0</span> Operator
+          </button>
+        </div>
+      </div>
+
       <div class="table-card">
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
+                <th class="checkbox-cell">
+                  <input type="checkbox" id="checkAll" onchange="toggleSelectAll(this.checked)" title="Pilih semua di halaman ini">
+                </th>
                 <th style="width:50px;">No</th>
                 <th>Operator</th>
                 <th style="width:240px;">Sekolah</th>
@@ -736,7 +867,7 @@
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="5" class="empty-row">Memuat...</td></tr>
+              <tr><td colspan="6" class="empty-row">Memuat...</td></tr>
             </tbody>
           </table>
         </div>
@@ -854,7 +985,7 @@
     </div>
   </div>
 
-  <!-- Modal Konfirmasi Hapus -->
+  <!-- Modal Konfirmasi Hapus Tunggal -->
   <div class="modal-overlay" id="modalDelete">
     <div class="modal-card">
       <h2 style="color: var(--danger);"><i class="fas fa-trash"></i> Hapus Operator?</h2>
@@ -867,6 +998,46 @@
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
         <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus Total</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus Massal -->
+  <div class="modal-overlay" id="modalBulkDelete">
+    <div class="modal-card">
+      <h2 style="color: var(--danger);">
+        <i class="fas fa-trash"></i> Hapus <span id="bulkDeleteCount">0</span> Operator Sekaligus?
+      </h2>
+      <p id="bulkDeleteMessage" style="color: var(--text); margin-bottom: 0.8rem;"></p>
+
+      <div style="max-height: 220px; overflow-y: auto; background: var(--bg-soft); border-radius: 8px; padding: 0.7rem; margin-bottom: 1rem; font-size: 0.78rem;">
+        <ol id="bulkDeleteList" style="margin: 0 0 0 1.2rem; padding: 0;"></ol>
+      </div>
+
+      <div style="background: #fef3c7; border-left: 3px solid var(--warning); padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.78rem; color: #92400e; margin-bottom: 1rem;">
+        ⚠️ <strong>Perhatian:</strong> Semua akun login (Auth) dan profil operator terpilih akan dihapus permanen.
+        <br><br>
+        💡 <strong>Catatan multi-role:</strong> Jika ada user yang juga guru/siswa, akun mereka akan ikut terhapus.
+      </div>
+
+      <div id="bulkProgressBox" class="bulk-progress hidden">
+        <div class="bulk-progress-label">
+          <span>Memproses...</span>
+          <span id="bulkProgressText">0 / 0</span>
+        </div>
+        <div class="bulk-progress-bar">
+          <div class="bulk-progress-fill" id="bulkProgressFill"></div>
+        </div>
+        <div class="bulk-progress-detail" id="bulkProgressDetail"></div>
+      </div>
+
+      <div id="bulkDeleteError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnBulkCancel" onclick="closeBulkDelete()">Batal</button>
+        <button class="btn-danger" id="btnConfirmBulkDelete" onclick="confirmBulkDelete()">
+          Ya, Hapus Semua
+        </button>
       </div>
     </div>
   </div>
@@ -885,6 +1056,8 @@
     let deletingId = null;
     let currentPage = 1;
     let pageSize = 25;
+    let selectedIds = new Set();
+    let bulkDeleteIds = [];
 
     // ============================================
     // INIT
@@ -983,11 +1156,15 @@
           (a.name || '').localeCompare(b.name || '')
         );
 
+        // Buang ID terpilih yang sudah tidak ada
+        const validIds = new Set(allOperators.map(o => String(o.id)));
+        selectedIds.forEach(id => { if (!validIds.has(id)) selectedIds.delete(id); });
+
         applyFilter();
       } catch (err) {
         console.error('loadOperators error:', err);
         document.getElementById('tableBody').innerHTML =
-          `<tr><td colspan="5" class="empty-row" style="color:var(--danger);">Gagal memuat: ${esc(err.message)}</td></tr>`;
+          `<tr><td colspan="6" class="empty-row" style="color:var(--danger);">Gagal memuat: ${esc(err.message)}</td></tr>`;
       }
     }
 
@@ -1032,12 +1209,13 @@
 
       if (filteredOperators.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="5" class="empty-row">
+          <tr><td colspan="6" class="empty-row">
             <span class="emoji">👤</span>
             ${allOperators.length === 0
               ? '<strong>Belum ada operator.</strong><br>Klik "+ Tambah Operator" untuk memulai.'
               : 'Tidak ada operator yang cocok dengan filter.'}
           </td></tr>`;
+        updateBulkBar();
         return;
       }
 
@@ -1047,12 +1225,20 @@
 
       tbody.innerHTML = pageData.map((o, i) => {
         const isActive = o.status === 'active';
+        const sid = String(o.id);
+        const isChecked = selectedIds.has(sid);
         const schoolBadges = (o.schools || []).map(s =>
           `<span class="sekolah-badge"><i class="fas fa-school"></i> ${esc(s.name || '-')}</span>`
         ).join('');
 
         return `
-          <tr>
+          <tr class="${isChecked ? 'selected' : ''}">
+            <td class="checkbox-cell">
+              <input type="checkbox" class="row-checkbox"
+                data-id="${sid}"
+                ${isChecked ? 'checked' : ''}
+                onchange="toggleRowSelection('${sid}', this.checked)">
+            </td>
             <td>${startIdx + i + 1}</td>
             <td>
               <div class="nama-operator">
@@ -1085,6 +1271,9 @@
           </tr>
         `;
       }).join('');
+
+      syncCheckAllState();
+      updateBulkBar();
     }
 
     function renderPagination() {
@@ -1172,6 +1361,65 @@
     }
 
     // ============================================
+    // SELEKSI MULTI BARIS
+    // ============================================
+    function toggleRowSelection(id, checked) {
+      const sid = String(id);
+      if (checked) selectedIds.add(sid);
+      else selectedIds.delete(sid);
+      const cb = document.querySelector(`.row-checkbox[data-id="${sid}"]`);
+      if (cb) cb.closest('tr').classList.toggle('selected', checked);
+      syncCheckAllState();
+      updateBulkBar();
+    }
+
+    function toggleSelectAll(checked) {
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredOperators.length);
+      const pageData = filteredOperators.slice(startIdx, endIdx);
+
+      pageData.forEach(o => {
+        const sid = String(o.id);
+        if (checked) selectedIds.add(sid);
+        else selectedIds.delete(sid);
+      });
+      renderTable();
+    }
+
+    function syncCheckAllState() {
+      const checkAll = document.getElementById('checkAll');
+      if (!checkAll) return;
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredOperators.length);
+      const pageData = filteredOperators.slice(startIdx, endIdx);
+
+      if (pageData.length === 0) {
+        checkAll.checked = false;
+        checkAll.indeterminate = false;
+        return;
+      }
+      const selectedOnPage = pageData.filter(o => selectedIds.has(String(o.id))).length;
+      checkAll.checked = selectedOnPage === pageData.length;
+      checkAll.indeterminate = selectedOnPage > 0 && selectedOnPage < pageData.length;
+    }
+
+    function updateBulkBar() {
+      const count = selectedIds.size;
+      const bar = document.getElementById('bulkBar');
+      document.getElementById('selectedCountLabel').textContent = count;
+      document.getElementById('bulkCountLabel').textContent = count;
+      document.getElementById('btnBulkDelete').disabled = count === 0;
+      if (count > 0) bar.classList.add('active');
+      else bar.classList.remove('active');
+    }
+
+    function clearSelection() {
+      selectedIds.clear();
+      renderTable();
+      updateBulkBar();
+    }
+
+    // ============================================
     // TAMBAH OPERATOR
     // ============================================
     function openAddModal() {
@@ -1229,7 +1477,6 @@
           body: { email, password, name, schoolId }
         });
 
-        // ✅ Ambil detail error dari body response
         if (error) {
           let detail = error.message;
           try {
@@ -1301,7 +1548,6 @@
 
       try {
         const client = initSupabase();
-        // Update profil (tanpa filter role, karena user mungkin multi-role)
         const { error } = await client.from('profiles')
           .update({ name })
           .eq('id', editingId);
@@ -1386,7 +1632,7 @@
     }
 
     // ============================================
-    // HAPUS OPERATOR
+    // HAPUS OPERATOR (TUNGGAL)
     // ============================================
     function openDeleteModal(userId) {
       const op = allOperators.find(o => o.id === userId);
@@ -1432,6 +1678,178 @@
     }
 
     // ============================================
+    // HAPUS OPERATOR (MASSAL) — pakai edge function delete-teachers
+    // ============================================
+    function openBulkDelete() {
+      const ids = Array.from(selectedIds);
+      if (ids.length === 0) return;
+
+      bulkDeleteIds = ids;
+      const operators = ids
+        .map(id => allOperators.find(o => String(o.id) === String(id)))
+        .filter(Boolean);
+
+      document.getElementById('bulkDeleteCount').textContent = operators.length;
+      document.getElementById('bulkDeleteMessage').innerHTML =
+        'Anda akan menghapus <strong>' + operators.length + ' operator</strong> berikut secara permanen:';
+
+      document.getElementById('bulkDeleteList').innerHTML =
+        operators.map(o => {
+          const schoolNames = (o.schools || []).map(s => s.name).filter(Boolean).join(', ');
+          return '<li><strong>' + esc(o.name) + '</strong> — ' + esc(o.email) +
+            (schoolNames ? ' <span style="color:#94a3b8;">(' + esc(schoolNames) + ')</span>' : '') +
+            '</li>';
+        }).join('');
+
+      document.getElementById('bulkProgressBox').classList.add('hidden');
+      document.getElementById('bulkProgressFill').style.width = '0%';
+      document.getElementById('bulkProgressDetail').innerHTML = '';
+      document.getElementById('bulkProgressText').textContent = '0 / 0';
+      document.getElementById('bulkDeleteError').classList.add('hidden');
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      btn.disabled = false;
+      btn.dataset.processing = '0';
+      btn.innerHTML = 'Ya, Hapus Semua';
+      btn.onclick = confirmBulkDelete;
+      document.getElementById('btnBulkCancel').disabled = false;
+
+      document.getElementById('modalBulkDelete').classList.add('active');
+    }
+
+    function closeBulkDelete() {
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      if (btn.disabled && btn.dataset.processing === '1') return;
+
+      document.getElementById('modalBulkDelete').classList.remove('active');
+      bulkDeleteIds = [];
+      btn.onclick = confirmBulkDelete;
+    }
+
+    async function confirmBulkDelete() {
+      if (bulkDeleteIds.length === 0) return;
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      const btnCancel = document.getElementById('btnBulkCancel');
+      btn.disabled = true;
+      btn.dataset.processing = '1';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+      btnCancel.disabled = true;
+
+      const progressBox = document.getElementById('bulkProgressBox');
+      const progressFill = document.getElementById('bulkProgressFill');
+      const progressText = document.getElementById('bulkProgressText');
+      const progressDetail = document.getElementById('bulkProgressDetail');
+      const errorBox = document.getElementById('bulkDeleteError');
+
+      progressBox.classList.remove('hidden');
+      progressDetail.innerHTML = '';
+      errorBox.classList.add('hidden');
+
+      const total = bulkDeleteIds.length;
+      progressText.textContent = '0 / ' + total;
+      progressFill.style.width = '25%';
+
+      const waitingItem = document.createElement('div');
+      waitingItem.textContent = '⏳ Mengirim ' + total + ' operator ke server...';
+      progressDetail.appendChild(waitingItem);
+
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('delete-teachers', {
+          body: { userIds: bulkDeleteIds }
+        });
+
+        if (error) {
+          let detail = error.message;
+          try {
+            const errBody = await error.context?.json();
+            detail = errBody?.error || errBody?.message || detail;
+          } catch (e) { /* ignore */ }
+          throw new Error(detail);
+        }
+        if (data && data.error) throw new Error(data.error);
+
+        progressFill.style.width = '100%';
+        progressText.textContent = total + ' / ' + total + ' selesai';
+        progressDetail.innerHTML = '';
+
+        const results = data?.results || [];
+        const successIds = [];
+
+        results.forEach(r => {
+          const op = allOperators.find(o => String(o.id) === String(r.userId));
+          const label = op ? (op.name + ' (' + op.email + ')') : r.userId;
+          const item = document.createElement('div');
+          if (r.success) {
+            item.textContent = '✅ ' + label + ' — ' +
+              (r.mode === 'full-delete' ? 'dihapus total' : 'role operator dicabut');
+            item.className = 'ok';
+            successIds.push(String(r.userId));
+          } else {
+            item.textContent = '❌ ' + label + ' — ' + (r.error || 'Gagal');
+            item.className = 'err';
+          }
+          progressDetail.appendChild(item);
+        });
+
+        successIds.forEach(id => selectedIds.delete(id));
+
+        if ((data.failedCount || 0) > 0) {
+          errorBox.innerHTML =
+            '<strong>⚠️ ' + data.failedCount + ' dari ' + total + ' gagal dihapus:</strong><br>' +
+            results.filter(r => !r.success).map(r => {
+              const op = allOperators.find(o => String(o.id) === String(r.userId));
+              const label = op ? op.email : r.userId;
+              return '• ' + esc(label) + ': ' + esc(r.error || 'Gagal');
+            }).join('<br>');
+          errorBox.classList.remove('hidden');
+        }
+
+        btn.disabled = false;
+        btn.dataset.processing = '0';
+        btnCancel.disabled = false;
+
+        if ((data.failedCount || 0) === 0) {
+          btn.innerHTML = '<i class="fas fa-check"></i> Selesai';
+          showToast('🗑️ ' + (data.successCount || total) + ' operator berhasil dihapus', 'success');
+          setTimeout(() => {
+            document.getElementById('modalBulkDelete').classList.remove('active');
+            bulkDeleteIds = [];
+            btn.onclick = confirmBulkDelete;
+          }, 800);
+        } else {
+          btn.innerHTML = 'Tutup';
+          btn.onclick = () => {
+            document.getElementById('modalBulkDelete').classList.remove('active');
+            bulkDeleteIds = [];
+            btn.onclick = confirmBulkDelete;
+          };
+          showToast(
+            (data.successCount || 0) + ' dihapus, ' + (data.failedCount || 0) + ' gagal',
+            'error'
+          );
+        }
+
+        await loadOperators();
+        updateBulkBar();
+
+      } catch (err) {
+        console.error('Bulk delete error:', err);
+        progressFill.style.width = '0%';
+        errorBox.innerHTML = '<strong>❌ Gagal:</strong> ' + esc(err.message || 'Unknown error');
+        errorBox.classList.remove('hidden');
+
+        btn.disabled = false;
+        btn.dataset.processing = '0';
+        btnCancel.disabled = false;
+        btn.innerHTML = 'Ya, Hapus Semua';
+        btn.onclick = confirmBulkDelete;
+
+        showToast('Gagal menghapus massal: ' + (err.message || 'Unknown error'), 'error');
+      }
+    }
+
+    // ============================================
     // UTILS
     // ============================================
     function esc(t) {
@@ -1455,6 +1873,7 @@
         closeEditModal();
         closeResetModal();
         closeDeleteModal();
+        closeBulkDelete();
       }
     });
   </script>

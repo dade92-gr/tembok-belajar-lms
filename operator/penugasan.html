@@ -59,7 +59,6 @@
       padding-bottom: 2rem;
     }
 
-    /* PAGE TOOLBAR */
     .page-toolbar {
       display: flex;
       justify-content: space-between;
@@ -118,7 +117,6 @@
 
     .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 
-    /* BUTTONS */
     .btn-primary {
       background: var(--primary);
       color: white;
@@ -193,7 +191,6 @@
 
     .btn-danger:hover { background: #dc2626; }
 
-    /* FILTER BAR */
     .filter-card {
       background: var(--surface);
       border-radius: var(--radius-lg);
@@ -272,7 +269,6 @@
       color: var(--danger);
     }
 
-    /* INFO BAR */
     .info-bar {
       background: var(--primary-light);
       border-radius: 10px;
@@ -291,7 +287,76 @@
     .info-bar i { color: var(--primary); }
     .info-bar strong { color: var(--navy); }
 
-    /* TABLE */
+    /* BULK ACTION BAR */
+    .bulk-bar {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 1rem;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.2s ease;
+    }
+    .bulk-bar.active { display: flex; }
+    .bulk-info {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bulk-info strong { color: #78350f; font-size: 1rem; }
+    .bulk-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn-bulk-clear {
+      background: transparent;
+      border: 1px solid #92400e;
+      color: #92400e;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-bulk-clear:hover { background: #fef3c7; }
+    .btn-bulk-delete {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-bulk-delete:hover { background: #dc2626; transform: translateY(-1px); }
+    .btn-bulk-delete:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Checkbox styling */
+    .row-checkbox, #checkAll {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+    .checkbox-cell { text-align: center; width: 40px; }
+    .data-table tbody tr.selected { background: #eff6ff !important; }
+    .data-table tbody tr.selected:hover { background: #dbeafe !important; }
+
     .table-card {
       background: var(--surface);
       border-radius: var(--radius-lg);
@@ -389,7 +454,6 @@
       opacity: 0.5;
     }
 
-    /* PAGINATION */
     .pagination-bar {
       background: var(--surface);
       border-top: 1px solid var(--border);
@@ -454,7 +518,6 @@
 
     .page-numbers { display: flex; gap: 0.3rem; align-items: center; }
 
-    /* MODAL */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -479,6 +542,8 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       animation: fadeInUp 0.25s ease;
       margin: auto;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .modal-card h2 {
@@ -544,7 +609,6 @@
     .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
     .alert-success { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
 
-    /* MULTI-SELECT KELAS */
     .kelas-multiselect {
       max-height: 240px;
       overflow-y: auto;
@@ -617,7 +681,6 @@
       margin-top: 4px;
     }
 
-    /* PROGRESS */
     .progress-box {
       background: var(--surface);
       border-radius: 10px;
@@ -662,7 +725,45 @@
     .progress-detail .item-err { color: var(--danger); }
     .progress-detail .item-skip { color: var(--warning); }
 
-    /* TOAST */
+    .bulk-progress {
+      margin-top: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .bulk-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    .bulk-progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .bulk-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--danger), #b91c1c);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .bulk-progress-detail {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      max-height: 120px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+    }
+    .bulk-progress-detail .ok { color: var(--success); }
+    .bulk-progress-detail .err { color: var(--danger); }
+
     .toast {
       position: fixed;
       bottom: 24px;
@@ -787,12 +888,31 @@
             Halaman: <strong id="currentPageInfo">1</strong> dari <strong id="totalPagesInfo">1</strong></span>
     </div>
 
+    <!-- BULK ACTION BAR -->
+    <div class="bulk-bar" id="bulkBar">
+      <div class="bulk-info">
+        <i class="fas fa-check-square"></i>
+        <strong id="selectedCount">0</strong> penugasan dipilih
+      </div>
+      <div class="bulk-actions">
+        <button class="btn-bulk-clear" onclick="clearSelection()">
+          <i class="fas fa-xmark"></i> Batal Pilih
+        </button>
+        <button class="btn-bulk-delete" id="btnBulkDelete" onclick="openBulkDelete()">
+          <i class="fas fa-trash"></i> Hapus <span id="bulkCountLabel">0</span> Penugasan
+        </button>
+      </div>
+    </div>
+
     <!-- TABLE -->
     <div class="table-card">
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
             <tr>
+              <th class="checkbox-cell">
+                <input type="checkbox" id="checkAll" onchange="toggleSelectAll(this.checked)" title="Pilih semua di halaman ini">
+              </th>
               <th style="width:50px;">No</th>
               <th>Guru</th>
               <th style="width:200px;">Mata Pelajaran</th>
@@ -801,7 +921,7 @@
             </tr>
           </thead>
           <tbody id="tableBody">
-            <tr><td colspan="5" class="empty-row">Memuat...</td></tr>
+            <tr><td colspan="6" class="empty-row">Memuat...</td></tr>
           </tbody>
         </table>
       </div>
@@ -912,7 +1032,7 @@
     </div>
   </div>
 
-  <!-- Modal Konfirmasi Hapus -->
+  <!-- Modal Konfirmasi Hapus Tunggal -->
   <div class="modal-overlay" id="modalDelete">
     <div class="modal-card">
       <h2 style="color: var(--danger);"><i class="fas fa-trash"></i> Hapus Penugasan?</h2>
@@ -923,6 +1043,44 @@
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
         <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus Massal -->
+  <div class="modal-overlay" id="modalBulkDelete">
+    <div class="modal-card">
+      <h2 style="color: var(--danger);">
+        <i class="fas fa-trash"></i> Hapus <span id="bulkDeleteCount">0</span> Penugasan Sekaligus?
+      </h2>
+      <p id="bulkDeleteMessage" style="color: var(--text); margin-bottom: 0.8rem;"></p>
+
+      <div style="max-height: 200px; overflow-y: auto; background: var(--bg); border-radius: 8px; padding: 0.7rem; margin-bottom: 1rem; font-size: 0.78rem;">
+        <ol id="bulkDeleteList" style="margin: 0 0 0 1.2rem; padding: 0;"></ol>
+      </div>
+
+      <div style="background: #fef3c7; border-left: 3px solid var(--warning); padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.78rem; color: #92400e; margin-bottom: 1rem;">
+        ℹ️ Menghapus penugasan <strong>tidak menghapus</strong> guru, mapel, atau kelas. Hanya memutus relasi di antara mereka.
+      </div>
+
+      <div id="bulkProgressBox" class="bulk-progress hidden">
+        <div class="bulk-progress-label">
+          <span>Memproses...</span>
+          <span id="bulkProgressText">0 / 0</span>
+        </div>
+        <div class="bulk-progress-bar">
+          <div class="bulk-progress-fill" id="bulkProgressFill"></div>
+        </div>
+        <div class="bulk-progress-detail" id="bulkProgressDetail"></div>
+      </div>
+
+      <div id="bulkDeleteError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnBulkCancel" onclick="closeBulkDelete()">Batal</button>
+        <button class="btn-danger" id="btnConfirmBulkDelete" onclick="confirmBulkDelete()">
+          Ya, Hapus Semua
+        </button>
       </div>
     </div>
   </div>
@@ -943,6 +1101,8 @@
     let selectedExcelData = null;
     let currentPage = 1;
     let pageSize = 25;
+    let selectedIds = new Set();
+    let bulkDeleteIds = [];
 
     (async () => {
       initSupabase();
@@ -963,11 +1123,13 @@
     async function loadAssignments() {
       try {
         allAssignments = await getTeacherAssignments(currentSchoolId);
+        const validIds = new Set(allAssignments.map(a => String(a.id)));
+        selectedIds.forEach(id => { if (!validIds.has(id)) selectedIds.delete(id); });
         applyFilter();
       } catch (err) {
         console.error('Gagal load penugasan:', err);
         document.getElementById('tableBody').innerHTML =
-          '<tr><td colspan="5" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + err.message + '</td></tr>';
+          '<tr><td colspan="6" class="empty-row" style="color:var(--danger);">Gagal memuat: ' + err.message + '</td></tr>';
       }
     }
 
@@ -1019,12 +1181,13 @@
 
       if (filteredAssignments.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="5" class="empty-row">
+          <tr><td colspan="6" class="empty-row">
             <span class="emoji">🔗</span>
             ${allAssignments.length === 0
               ? 'Belum ada penugasan. Klik "+ Tambah Penugasan" atau "Import Excel".'
               : 'Tidak ada penugasan yang cocok dengan filter.'}
           </td></tr>`;
+        updateBulkBar();
         return;
       }
 
@@ -1032,8 +1195,16 @@
       const endIdx = Math.min(startIdx + pageSize, filteredAssignments.length);
       const pageData = filteredAssignments.slice(startIdx, endIdx);
 
-      tbody.innerHTML = pageData.map((a, i) => `
-        <tr>
+      tbody.innerHTML = pageData.map((a, i) => {
+        const sid = String(a.id);
+        return `
+        <tr class="${selectedIds.has(sid) ? 'selected' : ''}">
+          <td class="checkbox-cell">
+            <input type="checkbox" class="row-checkbox"
+              data-id="${sid}"
+              ${selectedIds.has(sid) ? 'checked' : ''}
+              onchange="toggleRowSelection('${sid}', this.checked)">
+          </td>
           <td>${startIdx + i + 1}</td>
           <td>
             <span class="badge badge-guru">
@@ -1057,8 +1228,11 @@
               </button>
             </div>
           </td>
-        </tr>
-      `).join('');
+        </tr>`;
+      }).join('');
+
+      syncCheckAllState();
+      updateBulkBar();
     }
 
     function renderPagination() {
@@ -1144,6 +1318,65 @@
       currentPage = 1;
       renderTable();
       renderPagination();
+    }
+
+    /* ============================================
+       SELEKSI MULTI BARIS
+       ============================================ */
+    function toggleRowSelection(id, checked) {
+      const sid = String(id);
+      if (checked) selectedIds.add(sid);
+      else selectedIds.delete(sid);
+      const cb = document.querySelector(`.row-checkbox[data-id="${sid}"]`);
+      if (cb) cb.closest('tr').classList.toggle('selected', checked);
+      syncCheckAllState();
+      updateBulkBar();
+    }
+
+    function toggleSelectAll(checked) {
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredAssignments.length);
+      const pageData = filteredAssignments.slice(startIdx, endIdx);
+
+      pageData.forEach(a => {
+        const sid = String(a.id);
+        if (checked) selectedIds.add(sid);
+        else selectedIds.delete(sid);
+      });
+      renderTable();
+    }
+
+    function syncCheckAllState() {
+      const checkAll = document.getElementById('checkAll');
+      if (!checkAll) return;
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredAssignments.length);
+      const pageData = filteredAssignments.slice(startIdx, endIdx);
+
+      if (pageData.length === 0) {
+        checkAll.checked = false;
+        checkAll.indeterminate = false;
+        return;
+      }
+      const selectedOnPage = pageData.filter(a => selectedIds.has(String(a.id))).length;
+      checkAll.checked = selectedOnPage === pageData.length;
+      checkAll.indeterminate = selectedOnPage > 0 && selectedOnPage < pageData.length;
+    }
+
+    function updateBulkBar() {
+      const count = selectedIds.size;
+      const bar = document.getElementById('bulkBar');
+      document.getElementById('selectedCount').textContent = count;
+      document.getElementById('bulkCountLabel').textContent = count;
+      document.getElementById('btnBulkDelete').disabled = count === 0;
+      if (count > 0) bar.classList.add('active');
+      else bar.classList.remove('active');
+    }
+
+    function clearSelection() {
+      selectedIds.clear();
+      renderTable();
+      updateBulkBar();
     }
 
     /* ============================================
@@ -1474,7 +1707,7 @@
     }
 
     /* ============================================
-       HAPUS
+       HAPUS PENUGASAN (TUNGGAL)
        ============================================ */
     function openDelete(id) {
       deletingId = id;
@@ -1514,6 +1747,153 @@
       }
     }
 
+    /* ============================================
+       HAPUS PENUGASAN (MASSAL)
+       ============================================ */
+    function openBulkDelete() {
+      const ids = Array.from(selectedIds);
+      if (ids.length === 0) return;
+
+      bulkDeleteIds = ids;
+      const assignments = ids
+        .map(id => allAssignments.find(a => String(a.id) === String(id)))
+        .filter(Boolean);
+
+      document.getElementById('bulkDeleteCount').textContent = assignments.length;
+      document.getElementById('bulkDeleteMessage').innerHTML =
+        'Anda akan menghapus <strong>' + assignments.length + ' penugasan</strong> berikut:';
+
+      document.getElementById('bulkDeleteList').innerHTML =
+        assignments.map(a =>
+          '<li><strong>' + escapeHtml(a.profiles?.name || '-') + '</strong> — ' +
+          escapeHtml(a.subjects?.name || '-') +
+          ' <span style="color:#94a3b8;">di</span> ' +
+          escapeHtml(a.classes?.name || '-') +
+          '</li>'
+        ).join('');
+
+      document.getElementById('bulkProgressBox').classList.add('hidden');
+      document.getElementById('bulkProgressFill').style.width = '0%';
+      document.getElementById('bulkProgressDetail').innerHTML = '';
+      document.getElementById('bulkProgressText').textContent = '0 / 0';
+      document.getElementById('bulkDeleteError').classList.add('hidden');
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      btn.disabled = false;
+      btn.dataset.processing = '0';
+      btn.innerHTML = 'Ya, Hapus Semua';
+      btn.onclick = confirmBulkDelete;
+      document.getElementById('btnBulkCancel').disabled = false;
+
+      document.getElementById('modalBulkDelete').classList.add('active');
+    }
+
+    function closeBulkDelete() {
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      if (btn.disabled && btn.dataset.processing === '1') return;
+
+      document.getElementById('modalBulkDelete').classList.remove('active');
+      bulkDeleteIds = [];
+      btn.onclick = confirmBulkDelete;
+    }
+
+    async function confirmBulkDelete() {
+      if (bulkDeleteIds.length === 0) return;
+
+      const btn = document.getElementById('btnConfirmBulkDelete');
+      const btnCancel = document.getElementById('btnBulkCancel');
+      btn.disabled = true;
+      btn.dataset.processing = '1';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+      btnCancel.disabled = true;
+
+      const progressBox = document.getElementById('bulkProgressBox');
+      const progressFill = document.getElementById('bulkProgressFill');
+      const progressText = document.getElementById('bulkProgressText');
+      const progressDetail = document.getElementById('bulkProgressDetail');
+      const errorBox = document.getElementById('bulkDeleteError');
+
+      progressBox.classList.remove('hidden');
+      progressDetail.innerHTML = '';
+      errorBox.classList.add('hidden');
+
+      const total = bulkDeleteIds.length;
+      let success = 0, failed = 0;
+      const errors = [];
+      const successIds = [];
+
+      for (let i = 0; i < total; i++) {
+        const id = bulkDeleteIds[i];
+        const a = allAssignments.find(x => String(x.id) === String(id));
+        const label = a
+          ? (a.profiles?.name || '-') + ' — ' + (a.subjects?.name || '-') + ' di ' + (a.classes?.name || '-')
+          : String(id);
+
+        progressText.textContent = (i + 1) + ' / ' + total;
+        progressFill.style.width = (((i + 1) / total) * 100) + '%';
+
+        const detailItem = document.createElement('div');
+        detailItem.textContent = '⏳ Menghapus: ' + label;
+        progressDetail.appendChild(detailItem);
+        progressDetail.scrollTop = progressDetail.scrollHeight;
+
+        try {
+          await deleteTeacherAssignment(id);
+          success++;
+          successIds.push(String(id));
+          detailItem.textContent = '✅ ' + label + ' — berhasil dihapus';
+          detailItem.className = 'ok';
+        } catch (err) {
+          failed++;
+          const msg = err.message || 'Unknown error';
+          errors.push(label + ': ' + msg);
+          detailItem.textContent = '❌ ' + label + ' — ' + msg;
+          detailItem.className = 'err';
+        }
+
+        // Throttle ringan
+        if (i < total - 1) {
+          await new Promise(r => setTimeout(r, 80));
+        }
+      }
+
+      progressText.textContent = total + ' / ' + total + ' selesai';
+
+      successIds.forEach(id => selectedIds.delete(id));
+
+      if (failed > 0) {
+        errorBox.innerHTML =
+          '<strong>⚠️ ' + failed + ' dari ' + total + ' gagal dihapus:</strong><br>' +
+          errors.map(e => '• ' + e).join('<br>');
+        errorBox.classList.remove('hidden');
+      }
+
+      btn.disabled = false;
+      btn.dataset.processing = '0';
+      btnCancel.disabled = false;
+
+      if (failed === 0) {
+        btn.innerHTML = '<i class="fas fa-check"></i> Selesai';
+        showToast('🗑️ ' + success + ' penugasan berhasil dihapus', 'success');
+        setTimeout(() => {
+          document.getElementById('modalBulkDelete').classList.remove('active');
+          bulkDeleteIds = [];
+          btn.onclick = confirmBulkDelete;
+        }, 800);
+      } else {
+        btn.innerHTML = 'Tutup';
+        btn.onclick = () => {
+          document.getElementById('modalBulkDelete').classList.remove('active');
+          bulkDeleteIds = [];
+          btn.onclick = confirmBulkDelete;
+        };
+        showToast(success + ' dihapus, ' + failed + ' gagal', 'error');
+      }
+
+      await loadAssignments();
+      updateBulkBar();
+    }
+
     /* UTILS */
     function escapeHtml(t) {
       if (t === null || t === undefined) return '';
@@ -1535,6 +1915,7 @@
         closeModal();
         closeImportModal();
         closeDeleteModal();
+        closeBulkDelete();
       }
     });
   </script>
