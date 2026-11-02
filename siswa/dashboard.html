@@ -20,7 +20,6 @@
       --header-bg-dark: #0f172a;
       --header-text: #ffffff;
       --header-text-muted: #94a3b8;
-      /* SISWA = ORANGE */
       --orange: #f59e0b;
       --orange-dark: #d97706;
       --orange-light: #fef3c7;
@@ -474,7 +473,7 @@
   </main>
 
   <script src="../assets/js/core/cache.js"></script>
-<script src="../assets/js/config.js"></script>
+  <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
     // ============================================
@@ -532,7 +531,6 @@
       });
       document.getElementById('subGreeting').textContent = 'Selamat datang di panel siswa · ' + tglFormat;
 
-      // Ambil sekolah
       try {
         if (profile.school_id) {
           const school = await getSchool(profile.school_id);
@@ -550,18 +548,16 @@
 
     // ============================================
     // RENDER HOME
+    // FIX B3: paralel query, bukan N+1
     // ============================================
     async function renderHome(profile) {
       const mapelGrid = document.getElementById('mapelGrid');
       mapelGrid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="spinner"></div><p>Memuat mapel...</p></div>';
 
-      // Ambil kelas siswa (enrollments)
       let enrollments = [];
-      try {
-        enrollments = await getStudentClasses(profile.id);
-      } catch (err) { console.warn('Enrollment error:', err); }
+      try { enrollments = await getStudentClasses(profile.id); }
+      catch (err) { console.warn('Enrollment error:', err); }
 
-      // Hero classes
       const heroClasses = document.getElementById('heroClasses');
       if (enrollments.length > 0) {
         heroClasses.innerHTML = enrollments.map(e =>
@@ -569,22 +565,16 @@
         ).join('');
       }
 
-      // Ambil mapel dari semua kelas
       let subjectsData = [];
-      try {
-        subjectsData = await getMyEnrolledSubjects(profile.id);
-      } catch (err) { console.warn('Subjects error:', err); }
+      try { subjectsData = await getMyEnrolledSubjects(profile.id); }
+      catch (err) { console.warn('Subjects error:', err); }
 
-      // Ambil semua submission (untuk hitung statistik)
       let myGrades = [];
       try { myGrades = await getMyGrades(profile.id); } catch (err) {}
 
-      // Ambil units published untuk progress
-      let publishedUnitsCount = 0;
       let myProgressData = [];
-      try {
-        myProgressData = await getMyProgress(profile.id);
-      } catch (err) { console.warn('Progress error:', err); }
+      try { myProgressData = await getMyProgress(profile.id); }
+      catch (err) { console.warn('Progress error:', err); }
 
       // Stats
       const totalMapel = new Set(subjectsData.map(s => s.subject_id)).size;
@@ -610,7 +600,7 @@
         </div>
       `).join('');
 
-      // Group subjects by subject_id
+      // Group subjects
       const bySubject = {};
       subjectsData.forEach(s => {
         const sid = String(s.subject_id);
@@ -630,23 +620,45 @@
         return;
       }
 
-      // Render mapel cards dengan info progress
+      // FIX B3: kumpulkan semua (classId, subjectId) pairs, lalu query paralel
+      const uniqueClassIds = new Set();
+      Object.values(bySubject).forEach(data => {
+        data.classes.forEach(c => uniqueClassIds.add(c.id));
+      });
+
+      // Paralel: ambil units per kelas sekaligus
+      const classIdArr = [...uniqueClassIds];
+      const unitResults = await Promise.all(        classIdArr.map(cid =>
+          getUnitsPublishedByClass(cid).catch(e => { console.warn('Unit kelas ' + cid + ':', e); return []; })
+        )
+      );
+
+      // Map: classId → array of units
+      const unitsByClass = {};
+      classIdArr.forEach((cid, idx) => { unitsByClass[cid] = unitResults[idx] || []; });
+
+      // FIX B3: hitung unitCount per subject dari hasil paralel (tanpa query tambahan)
       const cards = [];
       for (const [sid, data] of Object.entries(bySubject)) {
-        // Hitung unit published di mapel ini (dari salah satu kelas)
         let unitCount = 0;
-        const uniqueClassIds = [...new Set(data.classes.map(c => c.id))];
-        for (const cid of uniqueClassIds) {
-          try {
-            const units = await getUnitsPublishedByClass(cid);
-            const filtered = units.filter(u => String(u.annual_plans?.subject_id) === sid);
-            unitCount += filtered.length;
-          } catch (e) {}
+        const seenUnitIds = new Set();
+        const uniqueClasses = [...new Set(data.classes.map(c => c.id))];
+        for (const cid of uniqueClasses) {
+          const units = unitsByClass[cid] || [];
+          const filtered = units.filter(u => String(u.annual_plans?.subject_id) === sid);
+          filtered.forEach(u => {
+            if (!seenUnitIds.has(String(u.id))) {
+              seenUnitIds.add(String(u.id));
+              unitCount++;
+            }
+          });
         }
 
-        // Hitung progress siswa di mapel ini
-        const mySubjProgress = myProgressData.find(p => String(p.subject?.id) === sid);
-        const progressPercent = mySubjProgress ? mySubjProgress.percent : 0;
+        // FIX B4: guard structure myProgressData
+        const mySubjProgress = (myProgressData || []).find(p =>
+          p && p.subject && String(p.subject.id) === sid
+        );
+        const progressPercent = mySubjProgress ? (mySubjProgress.percent || 0) : 0;
 
         const teacherNames = [...new Set(data.teachers)].join(', ');
         const classNames = [...new Set(data.classes.map(c => c.name))].join(', ');
@@ -684,14 +696,23 @@
 
     // ============================================
     // NAVIGASI
+    // FIX B1: navigateToWithParams TIDAK menimpa VIEW_URLS permanen
     // ============================================
     function navigateToWithParams(target, params = {}) {
       const base = VIEW_BASE_URLS[target];
       if (!base) { alert('Modul tidak dikenal: ' + target); return; }
+
       const query = new URLSearchParams(params).toString();
       const url = query ? base + '&' + query : base;
+
+      // FIX B1: simpan URL sementara, restore setelah navigateTo selesai load
       VIEW_URLS[target] = url;
-      navigateTo(target);
+      try {
+        navigateTo(target);
+      } finally {
+        // Restore base URL setelah navigasi (agar klik sidebar berikutnya kembali ke list)
+        VIEW_URLS[target] = base;
+      }
     }
 
     function resetFrameToBlank() {
@@ -715,6 +736,14 @@
       document.querySelectorAll('.sidebar-item[data-view]').forEach(el => {
         el.classList.toggle('active', el.dataset.view === activeKey);
       });
+    }
+
+    // ============================================
+    // FIX B2: bandingkan URL absolut, bukan string mentah
+    // ============================================
+    function absUrl(url) {
+      try { return new URL(url, window.location.href).href; }
+      catch (e) { return url; }
     }
 
     function navigateTo(view) {
@@ -744,7 +773,10 @@
       const url = VIEW_URLS[view];
       if (!url) { alert('Modul tidak dikenal: ' + view); return; }
 
-      if (_currentFrameSrc === url && !_isHomeView) {
+      const targetAbs = absUrl(url);
+
+      // FIX B2: cek apakah iframe sudah menampilkan URL yang sama (dalam absolut)
+      if (_currentFrameSrc && absUrl(_currentFrameSrc) === targetAbs && !_isHomeView) {
         frameEl.classList.remove('hidden');
         frameEl.style.display = 'block';
         frameEl.style.height = '';
@@ -764,23 +796,28 @@
       _currentFrameSrc = url;
       _isHomeView = false;
 
-      const thisNavSrc = url;
-      frameEl.onload = function onFrameLoad() {
-        if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
+      const thisNavAbs = targetAbs;
+
+      // FIX B2: helper untuk finalize (dipakai onload & timeout)
+      const finalize = () => {
         if (_isHomeView) return;
+        if (!_currentFrameSrc) return;
+        if (absUrl(_currentFrameSrc) !== thisNavAbs) return;
         loadingEl.classList.remove('active');
         frameEl.classList.remove('hidden');
         frameEl.style.display = 'block';
         frameEl.style.height = '';
       };
 
+      frameEl.onload = function onFrameLoad() {
+        // FIX B2: bandingkan absolut
+        if (absUrl(frameEl.src) !== thisNavAbs) return;
+        finalize();
+      };
+
+      // Fallback timeout 8 detik
       _navTimeout = setTimeout(() => {
-        if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
-        if (_isHomeView) return;
-        loadingEl.classList.remove('active');
-        frameEl.classList.remove('hidden');
-        frameEl.style.display = 'block';
-        frameEl.style.height = '';
+        if (_currentFrameSrc && absUrl(_currentFrameSrc) === thisNavAbs) finalize();
       }, 8000);
 
       if (history.pushState) history.pushState({ view }, '', '#' + view);
@@ -792,16 +829,22 @@
       if (VIEW_URLS[view]) navigateTo(view);
     });
 
+    // ============================================
+    // PostMessage dari iframe (unit-view, mapel-list, dll)
+    // ============================================
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
+
       if (e.data.type === 'SISWA_NAVIGATE' && e.data.view) {
         if (VIEW_URLS[e.data.view]) navigateTo(e.data.view);
         return;
       }
+
       if (e.data.type === 'SISWA_GOTO' && e.data.target) {
         navigateToWithParams(e.data.target, e.data.params || {});
         return;
       }
+
       if (e.data.type === 'SISWA_BACK') {
         navigateTo(e.data.view || 'mapel');
         return;
@@ -812,6 +855,7 @@
       const hash = window.location.hash.substring(1);
       if (!hash || !VIEW_URLS[hash]) resetFrameToBlank();
     });
+
     window.addEventListener('pageshow', (e) => {
       if (e.persisted && _initDone) {
         const hash = window.location.hash.substring(1);

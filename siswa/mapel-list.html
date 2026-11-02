@@ -285,7 +285,7 @@
       </div>
     </div>
 
-    <!-- FILTER (hanya tampil di mode detail) -->
+    <!-- FILTER -->
     <div class="filter-card" id="filterCard" style="display:none;">
       <div class="filter-row">
         <div class="filter-group">
@@ -309,7 +309,7 @@
       </div>
     </div>
 
-    <!-- INFO BAR (hanya tampil di mode detail) -->
+    <!-- INFO BAR -->
     <div class="info-bar" id="infoBar" style="display:none;">
       <i class="fas fa-info-circle"></i>
       <span>
@@ -319,7 +319,7 @@
       </span>
     </div>
 
-    <!-- KELAS TABS (mode detail, jika >1 kelas) -->
+    <!-- KELAS TABS -->
     <div class="kelas-tabs" id="kelasTabs" style="display:none;"></div>
 
     <!-- LOADING -->
@@ -338,7 +338,7 @@
   <script src="../assets/js/core/cache.js"></script>
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
-    <script>
+  <script>
     // ============================================
     // STATE
     // ============================================
@@ -349,7 +349,7 @@
     let filteredUnits = [];
     let activeClassId = null;
     let progressData = [];
-    let mode = 'list';  // 'list' atau 'detail'
+    let mode = 'list';
 
     // ============================================
     // INIT
@@ -371,7 +371,7 @@
     })();
 
     // ============================================
-    // MODE LIST: tampilkan semua mapel siswa
+    // MODE LIST
     // ============================================
     async function loadModeList() {
       try {
@@ -383,16 +383,11 @@
 
         const subjectsData = await getMyEnrolledSubjects(currentUser.id);
 
-        // Kelompokkan per mapel
         const bySubject = {};
         (subjectsData || []).forEach(s => {
           const sid = String(s.subject_id);
           if (!bySubject[sid]) {
-            bySubject[sid] = {
-              subject: s.subjects,
-              classes: [],
-              teachers: []
-            };
+            bySubject[sid] = { subject: s.subjects, classes: [], teachers: [] };
           }
           if (s.classes) bySubject[sid].classes.push(s.classes);
           if (s.profiles?.name) bySubject[sid].teachers.push(s.profiles.name);
@@ -419,8 +414,10 @@
         grid.innerHTML = subjectList.map(s => {
           const kelasNames = [...new Set(s.classes.map(c => c.name))].filter(Boolean);
           const teacherNames = [...new Set(s.teachers)].join(', ');
+          // FIX C1: guard subject id di onclick
+          const sid = String(s.subject.id).replace(/'/g, "\\'");
           return `
-            <div class="unit-card" onclick="openSubjectDetail('${s.subject.id}')">
+            <div class="unit-card" onclick="openSubjectDetail('${sid}')">
               <div class="unit-card-header">
                 <div class="unit-title">${escapeHtml(s.subject.name)}</div>
                 ${s.subject.code ? `<span class="unit-badge new">${escapeHtml(s.subject.code)}</span>` : ''}
@@ -433,7 +430,7 @@
                 <span><i class="fas fa-layer-group"></i> ${kelasNames.length} kelas</span>
               </div>
               <div class="unit-actions">
-                <button class="btn-buka" onclick="event.stopPropagation(); openSubjectDetail('${s.subject.id}')">
+                <button class="btn-buka" onclick="event.stopPropagation(); openSubjectDetail('${sid}')">
                   <i class="fas fa-arrow-right"></i> Buka Mapel
                 </button>
               </div>
@@ -458,16 +455,15 @@
           params: { subjectId }
         }, '*');
       } else {
-        window.location.href = 'mapel-list.html?embed=1&subjectId=' + subjectId;
+        window.location.href = 'mapel-list.html?embed=1&subjectId=' + encodeURIComponent(subjectId);
       }
     }
 
     // ============================================
-    // MODE DETAIL: mapel tertentu
+    // MODE DETAIL
     // ============================================
     async function loadModeDetail() {
       try {
-        // Ambil info subject + kelas dari enrollments
         const subjectsData = await getMyEnrolledSubjects(currentUser.id);
         const subjectInfo = subjectsData.find(s => String(s.subject_id) === String(subjectIdFromUrl));
         if (!subjectInfo) throw new Error('Mapel tidak ditemukan atau Anda tidak terdaftar di mapel ini.');
@@ -478,7 +474,6 @@
           'Daftar unit pembelajaran' + (currentSubject.code ? ' · ' + currentSubject.code : '');
         document.title = currentSubject.name + ' — Tembok Belajar';
 
-        // Ambil semua kelas untuk mapel ini
         const classesForSubject = subjectsData
           .filter(s => String(s.subject_id) === String(subjectIdFromUrl))
           .map(s => s.classes)
@@ -487,19 +482,13 @@
         classesForSubject.forEach(c => { uniqueClasses[String(c.id)] = c; });
         const classesList = Object.values(uniqueClasses);
 
-        // Ambil progress siswa
-        try {
-          progressData = await getMyProgress(currentUser.id);
-        } catch (e) {
-          console.warn('Progress error:', e);
-        }
+        try { progressData = await getMyProgress(currentUser.id); }
+        catch (e) { console.warn('Progress error:', e); }
 
-        // Render kelas tabs (jika >1 kelas)
         if (classesList.length > 1) {
           renderKelasTabs(classesList);
         }
 
-        // Load units
         await loadAllUnits(classesList);
 
         document.getElementById('loading').classList.add('hidden');
@@ -525,6 +514,7 @@
     function renderKelasTabs(classesList) {
       const container = document.getElementById('kelasTabs');
       container.style.display = 'flex';
+      // FIX C3: tombol "Semua Kelas" reset activeClassId ke null
       container.innerHTML = `
         <button class="kelas-tab active" onclick="switchKelas(null, this)">
           <i class="fas fa-layer-group"></i> Semua Kelas
@@ -538,7 +528,8 @@
     }
 
     function switchKelas(classId, btn) {
-      activeClassId = classId;
+      // FIX C3: reset activeClassId ke null jika "Semua Kelas"
+      activeClassId = classId || null;
       document.querySelectorAll('.kelas-tab').forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
       applyFilter();
@@ -546,89 +537,146 @@
 
     // ============================================
     // LOAD UNITS
+    // FIX C4: BATCH QUERY — dari ~60 query → 3 query
+    // FIX C5: guard u.annual_plans
     // ============================================
     async function loadAllUnits(classesList) {
       const grid = document.getElementById('unitGrid');
       grid.innerHTML = '<div class="empty-row"><div class="spinner"></div><p>Memuat unit...</p></div>';
 
       try {
-        const allUnitsTemp = [];
+        const client = initSupabase();
 
-        for (const c of classesList) {
-          try {
-            const units = await getUnitsPublishedByClass(c.id);
-            const filtered = units.filter(u =>
-              String(u.annual_plans?.subject_id) === String(subjectIdFromUrl)
-            );
-            filtered.forEach(u => {
-              allUnitsTemp.push({
-                ...u,
-                _classId: c.id,
-                _className: c.name
-              });
-            });
-          } catch (e) {
-            console.warn('Load unit kelas ' + c.id + ':', e);
-          }
-        }
+        // STEP 1: paralel ambil units per kelas (biasanya 1-3 kelas, cepat)
+        const classIdArr = classesList.map(c => c.id);
+        const unitsPerClass = await Promise.all(
+          classIdArr.map(cid =>
+            getUnitsPublishedByClass(cid).catch(e => { console.warn('Unit kelas ' + cid + ':', e); return []; })
+          )
+        );
 
-        // Deduplicate by unit id
+        // STEP 2: flatten + dedup + filter by subject
         const unitMap = {};
-        allUnitsTemp.forEach(u => {
-          const uid = String(u.id);
-          if (!unitMap[uid]) {
-            unitMap[uid] = { ...u, _classNames: [u._className] };
-          } else {
-            if (!unitMap[uid]._classNames.includes(u._className)) {
-              unitMap[uid]._classNames.push(u._className);
+        const allUnitsTemp = [];
+        classIdArr.forEach((cid, idx) => {
+          const classInfo = classesList[idx];
+          const units = unitsPerClass[idx] || [];
+          units.forEach(u => {
+            // FIX C5: guard annual_plans null
+            const subjectId = u.annual_plans?.subject_id;
+            if (String(subjectId) !== String(subjectIdFromUrl)) return;
+
+            const uid = String(u.id);
+            if (!unitMap[uid]) {
+              unitMap[uid] = { ...u, _classNames: [classInfo.name], _classIds: [classInfo.id] };
+            } else {
+              if (!unitMap[uid]._classNames.includes(classInfo.name)) {
+                unitMap[uid]._classNames.push(classInfo.name);
+              }
+              if (!unitMap[uid]._classIds.includes(classInfo.id)) {
+                unitMap[uid]._classIds.push(classInfo.id);
+              }
             }
-          }
+          });
         });
 
         allUnits = Object.values(unitMap);
 
-        // Hitung progress per unit
-        for (const unit of allUnits) {
-          try {
-            const { data: acts } = await supabaseClient
-              .from('unit_activities')
-              .select('id')
-              .eq('unit_id', unit.id);
-            const activityIds = (acts || []).map(a => a.id);
+        // STEP 3: FIX C4 — batch query untuk SEMUA unit sekaligus
+        // Sebelumnya: per unit query unit_activities + submissions + reflections (N×3 query)
+        // Sekarang: 3 query TOTAL (1 unit_activities, 1 submissions, 1 reflections)
+        if (allUnits.length > 0) {
+          const allUnitIds = allUnits.map(u => u.id);
+
+          // 3a. Batch ambil semua unit_activities
+          const { data: allActs } = await client.from('unit_activities')
+            .select('id, unit_id')
+            .in('unit_id', allUnitIds);
+
+          // Map: unit_id → [activity_id]
+          const actsByUnit = {};
+          const allActivityIds = [];
+          (allActs || []).forEach(a => {
+            if (!actsByUnit[a.unit_id]) actsByUnit[a.unit_id] = [];
+            actsByUnit[a.unit_id].push(a.id);
+            allActivityIds.push(a.id);
+          });
+
+          // 3b. Batch ambil submissions + reflections sekaligus
+          let subDone = new Set();
+          let reflDone = new Set();
+          let progDone = new Set(); 
+
+          if (allActivityIds.length > 0) {
+            // Paralel 2 query
+            // FIX: .catch() tidak valid di Supabase query builder.
+            // Bungkus pakai Promise.resolve().catch() atau try/catch.
+            let subsRes = { data: [] };
+            let reflRes = { data: [] };
+            let progRes = { data: [] };
+
+            try {
+              subsRes = await client.from('submissions')
+                .select('activity_id')
+                .eq('student_id', currentUser.id)
+                .in('activity_id', allActivityIds);
+            } catch (e) {
+              console.warn('Load submissions batch error:', e);
+            }
+
+            try {
+              reflRes = await client.from('reflections')
+                .select('activity_id')
+                .eq('student_id', currentUser.id)
+                .in('activity_id', allActivityIds);
+            } catch (e) {
+              console.warn('Load reflections batch error:', e);
+            }
+
+            // FIX: sertakan tabel progress agar sama dengan logika unit-view
+            try {
+              progRes = await client.from('progress')
+                .select('activity_id, status')
+                .eq('student_id', currentUser.id)
+                .in('activity_id', allActivityIds)
+                .eq('status', 'completed');
+            } catch (e) {
+              console.warn('Load progress batch error:', e);
+            }
+
+            subDone  = new Set((subsRes.data  || []).map(s => String(s.activity_id)));
+            reflDone = new Set((reflRes.data  || []).map(r => String(r.activity_id)));
+            progDone = new Set((progRes.data || []).map(p => String(p.activity_id)));
+          }
+
+          // 3c. Hitung progress per unit (in-memory, tanpa query)
+          allUnits.forEach(unit => {
+            const activityIds = actsByUnit[unit.id] || [];
             unit._totalActivities = activityIds.length;
 
             if (activityIds.length === 0) {
               unit._completedActivities = 0;
               unit._percent = 0;
             } else {
-              const { data: subs } = await supabaseClient
-                .from('submissions')
-                .select('id')
-                .eq('student_id', currentUser.id)
-                .in('activity_id', activityIds);
-              const submitted = (subs || []).length;
-
-              let submittedReflections = 0;
-              try {
-                const { data: refl } = await supabaseClient
-                  .from('reflections')
-                  .select('id')
-                  .eq('student_id', currentUser.id)
-                  .in('activity_id', activityIds);
-                submittedReflections = (refl || []).length;
-              } catch (e) {}
-
-              const totalDone = Math.max(submitted, submittedReflections);
+              const allDone = new Set();
+              activityIds.forEach(aid => {
+                if (subDone.has(String(aid)) ||
+                    reflDone.has(String(aid)) ||
+                    progDone.has(String(aid))) {
+                  allDone.add(String(aid));
+                }
+              });
+              const totalDone = allDone.size;
               unit._completedActivities = totalDone;
+              // FIX C2: >= 100 (defensif)
               unit._percent = Math.round((totalDone / activityIds.length) * 100);
             }
-          } catch (e) {
-            unit._totalActivities = 0;
-            unit._completedActivities = 0;
-            unit._percent = 0;
-          }
+          });
+        } else {
+          allUnits = [];
         }
 
+        // Sort by created_at
         allUnits.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
         document.getElementById('infoSubjectName').textContent = currentSubject.name;
@@ -653,7 +701,10 @@
       const status = document.getElementById('filterStatus').value;
 
       filteredUnits = allUnits.filter(u => {
-        if (activeClassId && String(u._classId) !== String(activeClassId)) return false;
+        if (activeClassId) {
+          const classIds = u._classIds || [];
+          if (!classIds.some(cid => String(cid) === String(activeClassId))) return false;
+        }
 
         if (keyword) {
           const title = (u.title || '').toLowerCase();
@@ -669,7 +720,8 @@
         return true;
       });
 
-      const completed = allUnits.filter(u => u._percent === 100).length;
+      // FIX C2: >= 100
+      const completed = allUnits.filter(u => (u._percent || 0) >= 100).length;
       document.getElementById('infoCompleted').textContent = completed;
 
       renderUnitGrid();
@@ -682,12 +734,13 @@
     }
 
     function getUnitStatus(unit) {
-      if (unit._percent === 100) return 'completed';
-      if (unit._percent > 0) return 'in-progress';
+      // FIX C2: >= 100
+      if ((unit._percent || 0) >= 100) return 'completed';
+      if ((unit._percent || 0) > 0) return 'in-progress';
       return 'new';
     }
 
-        // ============================================
+    // ============================================
     // RENDER UNIT GRID
     // ============================================
     function renderUnitGrid() {
@@ -715,9 +768,12 @@
         }[status];
         const btnCls = status === 'completed' ? 'completed' : '';
 
+        // FIX C1: guard onclick unit id
+        const uid = String(u.id).replace(/'/g, "\\'");
+
         return `
-          <div class="unit-card ${status}" onclick="openUnit('${u.id}')">
-            <div class="unit-card-header">
+          <div class="unit-card ${status}" onclick="openUnit('${uid}')">
+                        <div class="unit-card-header">
               <div class="unit-title">${escapeHtml(u.title)}</div>
               <span class="unit-badge ${statusConfig.cls}">
                 <i class="fas ${statusConfig.icon}"></i> ${statusConfig.label}
@@ -725,15 +781,15 @@
             </div>
             <div class="unit-desc">${escapeHtml(u.description || 'Belum ada deskripsi.')}</div>
             <div class="unit-meta">
-              <span><i class="fas fa-layer-group"></i> ${u._totalActivities} aktivitas</span>
-              ${u._classNames.length > 0 ? `<span><i class="fas fa-school"></i> ${escapeHtml(u._classNames.join(', '))}</span>` : ''}
+              <span><i class="fas fa-layer-group"></i> ${u._totalActivities || 0} aktivitas</span>
+              ${u._classNames && u._classNames.length > 0 ? `<span><i class="fas fa-school"></i> ${escapeHtml(u._classNames.join(', '))}</span>` : ''}
             </div>
             <div class="unit-progress-bar">
-              <div class="unit-progress-fill ${status === 'completed' ? 'completed' : ''}" style="width:${u._percent}%;"></div>
+              <div class="unit-progress-fill ${status === 'completed' ? 'completed' : ''}" style="width:${u._percent || 0}%;"></div>
             </div>
             <div class="unit-progress-text">
-              <span><strong>${u._completedActivities}</strong> / ${u._totalActivities} selesai</span>
-              <span><strong>${u._percent}%</strong></span>
+              <span><strong>${u._completedActivities || 0}</strong> / ${u._totalActivities || 0} selesai</span>
+              <span><strong>${u._percent || 0}%</strong></span>
             </div>
             <div class="unit-actions">
               <button class="btn-buka ${btnCls}">
@@ -757,7 +813,7 @@
           params: { unitId }
         }, '*');
       } else {
-        window.location.href = 'unit-view.html?embed=1&unitId=' + unitId;
+        window.location.href = 'unit-view.html?embed=1&unitId=' + encodeURIComponent(unitId);
       }
     }
 

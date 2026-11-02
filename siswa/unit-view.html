@@ -191,7 +191,7 @@
       margin-top: 0.5rem; padding: 3px 10px; border-radius: 999px;
       font-size: 0.7rem; font-weight: 700;
     }
-    .activity-render-status.done { background: var(--success-light, #d1fae5); color: var(--success-dark); }
+    .activity-render-status.done { background: #d1fae5; color: var(--success-dark); }
     .activity-render-body { padding: 1.8rem; }
     .component-block { margin-bottom: 1.4rem; line-height: 1.7; }
     .component-block:last-child { margin-bottom: 0; }
@@ -390,7 +390,7 @@
     .komentar-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; max-height: 400px; overflow-y: auto; }
     .komentar-item {
       background: white; border-radius: 8px; padding: 0.7rem 0.9rem;
-      border-left: 3px solid var(--success-light, #a7f3d0);
+      border-left: 3px solid #a7f3d0;
     }
     .komentar-item-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
     .komentar-author-avatar {
@@ -404,7 +404,7 @@
       display: inline-block; padding: 1px 6px; border-radius: 4px;
       font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
     }
-    .komentar-role-badge.guru { background: var(--success-light, #d1fae5); color: var(--success-dark); }
+    .komentar-role-badge.guru { background: #d1fae5; color: var(--success-dark); }
     .komentar-role-badge.siswa { background: #dbeafe; color: #1e40af; }
     .komentar-time { font-size: 0.68rem; color: var(--text-muted); margin-left: auto; }
     .komentar-body { font-size: 0.85rem; color: var(--text-secondary); white-space: pre-wrap; line-height: 1.5; }
@@ -581,7 +581,7 @@
 
   <!-- SCRIPT -->
   <script src="../assets/js/core/cache.js"></script>
-<script src="../assets/js/config.js"></script>
+  <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
     // ============================================
@@ -592,12 +592,14 @@
     let currentPlan = null;
     let activities = [];
     let activeActivityId = null;
-    let allSubmissions = [];          // submissions untuk semua aktivitas
-    let allReflections = [];          // reflections untuk semua aktivitas
-    let allForumPosts = [];           // forum posts untuk aktivitas diskusi
-    let answersCache = {};            // { activityId: { answers } } — cache lokal
-    let saveTimers = {};              // debounce timers per activity
+    let allSubmissions = [];
+    let allReflections = [];
+    let allProgressRows = [];
+    let allForumPosts = [];
+    let answersCache = {};        // { activityId: { compId: { value } } }
+    let saveTimers = {};
     let submitting = false;
+    let autoCompleteTimers = {};  // FIX A3: timer per activity, bisa dibatalkan
 
     const ACTIVITY_TYPE_LABEL = {
       materi: 'Materi', lkpd: 'LKPD', asesmen: 'Asesmen',
@@ -659,7 +661,6 @@
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('unitScreen').classList.remove('hidden');
 
-        // Render aktivitas pertama
         if (activities.length > 0) {
           activeActivityId = activities[0].id;
           renderActivityList();
@@ -688,16 +689,12 @@
     // LOAD DATA
     // ============================================
     async function loadUnitAndActivities(unitId) {
-      const client = initSupabase();
-
-      // Ambil unit
       currentUnit = await getUnitById(unitId);
       if (!currentUnit) throw new Error('Unit tidak ditemukan.');
       if (currentUnit.status !== 'published') throw new Error('Unit ini belum dipublikasikan.');
 
       currentPlan = currentUnit.annual_plans;
 
-      // Render header
       document.getElementById('topbarTitle').textContent = currentUnit.title;
       document.getElementById('topbarSub').textContent =
         (currentPlan?.classes?.name || '-') + ' · ' +
@@ -710,7 +707,6 @@
         <span><i class="fas fa-book"></i> ${escapeHtml(currentPlan?.subjects?.name || '-')}</span>
       `;
 
-      // Ambil activities
       activities = await getUnitActivities(unitId);
       document.getElementById('activityCountBadge').textContent = activities.length;
     }
@@ -721,31 +717,30 @@
       const client = initSupabase();
       const activityIds = activities.map(a => a.id);
 
-      // Ambil submissions
       try {
         const { data: subs } = await client.from('submissions')
           .select('id, activity_id, student_id, status, answers, score, teacher_feedback, submitted_at')
           .eq('student_id', currentUser.id)
           .in('activity_id', activityIds);
         allSubmissions = subs || [];
-      } catch (e) {
-        console.warn('Load submissions error:', e);
-        allSubmissions = [];
-      }
+      } catch (e) { console.warn('Load submissions error:', e); allSubmissions = []; }
 
-      // Ambil reflections
       try {
         const { data: refl } = await client.from('reflections')
           .select('id, activity_id, student_id, answers, submitted_at')
           .eq('student_id', currentUser.id)
           .in('activity_id', activityIds);
         allReflections = refl || [];
-      } catch (e) {
-        console.warn('Load reflections error:', e);
-        allReflections = [];
-      }
+      } catch (e) { console.warn('Load reflections error:', e); allReflections = []; }
 
-      // Ambil forum posts (untuk kolom komentar)
+      try {
+        const { data: prog } = await client.from('progress')
+          .select('id, activity_id, student_id, status, completed_at')
+          .eq('student_id', currentUser.id)
+          .in('activity_id', activityIds);
+        allProgressRows = prog || [];
+      } catch (e) { console.warn('Load progress error:', e); allProgressRows = []; }
+
       try {
         const { data: forum } = await client.from('forum_posts')
           .select(`
@@ -755,10 +750,7 @@
           .in('activity_id', activityIds)
           .order('created_at', { ascending: true });
         allForumPosts = forum || [];
-      } catch (e) {
-        console.warn('Load forum error:', e);
-        allForumPosts = [];
-      }
+      } catch (e) { console.warn('Load forum error:', e); allForumPosts = []; }
     }
 
     // ============================================
@@ -787,9 +779,14 @@
 
     function checkActivityCompleted(activityId) {
       const sub = allSubmissions.find(s => String(s.activity_id) === String(activityId));
-      if (sub && (sub.status === 'submitted' || sub.status === 'graded')) return true;
+      if (sub && (sub.status === 'submitted' || sub.status === 'graded' || sub.status === 'completed')) return true;
+
       const refl = allReflections.find(r => String(r.activity_id) === String(activityId));
       if (refl) return true;
+
+      const prog = allProgressRows.find(p => String(p.activity_id) === String(activityId));
+      if (prog && prog.status === 'completed') return true;
+
       return false;
     }
 
@@ -797,10 +794,15 @@
     // SWITCH ACTIVITY
     // ============================================
     async function switchActivity(activityId) {
-      // Save pending changes dari aktivitas sebelumnya
       if (activeActivityId && saveTimers[activeActivityId]) {
         clearTimeout(saveTimers[activeActivityId]);
         await flushSave(activeActivityId);
+      }
+
+      // FIX A3: batalkan auto-complete timer aktivitas sebelumnya
+      if (activeActivityId && autoCompleteTimers[activeActivityId]) {
+        clearTimeout(autoCompleteTimers[activeActivityId]);
+        delete autoCompleteTimers[activeActivityId];
       }
 
       activeActivityId = activityId;
@@ -808,6 +810,50 @@
       await renderActiveActivity();
       updateFooterNav();
       document.getElementById('previewContent').scrollTop = 0;
+
+      await tryAutoCompleteActivity(activityId);
+    }
+
+    // ============================================
+    // AUTO-PROGRESS
+    // FIX A3: HANYA update progress, JANGAN insert dummy submission.
+    // Dummy submission memblokir submit LKPD yang sebenarnya.
+    // ============================================
+    async function tryAutoCompleteActivity(activityId) {
+      const activity = activities.find(a => String(a.id) === String(activityId));
+      if (!activity) return;
+
+      const autoTypes = ['materi', 'custom', 'diskusi'];
+      if (!autoTypes.includes(activity.type)) return;
+
+      if (checkActivityCompleted(activityId)) return;
+
+      // Batalkan timer lama jika ada
+      if (autoCompleteTimers[activityId]) clearTimeout(autoCompleteTimers[activityId]);
+
+      autoCompleteTimers[activityId] = setTimeout(async () => {
+        delete autoCompleteTimers[activityId];
+
+        if (String(activeActivityId) !== String(activityId)) return;
+        if (checkActivityCompleted(activityId)) return;
+
+        try {
+          await upsertProgress({
+            studentId: currentUser.id,
+            unitId: currentUnit.id,
+            activityId: activityId,
+            status: 'completed',
+            completedAt: new Date().toISOString()
+          });
+
+          await loadUserSubmissions(currentUnit.id);
+          renderActivityList();
+          updateProgressBadge();
+          showSaveIndicator();
+        } catch (err) {
+          console.warn('Auto-progress error:', err);
+        }
+      }, 2000);
     }
 
     async function renderActiveActivity() {
@@ -820,7 +866,6 @@
       const isCompleted = checkActivityCompleted(activity.id);
       const sub = allSubmissions.find(s => String(s.activity_id) === String(activity.id));
 
-      // Ambil komponen
       let components = [];
       try {
         components = await getActivityComponents(activity.id);
@@ -829,7 +874,6 @@
         return;
       }
 
-      // Cek apakah aktivitas punya LKPD/asesmen/refleksi (untuk tombol submit)
       const hasSubmitComponent = components.some(c => c.component_type === 'tombol_submit' || c.component_type === 'tombol_submit_refleksi');
       const isRefleksi = activity.type === 'refleksi';
 
@@ -837,7 +881,6 @@
         ? `<div class="empty-state" style="padding:2rem 1rem;"><span class="emoji">📄</span><h3>Belum Ada Konten</h3></div>`
         : components.map(c => `<div class="component-block">${renderComponent(c.component_type, c.component_data || {}, activity, c)}</div>`).join('');
 
-      // Tombol submit global (kalau tidak ada tombol submit di komponen)
       let globalSubmitHtml = '';
       if (!hasSubmitComponent && (activity.type === 'lkpd' || activity.type === 'asesmen' || activity.type === 'refleksi')) {
         const submitLabel = isCompleted ? '✓ Sudah Dikumpulkan' : (isRefleksi ? 'Kirim Refleksi' : 'Kumpulkan Jawaban');
@@ -850,11 +893,10 @@
           </div>`;
       }
 
-      // Nilai & feedback dari guru
       let scoreHtml = '';
       if (sub && sub.score !== null && sub.score !== undefined) {
         scoreHtml = `
-          <div style="margin-top:1.5rem; padding:1rem 1.2rem; background:var(--success-light, #d1fae5); border-left:4px solid var(--success); border-radius:8px;">
+          <div style="margin-top:1.5rem; padding:1rem 1.2rem; background:#d1fae5; border-left:4px solid var(--success); border-radius:8px;">
             <div style="font-weight:800; color:var(--success-dark); font-size:0.9rem; margin-bottom:0.4rem;">
               <i class="fas fa-star"></i> Nilai: ${parseFloat(sub.score)}
             </div>
@@ -876,12 +918,10 @@
           </div>
         </div>`;
     }
-
-    // ============================================
+        // ============================================
     // RENDER COMPONENT (31 TIPE)
     // ============================================
     function renderComponent(type, data, activity, comp) {
-      // Ambil jawaban tersimpan dari cache
       const activityAnswers = getActivityAnswers(activity.id);
       const savedAnswer = activityAnswers[comp.id];
       const savedValue = savedAnswer ? savedAnswer.value : null;
@@ -1037,6 +1077,7 @@
         </div>`;
       }
 
+      // FIX A5 + A6: simpan index, bukan text. Event delegation via data-attributes.
       if (type === 'checkbox' || type === 'radio') {
         const opts = data.options || [];
         const inputType = type === 'radio' ? 'radio' : 'checkbox';
@@ -1044,8 +1085,12 @@
         return `<div class="lkpd-field">
           <label class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}${data.required ? '<span class="req">*</span>' : ''}</label>
           ${opts.map((o, i) => {
-            const isChecked = savedArr.includes(o);
-            return `<label class="lkpd-option-item ${isChecked ? 'checked' : ''}" onclick="toggleOption(this, '${activity.id}', '${comp.id}', '${inputType}', ${i})">
+            const isChecked = savedArr.includes(i) || savedArr.includes(String(i));
+            return `<label class="lkpd-option-item ${isChecked ? 'checked' : ''}" 
+              data-activity-id="${activity.id}" 
+              data-comp-id="${comp.id}" 
+              data-input-type="${inputType}" 
+              data-option-index="${i}">
               <input type="${inputType}" name="opt_${comp.id}" ${isChecked ? 'checked' : ''}>
               <span>${escapeHtml(o)}</span>
             </label>`;
@@ -1085,6 +1130,7 @@
         </div>`;
       }
 
+      // FIX A7: penilaian diri pakai data-attributes juga
       if (type === 'penilaian_diri') {
         const min = data.min || 1;
         const max = data.max || 5;
@@ -1093,7 +1139,10 @@
         for (let i = min; i <= max; i++) {
           const lbl = labels[i - min] || `Skala ${i}`;
           const isChecked = String(savedValue) === String(i);
-          opts.push(`<label class="penilaian-diri-item ${isChecked ? 'checked' : ''}" onclick="selectPenilaianDiri(this, '${activity.id}', '${comp.id}', ${i})">
+          opts.push(`<label class="penilaian-diri-item ${isChecked ? 'checked' : ''}" 
+            data-activity-id="${activity.id}" 
+            data-comp-id="${comp.id}" 
+            data-value="${i}">
             <input type="radio" name="pd_${comp.id}" ${isChecked ? 'checked' : ''}>
             <strong>${i}</strong> — ${escapeHtml(lbl)}
           </label>`);
@@ -1105,7 +1154,6 @@
       }
 
       if (type === 'tombol_submit') {
-        // Tombol ini dirender di bawah body (lihat renderActiveActivity)
         return '';
       }
 
@@ -1128,7 +1176,10 @@
           <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
           ${opts.map((o, i) => {
             const isChecked = String(savedValue) === String(i);
-            return `<label class="asesmen-jawaban-item ${isChecked ? 'checked' : ''}" onclick="selectAsesmenOption(this, '${activity.id}', '${comp.id}', ${i})">
+            return `<label class="asesmen-jawaban-item ${isChecked ? 'checked' : ''}" 
+              data-activity-id="${activity.id}" 
+              data-comp-id="${comp.id}" 
+              data-option-index="${i}">
               <input type="radio" name="pg_${comp.id}" ${isChecked ? 'checked' : ''}>
               <div class="asesmen-jawaban-label">${String.fromCharCode(65+i)}</div>
               <div>${escapeHtml(o)}</div>
@@ -1144,8 +1195,11 @@
           <div class="asesmen-soal-num">PG Kompleks · ${data.points || 15} poin</div>
           <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
           ${opts.map((o, i) => {
-            const isChecked = savedArr.includes(i);
-            return `<label class="asesmen-jawaban-item ${isChecked ? 'checked' : ''}" onclick="toggleAsesmenCheckbox(this, '${activity.id}', '${comp.id}', ${i})">
+            const isChecked = savedArr.includes(i) || savedArr.includes(String(i));
+            return `<label class="asesmen-jawaban-item ${isChecked ? 'checked' : ''}" 
+              data-activity-id="${activity.id}" 
+              data-comp-id="${comp.id}" 
+              data-option-index="${i}">
               <input type="checkbox" ${isChecked ? 'checked' : ''}>
               <div class="asesmen-jawaban-label">${String.fromCharCode(65+i)}</div>
               <div>${escapeHtml(o)}</div>
@@ -1194,10 +1248,12 @@
           <div class="asesmen-soal-num">Benar/Salah · ${data.points || 5} poin</div>
           <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pernyataan)')}</div>
           <div style="display:flex; gap:0.6rem;">
-            <label class="asesmen-jawaban-item ${savedVal === true || savedVal === 'true' ? 'checked' : ''}" style="flex:1; justify-content:center;" onclick="selectBS(this, '${activity.id}', '${comp.id}', true)">
+            <label class="asesmen-jawaban-item ${savedVal === true || savedVal === 'true' ? 'checked' : ''}" style="flex:1; justify-content:center;"
+              data-activity-id="${activity.id}" data-comp-id="${comp.id}" data-value="true">
               <input type="radio" name="bs_${comp.id}" ${savedVal === true || savedVal === 'true' ? 'checked' : ''}> BENAR
             </label>
-            <label class="asesmen-jawaban-item ${savedVal === false || savedVal === 'false' ? 'checked' : ''}" style="flex:1; justify-content:center;" onclick="selectBS(this, '${activity.id}', '${comp.id}', false)">
+            <label class="asesmen-jawaban-item ${savedVal === false || savedVal === 'false' ? 'checked' : ''}" style="flex:1; justify-content:center;"
+              data-activity-id="${activity.id}" data-comp-id="${comp.id}" data-value="false">
               <input type="radio" name="bs_${comp.id}" ${savedVal === false || savedVal === 'false' ? 'checked' : ''}> SALAH
             </label>
           </div>
@@ -1217,6 +1273,7 @@
         </div>`;
       }
 
+      // FIX A6: mood tracker simpan index bukan text
       if (type === 'mood_tracker') {
         const opts = data.options || [];
         return `<div class="refleksi-question-box">
@@ -1226,8 +1283,9 @@
               const parts = o.split(' ');
               const emoji = parts[0] || '😐';
               const label = parts.slice(1).join(' ') || o;
-              const isChecked = savedValue === o;
-              return `<div class="mood-item-card ${isChecked ? 'checked' : ''}" onclick="selectMood(this, '${activity.id}', '${comp.id}', '${escapeHtml(o)}')">
+              const isChecked = String(savedValue) === String(i) || savedValue === o;
+              return `<div class="mood-item-card ${isChecked ? 'checked' : ''}" 
+                data-activity-id="${activity.id}" data-comp-id="${comp.id}" data-option-index="${i}" data-value="${escapeHtml(o)}">
                 <span class="mood-emoji">${emoji}</span>
                 <span>${escapeHtml(label)}</span>
               </div>`;
@@ -1294,12 +1352,12 @@
             </div>`;
           }).join('');
 
-      return `<div class="komentar-box">
+      return `<div class="komentar-box" data-komentar-activity="${activity.id}">
         <div class="komentar-header"><i class="fas fa-comments"></i> ${escapeHtml(data.label || 'Diskusi Kelas')}</div>
         <div class="komentar-list">${postsHtml}</div>
         <div class="komentar-form">
-          <input type="text" id="komentarInput_${activity.id}" placeholder="${escapeHtml(data.placeholder || 'Tulis komentar...')}" maxlength="500" onkeypress="if(event.key==='Enter')submitKomentar('${activity.id}')">
-          <button onclick="submitKomentar('${activity.id}')"><i class="fas fa-paper-plane"></i> Kirim</button>
+          <input type="text" class="komentar-input" data-activity-id="${activity.id}" placeholder="${escapeHtml(data.placeholder || 'Tulis komentar...')}" maxlength="500">
+          <button class="komentar-submit-btn" data-activity-id="${activity.id}"><i class="fas fa-paper-plane"></i> Kirim</button>
         </div>
       </div>`;
     }
@@ -1308,7 +1366,6 @@
     // ANSWER MANAGEMENT (auto-save)
     // ============================================
     function getActivityAnswers(activityId) {
-      // Cari di submission atau reflection
       const sub = allSubmissions.find(s => String(s.activity_id) === String(activityId));
       if (sub && sub.answers && typeof sub.answers === 'object') {
         return sub.answers;
@@ -1347,94 +1404,126 @@
       debounceSave(activityId);
     }
 
-    function toggleOption(labelEl, activityId, compId, inputType, optionIndex) {
-      setTimeout(() => {
-        const container = labelEl.parentElement;
-        const checkedValues = [];
-        container.querySelectorAll('input[type="' + inputType + '"]:checked').forEach((input, idx) => {
-          const parentLabel = input.closest('.lkpd-option-item');
-          const text = parentLabel.querySelector('span').textContent;
-          checkedValues.push(text);
-          parentLabel.classList.add('checked');
-        });
-        container.querySelectorAll('.lkpd-option-item').forEach(l => {
-          const input = l.querySelector('input');
-          if (!input.checked) l.classList.remove('checked');
-        });
+    // ============================================
+    // FIX A5 + A6 + A7: Event delegation — TANPA setTimeout, TANPA inline onclick
+    // ============================================
+    document.addEventListener('click', (e) => {
+      // LKPD checkbox/radio
+      const optItem = e.target.closest('.lkpd-option-item');
+      if (optItem) {
+        e.preventDefault();
+        const activityId = optItem.dataset.activityId;
+        const compId = optItem.dataset.compId;
+        const inputType = optItem.dataset.inputType;
+        const optionIndex = parseInt(optItem.dataset.optionIndex, 10);
 
-        if (!answersCache[activityId]) answersCache[activityId] = {};
-        answersCache[activityId][compId] = { value: inputType === 'radio' ? checkedValues[0] : checkedValues };
+        const container = optItem.parentElement;
+        if (inputType === 'radio') {
+          container.querySelectorAll('.lkpd-option-item').forEach(el => el.classList.remove('checked'));
+          optItem.classList.add('checked');
+          if (!answersCache[activityId]) answersCache[activityId] = {};
+          answersCache[activityId][compId] = { value: optionIndex };
+        } else {
+          optItem.classList.toggle('checked');
+          const checkedIndices = [];
+          container.querySelectorAll('.lkpd-option-item.checked').forEach(el => {
+            checkedIndices.push(parseInt(el.dataset.optionIndex, 10));
+          });
+          if (!answersCache[activityId]) answersCache[activityId] = {};
+          answersCache[activityId][compId] = { value: checkedIndices };
+        }
         debounceSave(activityId);
-      }, 10);
-    }
+        return;
+      }
 
-    function selectPenilaianDiri(labelEl, activityId, compId, value) {
-      setTimeout(() => {
-        const container = labelEl.parentElement;
-        container.querySelectorAll('.penilaian-diri-item').forEach(l => l.classList.remove('checked'));
-        labelEl.classList.add('checked');
+      // Penilaian diri
+      const pdItem = e.target.closest('.penilaian-diri-item');
+      if (pdItem) {
+        e.preventDefault();
+        const activityId = pdItem.dataset.activityId;
+        const compId = pdItem.dataset.compId;
+        const value = parseInt(pdItem.dataset.value, 10);
 
+        const container = pdItem.parentElement;
+        container.querySelectorAll('.penilaian-diri-item').forEach(el => el.classList.remove('checked'));
+        pdItem.classList.add('checked');
         if (!answersCache[activityId]) answersCache[activityId] = {};
-        answersCache[activityId][compId] = { value: value };
+        answersCache[activityId][compId] = { value };
         debounceSave(activityId);
-      }, 10);
-    }
+        return;
+      }
 
-    function selectAsesmenOption(labelEl, activityId, compId, optionIndex) {
-      setTimeout(() => {
-        const container = labelEl.parentElement;
-        container.querySelectorAll('.asesmen-jawaban-item').forEach(l => l.classList.remove('checked'));
-        labelEl.classList.add('checked');
+      // Asesmen PG
+      const asesmenPg = e.target.closest('.asesmen-jawaban-item[data-option-index]');
+      if (asesmenPg) {
+        e.preventDefault();
+        const activityId = asesmenPg.dataset.activityId;
+        const compId = asesmenPg.dataset.compId;
+        const optionIndex = parseInt(asesmenPg.dataset.optionIndex, 10);
 
+        const container = asesmenPg.parentElement;
+        container.querySelectorAll('.asesmen-jawaban-item').forEach(el => el.classList.remove('checked'));
+        asesmenPg.classList.add('checked');
         if (!answersCache[activityId]) answersCache[activityId] = {};
         answersCache[activityId][compId] = { value: optionIndex };
         debounceSave(activityId);
-      }, 10);
-    }
+        return;
+      }
 
-    function toggleAsesmenCheckbox(labelEl, activityId, compId, optionIndex) {
-      setTimeout(() => {
-        const container = labelEl.parentElement;
-        const checkedIndices = [];
-        container.querySelectorAll('.asesmen-jawaban-item input[type="checkbox"]').forEach((input, idx) => {
-          const parentLabel = input.closest('.asesmen-jawaban-item');
-          if (input.checked) {
-            parentLabel.classList.add('checked');
-            checkedIndices.push(idx);
-          } else {
-            parentLabel.classList.remove('checked');
-          }
-        });
+      // Asesmen Benar/Salah
+      const asesmenBs = e.target.closest('.asesmen-jawaban-item[data-value]');
+      if (asesmenBs && !asesmenBs.dataset.optionIndex) {
+        e.preventDefault();
+        const activityId = asesmenBs.dataset.activityId;
+        const compId = asesmenBs.dataset.compId;
+        const rawVal = asesmenBs.dataset.value;
+        const value = rawVal === 'true' ? true : (rawVal === 'false' ? false : rawVal);
 
+        const container = asesmenBs.parentElement;
+        container.querySelectorAll('.asesmen-jawaban-item').forEach(el => el.classList.remove('checked'));
+        asesmenBs.classList.add('checked');
         if (!answersCache[activityId]) answersCache[activityId] = {};
-        answersCache[activityId][compId] = { value: checkedIndices };
+        answersCache[activityId][compId] = { value };
         debounceSave(activityId);
-      }, 10);
-    }
+        return;
+      }
 
-    function selectBS(labelEl, activityId, compId, value) {
-      setTimeout(() => {
-        const container = labelEl.parentElement;
-        container.querySelectorAll('.asesmen-jawaban-item').forEach(l => l.classList.remove('checked'));
-        labelEl.classList.add('checked');
+      // Mood tracker
+      const moodItem = e.target.closest('.mood-item-card');
+      if (moodItem) {
+        e.preventDefault();
+        const activityId = moodItem.dataset.activityId;
+        const compId = moodItem.dataset.compId;
+        const optionIndex = parseInt(moodItem.dataset.optionIndex, 10);
+        const value = moodItem.dataset.value;
 
-        if (!answersCache[activityId]) answersCache[activityId] = {};
-        answersCache[activityId][compId] = { value: value };
+        const container = moodItem.parentElement;
+        container.querySelectorAll('.mood-item-card').forEach(el => el.classList.remove('checked'));
+        moodItem.classList.add('checked');
+               if (!answersCache[activityId]) answersCache[activityId] = {};
+        answersCache[activityId][compId] = { value: optionIndex, raw: value };
         debounceSave(activityId);
-      }, 10);
-    }
+        return;
+      }
 
-    function selectMood(labelEl, activityId, compId, value) {
-      setTimeout(() => {
-        const container = labelEl.parentElement;
-        container.querySelectorAll('.mood-item-card').forEach(l => l.classList.remove('checked'));
-        labelEl.classList.add('checked');
+      // Tombol kirim komentar
+      const komentarBtn = e.target.closest('.komentar-submit-btn');
+      if (komentarBtn) {
+        e.preventDefault();
+        const activityId = komentarBtn.dataset.activityId;
+        submitKomentar(activityId);
+        return;
+      }
+    });
 
-        if (!answersCache[activityId]) answersCache[activityId] = {};
-        answersCache[activityId][compId] = { value: value };
-        debounceSave(activityId);
-      }, 10);
-    }
+    // Enter di input komentar → submit
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.classList.contains('komentar-input')) {
+        e.preventDefault();
+        const activityId = e.target.dataset.activityId;
+        submitKomentar(activityId);
+      }
+    });
 
     // ============================================
     // DEBOUNCE SAVE
@@ -1443,9 +1532,12 @@
       if (saveTimers[activityId]) clearTimeout(saveTimers[activityId]);
       saveTimers[activityId] = setTimeout(async () => {
         await flushSave(activityId);
-      }, 2000);
+      }, 1500);
     }
 
+    // ============================================
+    // FIX A2: pakai .limit(1).maybeSingle() agar tidak error PGRST116
+    // ============================================
     async function flushSave(activityId) {
       if (!answersCache[activityId]) return;
 
@@ -1459,9 +1551,8 @@
         const client = initSupabase();
 
         if (isRefleksi) {
-          // Simpan ke reflections
           const { data: existing } = await client.from('reflections')
-            .select('id').eq('activity_id', activityId).eq('student_id', currentUser.id).maybeSingle();
+            .select('id').eq('activity_id', activityId).eq('student_id', currentUser.id).limit(1).maybeSingle();
 
           if (existing) {
             await client.from('reflections').update({ answers, submitted_at: new Date().toISOString() }).eq('id', existing.id);
@@ -1469,12 +1560,15 @@
             await client.from('reflections').insert([{ activity_id: activityId, student_id: currentUser.id, answers }]);
           }
         } else {
-          // Simpan ke submissions (sebagai draft, status = 'submitted' atau 'draft')
+          // FIX A2: limit(1) → hindari error multiple rows
           const { data: existing } = await client.from('submissions')
-            .select('id').eq('activity_id', activityId).eq('student_id', currentUser.id).maybeSingle();
+            .select('id, status').eq('activity_id', activityId).eq('student_id', currentUser.id).limit(1).maybeSingle();
 
           if (existing) {
-            await client.from('submissions').update({ answers }).eq('id', existing.id);
+            // Jangan reset status 'submitted'/'graded' jadi 'draft'
+            const payload = { answers };
+            if (existing.status === 'draft' || !existing.status) payload.status = 'draft';
+            await client.from('submissions').update(payload).eq('id', existing.id);
           } else {
             await client.from('submissions').insert([{
               activity_id: activityId,
@@ -1506,7 +1600,6 @@
       submitting = true;
 
       try {
-        // Flush pending changes dulu
         if (saveTimers[activity.id]) {
           clearTimeout(saveTimers[activity.id]);
           await flushSave(activity.id);
@@ -1516,15 +1609,14 @@
         const isRefleksi = activity.type === 'refleksi';
 
         if (isRefleksi) {
-          // Reflections sudah tersimpan, cukup update submitted_at
           await client.from('reflections')
             .update({ submitted_at: new Date().toISOString() })
             .eq('activity_id', activity.id)
             .eq('student_id', currentUser.id);
         } else {
-          // Update submission status ke submitted
+          // FIX A2: limit(1)
           const { data: existing } = await client.from('submissions')
-            .select('id').eq('activity_id', activity.id).eq('student_id', currentUser.id).maybeSingle();
+            .select('id').eq('activity_id', activity.id).eq('student_id', currentUser.id).limit(1).maybeSingle();
 
           if (existing) {
             await client.from('submissions').update({
@@ -1535,13 +1627,12 @@
             await client.from('submissions').insert([{
               activity_id: activity.id,
               student_id: currentUser.id,
-              answers: {},
+              answers: answersCache[activity.id] || {},
               status: 'submitted',
               submitted_at: new Date().toISOString()
             }]);
           }
 
-          // Update progress
           try {
             await upsertProgress({
               studentId: currentUser.id,
@@ -1555,7 +1646,6 @@
 
         showToast('✅ Aktivitas berhasil dikumpulkan!', 'success');
 
-        // Reload data
         await loadUserSubmissions(currentUnit.id);
         renderActivityList();
         await renderActiveActivity();
@@ -1570,9 +1660,10 @@
 
     // ============================================
     // KOMENTAR (forum per aktivitas)
+    // FIX A1: title TIDAK NULL → kirim title string
     // ============================================
     async function submitKomentar(activityId) {
-      const input = document.getElementById('komentarInput_' + activityId);
+      const input = document.querySelector(`.komentar-input[data-activity-id="${activityId}"]`);
       if (!input) return;
       const body = input.value.trim();
       if (!body) return;
@@ -1585,10 +1676,11 @@
         const { error } = await client.from('forum_posts').insert([{
           unit_id: currentUnit.id,
           activity_id: activityId,
-          class_id: currentPlan?.class_id,
-          subject_id: currentPlan?.subject_id,
+          class_id: currentPlan?.class_id || null,
+          subject_id: currentPlan?.subject_id || null,
           author_id: currentUser.id,
-          title: null,
+          // FIX A1: title NOT NULL — kirim string
+          title: 'Komentar dari ' + (currentUser.name || 'Siswa'),
           body: body,
           parent_id: null
         }]);
@@ -1598,7 +1690,6 @@
         input.value = '';
         showToast('✅ Komentar terkirim', 'success');
 
-        // Reload forum posts
         await loadUserSubmissions(currentUnit.id);
         await renderActiveActivity();
       } catch (err) {
@@ -1638,7 +1729,6 @@
     }
 
     function exitUnit() {
-      // Save pending dulu
       Object.keys(saveTimers).forEach(aid => {
         clearTimeout(saveTimers[aid]);
         flushSave(aid);
@@ -1690,13 +1780,56 @@
       window._saveTimer = setTimeout(() => ind.classList.remove('show'), 1500);
     }
 
-    // Flush save saat close tab
+    // ============================================
+    // FIX A4: beforeunload — pakai fetch keepalive (sinkron-ish)
+    // ============================================
     window.addEventListener('beforeunload', () => {
       Object.keys(saveTimers).forEach(aid => {
         clearTimeout(saveTimers[aid]);
-        flushSave(aid);
+        // Fire-and-forget dengan keepalive — browser tetap kirim meskipun tab ditutup
+        try { flushSaveKeepalive(aid); } catch (e) {}
       });
     });
+
+    async function flushSaveKeepalive(activityId) {
+      if (!answersCache[activityId]) return;
+      const activity = activities.find(a => String(a.id) === String(activityId));
+      if (!activity) return;
+
+      const isRefleksi = activity.type === 'refleksi';
+      const answers = answersCache[activityId];
+      const client = initSupabase();
+      const { data: { session } } = await client.auth.getSession();
+      if (!session) return;
+
+      const url = `${SUPABASE_URL}/rest/v1/${isRefleksi ? 'reflections' : 'submissions'}`;
+      const headers = {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      };
+
+      try {
+        if (isRefleksi) {
+          await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ activity_id: activityId, student_id: currentUser.id, answers }),
+            keepalive: true
+          });
+        } else {
+          await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ activity_id: activityId, student_id: currentUser.id, answers, status: 'draft' }),
+            keepalive: true
+          });
+        }
+      } catch (e) {
+        console.warn('Keepalive flush error:', e);
+      }
+    }
   </script>
 </body>
 </html>
