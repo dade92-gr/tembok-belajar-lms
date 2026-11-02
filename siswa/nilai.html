@@ -9,439 +9,335 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- PATCH 1 -->
-  <script>
-    (function() {
-      function applyEmbedMode() {
-        if (new URLSearchParams(window.location.search).get('embed') === '1') {
-          document.documentElement.classList.add('tb-embed');
-          if (document.body) document.body.classList.add('tb-embed');
-        }
-      }
-      applyEmbedMode();
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applyEmbedMode);
-      }
-      window.addEventListener('load', applyEmbedMode);
-    })();
-  </script>
-
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scrollbar-gutter: stable; }
-
     :root {
-      --primary: #3b82f6;
-      --primary-dark: #2563eb;
-      --primary-light: #dbeafe;
-      --primary-lighter: #eff6ff;
-      --navy: #1e293b;
-      --navy-dark: #0f172a;
-      --success: #10b981;
-      --success-light: #d1fae5;
-      --warning: #f59e0b;
-      --warning-light: #fef3c7;
-      --danger: #ef4444;
-      --danger-light: #fee2e2;
-      --bg: #f1f5f9;
-      --bg-soft: #f8fafc;
-      --surface: #ffffff;
-      --text: #0f172a;
-      --text-secondary: #334155;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --header-height: 68px;
-      --radius: 12px;
-      --radius-lg: 16px;
-      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --orange: #f59e0b; --orange-dark: #d97706; --orange-light: #fef3c7; --orange-lighter: #fffbeb;
+      --primary: #3b82f6; --success: #10b981; --success-dark: #047857; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
       --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
       --transition: all 0.2s ease;
     }
-
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
     }
-
-    /* PATCH 2 */
-    html.tb-embed .btn-back,
     body.tb-embed .btn-back { display: none !important; }
-    html.tb-embed .page-container,
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
     body.tb-embed .page-container {
-      padding-top: calc(var(--header-height) + 1rem);
-      padding-bottom: 2rem;
-    }
-    html.tb-embed .back-nav,
-    body.tb-embed .back-nav { display: none !important; }
-    html.tb-embed .app-header,
-    body.tb-embed .app-header { display: none !important; }
-
-    .page-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem 1.5rem 3rem;
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
     }
 
     .page-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      gap: 1rem;
-      margin-bottom: 1.2rem;
-      flex-wrap: wrap;
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
     }
     .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
-
     .btn-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      padding: 0.45rem 0.9rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      font-weight: 600;
-      font-family: inherit;
-      text-decoration: none;
-      transition: var(--transition);
-      width: fit-content;
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
     }
-    .btn-back:hover {
-      background: var(--primary-light);
-      border-color: var(--primary);
-      color: var(--primary-dark);
-    }
-
+    .btn-back:hover { background: var(--orange-light); border-color: var(--orange); color: var(--orange-dark); }
     .page-toolbar h1 {
-      font-size: 1.5rem;
-      color: var(--navy);
-      font-weight: 800;
-      letter-spacing: -0.3px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
     }
-    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 i { color: var(--orange); font-size: 1.3rem; }
     .page-toolbar h1 small {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 400;
-      color: var(--text-muted);
-      margin-top: 4px;
-      letter-spacing: 0;
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
     }
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--orange); color: var(--orange);
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--orange-light); }
 
-    /* STAT GRID */
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.2rem;
+    /* STATS */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem; margin-bottom: 1rem;
     }
     .stat-card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 1.1rem 1.3rem;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-xs);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.2rem;
+      display: flex; align-items: center; gap: 1rem;
+      box-shadow: var(--shadow-sm);
     }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 4px; height: 100%;
-      background: var(--primary);
-      opacity: 0;
-      transition: var(--transition);
-    }
-    .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--primary);
-    }
-    .stat-card:hover::before { opacity: 1; }
     .stat-icon {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      flex-shrink: 0;
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
     }
-    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.orange { background: var(--orange-light); color: var(--orange-dark); }
     .stat-icon.green { background: #d1fae5; color: #059669; }
-    .stat-icon.orange { background: #fed7aa; color: #ea580c; }
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
     .stat-info { flex: 1; min-width: 0; }
-    .stat-value {
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.1;
-      letter-spacing: -0.5px;
-    }
-    .stat-label {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      font-weight: 500;
-      margin-top: 2px;
-    }
+    .stat-value { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 2px; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
 
-    /* PANEL */
-    .panel {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      padding: 1.4rem;
+    /* FILTER */
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr auto;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .filter-group label i { color: var(--orange); }
+    .filter-input, .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
+    }
+    .btn-reset {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-muted); padding: 0.55rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-reset:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+
+    /* TABLE */
+    .table-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); overflow: hidden;
       box-shadow: var(--shadow-sm);
     }
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table thead { background: var(--bg-soft); }
+    .data-table th {
+      padding: 0.85rem 1rem; text-align: left; font-weight: 700;
+      color: var(--text-muted); border-bottom: 2px solid var(--border);
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.85rem 1rem; border-bottom: 1px solid var(--border);
+      vertical-align: middle; color: var(--text);
+    }
+    .data-table tbody tr:hover { background: var(--orange-lighter); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
 
-    .panel-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 1rem;
-      padding-bottom: 0.6rem;
-      border-bottom: 2px solid var(--primary-light);
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .activity-cell { display: flex; flex-direction: column; gap: 2px; }
+    .activity-name { font-weight: 700; color: var(--text); font-size: 0.88rem; }
+    .activity-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .activity-type-badge {
+      display: inline-block; padding: 1px 6px; border-radius: 4px;
+      font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
     }
-    .panel-title i { color: var(--primary); font-size: 0.9rem; }
+    .activity-type-badge.materi { background: #dbeafe; color: #1e40af; }
+    .activity-type-badge.lkpd { background: #fef3c7; color: #92400e; }
+    .activity-type-badge.asesmen { background: #ede9fe; color: #6d28d9; }
+    .activity-type-badge.refleksi { background: #fce7f3; color: #be185d; }
+    .activity-type-badge.diskusi { background: #d1fae5; color: #047857; }
+    .activity-type-badge.custom { background: #f1f5f9; color: #475569; }
 
-    .badge-count {
-      background: var(--primary);
-      color: white;
-      padding: 2px 10px;
-      border-radius: 999px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      margin-left: auto;
-    }
+    .mapel-cell { font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; }
+    .kelas-cell { font-size: 0.78rem; color: var(--text-muted); }
 
-    /* NILAI LIST */
-    .nilai-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.9rem;
-    }
+    .nilai-cell { font-weight: 800; font-size: 1.1rem; }
+    .nilai-cell.high { color: var(--success-dark); }
+    .nilai-cell.mid { color: var(--warning); }
+    .nilai-cell.low { color: var(--danger); }
+    .nilai-empty { color: var(--text-muted); font-style: italic; font-weight: 400; font-size: 0.85rem; }
 
-    .nilai-item {
-      background: var(--bg-soft);
-      border-radius: 12px;
-      padding: 1.1rem 1.3rem;
-      border-left: 4px solid var(--primary);
-      border-top: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      gap: 1rem;
-      flex-wrap: wrap;
-      transition: var(--transition);
+    .status-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-weight: 700; font-size: 0.68rem; white-space: nowrap;
     }
-    .nilai-item:hover {
-      box-shadow: var(--shadow-sm);
-      border-left-color: var(--primary-dark);
-    }
+    .status-graded { background: #d1fae5; color: var(--success-dark); }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-submitted { background: #dbeafe; color: #1e40af; }
 
-    .nilai-item.high { border-left-color: var(--success); }
-    .nilai-item.mid { border-left-color: var(--warning); }
-    .nilai-item.low { border-left-color: var(--danger); }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition); font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover { background: var(--orange-light); border-color: var(--orange); color: var(--orange-dark); }
 
-    .nilai-info { flex: 1; min-width: 240px; }
+    .empty-row { text-align: center; padding: 4rem 1.5rem; color: var(--text-muted); }
+    .empty-row .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-row h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-row p { font-size: 0.85rem; line-height: 1.6; max-width: 400px; margin: 0 auto; }
 
-    .nilai-title {
-      font-weight: 700;
-      color: var(--navy);
-      font-size: 0.95rem;
-      margin-bottom: 0.4rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+    .pagination-bar {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 0.9rem 1.2rem; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 1rem;
     }
+    .pagination-info { font-size: 0.8rem; color: var(--text-muted); }
+    .pagination-info strong { color: var(--text); font-weight: 600; }
+    .pagination-controls { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .page-size-select {
+      padding: 0.4rem 2rem 0.4rem 0.7rem; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 0.8rem; font-family: inherit;
+      background: var(--surface); color: var(--text); cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+    }
+    .page-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); width: 32px; height: 32px;
+      border-radius: 6px; cursor: pointer; font-size: 0.75rem;
+      font-weight: 600; transition: var(--transition);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: inherit;
+    }
+    .page-btn:hover:not(:disabled) { background: var(--orange-light); border-color: var(--orange); color: var(--orange-dark); }
+    .page-btn.active { background: var(--orange); border-color: var(--orange); color: white; }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-numbers { display: flex; gap: 0.3rem; align-items: center; }
 
-    .badge-type {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 0.68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    .badge-type.quiz { background: #fef3c7; color: #92400e; }
-    .badge-type.task { background: var(--primary-light); color: var(--primary-dark); }
-
-    .nilai-meta {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 0.5rem;
-    }
-    .nilai-meta span {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .nilai-meta i { color: var(--primary); }
-
-    .nilai-feedback {
-      font-size: 0.8rem;
-      color: #78350f;
-      background: var(--warning-light);
-      padding: 0.6rem 0.9rem;
-      border-radius: 8px;
-      margin-top: 0.6rem;
-      line-height: 1.5;
-      border-left: 3px solid var(--warning);
-    }
-    .nilai-feedback strong {
-      color: var(--navy);
-      display: block;
-      margin-bottom: 3px;
-      font-size: 0.78rem;
-    }
-    .nilai-feedback em {
-      color: #78350f;
-      font-style: normal;
-    }
-
-    /* SCORE */
-    .nilai-score {
-      text-align: center;
-      min-width: 110px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .score-big {
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: var(--primary);
-      line-height: 1;
-      letter-spacing: -1px;
-    }
-    .score-big.high { color: var(--success); }
-    .score-big.mid { color: var(--warning); }
-    .score-big.low { color: var(--danger); }
-    .score-small {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      margin-top: 0.3rem;
-      font-weight: 500;
-    }
-    .score-pct {
-      display: inline-block;
-      margin-top: 0.4rem;
-      padding: 2px 10px;
-      border-radius: 999px;
-      font-size: 0.68rem;
-      font-weight: 700;
-    }
-    .score-pct.high { background: var(--success-light); color: #047857; }
-    .score-pct.mid { background: var(--warning-light); color: #92400e; }
-    .score-pct.low { background: var(--danger-light); color: #b91c1c; }
-
-    /* EMPTY */
-    .empty-msg {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 2.5rem 1rem;
-      font-size: 0.85rem;
-    }
-    .empty-msg .emoji {
-      font-size: 2.5rem;
-      display: block;
-      margin-bottom: 0.5rem;
-      opacity: 0.4;
-    }
-    .empty-msg strong { color: var(--text); }
-
-    /* LOADING */
-    .loading-box {
-      text-align: center;
-      padding: 4rem 1rem;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
+    .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
     .spinner {
-      width: 40px; height: 40px;
-      margin: 0 auto 1rem;
-      border: 3px solid var(--primary-light);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--orange-light); border-top-color: var(--orange);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .hidden { display: none !important; }
 
-    /* BACK NAV */
-    .back-nav {
-      text-align: center;
-      margin-top: 2rem;
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
     }
-    .btn-back-full {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface);
-      color: var(--text-secondary);
-      padding: 0.6rem 1.5rem;
-      border-radius: 999px;
-      text-decoration: none;
-      font-weight: 600;
-      border: 1px solid var(--border);
-      font-size: 0.85rem;
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem; width: 100%; max-width: 640px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 92vh; overflow-y: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--text); margin-bottom: 0.5rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--orange); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; flex-wrap: wrap; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
       transition: var(--transition);
     }
-    .btn-back-full:hover {
-      background: var(--primary-lighter);
-      border-color: var(--primary);
-      color: var(--primary-dark);
+    .btn-secondary:hover { background: #475569; }
+
+    .detail-header {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1rem; background: var(--orange-lighter);
+      border-radius: 10px; margin-bottom: 1rem;
+      border-left: 3px solid var(--orange);
+    }
+    .detail-nilai-big {
+      width: 72px; height: 72px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; font-weight: 800; flex-shrink: 0;
+      color: white;
+    }
+    .detail-nilai-big.high { background: var(--success); }
+    .detail-nilai-big.mid { background: var(--warning); }
+    .detail-nilai-big.low { background: var(--danger); }
+    .detail-nilai-big.empty { background: #cbd5e1; }
+    .detail-info { flex: 1; min-width: 0; }
+    .detail-title { font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 0.2rem; }
+    .detail-meta { font-size: 0.78rem; color: var(--text-muted); }
+
+    .detail-section { margin-bottom: 1rem; }
+    .detail-section-title {
+      font-size: 0.75rem; font-weight: 800; color: var(--text);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      margin-bottom: 0.5rem; padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .detail-section-title i { color: var(--orange); }
+
+    .answer-item {
+      background: var(--bg-soft); border-radius: 8px;
+      padding: 0.7rem 1rem; margin-bottom: 0.5rem;
+      border-left: 3px solid var(--orange-light);
+    }
+    .answer-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.3rem; }
+    .answer-value { font-size: 0.85rem; color: var(--text); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+
+    .feedback-box {
+      background: #d1fae5; border-left: 4px solid var(--success);
+      padding: 0.9rem 1.1rem; border-radius: 8px;
+      font-size: 0.85rem; color: #065f46; line-height: 1.6;
+    }
+    .feedback-box strong { color: var(--success-dark); display: block; margin-bottom: 0.3rem; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    /* RESPONSIVE */
-    @media (max-width: 640px) {
-      .stat-grid { grid-template-columns: repeat(2, 1fr); }
-      .nilai-item { flex-direction: column; }
-      .nilai-score { flex-direction: row; gap: 0.6rem; min-width: 0; width: 100%; justify-content: flex-start; }
-      .score-big { font-size: 1.8rem; }
+    @media (max-width: 900px) {
+      .filter-row { grid-template-columns: 1fr 1fr; }
+      .filter-row .btn-reset { grid-column: 1 / -1; }
     }
-
     @media (max-width: 768px) {
       :root { --header-height: 60px; }
       .page-container { padding: 1rem 1rem 2rem; }
-      html.tb-embed .page-container,
-      body.tb-embed .page-container {
-        padding-top: calc(var(--header-height) + 0.8rem);
-      }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
       .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .data-table th, .data-table td { padding: 0.55rem 0.5rem; font-size: 0.78rem; }
     }
   </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
 </head>
 <body>
 
@@ -456,48 +352,118 @@
           <i class="fas fa-star"></i>
           <span>
             Nilai Saya
-            <small>Nilai dan feedback dari guru</small>
+            <small>Semua nilai dari aktivitas yang sudah dinilai guru</small>
           </span>
         </h1>
       </div>
+      <div class="toolbar-actions">
+        <button class="btn-outline" onclick="loadData()">
+          <i class="fas fa-rotate"></i> Muat Ulang
+        </button>
+      </div>
     </div>
 
-    <!-- LOADING -->
+    <div class="stats-row" id="statsRow"></div>
+
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="searchInput"><i class="fas fa-search"></i> Cari</label>
+          <input type="text" id="searchInput" class="filter-input" placeholder="Cari nama aktivitas, mapel, atau kelas..." oninput="applyFilter()">
+        </div>
+        <div class="filter-group">
+          <label for="filterMapel"><i class="fas fa-book"></i> Mapel</label>
+          <select id="filterMapel" class="filter-select" onchange="applyFilter()">
+            <option value="">Semua Mapel</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterStatus"><i class="fas fa-circle-check"></i> Status</label>
+          <select id="filterStatus" class="filter-select" onchange="applyFilter()">
+            <option value="">Semua Status</option>
+            <option value="graded">Sudah Dinilai</option>
+            <option value="submitted">Menunggu Nilai</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <button class="btn-reset" onclick="resetFilter()">
+            <i class="fas fa-rotate-left"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="loading" class="loading-box">
       <div class="spinner"></div>
       <p>Memuat nilai...</p>
     </div>
 
-    <!-- CONTENT -->
     <div id="pageContent" class="hidden">
-
-      <!-- Stat Grid -->
-      <div class="stat-grid" id="statsGrid"></div>
-
-      <!-- Panel Nilai -->
-      <div class="panel">
-        <h2 class="panel-title">
-          <i class="fas fa-list"></i> Daftar Nilai
-          <span class="badge-count" id="nilaiCount" style="display:none;">0</span>
-        </h2>
-        <div class="nilai-list" id="nilaiList">
-          <div class="empty-msg">Memuat...</div>
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">No</th>
+                <th>Aktivitas</th>
+                <th style="width:180px;">Mapel & Kelas</th>
+                <th style="width:100px;">Nilai</th>
+                <th style="width:120px;">Status</th>
+                <th style="width:140px;">Tanggal Submit</th>
+                <th style="width:80px;">Detail</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="7" class="empty-row">Memuat...</td></tr>
+            </tbody>
+          </table>
         </div>
-      </div>
-
-      <div class="back-nav">
-        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#nilai';return false;}">
-          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
-        </a>
+        <div class="pagination-bar">
+          <div class="pagination-info">
+            Menampilkan <strong id="pageStart">0</strong>-<strong id="pageEnd">0</strong> dari <strong id="pageTotal">0</strong> data
+          </div>
+          <div class="pagination-controls">
+            <label style="font-size:0.75rem; color:var(--text-muted);">Baris:</label>
+            <select id="pageSize" class="page-size-select" onchange="changePageSize()">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <button class="page-btn" id="btnPrev" onclick="prevPage()"><i class="fas fa-chevron-left"></i></button>
+            <div class="page-numbers" id="pageNumbers"></div>
+            <button class="page-btn" id="btnNext" onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
       </div>
     </div>
 
   </div>
 
+  <div class="modal-overlay" id="modalDetail">
+    <div class="modal-card">
+      <h2><i class="fas fa-file-lines"></i> Detail Nilai</h2>
+      <div id="detailBody">
+        <div style="text-align:center; padding:2rem;"><div class="spinner"></div></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDetail()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/core/cache.js"></script>
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
-  <script>
+    <script>
+    // ============================================
+    // STATE
+    // ============================================
     let currentUser = null;
+    let allGrades = [];
+    let filteredItems = [];
+    let currentPage = 1;
+    let pageSize = 25;
 
     // ============================================
     // INIT
@@ -510,131 +476,478 @@
     })();
 
     async function loadData() {
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('pageContent').classList.add('hidden');
+
       try {
-        const grades = await getMyGrades(currentUser.id);
+        let grades = [];
+        try {
+          grades = await getMyGrades(currentUser.id, true);
+        } catch (e) {
+          console.warn('Grades error:', e);
+        }
+
+        // Normalisasi: getMyGrades mengembalikan field:
+        // - activities (nested: activities.units.annual_plans.subjects/classes)
+        // - subject (langsung dari _21-siswa.js versi baru)
+        // - classInfo
+        // - gradedAt (fallback = submitted_at)
+        allGrades = (grades || []).map(g => {
+          const act = g.activities || {};
+          const unit = act.units || {};
+          const plan = unit.annual_plans || {};
+          return {
+            ...g,
+            // Pastikan selalu ada field yang dipakai renderTable
+            subject: g.subject || plan.subjects || null,
+            classInfo: g.classInfo || plan.classes || null,
+            gradedAt: g.gradedAt || g.submitted_at || null,
+            activityTitle: act.title || '(Aktivitas tidak ditemukan)',
+            activityType: act.type || 'custom'
+          };
+        });
+
+        // Sort: yang sudah dinilai dulu, lalu tanggal terbaru
+        allGrades.sort((a, b) => {
+          const ta = a.gradedAt || a.submitted_at || 0;
+          const tb = b.gradedAt || b.submitted_at || 0;
+          return new Date(tb) - new Date(ta);
+        });
+
+        renderStats();
+        populateFilterMapel();
+        applyFilter();
+
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('pageContent').classList.remove('hidden');
+      } catch (err) {
+        console.error('Load data error:', err);
+        document.getElementById('loading').innerHTML =
+          `<p style="color:var(--danger);">Gagal memuat: ${escapeHtml(err.message)}</p>`;
+      }
+    }
 
-        const total = grades.length;
-        const list = document.getElementById('nilaiList');
-        const countEl = document.getElementById('nilaiCount');
+    // ============================================
+    // STATS
+    // ============================================
+    function renderStats() {
+      const graded = allGrades.filter(i => i.score !== null && i.score !== undefined);
+      const pending = allGrades.filter(i => i.score === null || i.score === undefined);
+      const avg = graded.length > 0
+        ? (graded.reduce((s, i) => s + parseFloat(i.score || 0), 0) / graded.length).toFixed(1)
+        : '-';
+      const highest = graded.length > 0
+        ? Math.max(...graded.map(i => parseFloat(i.score || 0))).toFixed(0)
+        : '-';
 
-        // Hitung statistik
-        let avg = 0, highest = 0;
-        if (total > 0) {
-          const sumPct = grades.reduce((s, g) => {
-            const max = g.activities?.max_score || 100;
-            return s + (parseFloat(g.score) / max) * 100;
-          }, 0);
-          avg = (sumPct / total).toFixed(1);
-          highest = Math.max(...grades.map(g => {
-            const max = g.activities?.max_score || 100;
-            return (parseFloat(g.score) / max) * 100;
-          })).toFixed(1);
+      document.getElementById('statsRow').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-icon orange"><i class="fas fa-star"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${graded.length}</div>
+            <div class="stat-label">Sudah Dinilai</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-clock"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${pending.length}</div>
+            <div class="stat-label">Menunggu Nilai</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-chart-line"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${avg}</div>
+            <div class="stat-label">Rata-rata Nilai</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple"><i class="fas fa-trophy"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${highest}</div>
+            <div class="stat-label">Nilai Tertinggi</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function populateFilterMapel() {
+      const subjects = {};
+      allGrades.forEach(i => {
+        if (i.subject) subjects[String(i.subject.id)] = i.subject;
+      });
+      const sel = document.getElementById('filterMapel');
+      sel.innerHTML = '<option value="">Semua Mapel</option>' +
+        Object.values(subjects).map(s =>
+          `<option value="${s.id}">${escapeHtml(s.name)}</option>`
+        ).join('');
+    }
+
+    // ============================================
+    // FILTER & PAGINATION
+    // ============================================
+    function applyFilter() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const mapelId = document.getElementById('filterMapel').value;
+      const status = document.getElementById('filterStatus').value;
+
+      filteredItems = allGrades.filter(i => {
+        const actTitle = (i.activityTitle || '').toLowerCase();
+        const subjName = (i.subject?.name || '').toLowerCase();
+        const className = (i.classInfo?.name || '').toLowerCase();
+        const matchKeyword = !keyword ||
+          actTitle.includes(keyword) || subjName.includes(keyword) || className.includes(keyword);
+
+        const matchMapel = !mapelId || String(i.subject?.id) === String(mapelId);
+
+        const isGraded = i.score !== null && i.score !== undefined;
+        const itemStatus = isGraded ? 'graded' : 'submitted';
+        const matchStatus = !status || itemStatus === status;
+
+        return matchKeyword && matchMapel && matchStatus;
+      });
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    function resetFilter() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterMapel').value = '';
+      document.getElementById('filterStatus').value = '';
+      applyFilter();
+    }
+
+    // ============================================
+    // TABLE
+    // ============================================
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+
+      if (filteredItems.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="7" class="empty-row">
+            <span class="emoji">${allGrades.length === 0 ? '📝' : '🔍'}</span>
+            <h3>${allGrades.length === 0 ? 'Belum Ada Nilai' : 'Tidak Ada Hasil Cocok'}</h3>
+            <p>${allGrades.length === 0
+              ? 'Anda belum memiliki nilai. Kerjakan aktivitas di menu Mapel Saya untuk mendapatkan nilai.'
+              : 'Coba ubah filter atau kata kunci pencarian Anda.'}</p>
+          </td></tr>`;
+        return;
+      }
+
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, filteredItems.length);
+      const pageData = filteredItems.slice(startIdx, endIdx);
+
+      tbody.innerHTML = pageData.map((item, i) => {
+        const actTitle = item.activityTitle;
+        const actType = item.activityType;
+        const typeLabel = actType.charAt(0).toUpperCase() + actType.slice(1);
+
+        const scoreNum = item.score !== null && item.score !== undefined ? parseFloat(item.score) : null;
+        let scoreCls = '';
+        if (scoreNum !== null) {
+          scoreCls = scoreNum >= 80 ? 'high' : scoreNum >= 60 ? 'mid' : 'low';
         }
 
-        // Render stat cards
-        const stats = [
-          { icon: 'fa-star', color: 'blue', value: total, label: 'Nilai Diterima' },
-          { icon: 'fa-chart-line', color: 'green', value: total > 0 ? avg + '%' : '-', label: 'Rata-rata' },
-          { icon: 'fa-trophy', color: 'orange', value: total > 0 ? highest + '%' : '-', label: 'Tertinggi' }
-        ];
-        document.getElementById('statsGrid').innerHTML = stats.map(s => `
-          <div class="stat-card">
-            <div class="stat-icon ${s.color}"><i class="fas ${s.icon}"></i></div>
-            <div class="stat-info">
-              <div class="stat-value">${s.value}</div>
-              <div class="stat-label">${s.label}</div>
+        const isGraded = scoreNum !== null;
+        const statusLabel = isGraded
+          ? '<span class="status-badge status-graded">✓ Dinilai</span>'
+          : '<span class="status-badge status-pending">⏳ Menunggu</span>';
+
+        const tanggal = item.gradedAt
+          ? formatDate(item.gradedAt)
+          : (item.submitted_at ? formatDate(item.submitted_at) : '-');
+
+        return `
+          <tr>
+            <td>${startIdx + i + 1}</td>
+            <td>
+              <div class="activity-cell">
+                <div class="activity-name">${escapeHtml(actTitle)}</div>
+                <div class="activity-meta">
+                  <span class="activity-type-badge ${actType}">${escapeHtml(typeLabel)}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="mapel-cell">${escapeHtml(item.subject?.name || '-')}</div>
+              <div class="kelas-cell">${escapeHtml(item.classInfo?.name || '-')}</div>
+            </td>
+            <td>
+              ${scoreNum !== null
+                ? `<span class="nilai-cell ${scoreCls}">${scoreNum}</span>`
+                : '<span class="nilai-empty">-</span>'}
+            </td>
+            <td>${statusLabel}</td>
+            <td style="font-size:0.78rem; color:var(--text-muted);">${tanggal}</td>
+            <td>
+              <button class="btn-icon" onclick="openDetail('${item.id}')" title="Lihat Detail">
+                <i class="fas fa-eye"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPagination() {
+      const total = filteredItems.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIdx = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const endIdx = Math.min(currentPage * pageSize, total);
+
+      document.getElementById('pageStart').textContent = startIdx;
+      document.getElementById('pageEnd').textContent = endIdx;
+      document.getElementById('pageTotal').textContent = total;
+      document.getElementById('btnPrev').disabled = currentPage <= 1;
+      document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+      const numbersDiv = document.getElementById('pageNumbers');
+      numbersDiv.innerHTML = '';
+
+      const maxButtons = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+      if (endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+
+      if (startPage > 1) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = '1';
+        btn.onclick = () => goToPage(1);
+        numbersDiv.appendChild(btn);
+        if (startPage > 2) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => goToPage(i);
+        numbersDiv.appendChild(btn);
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.style.cssText = 'color:#94a3b8;font-size:0.75rem;padding:0 4px;';
+          numbersDiv.appendChild(dots);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = totalPages;
+        btn.onclick = () => goToPage(totalPages);
+        numbersDiv.appendChild(btn);
+      }
+    }
+
+    function goToPage(page) { currentPage = page; renderTable(); renderPagination(); }
+    function prevPage() { if (currentPage > 1) goToPage(currentPage - 1); }
+    function nextPage() {
+      const totalPages = Math.ceil(filteredItems.length / pageSize);
+      if (currentPage < totalPages) goToPage(currentPage + 1);
+    }
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('pageSize').value);
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    // ============================================
+    // DETAIL MODAL
+    // ============================================
+    async function openDetail(itemId) {
+      const item = allGrades.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+
+      const modal = document.getElementById('modalDetail');
+      const body = document.getElementById('detailBody');
+      body.innerHTML = '<div style="text-align:center; padding:2rem;"><div class="spinner"></div></div>';
+      modal.classList.add('active');
+
+      try {
+        const act = item.activities || {};
+        const unit = act.units || {};
+        const plan = unit.annual_plans || {};
+        const subject = item.subject || plan.subjects || {};
+        const classInfo = item.classInfo || plan.classes || {};
+
+        const scoreNum = item.score !== null && item.score !== undefined ? parseFloat(item.score) : null;
+        let scoreCls = 'empty';
+        if (scoreNum !== null) {
+          scoreCls = scoreNum >= 80 ? 'high' : scoreNum >= 60 ? 'mid' : 'low';
+        }
+
+        // Ambil submission lengkap untuk jawaban + feedback
+        let answers = null;
+        let feedback = item.feedback || null;
+        let submittedAt = item.submitted_at || null;
+
+        try {
+          const sub = await getSubmissionById(item.submission_id || item.id);
+          if (sub) {
+            answers = sub.answers;
+            feedback = feedback || sub.teacher_feedback;
+            submittedAt = submittedAt || sub.submitted_at;
+          }
+        } catch (e) {
+          console.warn('Ambil submission error:', e);
+        }
+
+        // Render jawaban
+        let answersHtml = '<div style="color:var(--text-muted); font-style:italic;">Belum ada jawaban tersimpan.</div>';
+        if (answers && typeof answers === 'object' && Object.keys(answers).length > 0) {
+          try {
+            // Ambil komponen aktivitas (untuk terjemahkan jawaban)
+            const actId = act.id;
+            let components = [];
+            if (actId) {
+              try {
+                components = await getActivityComponents(actId);
+              } catch (e) {}
+            }
+            // Render jawaban memakai helper terjemahan sederhana
+            answersHtml = renderAnswersReadable(answers, components);
+          } catch (e) {
+            answersHtml = '<div style="color:var(--danger);">Gagal memuat jawaban.</div>';
+          }
+        }
+
+        body.innerHTML = `
+          <div class="detail-header">
+            <div class="detail-nilai-big ${scoreCls}">${scoreNum !== null ? scoreNum : '?'}</div>
+            <div class="detail-info">
+              <div class="detail-title">${escapeHtml(item.activityTitle || '-')}</div>
+              <div class="detail-meta">
+                ${escapeHtml(subject?.name || '-')} · ${escapeHtml(classInfo?.name || '-')}
+              </div>
             </div>
           </div>
-        `).join('');
 
-        // Empty state
-        if (total === 0) {
-          countEl.style.display = 'none';
-          list.innerHTML = `
-            <div class="empty-msg">
-              <span class="emoji">📊</span>
-              <strong>Belum ada nilai.</strong><br>
-              Kerjakan tugas atau kuis, lalu tunggu guru menilai.
-            </div>`;
-          return;
-        }
+          <div class="detail-section">
+            <div class="detail-section-title"><i class="fas fa-file-lines"></i> Jawaban Anda</div>
+            ${answersHtml}
+          </div>
 
-        countEl.textContent = total;
-        countEl.style.display = 'inline-block';
-
-        // Render daftar nilai
-        list.innerHTML = grades.map(g => {
-          const act = g.activities;
-          const subject = act?.subjects;
-          const kelas = act?.classes;
-          const max = act?.max_score || 100;
-          const score = parseFloat(g.score);
-          const pct = ((score / max) * 100).toFixed(1);
-
-          // Klasifikasi warna
-          let cls = 'high';
-          if (pct < 60) cls = 'low';
-          else if (pct < 80) cls = 'mid';
-
-          const typeLabel = act?.type === 'quiz'
-            ? '<span class="badge-type quiz">🧪 Kuis</span>'
-            : '<span class="badge-type task">📝 Tugas</span>';
-
-          const gradedDate = g.graded_at
-            ? new Date(g.graded_at).toLocaleDateString('id-ID', {
-                day: 'numeric', month: 'short', year: 'numeric'
-              })
-            : '-';
-
-          return `
-            <div class="nilai-item ${cls}">
-              <div class="nilai-info">
-                <div class="nilai-title">
-                  ${typeLabel}
-                  <span>${esc(act?.title || '(judul tidak tersedia)')}</span>
-                </div>
-                <div class="nilai-meta">
-                  <span><i class="fas fa-book"></i> ${esc(subject?.name || '-')}</span>
-                  <span><i class="fas fa-school"></i> ${esc(kelas?.name || '-')}</span>
-                  <span><i class="fas fa-calendar"></i> ${gradedDate}</span>
-                </div>
-                ${g.feedback ? `
-                  <div class="nilai-feedback">
-                    <strong>💬 Feedback dari guru:</strong>
-                    <em>${esc(g.feedback)}</em>
-                  </div>
-                ` : ''}
-              </div>
-              <div class="nilai-score">
-                <div class="score-big ${cls}">${score}</div>
-                <div class="score-small">dari ${max}</div>
-                <span class="score-pct ${cls}">${pct}%</span>
+          ${feedback ? `
+            <div class="detail-section">
+              <div class="detail-section-title"><i class="fas fa-comment-dots"></i> Feedback dari Guru</div>
+              <div class="feedback-box">
+                <strong>Catatan:</strong>
+                ${escapeHtml(feedback)}
               </div>
             </div>
-          `;
-        }).join('');
+          ` : ''}
+
+          ${submittedAt ? `
+            <div style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-top:1rem;">
+              Dikumpulkan: ${formatDate(submittedAt)}
+            </div>
+          ` : ''}
+        `;
       } catch (err) {
-        console.error('loadData error:', err);
-        document.getElementById('loading').innerHTML = `
-          <div class="empty-msg" style="color:var(--danger);">
-            <span class="emoji">⚠️</span>
-            <strong>Gagal memuat nilai</strong><br>
-            <small>${esc(err.message)}</small>
-          </div>`;
+        console.error('Detail error:', err);
+        body.innerHTML = `<div style="color:var(--danger); padding:1rem;">Gagal memuat detail: ${escapeHtml(err.message)}</div>`;
       }
+    }
+
+    function renderAnswersReadable(answers, components) {
+      const compMap = {};
+      (components || []).forEach(c => { compMap[String(c.id)] = c; });
+
+      const entries = Object.entries(answers);
+      if (entries.length === 0) {
+        return '<div style="color:var(--text-muted); font-style:italic;">Belum ada jawaban.</div>';
+      }
+
+      return entries.map(([compId, ansObj]) => {
+        const comp = compMap[String(compId)];
+        const value = ansObj && typeof ansObj === 'object' && 'value' in ansObj ? ansObj.value : ansObj;
+
+        if (!comp) {
+          let v = value;
+          if (typeof v === 'object') v = JSON.stringify(v);
+          return `<div class="answer-item">
+            <div class="answer-label">Komponen (ID: ${escapeHtml(compId).substring(0, 8)}…)</div>
+            <div class="answer-value">${escapeHtml(String(v))}</div>
+          </div>`;
+        }
+
+        const data = comp.component_data || {};
+        let question = data.label || data.question || data.title || `(${comp.component_type})`;
+        let displayValue = value;
+
+        // Terjemahkan sesuai tipe
+        if (comp.component_type === 'soal_pg') {
+          const opts = data.options || [];
+          const idx = parseInt(value);
+          displayValue = opts[idx] ? opts[idx] : '(tidak dijawab)';
+        } else if (comp.component_type === 'soal_pg_kompleks') {
+          const opts = data.options || [];
+          const arr = Array.isArray(value) ? value : [];
+          displayValue = arr.map(i => opts[i] || `Opsi ${i}`).join(', ') || '(kosong)';
+        } else if (comp.component_type === 'soal_benar_salah') {
+          displayValue = value === true || value === 'true' ? 'BENAR'
+                       : value === false || value === 'false' ? 'SALAH' : '(kosong)';
+        } else if (typeof displayValue === 'object' && displayValue !== null) {
+          displayValue = JSON.stringify(displayValue, null, 2);
+        } else if (displayValue === null || displayValue === undefined || displayValue === '') {
+          displayValue = '(kosong)';
+        }
+
+        return `<div class="answer-item">
+          <div class="answer-label">${escapeHtml(String(question).substring(0, 120))}</div>
+          <div class="answer-value">${escapeHtml(String(displayValue))}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function closeDetail() {
+      document.getElementById('modalDetail').classList.remove('active');
     }
 
     // ============================================
     // UTILS
     // ============================================
-    function esc(t) {
+    function formatDate(iso) {
+      if (!iso) return '-';
+      try {
+        const d = new Date(iso);
+        const now = new Date();
+        const diff = (now - d) / 1000;
+        if (diff < 60) return 'Baru saja';
+        if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
+        if (diff < 604800) return Math.floor(diff / 86400) + ' hari lalu';
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch { return iso; }
+    }
+
+    function escapeHtml(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');
       d.textContent = String(t);
       return d.innerHTML;
     }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeDetail();
+    });
   </script>
 </body>
 </html>

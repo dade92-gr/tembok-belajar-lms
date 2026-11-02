@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forum Diskusi — Tembok Belajar</title>
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #10b981; --green-dark: #047857; --green-light: #d1fae5; --green-lighter: #ecfdf5;
+      --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+
+    /* TOOLBAR */
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--green); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+    .btn-primary {
+      background: var(--green); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--green-dark);
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger {
+      background: var(--danger); color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--green);
+      color: var(--green); padding: 0.55rem 1.1rem; border-radius: 8px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--green-light); }
+
+    /* TABS */
+    .forum-tabs {
+      display: flex; gap: 0.4rem; margin-bottom: 1rem;
+      border-bottom: 2px solid var(--border); overflow-x: auto;
+    }
+    .forum-tab {
+      background: transparent; border: none;
+      padding: 0.8rem 1.3rem; cursor: pointer;
+      font-size: 0.88rem; font-weight: 700;
+      color: var(--text-muted); font-family: inherit;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: var(--transition); white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .forum-tab:hover { color: var(--text); background: var(--bg-soft); }
+    .forum-tab.active { color: var(--green-dark); border-bottom-color: var(--green); }
+    .forum-tab .tab-count {
+      background: var(--green-light); color: var(--green-dark);
+      padding: 1px 8px; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 800;
+    }
+    .forum-tab.active .tab-count { background: var(--green); color: white; }
+
+    /* FILTER */
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .filter-group label i { color: var(--green); }
+    .filter-input, .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
+    }
+
+    /* TOPIC LIST */
+    .topic-list { display: flex; flex-direction: column; gap: 0.7rem; }
+
+    .topic-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.2rem;
+      cursor: pointer; transition: var(--transition);
+      position: relative;
+    }
+    .topic-card:hover { border-color: var(--green); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .topic-card.pinned { border-left: 4px solid var(--warning); background: #fffbf0; }
+
+    .topic-header {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 0.7rem; margin-bottom: 0.4rem;
+    }
+    .topic-title {
+      font-size: 1rem; font-weight: 800; color: var(--text);
+      line-height: 1.4; flex: 1;
+    }
+    .topic-badges { display: flex; gap: 0.3rem; flex-shrink: 0; flex-wrap: wrap; }
+    .topic-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 8px; border-radius: 6px;
+      font-size: 0.65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .topic-badge.unit { background: #dbeafe; color: #1e40af; }
+    .topic-badge.aktivitas { background: #fef3c7; color: #92400e; }
+    .topic-badge.pinned { background: #fef3c7; color: #92400e; }
+
+    .topic-body-preview {
+      font-size: 0.85rem; color: var(--text-muted);
+      line-height: 1.6; margin-bottom: 0.6rem;
+      display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .topic-meta {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      font-size: 0.72rem; color: var(--text-muted);
+      padding-top: 0.6rem; border-top: 1px solid var(--border);
+    }
+    .topic-meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .topic-meta i { color: var(--green); font-size: 0.7rem; }
+    .topic-meta strong { color: var(--text); }
+
+    .reply-count-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--green-lighter); color: var(--green-dark);
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 700;
+    }
+
+    /* EMPTY / LOADING */
+    .empty-row {
+      text-align: center; padding: 4rem 1.5rem; color: var(--text-muted);
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 2px dashed var(--border);
+    }
+    .empty-row .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-row h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-row p { font-size: 0.85rem; line-height: 1.6; max-width: 400px; margin: 0 auto 1rem; }
+
+    .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
+    .spinner {
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    .spinner-sm {
+      width: 20px; height: 20px;
+      border: 2px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      display: inline-block; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem; width: 100%; max-width: 640px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 92vh; overflow-y: auto;
+    }
+    .modal-card.wide { max-width: 820px; }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--text); margin-bottom: 0.5rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--green); }
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.2rem; flex-wrap: wrap;
+    }
+    .form-label {
+      display: block; font-size: 0.75rem; font-weight: 700;
+      margin-bottom: 0.45rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-label .req { color: var(--danger); }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.9rem;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 35px; cursor: pointer;
+    }
+    .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .alert {
+      margin-top: 0.8rem; padding: 0.75rem 1rem;
+      border-radius: 8px; font-size: 0.83rem; line-height: 1.5;
+    }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    /* DETAIL THREAD */
+    .thread-header {
+      background: var(--green-lighter); border-left: 4px solid var(--green);
+      padding: 1rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem;
+    }
+    .thread-header-title {
+      font-size: 1.1rem; font-weight: 800; color: var(--text);
+      margin-bottom: 0.4rem; line-height: 1.4;
+    }
+    .thread-header-meta {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      font-size: 0.75rem; color: var(--text-muted);
+    }
+    .thread-header-meta strong { color: var(--text); }
+
+    .thread-posts { display: flex; flex-direction: column; gap: 0.8rem; }
+
+    .post-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem 1.2rem;
+      position: relative;
+    }
+    .post-item.opening { background: var(--green-lighter); border-color: var(--green-light); }
+    .post-item.reply { margin-left: 1.5rem; }
+    .post-item.reply::before {
+      content: ''; position: absolute; left: -1rem; top: 1rem;
+      width: 1rem; height: 2px; background: var(--border);
+    }
+    .post-header {
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-bottom: 0.6rem; flex-wrap: wrap;
+    }
+    .post-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--green-dark));
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .post-author-info { flex: 1; min-width: 0; }
+    .post-author-name {
+      font-size: 0.85rem; font-weight: 700; color: var(--text);
+      display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+    }
+    .post-author-role {
+      display: inline-block; padding: 1px 6px;
+      border-radius: 4px; font-size: 0.6rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .post-author-role.guru { background: var(--green-light); color: var(--green-dark); }
+    .post-author-role.siswa { background: #dbeafe; color: #1e40af; }
+    .post-time { font-size: 0.7rem; color: var(--text-muted); }
+    .post-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .btn-icon-mini {
+      width: 28px; height: 28px; border-radius: 6px;
+      border: 1px solid var(--border); background: white;
+      cursor: pointer; font-size: 0.7rem;
+      color: var(--text-secondary); display: inline-flex;
+      align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+    .btn-icon-mini:hover { background: var(--green-light); border-color: var(--green); color: var(--green); }
+    .btn-icon-mini.danger:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+
+    .post-body {
+      font-size: 0.88rem; color: var(--text-secondary);
+      line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+    }
+    .post-edited-tag {
+      display: inline-block; margin-left: 6px;
+      font-size: 0.65rem; color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .reply-form-area {
+      margin-top: 1rem; padding: 1rem;
+      background: var(--bg-soft); border-radius: 10px;
+      border: 1px dashed var(--border);
+    }
+    .reply-form-area textarea {
+      width: 100%; min-height: 70px;
+      padding: 0.6rem 0.9rem; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.85rem; font-family: inherit;
+      outline: none; resize: vertical; margin-bottom: 0.5rem;
+    }
+    .reply-form-area textarea:focus {
+      border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--text);
+      color: white; padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--danger); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .post-item.reply { margin-left: 0.6rem; }
+      .modal-card { padding: 1.2rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+
+    <!-- TOOLBAR -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#forum';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-comments"></i>
+          <span>
+            Forum Diskusi
+            <small>Diskusi dengan siswa per unit dan per aktivitas</small>
+          </span>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-outline" onclick="loadAllData()">
+          <i class="fas fa-rotate"></i> Muat Ulang
+        </button>
+        <button class="btn-primary" onclick="openCreateTopicModal()">
+          <i class="fas fa-plus"></i> Buat Topik
+        </button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="forum-tabs">
+      <button class="forum-tab active" data-tab="unit" onclick="switchTab('unit')">
+        <i class="fas fa-book"></i>
+        Forum Unit
+        <span class="tab-count" id="unitTabCount">0</span>
+      </button>
+      <button class="forum-tab" data-tab="aktivitas" onclick="switchTab('aktivitas')">
+        <i class="fas fa-file-pen"></i>
+        Forum Aktivitas
+        <span class="tab-count" id="aktivitasTabCount">0</span>
+      </button>
+    </div>
+
+    <!-- FILTER -->
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="searchInput"><i class="fas fa-search"></i> Cari Topik</label>
+          <input type="text" id="searchInput" class="filter-input" placeholder="Cari judul atau isi diskusi..." oninput="applyFilter()">
+        </div>
+        <div class="filter-group">
+          <label for="filterKelas"><i class="fas fa-school"></i> Kelas</label>
+          <select id="filterKelas" class="filter-select" onchange="applyFilter()">
+            <option value="">Semua Kelas</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterSort"><i class="fas fa-sort"></i> Urutkan</label>
+          <select id="filterSort" class="filter-select" onchange="applyFilter()">
+            <option value="newest">Terbaru</option>
+            <option value="oldest">Terlama</option>
+            <option value="replies">Terbanyak Reply</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat forum...</p>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+      <div id="topicList" class="topic-list"></div>
+    </div>
+
+  </div>
+
+  <!-- MODAL: CREATE TOPIC -->
+  <div class="modal-overlay" id="modalCreateTopic">
+    <div class="modal-card">
+      <h2><i class="fas fa-plus"></i> Buat Topik Diskusi</h2>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
+        Buat topik baru untuk memulai diskusi. Siswa di kelas akan bisa melihat dan membalas.
+      </p>
+
+      <label class="form-label">Lokasi Diskusi <span class="req">*</span></label>
+      <select id="inputLocation" class="form-select" onchange="onLocationChange()">
+        <option value="">-- Pilih Lokasi --</option>
+        <optgroup label="Per Unit" id="optgroupUnit"></optgroup>
+        <optgroup label="Per Aktivitas" id="optgroupAktivitas"></optgroup>
+      </select>
+
+      <label class="form-label">Judul Topik <span class="req">*</span></label>
+      <input type="text" id="inputTopicTitle" class="form-input" placeholder="Contoh: Bagaimana cara kerja ekosistem?" maxlength="200">
+
+      <label class="form-label">Isi Diskusi <span class="req">*</span></label>
+      <textarea id="inputTopicBody" class="form-textarea" placeholder="Tulis pertanyaan atau topik diskusi..." maxlength="3000"></textarea>
+
+      <div id="createTopicError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeCreateTopicModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveTopic" onclick="saveNewTopic()">
+          <i class="fas fa-paper-plane"></i> Kirim
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VIEW THREAD -->
+  <div class="modal-overlay" id="modalThread">
+    <div class="modal-card wide">
+      <div id="threadContent">
+        <div style="text-align:center; padding:2rem;"><div class="spinner"></div></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeThreadModal()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT TOPIC -->
+  <div class="modal-overlay" id="modalEditTopic">
+    <div class="modal-card">
+      <h2><i class="fas fa-pen"></i> Edit Post</h2>
+
+      <label class="form-label">Isi Post <span class="req">*</span></label>
+      <textarea id="editPostBody" class="form-textarea" placeholder="Isi diskusi..." maxlength="3000" style="min-height:140px;"></textarea>
+
+      <div id="editPostError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeEditTopicModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveEdit" onclick="saveEditTopic()">
+          <i class="fas fa-save"></i> Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DELETE POST -->
+  <div class="modal-overlay" id="modalDeletePost">
+    <div class="modal-card" style="max-width:440px;">
+      <h2 style="color:var(--danger);"><i class="fas fa-trash"></i> Hapus Post?</h2>
+      <p id="deletePostMessage" style="color:var(--text); margin-bottom:0.8rem;"></p>
+      <p style="font-size:0.75rem; color:#92400e; background:#fef3c7; padding:0.6rem 0.8rem; border-radius:8px; margin-bottom:1rem; border-left:3px solid var(--warning);">
+        ⚠️ Post yang dihapus tidak bisa dikembalikan. Semua reply di bawahnya juga akan terhapus.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDeletePost()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/core/cache.js"></script>
+<script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let myAssignments = [];         // teacher_assign guru
+    let myUnits = [];               // units dari annual_plan guru
+    let myActivities = [];          // unit_activities tipe diskusi
+    let allTopics = [];             // topik forum_posts (parent_id = null)
+    let filteredTopics = [];
+    let topicsReplyMap = {};        // { topic_id: reply_count }
+    let activeTab = 'unit';         // 'unit' | 'aktivitas'
+    let activeThreadId = null;      // id topik yang sedang dibuka
+    let editingPostId = null;
+    let deletingPostId = null;
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+
+      await loadAllData();
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    async function loadAllData() {
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('pageContent').classList.add('hidden');
+
+      try {
+        // 1. Ambil assignments guru
+        myAssignments = await getMyTeachingAssignments(currentUser.id);
+
+        // 2. Ambil annual plans guru
+        const plans = await getMyAnnualPlans(currentUser.id);
+
+        // 3. Ambil semua unit dari plans
+        myUnits = [];
+        for (const plan of plans) {
+          try {
+            const units = await getUnits(plan.id);
+            units.forEach(u => {
+              myUnits.push({
+                ...u,
+                _plan: plan
+              });
+            });
+          } catch (e) { console.warn('Load unit error:', e); }
+        }
+
+        // 4. Ambil semua aktivitas tipe diskusi dari semua unit
+        myActivities = [];
+        for (const unit of myUnits) {
+          try {
+            const acts = await getUnitActivities(unit.id);
+            const diskusiActs = acts.filter(a => a.type === 'diskusi');
+            diskusiActs.forEach(a => {
+              myActivities.push({
+                ...a,
+                _unit: unit,
+                _plan: unit._plan
+              });
+            });
+          } catch (e) { console.warn('Load activity error:', e); }
+        }
+
+        // 5. Ambil semua topik forum (parent_id = null) untuk guru ini
+        await loadTopics();
+        renderTabCounts();
+      } catch (err) {
+        console.error('Load all data error:', err);
+        showToast('Gagal memuat data: ' + err.message, 'error');
+      }
+    }
+
+    async function loadTopics() {
+      const client = initSupabase();
+
+      const unitIds = myUnits.map(u => u.id);
+      const activityIds = myActivities.map(a => a.id);
+
+      // Ambil topik (parent_id = null) untuk unit & aktivitas
+      let query = client.from('forum_posts')
+        .select(`
+          id, unit_id, activity_id, class_id, subject_id, title, body, parent_id, created_at, updated_at, author_id, is_pinned,
+          profiles!forum_posts_author_id_fkey (id, name, role)
+        `)
+        .is('parent_id', null)
+        .order('created_at', { ascending: false });
+
+      const orConditions = [];
+      if (unitIds.length > 0) orConditions.push(`unit_id.in.(${unitIds.join(',')})`);
+      if (activityIds.length > 0) orConditions.push(`activity_id.in.(${activityIds.join(',')})`);
+
+      if (orConditions.length === 0) {
+        allTopics = [];
+        topicsReplyMap = {};
+        applyFilter();
+        return;
+      }
+
+      query = query.or(orConditions.join(','));
+
+      const { data: topics, error } = await query;
+      if (error) throw error;
+
+      allTopics = topics || [];
+
+      // Ambil jumlah reply per topik
+      topicsReplyMap = {};
+      if (allTopics.length > 0) {
+        const topicIds = allTopics.map(t => t.id);
+        const { data: replies } = await client.from('forum_posts')
+          .select('id, parent_id')
+          .in('parent_id', topicIds);
+        (replies || []).forEach(r => {
+          topicsReplyMap[r.parent_id] = (topicsReplyMap[r.parent_id] || 0) + 1;
+        });
+      }
+    }
+
+    function renderTabCounts() {
+      const unitCount = allTopics.filter(t => t.unit_id).length;
+      const aktCount = allTopics.filter(t => t.activity_id).length;
+      document.getElementById('unitTabCount').textContent = unitCount;
+      document.getElementById('aktivitasTabCount').textContent = aktCount;
+    }
+
+    // ============================================
+    // TABS
+    // ============================================
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.forum-tab').forEach(el => {
+        el.classList.toggle('active', el.dataset.tab === tab);
+      });
+      applyFilter();
+    }
+
+    // ============================================
+    // FILTER
+    // ============================================
+    function applyFilter() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const sort = document.getElementById('filterSort').value;
+
+      let filtered = allTopics.filter(t => {
+        // Filter tab
+        if (activeTab === 'unit' && !t.unit_id) return false;
+        if (activeTab === 'aktivitas' && !t.activity_id) return false;
+
+        // Filter keyword
+        if (keyword) {
+          const title = (t.title || '').toLowerCase();
+          const body = (t.body || '').toLowerCase();
+          const author = (t.profiles?.name || '').toLowerCase();
+          if (!title.includes(keyword) && !body.includes(keyword) && !author.includes(keyword)) return false;
+        }
+        return true;
+      });
+
+      // Sort
+      if (sort === 'newest') filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      else if (sort === 'oldest') filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      else if (sort === 'replies') filtered.sort((a, b) => (topicsReplyMap[b.id] || 0) - (topicsReplyMap[a.id] || 0));
+
+      filteredTopics = filtered;
+      renderTopicList();
+    }
+
+    // ============================================
+    // RENDER LIST
+    // ============================================
+    function renderTopicList() {
+      const container = document.getElementById('topicList');
+
+      if (filteredTopics.length === 0) {
+        const isUnit = activeTab === 'unit';
+        container.innerHTML = `
+          <div class="empty-row">
+            <span class="emoji">${isUnit ? '📚' : '📝'}</span>
+            <h3>Belum Ada Topik Diskusi</h3>
+            <p>${isUnit
+              ? 'Mulai diskusi di level unit. Siswa di kelas akan melihat dan bisa membalas.'
+              : 'Buat aktivitas tipe "Diskusi" di editor unit terlebih dahulu untuk memulai.'}</p>
+            ${isUnit ? `<button class="btn-primary" onclick="openCreateTopicModal()">
+              <i class="fas fa-plus"></i> Buat Topik Pertama
+            </button>` : ''}
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = filteredTopics.map(t => {
+        const author = t.profiles || {};
+        const authorName = author.name || 'Anonim';
+        const authorRole = author.role || 'siswa';
+        const replyCount = topicsReplyMap[t.id] || 0;
+        const isUnit = !!t.unit_id;
+
+        // Cari label unit/aktivitas
+        let label = '-';
+        if (isUnit) {
+          const unit = myUnits.find(u => String(u.id) === String(t.unit_id));
+          if (unit) label = unit._plan?.classes?.name + ' · ' + unit.title;
+        } else {
+          const act = myActivities.find(a => String(a.id) === String(t.activity_id));
+          if (act) label = act._plan?.classes?.name + ' · ' + act.title;
+        }
+
+        return `
+          <div class="topic-card ${t.is_pinned ? 'pinned' : ''}" onclick="openThread('${t.id}')">
+            <div class="topic-header">
+              <div class="topic-title">${escapeHtml(t.title)}</div>
+              <div class="topic-badges">
+                ${t.is_pinned ? '<span class="topic-badge pinned">📌 Pinned</span>' : ''}
+                <span class="topic-badge ${isUnit ? 'unit' : 'aktivitas'}">
+                  <i class="fas fa-${isUnit ? 'book' : 'file-pen'}"></i>
+                  ${isUnit ? 'Unit' : 'Aktivitas'}
+                </span>
+              </div>
+            </div>
+            <div class="topic-body-preview">${escapeHtml(t.body || '')}</div>
+            <div class="topic-meta">
+              <span><i class="fas fa-${authorRole === 'guru' ? 'chalkboard-teacher' : 'user-graduate'}"></i> <strong>${escapeHtml(authorName)}</strong></span>
+              <span><i class="fas fa-location-dot"></i> ${escapeHtml(label)}</span>
+              <span><i class="fas fa-clock"></i> ${formatDate(t.created_at)}</span>
+              <span class="reply-count-badge"><i class="fas fa-comments"></i> ${replyCount} balasan</span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ============================================
+    // CREATE TOPIC
+    // ============================================
+    function openCreateTopicModal() {
+      document.getElementById('inputLocation').value = '';
+      document.getElementById('inputTopicTitle').value = '';
+      document.getElementById('inputTopicBody').value = '';
+      document.getElementById('createTopicError').classList.add('hidden');
+      document.getElementById('btnSaveTopic').disabled = false;
+      document.getElementById('btnSaveTopic').innerHTML = '<i class="fas fa-paper-plane"></i> Kirim';
+
+      // Populate optgroup
+      const unitGroup = document.getElementById('optgroupUnit');
+      const actGroup = document.getElementById('optgroupAktivitas');
+
+      unitGroup.innerHTML = myUnits.map(u => {
+        const kelas = u._plan?.classes?.name || '-';
+        return `<option value="unit:${u.id}">${escapeHtml(kelas)} · ${escapeHtml(u.title)}</option>`;
+      }).join('');
+
+      if (myActivities.length === 0) {
+        actGroup.innerHTML = '<option disabled>(Belum ada aktivitas diskusi)</option>';
+      } else {
+        actGroup.innerHTML = myActivities.map(a => {
+          const kelas = a._plan?.classes?.name || '-';
+          return `<option value="aktivitas:${a.id}">${escapeHtml(kelas)} · ${escapeHtml(a.title)}</option>`;
+        }).join('');
+      }
+
+      document.getElementById('modalCreateTopic').classList.add('active');
+      setTimeout(() => document.getElementById('inputLocation').focus(), 100);
+    }
+
+    function closeCreateTopicModal() {
+      document.getElementById('modalCreateTopic').classList.remove('active');
+    }
+
+    function onLocationChange() {
+      // Placeholder - bisa dipakai untuk filter atau info tambahan
+    }
+
+    async function saveNewTopic() {
+      const location = document.getElementById('inputLocation').value;
+      const title = document.getElementById('inputTopicTitle').value.trim();
+      const body = document.getElementById('inputTopicBody').value.trim();
+      const errBox = document.getElementById('createTopicError');
+      const btn = document.getElementById('btnSaveTopic');
+
+      errBox.classList.add('hidden');
+      if (!location) { errBox.textContent = 'Pilih lokasi diskusi (unit/aktivitas).'; errBox.classList.remove('hidden'); return; }
+      if (!title) { errBox.textContent = 'Judul wajib diisi.'; errBox.classList.remove('hidden'); return; }
+      if (!body) { errBox.textContent = 'Isi diskusi wajib diisi.'; errBox.classList.remove('hidden'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+
+      try {
+        const [type, id] = location.split(':');
+        const client = initSupabase();
+
+        let unitId = null, activityId = null, classId = null, subjectId = null;
+
+        if (type === 'unit') {
+          unitId = id;
+          const unit = myUnits.find(u => String(u.id) === String(id));
+          if (unit) {
+            classId = unit._plan?.class_id;
+            subjectId = unit._plan?.subject_id;
+          }
+        } else {
+          activityId = id;
+          const act = myActivities.find(a => String(a.id) === String(id));
+          if (act) {
+            unitId = act._unit?.id;
+            classId = act._plan?.class_id;
+            subjectId = act._plan?.subject_id;
+          }
+        }
+
+        const { error } = await client.from('forum_posts').insert([{
+          unit_id: unitId,
+          activity_id: activityId,
+          class_id: classId,
+          subject_id: subjectId,
+          author_id: currentUser.id,
+          title,
+          body,
+          parent_id: null
+        }]);
+
+        if (error) throw error;
+
+        closeCreateTopicModal();
+        showToast('✅ Topik diskusi berhasil dibuat', 'success');
+        await loadTopics();
+        renderTabCounts();
+        applyFilter();
+      } catch (err) {
+        console.error('Save topic error:', err);
+        errBox.textContent = 'Gagal mengirim: ' + (err.message || 'Unknown error');
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim';
+      }
+    }
+
+    // ============================================
+    // OPEN THREAD
+    // ============================================
+    async function openThread(topicId) {
+      activeThreadId = topicId;
+      const modal = document.getElementById('modalThread');
+      const content = document.getElementById('threadContent');
+      content.innerHTML = '<div style="text-align:center; padding:2rem;"><div class="spinner"></div></div>';
+      modal.classList.add('active');
+
+      try {
+        const client = initSupabase();
+
+        // Ambil topik
+        const { data: topic, error: e1 } = await client.from('forum_posts')
+          .select(`
+            id, unit_id, activity_id, title, body, created_at, updated_at, author_id,
+            profiles!forum_posts_author_id_fkey (id, name, role)
+          `)
+          .eq('id', topicId)
+          .single();
+        if (e1) throw e1;
+
+        // Ambil replies
+        const { data: replies, error: e2 } = await client.from('forum_posts')
+          .select(`
+            id, body, created_at, updated_at, author_id,
+            profiles!forum_posts_author_id_fkey (id, name, role)
+          `)
+          .eq('parent_id', topicId)
+          .order('created_at', { ascending: true });
+        if (e2) throw e2;
+
+        renderThread(topic, replies || []);
+      } catch (err) {
+        console.error('Open thread error:', err);
+        content.innerHTML = `<div style="color:var(--danger); padding:1rem;">Gagal memuat: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function closeThreadModal() {
+      document.getElementById('modalThread').classList.remove('active');
+      activeThreadId = null;
+    }
+
+    function renderThread(topic, replies) {
+      const content = document.getElementById('threadContent');
+      const author = topic.profiles || {};
+      const authorName = author.name || 'Anonim';
+      const authorRole = author.role || 'siswa';
+
+      let location = '-';
+      if (topic.unit_id) {
+        const unit = myUnits.find(u => String(u.id) === String(topic.unit_id));
+        if (unit) location = unit._plan?.classes?.name + ' · ' + unit.title;
+      } else if (topic.activity_id) {
+        const act = myActivities.find(a => String(a.id) === String(topic.activity_id));
+        if (act) location = act._plan?.classes?.name + ' · ' + act.title;
+      }
+
+      content.innerHTML = `
+        <div class="thread-header">
+          <div class="thread-header-title">${escapeHtml(topic.title)}</div>
+          <div class="thread-header-meta">
+            <span><i class="fas fa-user"></i> <strong>${escapeHtml(authorName)}</strong></span>
+            <span><i class="fas fa-location-dot"></i> ${escapeHtml(location)}</span>
+            <span><i class="fas fa-clock"></i> ${formatDate(topic.created_at)}</span>
+          </div>
+        </div>
+
+        <div class="thread-posts">
+          ${renderPostItem(topic, true, 'opening')}
+          ${replies.map(r => renderPostItem(r, false, 'reply')).join('')}
+        </div>
+
+        <div class="reply-form-area">
+          <label class="form-label" style="margin-bottom:0.4rem;">Balas Diskusi</label>
+          <textarea id="replyBodyInput" placeholder="Tulis balasan Anda..." maxlength="2000"></textarea>
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="btn-primary" onclick="submitReply()">
+              <i class="fas fa-paper-plane"></i> Kirim Balasan
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPostItem(post, isOpening, extraClass) {
+      const author = post.profiles || {};
+      const authorName = author.name || 'Anonim';
+      const authorRole = author.role || 'siswa';
+      const initials = authorName.charAt(0).toUpperCase();
+      const isOwner = String(post.author_id) === String(currentUser.id);
+      const edited = post.updated_at && post.created_at && post.updated_at !== post.created_at;
+      const roleClass = authorRole === 'guru' ? 'guru' : 'siswa';
+      const roleLabel = authorRole === 'guru' ? 'Guru' : 'Siswa';
+
+      return `
+        <div class="post-item ${extraClass}">
+          <div class="post-header">
+            <div class="post-avatar" style="${authorRole === 'guru' ? 'background:linear-gradient(135deg,var(--green),var(--green-dark));' : 'background:linear-gradient(135deg,var(--primary),#2563eb);'}">${initials}</div>
+            <div class="post-author-info">
+              <div class="post-author-name">
+                ${escapeHtml(authorName)}
+                <span class="post-author-role ${roleClass}">${roleLabel}</span>
+              </div>
+              <div class="post-time">${formatDate(post.created_at)}</div>
+            </div>
+            ${isOwner ? `
+              <div class="post-actions">
+                <button class="btn-icon-mini" title="Edit" onclick="openEditPost('${post.id}')">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn-icon-mini danger" title="Hapus" onclick="openDeletePost('${post.id}', ${isOpening})">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            ` : ''}
+          </div>
+          <div class="post-body">${escapeHtml(post.body || '')}${edited ? '<span class="post-edited-tag">(diedit)</span>' : ''}</div>
+        </div>
+      `;
+    }
+
+    async function submitReply() {
+      if (!activeThreadId) return;
+      const textarea = document.getElementById('replyBodyInput');
+      const body = textarea.value.trim();
+      if (!body) { showToast('Balasan tidak boleh kosong', 'error'); return; }
+
+      try {
+        const client = initSupabase();
+        const { data: topic } = await client.from('forum_posts')
+          .select('unit_id, activity_id, class_id, subject_id')
+          .eq('id', activeThreadId)
+          .single();
+
+        const { error } = await client.from('forum_posts').insert([{
+          unit_id: topic?.unit_id || null,
+          activity_id: topic?.activity_id || null,
+          class_id: topic?.class_id || null,
+          subject_id: topic?.subject_id || null,
+          author_id: currentUser.id,
+          title: null,
+          body: body,
+          parent_id: activeThreadId
+        }]);
+
+        if (error) throw error;
+
+        textarea.value = '';
+        showToast('✅ Balasan terkirim', 'success');
+        await openThread(activeThreadId);
+        await loadTopics();
+        renderTabCounts();
+        applyFilter();
+      } catch (err) {
+        console.error('Reply error:', err);
+        showToast('Gagal kirim balasan: ' + err.message, 'error');
+      }
+    }
+
+    // ============================================
+    // EDIT POST
+    // ============================================
+    function openEditPost(postId) {
+      editingPostId = postId;
+      const client = initSupabase();
+      document.getElementById('editPostError').classList.add('hidden');
+      document.getElementById('btnSaveEdit').disabled = false;
+      document.getElementById('btnSaveEdit').innerHTML = '<i class="fas fa-save"></i> Simpan';
+
+      // Ambil body post
+      client.from('forum_posts').select('body').eq('id', postId).single()
+        .then(({ data, error }) => {
+          if (error) { showToast('Gagal load post: ' + error.message, 'error'); return; }
+          document.getElementById('editPostBody').value = data.body || '';
+          document.getElementById('modalEditTopic').classList.add('active');
+        });
+    }
+
+    function closeEditTopicModal() {
+      document.getElementById('modalEditTopic').classList.remove('active');
+      editingPostId = null;
+    }
+
+    async function saveEditTopic() {
+      if (!editingPostId) return;
+      const body = document.getElementById('editPostBody').value.trim();
+      const errBox = document.getElementById('editPostError');
+      const btn = document.getElementById('btnSaveEdit');
+
+      errBox.classList.add('hidden');
+      if (!body) { errBox.textContent = 'Isi tidak boleh kosong.'; errBox.classList.remove('hidden'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        const client = initSupabase();
+        const { error } = await client.from('forum_posts')
+          .update({ body, updated_at: new Date().toISOString() })
+          .eq('id', editingPostId);
+
+        if (error) throw error;
+
+        closeEditTopicModal();
+        showToast('✅ Post diperbarui', 'success');
+        await openThread(activeThreadId);
+        await loadTopics();
+        applyFilter();
+      } catch (err) {
+        console.error('Edit post error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + err.message;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+      }
+    }
+
+    // ============================================
+    // DELETE POST
+    // ============================================
+    function openDeletePost(postId, isOpening) {
+      deletingPostId = postId;
+      document.getElementById('deletePostMessage').innerHTML =
+        isOpening
+          ? `Hapus topik diskusi ini beserta semua balasannya?`
+          : `Hapus balasan ini?`;
+      document.getElementById('btnConfirmDelete').disabled = false;
+      document.getElementById('btnConfirmDelete').textContent = 'Ya, Hapus';
+      document.getElementById('modalDeletePost').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('modalDeletePost').classList.remove('active');
+      deletingPostId = null;
+    }
+
+    async function confirmDeletePost() {
+      if (!deletingPostId) return;
+      const btn = document.getElementById('btnConfirmDelete');
+      btn.disabled = true;
+      btn.textContent = 'Menghapus...';
+
+      try {
+        const client = initSupabase();
+        const { error } = await client.from('forum_posts').delete().eq('id', deletingPostId);
+        if (error) throw error;
+
+        closeDeleteModal();
+        showToast('🗑️ Post dihapus', 'success');
+
+        // Kalau topik yang dihapus = thread aktif, tutup modal
+        if (String(deletingPostId) === String(activeThreadId)) {
+          closeThreadModal();
+        } else if (activeThreadId) {
+          await openThread(activeThreadId);
+        }
+
+        await loadTopics();
+        renderTabCounts();
+        applyFilter();
+      } catch (err) {
+        console.error('Delete post error:', err);
+        showToast('Gagal hapus: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus';
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function formatDate(iso) {
+      if (!iso) return '-';
+      try {
+        const d = new Date(iso);
+        const now = new Date();
+        const diff = (now - d) / 1000;
+        if (diff < 60) return 'Baru saja';
+        if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
+        if (diff < 604800) return Math.floor(diff / 86400) + ' hari lalu';
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch { return iso; }
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeCreateTopicModal();
+        closeThreadModal();
+        closeEditTopicModal();
+        closeDeleteModal();
+      }
+    });
+  </script>
+</body>
+</html>

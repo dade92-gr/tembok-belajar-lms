@@ -13,105 +13,362 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scrollbar-gutter: stable; }
     :root {
-      --header-height: 68px; --sidebar-width: 72px; --sidebar-width-expanded: 240px;
-      --header-bg: #1e293b; --header-bg-dark: #0f172a; --header-text: #ffffff; --header-text-muted: #94a3b8;
-      --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --siswa-accent: #f59e0b;
-      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff; --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b; --border: #e2e8f0;
-      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04); --shadow-sm: 0 1px 3px rgba(0,0,0,0.06); --shadow-md: 0 10px 15px rgba(0,0,0,0.06);
-      --radius: 12px; --radius-lg: 16px; --transition: all 0.2s ease;
+      --header-height: 68px;
+      --sidebar-width: 72px;
+      --sidebar-width-expanded: 240px;
+      --header-bg: #1e293b;
+      --header-bg-dark: #0f172a;
+      --header-text: #ffffff;
+      --header-text-muted: #94a3b8;
+      /* SISWA = ORANGE */
+      --orange: #f59e0b;
+      --orange-dark: #d97706;
+      --orange-light: #fef3c7;
+      --orange-lighter: #fffbeb;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --bg: #f1f5f9;
+      --bg-soft: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --radius: 12px;
+      --radius-lg: 16px;
+      --transition: all 0.2s ease;
     }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; overflow: hidden; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased; overflow: hidden;
+    }
 
     /* HEADER */
-    .app-header { background: var(--header-bg); padding: 0 1.5rem 0 calc(var(--sidebar-width) + 1rem); display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.06); transition: padding-left 0.25s ease; }
+    .app-header {
+      background: var(--header-bg);
+      padding: 0 1.5rem 0 calc(var(--sidebar-width) + 1rem);
+      display: flex; justify-content: space-between; align-items: center;
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--header-height); z-index: 100;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.15);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: padding-left 0.25s ease;
+    }
     body.sidebar-hover .app-header { padding-left: calc(var(--sidebar-width-expanded) + 1rem); }
     .app-brand { display: flex; align-items: center; gap: 12px; }
-    .app-brand img { height: 44px; width: auto; }
+    .app-brand img { height: 44px; width: auto; object-fit: contain; }
     .app-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-    .app-brand-title { font-size: 1.05rem; font-weight: 800; color: var(--header-text); }
-    .app-brand-role { font-size: 0.65rem; font-weight: 600; color: #fcd34d; text-transform: uppercase; letter-spacing: 1px; }
+    .app-brand-title { font-size: 1.05rem; font-weight: 800; color: var(--header-text); letter-spacing: -0.4px; }
+    .app-brand-role {
+      font-size: 0.65rem; font-weight: 600; color: var(--orange);
+      text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;
+    }
     .app-user { display: flex; align-items: center; gap: 12px; }
-    .app-school { display: flex; align-items: center; gap: 8px; padding: 0.4rem 0.9rem; background: rgba(255,255,255,0.1); border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: #e2e8f0; }
-    .app-user-info { display: flex; align-items: center; gap: 10px; }
-    .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; }
-    .app-user-name { font-size: 0.82rem; font-weight: 600; color: var(--header-text); }
-    .app-user-email { font-size: 0.68rem; color: var(--header-text-muted); }
-
-    .btn-logout, .btn-switch-role {
-      padding: 0.45rem 0.9rem; border-radius: 999px; cursor: pointer;
-      font-size: 0.75rem; font-weight: 600; border: none; font-family: inherit;
-      display: inline-flex; align-items: center; gap: 6px;
+    .app-school {
+      display: flex; align-items: center; gap: 8px;
+      padding: 0.4rem 0.9rem; background: rgba(245,158,11,0.15);
+      border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+      color: var(--orange-light); border: 1px solid rgba(245,158,11,0.3);
+    }
+    .app-school i { font-size: 0.85rem; color: var(--orange); }
+    .app-user-info {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0.3rem 0.6rem 0.3rem 0.3rem; border-radius: 999px;
       transition: var(--transition);
     }
-    .btn-logout { background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); }
-    .btn-logout:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
-    .btn-switch-role { background: rgba(245,158,11,0.2); color: #fde68a; border: 1px solid rgba(245,158,11,0.4); display: none; }
+    .app-user-info:hover { background: rgba(255,255,255,0.08); }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.95rem; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.15);
+    }
+    .app-user-text { display: flex; flex-direction: column; line-height: 1.25; }
+    .app-user-name { font-size: 0.82rem; font-weight: 600; color: var(--header-text); }
+    .app-user-email { font-size: 0.68rem; color: var(--header-text-muted); }
+    .btn-switch-role {
+      background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4);
+      color: #fde68a; padding: 0.45rem 0.9rem; border-radius: 999px;
+      cursor: pointer; font-size: 0.75rem; font-weight: 600;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
     .btn-switch-role:hover { background: rgba(245,158,11,0.35); border-color: rgba(245,158,11,0.6); color: white; }
+    .btn-logout {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+      color: #e2e8f0; padding: 0.45rem 0.9rem; border-radius: 999px;
+      cursor: pointer; font-size: 0.75rem; font-weight: 600;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
 
     /* SIDEBAR */
-    .app-sidebar { position: fixed; top: var(--header-height); left: 0; bottom: 0; width: var(--sidebar-width); background: var(--header-bg-dark); display: flex; flex-direction: column; padding: 0.8rem 0; z-index: 110; overflow-y: auto; transition: width 0.25s ease; }
+    .app-sidebar {
+      position: fixed; top: var(--header-height); left: 0; bottom: 0;
+      width: var(--sidebar-width); background: var(--header-bg-dark);
+      display: flex; flex-direction: column; padding: 0.5rem 0;
+      z-index: 110; border-right: 1px solid rgba(255,255,255,0.05);
+      overflow-y: auto; overflow-x: hidden;
+      transition: width 0.25s ease, box-shadow 0.25s ease;
+    }
     .app-sidebar:hover { width: var(--sidebar-width-expanded); box-shadow: 4px 0 20px rgba(0,0,0,0.2); }
-    .sidebar-item { position: relative; display: flex; align-items: center; gap: 14px; height: 44px; margin: 2px 10px; padding: 0 12px; border-radius: 8px; color: #94a3b8; font-size: 1rem; cursor: pointer; text-decoration: none; transition: background 0.15s, color 0.15s; }
+    .app-sidebar::-webkit-scrollbar { width: 4px; }
+    .app-sidebar::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
+    .app-sidebar:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); }
+    .sidebar-item {
+      position: relative; display: flex; align-items: center; gap: 14px;
+      height: 40px; margin: 1px 10px; padding: 0 12px;
+      border-radius: 8px; color: #94a3b8; font-size: 1rem;
+      cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
+      flex-shrink: 0; white-space: nowrap; overflow: hidden;
+      text-decoration: none;
+    }
     .sidebar-item:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; }
     .sidebar-item.active { background: rgba(245,158,11,0.15); color: #fcd34d; }
-    .sidebar-item i { width: 22px; text-align: center; font-size: 1.05rem; }
-    .sidebar-item .label { font-size: 0.85rem; font-weight: 600; opacity: 0; transition: opacity 0.15s; pointer-events: none; white-space: nowrap; }
-    .app-sidebar:hover .sidebar-item .label { opacity: 1; }
-    .sidebar-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 0.5rem 10px; }
+    .sidebar-item.active::before {
+      content: ''; position: absolute; left: -10px; top: 50%;
+      transform: translateY(-50%); width: 3px; height: 18px;
+      background: var(--orange); border-radius: 0 3px 3px 0;
+    }
+    .sidebar-item i { width: 22px; text-align: center; flex-shrink: 0; font-size: 1.05rem; }
+    .sidebar-item .label {
+      font-size: 0.85rem; font-weight: 600; white-space: nowrap;
+      opacity: 0; transition: opacity 0.15s ease; pointer-events: none;
+    }
+    .app-sidebar:hover .sidebar-item .label { opacity: 1; transition-delay: 0.05s; }
+    .sidebar-divider {
+      height: 1px; background: rgba(255,255,255,0.1);
+      margin: 0.4rem 10px; flex-shrink: 0;
+    }
     .sidebar-item.logout { margin-top: auto; }
     .sidebar-item.logout:hover { background: rgba(239,68,68,0.2); color: #fca5a5; }
 
     /* MAIN */
-    .app-main { margin-top: var(--header-height); margin-left: var(--sidebar-width); height: calc(100vh - var(--header-height)); overflow-y: auto; background: var(--bg); position: relative; transition: margin-left 0.25s ease; }
+    .app-main {
+      margin-top: var(--header-height); margin-left: var(--sidebar-width);
+      height: calc(100vh - var(--header-height));
+      overflow-y: auto; overflow-x: hidden;
+      transition: margin-left 0.25s ease; position: relative;
+      background: var(--bg);
+    }
+    .app-main::-webkit-scrollbar { width: 8px; }
+    .app-main::-webkit-scrollbar-track { background: var(--bg); }
+    .app-main::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .app-main::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     .content-frame { width: 100%; height: 100%; border: none; display: block; background: var(--bg); }
-    .content-frame.hidden { display: none !important; visibility: hidden !important; }
-    .content-home { padding: 1.5rem; max-width: 1280px; margin: 0 auto; }
+    .content-frame.hidden { display: none !important; }
+    .content-home { padding: 1.5rem 1.5rem 3rem; max-width: 1280px; margin: 0 auto; }
 
-    /* HERO & STATS */
-    .dash-hero { background: var(--surface); border-radius: var(--radius-lg); padding: 1.8rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); border-left: 4px solid var(--siswa-accent); }
-    .dash-hero h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.35rem; }
-    .dash-hero-sub { font-size: 0.9rem; color: var(--text-muted); }
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .stat-card { background: var(--surface); border-radius: var(--radius); padding: 1.3rem; border: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
-    .stat-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
-    .stat-icon.blue { background: #dbeafe; color: #2563eb; } .stat-icon.purple { background: #f3e8ff; color: #9333ea; } .stat-icon.orange { background: #fed7aa; color: #ea580c; } .stat-icon.green { background: #d1fae5; color: #059669; }
-    .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1.1; }
-    .stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+    /* HERO */
+    .dash-hero {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem 2rem; color: var(--text);
+      margin-bottom: 1.5rem; position: relative; overflow: hidden;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+    }
+    .dash-hero::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: linear-gradient(to bottom, var(--orange), var(--orange-light));
+    }
+    .dash-hero::after {
+      content: ''; position: absolute; top: -100px; right: -100px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%);
+      border-radius: 50%; pointer-events: none;
+    }
+    .dash-hero-content { position: relative; z-index: 1; padding-left: 0.8rem; }
+    .dash-hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--orange-lighter); color: var(--orange-dark);
+      padding: 0.3rem 0.8rem; border-radius: 999px;
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.8px; margin-bottom: 0.8rem;
+      border: 1px solid var(--orange-light);
+    }
+    .dash-hero-eyebrow i { color: var(--orange); }
+    .dash-hero h1 {
+      font-size: 1.75rem; font-weight: 800; margin-bottom: 0.35rem;
+      letter-spacing: -0.5px; line-height: 1.2; color: var(--text);
+    }
+    .dash-hero-sub { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .dash-hero-classes { margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 6px; }
+    .hero-class-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 999px;
+      background: var(--orange); color: white;
+      font-size: 0.78rem; font-weight: 700;
+    }
+    .hero-class-badge i { font-size: 0.7rem; }
+
+    /* STATS */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 1.3rem 1.4rem; border: 1px solid var(--border);
+      box-shadow: var(--shadow-xs); transition: var(--transition);
+      display: flex; align-items: center; gap: 1rem;
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 4px; height: 100%; background: var(--orange);
+      opacity: 0; transition: var(--transition);
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--orange); }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .stat-icon.orange { background: var(--orange-light); color: var(--orange-dark); }
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.green { background: #d1fae5; color: #059669; }
+    .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+    .stat-info { flex: 1; min-width: 0; }
+    .stat-value {
+      font-size: 1.75rem; font-weight: 800; color: var(--text);
+      line-height: 1.1; letter-spacing: -0.5px;
+    }
+    .stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
 
     /* PANEL */
-    .dash-panel { background: var(--surface); border-radius: var(--radius-lg); margin-bottom: 1.5rem; border: 1px solid var(--border); overflow: hidden; }
-    .panel-header { padding: 1.1rem 1.4rem; background: var(--bg-soft); border-bottom: 2px solid #fef3c7; }
-    .panel-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-    .panel-title i { color: var(--siswa-accent); }
+    .dash-panel {
+      background: var(--surface); border-radius: var(--radius-lg);
+      margin-bottom: 1.5rem; border: 1px solid var(--border);
+      box-shadow: var(--shadow-xs); overflow: hidden;
+    }
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.1rem 1.4rem; background: var(--bg-soft);
+      border-bottom: 2px solid var(--orange-light); position: relative;
+    }
+    .panel-header::before {
+      content: ''; position: absolute; left: 0; top: 1rem; bottom: 1rem;
+      width: 3px; background: var(--orange); border-radius: 0 3px 3px 0;
+    }
+    .panel-header > div { display: flex; flex-direction: column; padding-left: 0.6rem; }
+    .panel-title {
+      font-size: 1rem; font-weight: 700; color: var(--text);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .panel-title i { color: var(--orange); font-size: 1rem; }
+    .panel-subtitle { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
     .panel-body { padding: 1.4rem; }
 
-    /* QUICK MENU */
-    .quick-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.9rem; }
-    .quick-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 0.9rem; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; align-items: center; gap: 0.6rem; text-align: center; }
-    .quick-item:hover { transform: translateY(-4px); border-color: var(--siswa-accent); box-shadow: 0 8px 20px rgba(245,158,11,0.15); }
-    .quick-icon-wrap { width: 52px; height: 52px; background: var(--bg-soft); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--siswa-accent); border: 1px solid var(--border); }
-    .quick-label { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+    /* MAPEL CARD */
+    .mapel-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .mapel-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.2rem;
+      position: relative; overflow: hidden;
+      transition: var(--transition); cursor: pointer;
+    }
+    .mapel-card::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 4px; height: 100%; background: var(--orange);
+    }
+    .mapel-card:hover {
+      transform: translateY(-3px); box-shadow: var(--shadow-md);
+      border-color: var(--orange);
+    }
+    .mapel-card-header {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 0.6rem; margin-bottom: 0.6rem;
+    }
+    .mapel-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--orange-lighter); border: 1px solid var(--orange-light);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--orange); font-size: 1.2rem; flex-shrink: 0;
+    }
+    .mapel-card-title {
+      font-size: 1.05rem; font-weight: 800; color: var(--text);
+      line-height: 1.3; margin-bottom: 0.2rem;
+    }
+    .mapel-card-guru {
+      font-size: 0.78rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 5px; margin-bottom: 0.7rem;
+    }
+    .mapel-card-guru i { color: var(--orange); font-size: 0.7rem; }
+    .mapel-card-stats {
+      display: flex; gap: 1rem; padding-top: 0.7rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem; color: var(--text-muted);
+    }
+    .mapel-card-stats strong { color: var(--text); font-weight: 700; }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center; padding: 3rem 1.5rem;
+      color: var(--text-muted);
+    }
+    .empty-state .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.6; }
+    .empty-state h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 0.85rem; line-height: 1.6; max-width: 400px; margin: 0 auto; }
 
     /* LOADING */
-    .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
-    .spinner { width: 40px; height: 40px; margin: 0 auto 1rem; border: 3px solid #fef3c7; border-top-color: var(--siswa-accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); font-size: 0.9rem; }
+    .spinner {
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--orange-light); border-top-color: var(--orange);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
     .hidden { display: none !important; }
-    .module-loading { position: absolute; inset: 0; background: rgba(241,245,249,0.95); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; z-index: 50; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .content-home > * { animation: fadeInUp 0.3s ease; }
+    .module-loading {
+      position: absolute; inset: 0;
+      background: rgba(241,245,249,0.95); display: none;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 1rem; z-index: 50;
+      backdrop-filter: blur(2px);
+    }
     .module-loading.active { display: flex; }
     .module-loading p { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
 
     @media (max-width: 768px) {
-      :root { --header-height: 60px; --sidebar-width: 60px; --sidebar-width-expanded: 200px; }
+      :root { --sidebar-width: 60px; --sidebar-width-expanded: 200px; --header-height: 60px; }
+      .app-header { padding: 0 1rem 0 calc(var(--sidebar-width) + 0.5rem); }
+      .app-brand img { height: 32px; }
       .app-brand-title { font-size: 0.95rem; }
       .app-school { display: none; }
       .app-user-email { display: none; }
       .btn-logout span { display: none; }
       .btn-switch-role span { display: none; }
+      .sidebar-item { height: 38px; margin: 1px 6px; padding: 0 8px; }
+      .content-home { padding: 0.8rem 1rem 2rem; }
+      .dash-hero { padding: 1.3rem; }
+      .dash-hero h1 { font-size: 1.35rem; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-icon { width: 42px; height: 42px; font-size: 1.15rem; }
+      .stat-value { font-size: 1.35rem; }
+      .mapel-grid { grid-template-columns: 1fr; }
     }
+    @media (max-width: 420px) { .stat-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
+
   <header class="app-header">
     <div class="app-brand">
       <img src="../assets/img/logo.png" alt="Tembok Belajar" onerror="this.style.display='none'">
@@ -121,81 +378,131 @@
       </div>
     </div>
     <div class="app-user">
-      <div class="app-school" id="schoolBadge"><i class="fas fa-school"></i> <span id="schoolName">-</span></div>
+      <div class="app-school" id="schoolBadge">
+        <i class="fas fa-school"></i>
+        <span id="schoolName">-</span>
+      </div>
       <div class="app-user-info">
         <div class="avatar" id="userAvatar">?</div>
-        <div>
+        <div class="app-user-text">
           <div class="app-user-name" id="userName">Memuat...</div>
           <div class="app-user-email" id="userEmail">-</div>
         </div>
       </div>
-      <button class="btn-switch-role" id="btnSwitchRole" onclick="switchRole()">
+      <button class="btn-switch-role" id="btnSwitchRole" onclick="switchRole()" style="display: none;">
         <i class="fas fa-users-gear"></i> <span>Ganti Peran</span>
       </button>
-      <button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> <span>Keluar</span></button>
+      <button class="btn-logout" onclick="doLogout()">
+        <i class="fas fa-sign-out-alt"></i> <span>Keluar</span>
+      </button>
     </div>
   </header>
 
   <aside class="app-sidebar" id="appSidebar">
-    <div class="sidebar-item active" data-view="home" onclick="navigateTo('home')"><i class="fas fa-home"></i><span class="label">Beranda</span></div>
+    <div class="sidebar-item active" data-view="home" onclick="navigateTo('home')">
+      <i class="fas fa-home"></i>
+      <span class="label">Beranda</span>
+    </div>
     <div class="sidebar-divider"></div>
-    <div class="sidebar-item" data-view="mapel" onclick="navigateTo('mapel')"><i class="fas fa-book"></i><span class="label">Mapel Saya</span></div>
-    <div class="sidebar-item" data-view="unit" onclick="navigateTo('unit')"><i class="fas fa-layer-group"></i><span class="label">Unit Pembelajaran</span></div>
-    <div class="sidebar-item" data-view="tugas" onclick="navigateTo('tugas')"><i class="fas fa-tasks"></i><span class="label">Tugas & Kuis</span></div>
+    <div class="sidebar-item" data-view="mapel" onclick="navigateTo('mapel')">
+      <i class="fas fa-book"></i>
+      <span class="label">Mapel Saya</span>
+    </div>
+    <div class="sidebar-item" data-view="nilai" onclick="navigateTo('nilai')">
+      <i class="fas fa-star"></i>
+      <span class="label">Nilai Saya</span>
+    </div>
+    <div class="sidebar-item" data-view="forum" onclick="navigateTo('forum')">
+      <i class="fas fa-comments"></i>
+      <span class="label">Forum Diskusi</span>
+    </div>
     <div class="sidebar-divider"></div>
-    <div class="sidebar-item" data-view="nilai" onclick="navigateTo('nilai')"><i class="fas fa-star"></i><span class="label">Nilai Saya</span></div>
-    <div class="sidebar-item" data-view="progress" onclick="navigateTo('progress')"><i class="fas fa-chart-line"></i><span class="label">Progress & Jurnal</span></div>
+    <div class="sidebar-item" data-view="profil" onclick="navigateTo('profil')">
+      <i class="fas fa-user-cog"></i>
+      <span class="label">Profil</span>
+    </div>
     <div class="sidebar-divider"></div>
-    <div class="sidebar-item" data-view="forum" onclick="navigateTo('forum')"><i class="fas fa-comments"></i><span class="label">Forum Diskusi</span></div>
-    <div class="sidebar-item" data-view="profil" onclick="navigateTo('profil')"><i class="fas fa-user-cog"></i><span class="label">Profil</span></div>
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-item logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i><span class="label">Keluar</span></div>
+    <div class="sidebar-item logout" onclick="doLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="label">Keluar</span>
+    </div>
   </aside>
 
   <main class="app-main" id="appMain">
-    <div class="module-loading" id="moduleLoading"><div class="spinner"></div><p>Memuat modul...</p></div>
+    <div class="module-loading" id="moduleLoading">
+      <div class="spinner"></div>
+      <p>Memuat modul...</p>
+    </div>
 
-    <div id="loading" class="loading-box"><div class="spinner"></div><p>Memuat dashboard...</p></div>
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat dashboard...</p>
+    </div>
 
     <div id="contentHome" class="content-home hidden">
       <div class="dash-hero">
-        <h1 id="greeting">Halo!</h1>
-        <p class="dash-hero-sub" id="subGreeting"></p>
+        <div class="dash-hero-content">
+          <div class="dash-hero-eyebrow">
+            <i class="fas fa-user-graduate"></i>
+            Panel Siswa
+          </div>
+          <h1 id="greeting">Halo!</h1>
+          <p class="dash-hero-sub" id="subGreeting"></p>
+          <div class="dash-hero-classes" id="heroClasses"></div>
+        </div>
       </div>
+
       <div class="stat-grid" id="statsGrid"></div>
+
       <div class="dash-panel">
-        <div class="panel-header"><div class="panel-title"><i class="fas fa-bolt"></i> Menu Cepat</div></div>
-        <div class="panel-body"><div class="quick-menu" id="quickMenu"></div></div>
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              <i class="fas fa-book"></i>
+              Mapel Saya
+            </div>
+            <div class="panel-subtitle">Klik kartu untuk melihat unit pembelajaran</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="mapel-grid" id="mapelGrid"></div>
+        </div>
       </div>
     </div>
 
     <iframe id="contentFrame" class="content-frame hidden" src="about:blank"></iframe>
   </main>
 
-  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/core/cache.js"></script>
+<script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
-    const VIEW_URLS = {
-      mapel: 'mapel.html?embed=1',
-      unit: 'mapel.html?embed=1',  // halaman unit juga pakai mapel.html
-      tugas: 'tugas.html?embed=1',
+    // ============================================
+    // VIEW URLS
+    // ============================================
+    const VIEW_BASE_URLS = {
+      mapel: 'mapel-list.html?embed=1',
       nilai: 'nilai.html?embed=1',
-      progress: 'progress.html?embed=1',
       forum: 'forum.html?embed=1',
-      profil: 'profil.html?embed=1'
+      profil: 'profil.html?embed=1',
+      unit: 'unit-list.html?embed=1',
+      'unit-view': 'unit-view.html?embed=1'
     };
-
-    const sidebar = document.getElementById('appSidebar');
-    sidebar.addEventListener('mouseenter', () => document.body.classList.add('sidebar-hover'));
-    sidebar.addEventListener('mouseleave', () => document.body.classList.remove('sidebar-hover'));
+    const VIEW_URLS = { ...VIEW_BASE_URLS };
+    const MAPEL_SUBVIEWS = ['unit', 'unit-view'];
+    const STATIC_VIEWS = ['home', 'mapel', 'nilai', 'forum', 'profil'];
 
     // ============================================
-    // STATE NAVIGASI
+    // STATE
     // ============================================
     let _navTimeout = null;
     let _currentFrameSrc = '';
     let _isHomeView = true;
     let _initDone = false;
+
+    const sidebar = document.getElementById('appSidebar');
+    sidebar.addEventListener('mouseenter', () => document.body.classList.add('sidebar-hover'));
+    sidebar.addEventListener('mouseleave', () => document.body.classList.remove('sidebar-hover'));
 
     // ============================================
     // INIT
@@ -204,12 +511,11 @@
       initSupabase();
       const profile = await requireAuth('siswa');
       if (!profile) return;
-
       window.currentUser = profile;
 
-      // ✅ Tampilkan tombol Ganti Peran kalau >1 role
       if (profile.roles && profile.roles.length > 1) {
-        document.getElementById('btnSwitchRole').style.display = 'inline-flex';
+        const btn = document.getElementById('btnSwitchRole');
+        if (btn) btn.style.display = 'inline-flex';
       }
 
       document.getElementById('loading').classList.add('hidden');
@@ -219,118 +525,225 @@
       document.getElementById('userEmail').textContent = profile.email;
       document.getElementById('userAvatar').textContent = (profile.name || '?').charAt(0).toUpperCase();
       document.getElementById('greeting').textContent = 'Halo, ' + profile.name + '! 👋';
-      document.getElementById('subGreeting').textContent = 'Selamat datang kembali di panel siswa Tembok Belajar.';
 
-      // Tampilkan nama sekolah kalau ada
+      const today = new Date();
+      const tglFormat = today.toLocaleDateString('id-ID', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      });
+      document.getElementById('subGreeting').textContent = 'Selamat datang di panel siswa · ' + tglFormat;
+
+      // Ambil sekolah
       try {
-        if (profile.school_id && typeof getSchool === 'function') {
+        if (profile.school_id) {
           const school = await getSchool(profile.school_id);
           if (school) document.getElementById('schoolName').textContent = school.name;
         }
-      } catch (e) { /* ignore */ }
+      } catch (err) { console.warn('School error:', err); }
 
-      // Quick menu
-      const menus = [
-        { icon: 'fa-book', label: 'Mapel Saya', view: 'mapel' },
-        { icon: 'fa-layer-group', label: 'Unit Pembelajaran', view: 'unit' },
-        { icon: 'fa-tasks', label: 'Tugas & Kuis', view: 'tugas' },
-        { icon: 'fa-star', label: 'Nilai Saya', view: 'nilai' },
-        { icon: 'fa-chart-line', label: 'Progress & Jurnal', view: 'progress' },
-        { icon: 'fa-comments', label: 'Forum Diskusi', view: 'forum' }
-      ];
-      document.getElementById('quickMenu').innerHTML = menus.map(m => `
-        <div class="quick-item" onclick="navigateTo('${m.view}')">
-          <div class="quick-icon-wrap"><i class="fas ${m.icon}"></i></div>
-          <div class="quick-label">${m.label}</div>
-        </div>
-      `).join('');
-
-      // Statistik placeholder
-      document.getElementById('statsGrid').innerHTML = `
-        <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-door-open"></i></div><div><div class="stat-value">-</div><div class="stat-label">Kelas</div></div></div>
-        <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-book"></i></div><div><div class="stat-value">-</div><div class="stat-label">Mapel</div></div></div>
-        <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-tasks"></i></div><div><div class="stat-value">-</div><div class="stat-label">Tugas</div></div></div>
-      `;
-
-      // === MARK INIT SELESAI ===
+      await renderHome(profile);
       _initDone = true;
 
-      // === HANDLE HASH SETELAH INIT SELESAI ===
       const initialHash = window.location.hash.substring(1);
-      if (initialHash && VIEW_URLS[initialHash]) {
-        navigateTo(initialHash);
-      } else {
-        resetFrameToBlank();
-        syncSidebarActive('home');
-      }
+      if (initialHash && VIEW_URLS[initialHash]) navigateTo(initialHash);
+      else { resetFrameToBlank(); syncSidebarActive('home'); }
     })();
 
     // ============================================
-    // HELPER — reset iframe total
+    // RENDER HOME
     // ============================================
-    function resetFrameToBlank() {
-      const frameEl = document.getElementById('contentFrame');
-      if (!frameEl) return;
+    async function renderHome(profile) {
+      const mapelGrid = document.getElementById('mapelGrid');
+      mapelGrid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="spinner"></div><p>Memuat mapel...</p></div>';
 
-      frameEl.onload = null;
-      frameEl.classList.add('hidden');
-      frameEl.src = 'about:blank';
-      frameEl.style.height = '0';
-      frameEl.style.display = 'none';
+      // Ambil kelas siswa (enrollments)
+      let enrollments = [];
+      try {
+        enrollments = await getStudentClasses(profile.id);
+      } catch (err) { console.warn('Enrollment error:', err); }
 
-      _currentFrameSrc = '';
-      _isHomeView = true;
+      // Hero classes
+      const heroClasses = document.getElementById('heroClasses');
+      if (enrollments.length > 0) {
+        heroClasses.innerHTML = enrollments.map(e =>
+          `<span class="hero-class-badge"><i class="fas fa-school"></i> ${escapeHtml(e.classes?.name || '-')}</span>`
+        ).join('');
+      }
 
-      const appMain = document.getElementById('appMain');
-      if (appMain) appMain.scrollTop = 0;
+      // Ambil mapel dari semua kelas
+      let subjectsData = [];
+      try {
+        subjectsData = await getMyEnrolledSubjects(profile.id);
+      } catch (err) { console.warn('Subjects error:', err); }
+
+      // Ambil semua submission (untuk hitung statistik)
+      let myGrades = [];
+      try { myGrades = await getMyGrades(profile.id); } catch (err) {}
+
+      // Ambil units published untuk progress
+      let publishedUnitsCount = 0;
+      let myProgressData = [];
+      try {
+        myProgressData = await getMyProgress(profile.id);
+      } catch (err) { console.warn('Progress error:', err); }
+
+      // Stats
+      const totalMapel = new Set(subjectsData.map(s => s.subject_id)).size;
+      const totalKelas = enrollments.length;
+      const totalNilai = myGrades.length;
+      const avgNilai = myGrades.length > 0
+        ? (myGrades.reduce((s, g) => s + parseFloat(g.score || 0), 0) / myGrades.length).toFixed(1)
+        : '-';
+
+      const stats = [
+        { icon: 'fa-school', color: 'orange', value: totalKelas, label: 'Kelas' },
+        { icon: 'fa-book', color: 'blue', value: totalMapel, label: 'Mata Pelajaran' },
+        { icon: 'fa-star', color: 'green', value: totalNilai, label: 'Total Nilai' },
+        { icon: 'fa-chart-line', color: 'purple', value: avgNilai, label: 'Rata-rata Nilai' }
+      ];
+      document.getElementById('statsGrid').innerHTML = stats.map(s => `
+        <div class="stat-card">
+          <div class="stat-icon ${s.color}"><i class="fas ${s.icon}"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${s.value}</div>
+            <div class="stat-label">${s.label}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // Group subjects by subject_id
+      const bySubject = {};
+      subjectsData.forEach(s => {
+        const sid = String(s.subject_id);
+        if (!bySubject[sid]) {
+          bySubject[sid] = { subject: s.subjects, teachers: [], classes: [] };
+        }
+        if (s.profiles?.name) bySubject[sid].teachers.push(s.profiles.name);
+        if (s.classes) bySubject[sid].classes.push(s.classes);
+      });
+
+      if (Object.keys(bySubject).length === 0) {
+        mapelGrid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+          <span class="emoji">📚</span>
+          <h3>Belum Ada Mapel</h3>
+          <p>Anda belum terdaftar di kelas apapun. Hubungi operator sekolah.</p>
+        </div>`;
+        return;
+      }
+
+      // Render mapel cards dengan info progress
+      const cards = [];
+      for (const [sid, data] of Object.entries(bySubject)) {
+        // Hitung unit published di mapel ini (dari salah satu kelas)
+        let unitCount = 0;
+        const uniqueClassIds = [...new Set(data.classes.map(c => c.id))];
+        for (const cid of uniqueClassIds) {
+          try {
+            const units = await getUnitsPublishedByClass(cid);
+            const filtered = units.filter(u => String(u.annual_plans?.subject_id) === sid);
+            unitCount += filtered.length;
+          } catch (e) {}
+        }
+
+        // Hitung progress siswa di mapel ini
+        const mySubjProgress = myProgressData.find(p => String(p.subject?.id) === sid);
+        const progressPercent = mySubjProgress ? mySubjProgress.percent : 0;
+
+        const teacherNames = [...new Set(data.teachers)].join(', ');
+        const classNames = [...new Set(data.classes.map(c => c.name))].join(', ');
+
+        cards.push(`
+          <div class="mapel-card" onclick="openSubject('${data.subject.id}')">
+            <div class="mapel-card-header">
+              <div style="flex:1; min-width:0;">
+                <div class="mapel-card-title">${escapeHtml(data.subject.name)}</div>
+                ${data.subject.code ? `<div style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">${escapeHtml(data.subject.code)}</div>` : ''}
+              </div>
+              <div class="mapel-icon"><i class="fas fa-book"></i></div>
+            </div>
+            <div class="mapel-card-guru">
+              <i class="fas fa-chalkboard-teacher"></i>
+              <span>${escapeHtml(teacherNames || '-')}</span>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">
+              <i class="fas fa-school" style="color:var(--orange); font-size:0.7rem;"></i>
+              ${escapeHtml(classNames || '-')}
+            </div>
+            <div class="mapel-card-stats">
+              <span><strong>${unitCount}</strong> unit</span>
+              <span><strong>${progressPercent}%</strong> progress</span>
+            </div>
+          </div>
+        `);
+      }
+      mapelGrid.innerHTML = cards.join('');
     }
 
-    // ============================================
-    // HELPER — sinkronkan sidebar active
-    // ============================================
-    function syncSidebarActive(view) {
-      document.querySelectorAll('.sidebar-item[data-view]').forEach(el => {
-        el.classList.toggle('active', el.dataset.view === view);
-      });
+    function openSubject(subjectId) {
+      navigateToWithParams('mapel', { subjectId });
     }
 
     // ============================================
     // NAVIGASI
     // ============================================
+    function navigateToWithParams(target, params = {}) {
+      const base = VIEW_BASE_URLS[target];
+      if (!base) { alert('Modul tidak dikenal: ' + target); return; }
+      const query = new URLSearchParams(params).toString();
+      const url = query ? base + '&' + query : base;
+      VIEW_URLS[target] = url;
+      navigateTo(target);
+    }
+
+    function resetFrameToBlank() {
+      const frameEl = document.getElementById('contentFrame');
+      if (!frameEl) return;
+      frameEl.onload = null;
+      frameEl.classList.add('hidden');
+      frameEl.src = 'about:blank';
+      frameEl.style.height = '0';
+      frameEl.style.display = 'none';
+      _currentFrameSrc = '';
+      _isHomeView = true;
+      const appMain = document.getElementById('appMain');
+      if (appMain) appMain.scrollTop = 0;
+    }
+
+    function syncSidebarActive(view) {
+      let activeKey = 'home';
+      if (STATIC_VIEWS.includes(view)) activeKey = view;
+      else if (MAPEL_SUBVIEWS.includes(view)) activeKey = 'mapel';
+      document.querySelectorAll('.sidebar-item[data-view]').forEach(el => {
+        el.classList.toggle('active', el.dataset.view === activeKey);
+      });
+    }
+
     function navigateTo(view) {
       if (!_initDone) {
         if (history.replaceState) history.replaceState({ view }, '', '#' + view);
         else window.location.hash = view;
         return;
       }
-
       if (_navTimeout) { clearTimeout(_navTimeout); _navTimeout = null; }
-
       syncSidebarActive(view);
 
       const homeEl = document.getElementById('contentHome');
       const frameEl = document.getElementById('contentFrame');
       const loadingEl = document.getElementById('moduleLoading');
       const appMain = document.getElementById('appMain');
-
       appMain.scrollTop = 0;
 
-      // === HOME ===
       if (view === 'home') {
         resetFrameToBlank();
         loadingEl.classList.remove('active');
         homeEl.classList.remove('hidden');
-
         if (history.pushState) history.pushState({ view }, '', '#' + view);
         else window.location.hash = view;
         return;
       }
 
-      // === MODUL ===
       const url = VIEW_URLS[view];
       if (!url) { alert('Modul tidak dikenal: ' + view); return; }
 
-      // Skip reload kalau URL sama
       if (_currentFrameSrc === url && !_isHomeView) {
         frameEl.classList.remove('hidden');
         frameEl.style.display = 'block';
@@ -343,11 +756,9 @@
 
       homeEl.classList.add('hidden');
       loadingEl.classList.add('active');
-
       frameEl.classList.add('hidden');
       frameEl.style.display = 'none';
       frameEl.style.height = '0';
-
       frameEl.onload = null;
       frameEl.src = url;
       _currentFrameSrc = url;
@@ -357,7 +768,6 @@
       frameEl.onload = function onFrameLoad() {
         if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
         if (_isHomeView) return;
-
         loadingEl.classList.remove('active');
         frameEl.classList.remove('hidden');
         frameEl.style.display = 'block';
@@ -371,118 +781,50 @@
         frameEl.classList.remove('hidden');
         frameEl.style.display = 'block';
         frameEl.style.height = '';
-      }, 5000);
+      }, 8000);
 
       if (history.pushState) history.pushState({ view }, '', '#' + view);
       else window.location.hash = view;
     }
 
-    // ============================================
-    // LOAD UNIT DETAIL (dari pesan iframe)
-    // ============================================
-    function loadUnitDetail(unitId) {
-      if (!unitId) return;
-      if (_navTimeout) { clearTimeout(_navTimeout); _navTimeout = null; }
+    window.addEventListener('popstate', (e) => {
+      const view = (e.state && e.state.view) || window.location.hash.substring(1) || 'home';
+      if (VIEW_URLS[view]) navigateTo(view);
+    });
 
-      const frameEl = document.getElementById('contentFrame');
-      const loadingEl = document.getElementById('moduleLoading');
-      const homeEl = document.getElementById('contentHome');
-
-      // Sinkronkan sidebar (anggap "unit" masih aktif)
-      syncSidebarActive('unit');
-
-      homeEl.classList.add('hidden');
-      loadingEl.classList.add('active');
-
-      frameEl.classList.add('hidden');
-      frameEl.style.display = 'none';
-      frameEl.style.height = '0';
-
-      frameEl.onload = null;
-      const url = `unit-detail.html?unit_id=${unitId}&embed=1`;
-      frameEl.src = url;
-      _currentFrameSrc = url;
-      _isHomeView = false;
-
-      const thisNavSrc = url;
-      frameEl.onload = function onFrameLoad() {
-        if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
-        if (_isHomeView) return;
-
-        loadingEl.classList.remove('active');
-        frameEl.classList.remove('hidden');
-        frameEl.style.display = 'block';
-        frameEl.style.height = '';
-      };
-
-      _navTimeout = setTimeout(() => {
-        if (frameEl.src.indexOf(thisNavSrc) === -1 || _currentFrameSrc !== thisNavSrc) return;
-        if (_isHomeView) return;
-        loadingEl.classList.remove('active');
-        frameEl.classList.remove('hidden');
-        frameEl.style.display = 'block';
-        frameEl.style.height = '';
-      }, 5000);
-
-      if (history.pushState) {
-        history.pushState({ view: 'unit-detail', unitId }, '', '#unit-detail/' + unitId);
-      }
-    }
-
-    // ============================================
-    // LISTENER PESAN DARI IFRAME
-    // ============================================
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
-
-      if (e.data.type === 'SISWA_OPEN_UNIT_DETAIL' && e.data.unitId) {
-        loadUnitDetail(e.data.unitId);
-        return;
-      }
-
       if (e.data.type === 'SISWA_NAVIGATE' && e.data.view) {
-        if (e.data.context) sessionStorage.setItem('siswa_context', JSON.stringify(e.data.context));
-        navigateTo(e.data.view);
+        if (VIEW_URLS[e.data.view]) navigateTo(e.data.view);
+        return;
+      }
+      if (e.data.type === 'SISWA_GOTO' && e.data.target) {
+        navigateToWithParams(e.data.target, e.data.params || {});
+        return;
+      }
+      if (e.data.type === 'SISWA_BACK') {
+        navigateTo(e.data.view || 'mapel');
         return;
       }
     });
 
-    // ============================================
-    // POPSTATE & PAGESHOW
-    // ============================================
-    window.addEventListener('popstate', (e) => {
-      const state = e.state || {};
+    document.addEventListener('DOMContentLoaded', () => {
       const hash = window.location.hash.substring(1);
-
-      if (state.view === 'unit-detail' && state.unitId) {
-        loadUnitDetail(state.unitId);
-        return;
-      }
-      if (hash.startsWith('unit-detail/')) {
-        loadUnitDetail(hash.substring('unit-detail/'.length));
-        return;
-      }
-
-      const view = state.view || hash || 'home';
-      navigateTo(view);
+      if (!hash || !VIEW_URLS[hash]) resetFrameToBlank();
     });
-
     window.addEventListener('pageshow', (e) => {
       if (e.persisted && _initDone) {
         const hash = window.location.hash.substring(1);
-        navigateTo(hash || 'home');
+        navigateTo(VIEW_URLS[hash] ? hash : 'home');
       }
     });
 
-    // ============================================
-    // DOM READY — kalau tanpa hash, reset iframe
-    // ============================================
-    document.addEventListener('DOMContentLoaded', () => {
-      const hash = window.location.hash.substring(1);
-      if (!hash || !VIEW_URLS[hash]) {
-        resetFrameToBlank();
-      }
-    });
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
   </script>
 </body>
 </html>

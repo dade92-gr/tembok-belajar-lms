@@ -701,7 +701,6 @@
     </div>
   </header>
 
-  <!-- SIDEBAR -->
   <aside class="app-sidebar" id="appSidebar">
     <div class="sidebar-item active" data-view="home" onclick="navigateTo('home')">
       <i class="fas fa-home"></i>
@@ -709,13 +708,17 @@
     </div>
     <div class="sidebar-divider"></div>
 
-    <div class="sidebar-item" data-view="mapel" onclick="navigateTo('mapel')">
-      <i class="fas fa-book"></i>
-      <span class="label">Mapel Saya</span>
-    </div>
     <div class="sidebar-item" data-view="perencanaan" onclick="navigateTo('perencanaan')">
       <i class="fas fa-clipboard-list"></i>
       <span class="label">Perencanaan TP</span>
+    </div>
+        <div class="sidebar-item" data-view="mapel" onclick="navigateTo('mapel')">
+      <i class="fas fa-book"></i>
+      <span class="label">Mapel &amp; Unit</span>
+    </div>
+    <div class="sidebar-item" data-view="nilai" onclick="navigateTo('nilai')">
+      <i class="fas fa-clipboard-check"></i>
+      <span class="label">Penilaian</span>
     </div>
     <div class="sidebar-divider"></div>
 
@@ -774,8 +777,60 @@
       <!-- STATS -->
       <div class="stat-grid" id="statsGrid"></div>
 
+            <!-- ONBOARDING WIZARD (muncul kalau belum punya perencanaan) -->
+      <div id="onboardingWizard" class="dash-panel hidden" style="border: 2px solid var(--green); background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);">
+        <div class="panel-body" style="padding: 2rem;">
+          <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--green); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 0.8rem; box-shadow: 0 8px 20px rgba(16,185,129,0.3);">
+              <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h2 style="font-size: 1.4rem; color: var(--text); margin-bottom: 0.3rem; font-weight: 800;">
+              Selamat datang, <span id="wizardName">Guru</span>!
+            </h2>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">
+              Anda belum memiliki perencanaan pembelajaran. Ikuti 3 langkah ini untuk memulai.
+            </p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.8rem;">
+            <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; position: relative;">
+              <div style="position: absolute; top: -12px; left: 12px; background: var(--green); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(16,185,129,0.3);">1</div>
+              <div style="width: 52px; height: 52px; border-radius: 12px; background: var(--green-lighter); color: var(--green); display: inline-flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 0.7rem; margin-top: 0.4rem;">
+                <i class="fas fa-clipboard-list"></i>
+              </div>
+              <div style="font-weight: 800; font-size: 0.92rem; color: var(--text); margin-bottom: 0.3rem;">Buat Perencanaan</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">Tentukan mapel, kelas, dan semester untuk tahun ajaran ini</div>
+            </div>
+
+            <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; position: relative;">
+              <div style="position: absolute; top: -12px; left: 12px; background: var(--primary); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(59,130,246,0.3);">2</div>
+              <div style="width: 52px; height: 52px; border-radius: 12px; background: #dbeafe; color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 0.7rem; margin-top: 0.4rem;">
+                <i class="fas fa-book"></i>
+              </div>
+              <div style="font-weight: 800; font-size: 0.92rem; color: var(--text); margin-bottom: 0.3rem;">Buat Unit</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">Bab atau topik besar yang akan diajarkan ke siswa</div>
+            </div>
+
+            <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; position: relative;">
+              <div style="position: absolute; top: -12px; left: 12px; background: var(--purple); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(139,92,246,0.3);">3</div>
+              <div style="width: 52px; height: 52px; border-radius: 12px; background: #ede9fe; color: var(--purple); display: inline-flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 0.7rem; margin-top: 0.4rem;">
+                <i class="fas fa-file-pen"></i>
+              </div>
+              <div style="font-weight: 800; font-size: 0.92rem; color: var(--text); margin-bottom: 0.3rem;">Isi Aktivitas</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">Materi, LKPD, asesmen, refleksi untuk siswa</div>
+            </div>
+          </div>
+
+          <div style="text-align: center;">
+            <button class="btn-primary" onclick="startOnboarding()" style="padding: 0.8rem 2rem; font-size: 0.95rem; border-radius: 999px;">
+              <i class="fas fa-rocket"></i> Mulai: Buat Perencanaan Pertama
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- MAPEL SAYA -->
-      <div class="dash-panel">
+      <div class="dash-panel" id="mapelPanel">
         <div class="panel-header">
           <div>
             <div class="panel-title">
@@ -817,7 +872,8 @@
     Mode Preview — Klik untuk keluar
   </div>
 
-  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/core/cache.js"></script>
+<script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
     // ============================================
@@ -832,7 +888,7 @@
       workspace: 'mapel-workspace.html?embed=1',
       editor: 'unit-editor.html?embed=1',
       preview: 'unit-preview.html?embed=1',
-      nilai: 'unit-nilai.html?embed=1'
+      nilai: 'penilaian.html?embed=1'
     };
 
     // Runtime URL (di-set ulang setiap navigateToWithParams)
@@ -1043,6 +1099,30 @@
           </div>
         `).join('');
       }
+            // ============================================
+      // DETEKSI ONBOARDING WIZARD
+      // ============================================
+      const onboardingEl = document.getElementById('onboardingWizard');
+      const mapelPanelEl = document.getElementById('mapelPanel');
+
+      // Anggap butuh wizard kalau guru punya mapel diampu TAPI belum punya annual_plan
+      const hasAssignments = assignments.length > 0;
+      const hasPlans = (statsData.totalAnnualPlans || 0) > 0;
+      const needWizard = hasAssignments && !hasPlans;
+
+      if (needWizard) {
+        document.getElementById('wizardName').textContent = profile.name || 'Guru';
+        onboardingEl.classList.remove('hidden');
+        // Sembunyikan panel mapel (karena akan dipandu dulu)
+        mapelPanelEl.classList.add('hidden');
+        // Sembunyikan panel pending submissions
+        const pendingPanel = document.getElementById('panelPending');
+        if (pendingPanel) pendingPanel.style.display = 'none';
+      } else {
+        onboardingEl.classList.add('hidden');
+        mapelPanelEl.classList.remove('hidden');
+        // Panel pending submissions sudah di-handle di atas
+      }
     }
 
     // ============================================
@@ -1235,6 +1315,14 @@
     // ============================================
     // UTILS
     // ============================================
+        function startOnboarding() {
+      if (window.self !== window.top) {
+        window.parent.postMessage({ type: 'GURU_NAVIGATE', view: 'perencanaan' }, '*');
+      } else {
+        navigateTo('perencanaan');
+      }
+    }
+
     function escapeHtml(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');

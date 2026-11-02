@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Belajar Unit — Tembok Belajar</title>
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --orange: #f59e0b; --orange-dark: #d97706; --orange-light: #fef3c7; --orange-lighter: #fffbeb;
+      --primary: #3b82f6; --success: #10b981; --success-dark: #047857; --warning: #f59e0b;
+      --danger: #ef4444; --purple: #8b5cf6; --pink: #ec4899;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      -webkit-font-smoothing: antialiased; overflow: hidden;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+
+    /* TOP BAR */
+    .preview-topbar {
+      height: 60px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 1rem;
+      gap: 1rem; box-shadow: var(--shadow-sm); z-index: 50;
+      overflow-x: auto; overflow-y: hidden;
+    }
+    .preview-topbar::-webkit-scrollbar { height: 3px; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.5rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .btn-back:hover { background: var(--orange-light); border-color: var(--orange); color: var(--orange-dark); }
+    .topbar-title { flex: 1; min-width: 200px; display: flex; flex-direction: column; }
+    .topbar-title-main {
+      font-size: 0.95rem; font-weight: 800; color: var(--text);
+      line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .topbar-title-sub { font-size: 0.72rem; color: var(--text-muted); line-height: 1.2; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .progress-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--orange-lighter); color: var(--orange-dark);
+      padding: 0.4rem 0.9rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700;
+      border: 1px solid var(--orange-light); flex-shrink: 0;
+    }
+
+    /* LAYOUT */
+    .preview-layout { display: flex; height: calc(100vh - 60px); overflow: hidden; }
+
+    /* SIDEBAR */
+    .preview-sidebar {
+      width: 300px; background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .sidebar-header { padding: 1rem 1.1rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .sidebar-eyebrow {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--orange-lighter); color: var(--orange-dark);
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 0.62rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 0.5rem; border: 1px solid var(--orange-light);
+    }
+    .sidebar-unit-title { font-size: 1rem; font-weight: 800; color: var(--text); line-height: 1.3; margin-bottom: 0.4rem; word-break: break-word; }
+    .sidebar-unit-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 2px; }
+    .sidebar-unit-meta span { display: inline-flex; align-items: center; gap: 5px; }
+    .sidebar-unit-meta i { color: var(--orange); font-size: 0.68rem; }
+
+    .sidebar-activity-title {
+      padding: 0.7rem 1.1rem 0.4rem;
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--text-muted);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-shrink: 0;
+    }
+    .sidebar-activity-count {
+      font-size: 0.7rem; font-weight: 800;
+      background: var(--orange-light); color: var(--orange-dark);
+      padding: 1px 8px; border-radius: 999px;
+    }
+    .activity-nav-list { flex: 1; overflow-y: auto; padding: 0.4rem 0.6rem 0.6rem; }
+    .activity-nav-list::-webkit-scrollbar { width: 6px; }
+    .activity-nav-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+    .activity-nav-btn {
+      width: 100%; background: var(--bg-soft);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.7rem 0.8rem; margin-bottom: 0.5rem;
+      cursor: pointer; transition: var(--transition);
+      font-family: inherit; text-align: left;
+      display: flex; align-items: center; gap: 0.6rem;
+      position: relative;
+    }
+    .activity-nav-btn:hover { border-color: var(--orange); background: var(--orange-lighter); }
+    .activity-nav-btn.active { border-color: var(--orange); background: var(--orange-lighter); box-shadow: 0 0 0 2px rgba(245,158,11,0.15); }
+    .activity-nav-btn.active::before {
+      content: ''; position: absolute; left: -1px; top: 20%; bottom: 20%;
+      width: 3px; background: var(--orange); border-radius: 0 3px 3px 0;
+    }
+    .activity-nav-btn.completed { border-color: var(--success); background: #f0fdf4; }
+    .activity-nav-btn.completed .nav-num-circle { background: var(--success); color: white; border-color: var(--success); }
+
+    .nav-num-circle {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: white; border: 1px solid var(--border);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 800; color: var(--text-secondary);
+      flex-shrink: 0; position: relative;
+    }
+    .nav-num-circle .check-icon {
+      position: absolute; bottom: -3px; right: -3px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--success); color: white;
+      display: none; align-items: center; justify-content: center;
+      font-size: 0.5rem; border: 2px solid white;
+    }
+    .activity-nav-btn.completed .nav-num-circle .check-icon { display: flex; }
+    .nav-info { flex: 1; min-width: 0; }
+    .nav-title { font-size: 0.82rem; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 2px; word-break: break-word; }
+    .nav-type {
+      display: inline-block; font-size: 0.62rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.3px;
+      padding: 1px 6px; border-radius: 3px;
+    }
+    .nav-type.materi { background: #dbeafe; color: #1e40af; }
+    .nav-type.lkpd { background: #fef3c7; color: #92400e; }
+    .nav-type.asesmen { background: #ede9fe; color: #6d28d9; }
+    .nav-type.refleksi { background: #fce7f3; color: #be185d; }
+    .nav-type.diskusi { background: #d1fae5; color: #047857; }
+    .nav-type.custom { background: #f1f5f9; color: #475569; }
+
+    /* MAIN */
+    .preview-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+    .preview-content { flex: 1; overflow-y: auto; padding: 1.5rem; }
+    .preview-content::-webkit-scrollbar { width: 8px; }
+    .preview-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    .activity-render {
+      max-width: 820px; margin: 0 auto;
+      background: var(--surface); border-radius: var(--radius);
+      border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .activity-render-header {
+      padding: 1.3rem 1.8rem;
+      background: var(--bg-soft);
+      border-bottom: 2px solid var(--orange-light);
+      position: relative;
+    }
+    .activity-render-header::before {
+      content: ''; position: absolute; left: 0; top: 1rem; bottom: 1rem;
+      width: 4px; background: var(--orange); border-radius: 0 3px 3px 0;
+    }
+    .activity-render-eyebrow {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 6px;
+      font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+    .activity-render-eyebrow.materi { background: #dbeafe; color: #1e40af; }
+    .activity-render-eyebrow.lkpd { background: #fef3c7; color: #92400e; }
+    .activity-render-eyebrow.asesmen { background: #ede9fe; color: #6d28d9; }
+    .activity-render-eyebrow.refleksi { background: #fce7f3; color: #be185d; }
+    .activity-render-eyebrow.diskusi { background: #d1fae5; color: #047857; }
+    .activity-render-eyebrow.custom { background: #f1f5f9; color: #475569; }
+    .activity-render-title { font-size: 1.3rem; font-weight: 800; color: var(--text); line-height: 1.3; padding-left: 0.6rem; word-break: break-word; }
+    .activity-render-status {
+      display: inline-flex; align-items: center; gap: 5px;
+      margin-top: 0.5rem; padding: 3px 10px; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 700;
+    }
+    .activity-render-status.done { background: var(--success-light, #d1fae5); color: var(--success-dark); }
+    .activity-render-body { padding: 1.8rem; }
+    .component-block { margin-bottom: 1.4rem; line-height: 1.7; }
+    .component-block:last-child { margin-bottom: 0; }
+
+    /* Typography */
+    .component-block h1, .component-block h2, .component-block h3 {
+      color: var(--text); font-weight: 800; line-height: 1.3;
+      margin: 1rem 0 0.6rem;
+    }
+    .component-block h1 { font-size: 1.8rem; }
+    .component-block h2 { font-size: 1.4rem; }
+    .component-block h3 { font-size: 1.15rem; }
+    .component-block p { color: var(--text-secondary); margin-bottom: 0.6rem; }
+    .component-block ul, .component-block ol { margin: 0.5rem 0 0.5rem 1.5rem; color: var(--text-secondary); }
+    .component-block li { margin-bottom: 0.3rem; }
+    .component-block strong { color: var(--text); font-weight: 700; }
+    .component-block a { color: var(--orange-dark); text-decoration: underline; text-decoration-color: rgba(245,158,11,0.3); }
+    .component-block a:hover { text-decoration-color: var(--orange); }
+    .component-block blockquote {
+      border-left: 4px solid var(--orange); background: var(--orange-lighter);
+      padding: 0.8rem 1.2rem; margin: 0.8rem 0;
+      border-radius: 0 8px 8px 0;
+      color: var(--text-secondary); font-style: italic;
+    }
+    .component-block pre {
+      background: #0f172a; color: #e2e8f0;
+      padding: 1rem; border-radius: 8px;
+      overflow-x: auto; font-family: 'Courier New', monospace;
+      font-size: 0.85rem; line-height: 1.5;
+    }
+    .component-block img { max-width: 100%; height: auto; border-radius: 8px; display: block; margin: 0.5rem 0; }
+
+    .heading-render-block {
+      font-weight: 800; line-height: 1.3;
+      margin: 0.8rem 0 0.4rem; padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+      word-break: break-word;
+    }
+    .heading-render-block.h1 { font-size: 1.8rem; }
+    .heading-render-block.h2 { font-size: 1.4rem; }
+    .heading-render-block.h3 { font-size: 1.15rem; }
+
+    /* LKPD interactive */
+    .lkpd-field { margin-bottom: 1rem; }
+    .lkpd-label { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; display: block; }
+    .lkpd-label .req { color: var(--danger); margin-left: 2px; }
+    .lkpd-input {
+      width: 100%; padding: 0.6rem 0.9rem;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .lkpd-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+    .lkpd-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+    .lkpd-option-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.7rem 0.9rem; margin-bottom: 0.4rem;
+      background: var(--bg-soft); border-radius: 8px;
+      font-size: 0.88rem; color: var(--text-secondary);
+      border: 1.5px solid transparent; cursor: pointer;
+      transition: var(--transition);
+    }
+    .lkpd-option-item:hover { background: var(--orange-lighter); border-color: var(--orange-light); }
+    .lkpd-option-item.checked { background: var(--orange-lighter); border-color: var(--orange); font-weight: 600; color: var(--text); }
+    .lkpd-option-item input { accent-color: var(--orange); width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+    .identitas-box {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem 1.2rem; border-left: 3px solid var(--orange);
+    }
+    .identitas-row { display: flex; gap: 1rem; padding: 0.3rem 0; font-size: 0.85rem; flex-wrap: wrap; }
+    .identitas-row .label { font-weight: 600; color: var(--text-muted); min-width: 100px; }
+    .identitas-row .value { color: var(--text); font-weight: 600; }
+    .petunjuk-box {
+      background: var(--orange-lighter); border-left: 4px solid var(--orange);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .petunjuk-box .petunjuk-title { font-weight: 800; color: var(--orange-dark); margin-bottom: 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
+    .petunjuk-box .petunjuk-text { font-size: 0.88rem; color: #78350f; white-space: pre-wrap; line-height: 1.6; }
+
+    /* TABEL ISIAN (interactive) */
+    .tabel-isian-wrap { overflow-x: auto; }
+    .tabel-isian-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .tabel-isian-table th {
+      padding: 0.5rem 0.7rem; background: var(--orange-light);
+      border: 1px solid var(--border); text-align: left;
+      font-weight: 700; color: var(--orange-dark);
+    }
+    .tabel-isian-table td { padding: 0; border: 1px solid var(--border); }
+    .tabel-isian-table input {
+      width: 100%; border: none; outline: none;
+      padding: 0.5rem 0.7rem; font-family: inherit;
+      font-size: 0.85rem; background: transparent;
+    }
+    .tabel-isian-table input:focus { background: var(--orange-lighter); }
+
+    /* Penilaian Diri */
+    .penilaian-diri-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.6rem 0.9rem; margin-bottom: 0.4rem;
+      background: var(--bg-soft); border-radius: 8px;
+      font-size: 0.88rem; color: var(--text-secondary);
+      border: 1.5px solid transparent; cursor: pointer;
+      transition: var(--transition);
+    }
+    .penilaian-diri-item:hover { background: var(--orange-lighter); border-color: var(--orange-light); }
+    .penilaian-diri-item.checked { background: var(--orange-lighter); border-color: var(--orange); font-weight: 600; }
+    .penilaian-diri-item input { accent-color: var(--orange); width: 18px; height: 18px; cursor: pointer; }
+
+    /* Submit button */
+    .submit-btn-preview {
+      text-align: center; padding: 1rem;
+      background: var(--orange-lighter); border: 2px dashed var(--orange);
+      border-radius: 8px;
+    }
+    .submit-btn-preview button {
+      padding: 0.7rem 1.8rem; background: var(--orange); color: white;
+      border: none; border-radius: 8px; font-weight: 700;
+      font-size: 0.9rem; cursor: pointer; opacity: 1;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: inherit; transition: var(--transition);
+    }
+    .submit-btn-preview button:hover:not(:disabled) {
+      background: var(--orange-dark);
+      box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    }
+    .submit-btn-preview button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ASESMEN */
+    .asesmen-setting-box { background: #ede9fe; border-left: 4px solid var(--purple); padding: 1rem 1.2rem; border-radius: 8px; }
+    .asesmen-setting-title { font-weight: 800; color: #6d28d9; margin-bottom: 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
+    .asesmen-setting-info { font-size: 0.85rem; color: #5b21b6; display: flex; flex-direction: column; gap: 4px; }
+    .asesmen-setting-info strong { color: #4c1d95; }
+
+    .asesmen-soal-box {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem 1.2rem; border-left: 3px solid var(--purple);
+      margin-bottom: 0.6rem;
+    }
+    .asesmen-soal-num {
+      display: inline-block; background: var(--purple); color: white;
+      padding: 2px 10px; border-radius: 4px;
+      font-size: 0.68rem; font-weight: 700; margin-bottom: 0.5rem;
+    }
+    .asesmen-soal-question { font-size: 0.92rem; font-weight: 600; color: var(--text); margin-bottom: 0.7rem; line-height: 1.5; }
+    .asesmen-jawaban-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.6rem 0.9rem; margin-bottom: 0.4rem;
+      background: white; border-radius: 6px;
+      font-size: 0.88rem; border: 1.5px solid var(--border);
+      cursor: pointer; transition: var(--transition);
+    }
+    .asesmen-jawaban-item:hover { background: #f5f3ff; border-color: #c4b5fd; }
+    .asesmen-jawaban-item.checked { background: #f5f3ff; border-color: var(--purple); font-weight: 600; }
+    .asesmen-jawaban-item input { accent-color: var(--purple); width: 18px; height: 18px; cursor: pointer; }
+    .asesmen-jawaban-label {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--bg-soft); display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.72rem; flex-shrink: 0;
+    }
+
+    /* Refleksi */
+    .refleksi-question-box { background: #fce7f3; border-left: 4px solid var(--pink); padding: 1rem 1.2rem; border-radius: 8px; }
+    .refleksi-question-title { font-weight: 800; color: #be185d; margin-bottom: 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
+    .refleksi-question-text { font-size: 0.9rem; color: #831843; margin-bottom: 0.6rem; line-height: 1.6; }
+    .mood-grid { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .mood-item-card {
+      flex: 1; min-width: 80px;
+      display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+      padding: 0.7rem; background: white;
+      border: 2px solid var(--border); border-radius: 8px;
+      font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+      cursor: pointer; transition: var(--transition);
+    }
+    .mood-item-card:hover { border-color: var(--pink); background: #fdf2f8; }
+    .mood-item-card.checked { border-color: var(--pink); background: #fdf2f8; color: #be185d; transform: scale(1.05); }
+    .mood-item-card .mood-emoji { font-size: 2rem; line-height: 1; }
+
+    /* Diskusi */
+    .diskusi-topik-box { background: #d1fae5; border-left: 4px solid var(--success); padding: 1rem 1.2rem; border-radius: 8px; }
+    .diskusi-topik-title { font-weight: 800; color: var(--success-dark); margin-bottom: 0.5rem; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; }
+    .diskusi-topik-desc { font-size: 0.88rem; color: #065f46; white-space: pre-wrap; line-height: 1.6; }
+    .diskusi-aturan-box { background: var(--orange-lighter); border-left: 4px solid var(--orange); padding: 1rem 1.2rem; border-radius: 8px; }
+    .diskusi-aturan-title { font-weight: 800; color: var(--orange-dark); margin-bottom: 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
+    .diskusi-aturan-text { font-size: 0.85rem; color: #78350f; white-space: pre-wrap; line-height: 1.6; }
+
+    /* Komentar / Forum per aktivitas */
+    .komentar-box {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem; border: 1px solid var(--border);
+    }
+    .komentar-header {
+      font-weight: 800; color: var(--success-dark); margin-bottom: 0.6rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .komentar-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; max-height: 400px; overflow-y: auto; }
+    .komentar-item {
+      background: white; border-radius: 8px; padding: 0.7rem 0.9rem;
+      border-left: 3px solid var(--success-light, #a7f3d0);
+    }
+    .komentar-item-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+    .komentar-author-avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--success); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.65rem; flex-shrink: 0;
+    }
+    .komentar-author-name { font-size: 0.78rem; font-weight: 700; color: var(--text); }
+    .komentar-role-badge {
+      display: inline-block; padding: 1px 6px; border-radius: 4px;
+      font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+    }
+    .komentar-role-badge.guru { background: var(--success-light, #d1fae5); color: var(--success-dark); }
+    .komentar-role-badge.siswa { background: #dbeafe; color: #1e40af; }
+    .komentar-time { font-size: 0.68rem; color: var(--text-muted); margin-left: auto; }
+    .komentar-body { font-size: 0.85rem; color: var(--text-secondary); white-space: pre-wrap; line-height: 1.5; }
+    .komentar-form { display: flex; gap: 0.5rem; }
+    .komentar-form input {
+      flex: 1; padding: 0.55rem 0.85rem;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit; outline: none;
+    }
+    .komentar-form input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+    .komentar-form button {
+      padding: 0.55rem 1rem; background: var(--orange); color: white;
+      border: none; border-radius: 8px; font-weight: 700;
+      font-size: 0.82rem; cursor: pointer; font-family: inherit;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .komentar-form button:hover { background: var(--orange-dark); }
+
+    /* Footer nav */
+    .preview-footer-nav {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 0.9rem 1.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem; flex-wrap: wrap; flex-shrink: 0;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+    }
+    .nav-info-text { font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+    .nav-info-text strong { color: var(--text); }
+    .footer-nav-btn {
+      padding: 0.6rem 1.2rem; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1.5px solid;
+    }
+    .footer-nav-btn.primary { background: var(--orange); border-color: var(--orange); color: white; }
+    .footer-nav-btn.primary:hover:not(:disabled) {
+      background: var(--orange-dark); border-color: var(--orange-dark);
+      box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    }
+    .footer-nav-btn.secondary { background: var(--surface); border-color: var(--border); color: var(--text-secondary); }
+    .footer-nav-btn.secondary:hover:not(:disabled) { border-color: var(--orange); color: var(--orange-dark); }
+    .footer-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Empty / loading */
+    .empty-state { text-align: center; padding: 4rem 1.5rem; color: var(--text-muted); max-width: 500px; margin: 0 auto; }
+    .empty-state .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-state h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 0.85rem; line-height: 1.6; }
+    .loading-box { display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; gap: 1rem; color: var(--text-muted); font-size: 0.9rem; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--orange-light); border-top-color: var(--orange);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--text);
+      color: white; padding: 0.9rem 1.2rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.82rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000; max-width: 380px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+
+    /* Save indicator */
+    .save-indicator {
+      position: fixed; top: 70px; right: 20px;
+      background: var(--success); color: white;
+      padding: 0.5rem 1rem; border-radius: 8px;
+      font-size: 0.75rem; font-weight: 600;
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+      opacity: 0; transform: translateY(-10px);
+      transition: all 0.3s ease;
+      z-index: 100; pointer-events: none;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .save-indicator.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 900px) { .preview-sidebar { width: 240px; } }
+    @media (max-width: 768px) {
+      .preview-layout { flex-direction: column; height: auto; min-height: calc(100vh - 60px); }
+      .preview-sidebar { width: 100%; max-height: 280px; border-right: none; border-bottom: 1px solid var(--border); }
+      .preview-content { padding: 1rem; }
+      .preview-footer-nav { padding: 0.8rem 1rem; }
+      .footer-nav-btn { padding: 0.5rem 1rem; font-size: 0.78rem; }
+      .nav-info-text { width: 100%; justify-content: center; }
+      .preview-topbar { flex-wrap: wrap; height: auto; padding: 0.5rem; gap: 0.5rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- LOADING -->
+  <div id="loadingScreen" class="loading-box">
+    <div class="spinner"></div>
+    <p>Memuat unit...</p>
+  </div>
+
+  <!-- MAIN SCREEN -->
+  <div id="unitScreen" class="hidden">
+    <div class="preview-topbar">
+      <button class="btn-back" onclick="exitUnit()"><i class="fas fa-arrow-left"></i> Kembali</button>
+      <div class="topbar-title">
+        <div class="topbar-title-main" id="topbarTitle">-</div>
+        <div class="topbar-title-sub" id="topbarSub">-</div>
+      </div>
+      <span class="progress-badge" id="progressBadge">
+        <i class="fas fa-chart-simple"></i>
+        <span id="progressText">0/0</span>
+      </span>
+    </div>
+
+    <div class="preview-layout">
+      <aside class="preview-sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-eyebrow"><i class="fas fa-book-open"></i> Unit Pembelajaran</div>
+          <div class="sidebar-unit-title" id="sidebarUnitTitle">-</div>
+          <div class="sidebar-unit-meta" id="sidebarUnitMeta"></div>
+        </div>
+        <div class="sidebar-activity-title">
+          <span>Daftar Aktivitas</span>
+          <span class="sidebar-activity-count" id="activityCountBadge">0</span>
+        </div>
+        <div class="activity-nav-list" id="activityNavList"></div>
+      </aside>
+
+      <main class="preview-main">
+        <div class="preview-content" id="previewContent">
+          <div class="empty-state">
+            <span class="emoji">👈</span>
+            <h3>Pilih Aktivitas</h3>
+            <p>Klik salah satu aktivitas di sidebar untuk mulai belajar.</p>
+          </div>
+        </div>
+        <div class="preview-footer-nav" id="footerNav" style="display:none;">
+          <div class="nav-info-text">
+            <i class="fas fa-list-ol" style="color:var(--orange);"></i>
+            Aktivitas <strong id="navCurrentNum">1</strong> dari <strong id="navTotalNum">1</strong>
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button class="footer-nav-btn secondary" id="btnPrevAct" onclick="goToPrevActivity()"><i class="fas fa-arrow-left"></i> Sebelumnya</button>
+            <button class="footer-nav-btn primary" id="btnNextAct" onclick="goToNextActivity()">Berikutnya <i class="fas fa-arrow-right"></i></button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- SAVE INDICATOR -->
+  <div class="save-indicator" id="saveIndicator">
+    <i class="fas fa-check-circle"></i>
+    <span>Tersimpan</span>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- SCRIPT -->
+  <script src="../assets/js/core/cache.js"></script>
+<script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let currentUnit = null;
+    let currentPlan = null;
+    let activities = [];
+    let activeActivityId = null;
+    let allSubmissions = [];          // submissions untuk semua aktivitas
+    let allReflections = [];          // reflections untuk semua aktivitas
+    let allForumPosts = [];           // forum posts untuk aktivitas diskusi
+    let answersCache = {};            // { activityId: { answers } } — cache lokal
+    let saveTimers = {};              // debounce timers per activity
+    let submitting = false;
+
+    const ACTIVITY_TYPE_LABEL = {
+      materi: 'Materi', lkpd: 'LKPD', asesmen: 'Asesmen',
+      refleksi: 'Refleksi', diskusi: 'Diskusi', custom: 'Custom'
+    };
+    const ACTIVITY_TYPE_ICON = {
+      materi: 'fa-book', lkpd: 'fa-file-pen', asesmen: 'fa-clipboard-check',
+      refleksi: 'fa-brain', diskusi: 'fa-comments', custom: 'fa-wrench'
+    };
+
+    // ============================================
+    // DRIVE URL CONVERTER
+    // ============================================
+    function extractDriveId(url) {
+      if (!url) return null;
+      const patterns = [/\/file\/d\/([a-zA-Z0-9_-]+)/, /\/d\/([a-zA-Z0-9_-]+)/, /[?&]id=([a-zA-Z0-9_-]+)/];
+      for (const p of patterns) { const m = url.match(p); if (m) return m[1]; }
+      return null;
+    }
+    function convertDriveUrl(url, type = 'image') {
+      if (!url) return '';
+      const id = extractDriveId(url);
+      if (!id) return url;
+      if (type === 'image') return `https://drive.google.com/thumbnail?id=${id}&sz=w1600`;
+      if (type === 'video') return `https://drive.google.com/file/d/${id}/preview`;
+      return url;
+    }
+    function toEmbedVideoUrl(url) {
+      if (!url) return '';
+      const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+      const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+      if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+      const driveId = extractDriveId(url);
+      if (driveId) return `https://drive.google.com/file/d/${driveId}/preview`;
+      if (url.includes('embed') || url.includes('/iframe')) return url;
+      return '';
+    }
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('siswa');
+      if (!currentUser) return;
+
+      const unitId = new URLSearchParams(window.location.search).get('unitId');
+      if (!unitId) {
+        document.getElementById('loadingScreen').innerHTML =
+          '<p style="color:var(--danger);">Parameter unitId tidak ditemukan.</p>';
+        return;
+      }
+
+      try {
+        await loadUnitAndActivities(unitId);
+        await loadUserSubmissions(unitId);
+
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('unitScreen').classList.remove('hidden');
+
+        // Render aktivitas pertama
+        if (activities.length > 0) {
+          activeActivityId = activities[0].id;
+          renderActivityList();
+          await renderActiveActivity();
+          updateFooterNav();
+        } else {
+          document.getElementById('previewContent').innerHTML = `
+            <div class="empty-state">
+              <span class="emoji">📭</span>
+              <h3>Unit Masih Kosong</h3>
+              <p>Belum ada aktivitas di unit ini.</p>
+            </div>`;
+        }
+      } catch (err) {
+        console.error('Init error:', err);
+        document.getElementById('loadingScreen').innerHTML =
+          `<div style="text-align:center; color:var(--danger); padding:2rem;">
+            <i class="fas fa-triangle-exclamation" style="font-size:2rem; margin-bottom:1rem;"></i>
+            <p>${escapeHtml(err.message)}</p>
+            <button class="btn-back" onclick="exitUnit()" style="margin-top:1rem;"><i class="fas fa-arrow-left"></i> Kembali</button>
+          </div>`;
+      }
+    })();
+
+    // ============================================
+    // LOAD DATA
+    // ============================================
+    async function loadUnitAndActivities(unitId) {
+      const client = initSupabase();
+
+      // Ambil unit
+      currentUnit = await getUnitById(unitId);
+      if (!currentUnit) throw new Error('Unit tidak ditemukan.');
+      if (currentUnit.status !== 'published') throw new Error('Unit ini belum dipublikasikan.');
+
+      currentPlan = currentUnit.annual_plans;
+
+      // Render header
+      document.getElementById('topbarTitle').textContent = currentUnit.title;
+      document.getElementById('topbarSub').textContent =
+        (currentPlan?.classes?.name || '-') + ' · ' +
+        (currentPlan?.subjects?.name || '-');
+      document.title = currentUnit.title + ' — Tembok Belajar';
+
+      document.getElementById('sidebarUnitTitle').textContent = currentUnit.title;
+      document.getElementById('sidebarUnitMeta').innerHTML = `
+        <span><i class="fas fa-school"></i> ${escapeHtml(currentPlan?.classes?.name || '-')}</span>
+        <span><i class="fas fa-book"></i> ${escapeHtml(currentPlan?.subjects?.name || '-')}</span>
+      `;
+
+      // Ambil activities
+      activities = await getUnitActivities(unitId);
+      document.getElementById('activityCountBadge').textContent = activities.length;
+    }
+
+    async function loadUserSubmissions(unitId) {
+      if (activities.length === 0) return;
+
+      const client = initSupabase();
+      const activityIds = activities.map(a => a.id);
+
+      // Ambil submissions
+      try {
+        const { data: subs } = await client.from('submissions')
+          .select('id, activity_id, student_id, status, answers, score, teacher_feedback, submitted_at')
+          .eq('student_id', currentUser.id)
+          .in('activity_id', activityIds);
+        allSubmissions = subs || [];
+      } catch (e) {
+        console.warn('Load submissions error:', e);
+        allSubmissions = [];
+      }
+
+      // Ambil reflections
+      try {
+        const { data: refl } = await client.from('reflections')
+          .select('id, activity_id, student_id, answers, submitted_at')
+          .eq('student_id', currentUser.id)
+          .in('activity_id', activityIds);
+        allReflections = refl || [];
+      } catch (e) {
+        console.warn('Load reflections error:', e);
+        allReflections = [];
+      }
+
+      // Ambil forum posts (untuk kolom komentar)
+      try {
+        const { data: forum } = await client.from('forum_posts')
+          .select(`
+            id, activity_id, parent_id, title, body, created_at, author_id,
+            profiles!forum_posts_author_id_fkey (id, name, role)
+          `)
+          .in('activity_id', activityIds)
+          .order('created_at', { ascending: true });
+        allForumPosts = forum || [];
+      } catch (e) {
+        console.warn('Load forum error:', e);
+        allForumPosts = [];
+      }
+    }
+
+    // ============================================
+    // RENDER ACTIVITY LIST
+    // ============================================
+    function renderActivityList() {
+      const list = document.getElementById('activityNavList');
+      if (activities.length === 0) { list.innerHTML = ''; return; }
+
+      list.innerHTML = activities.map((a, idx) => {
+        const isActive = String(a.id) === String(activeActivityId);
+        const isCompleted = checkActivityCompleted(a.id);
+        const typeLabel = ACTIVITY_TYPE_LABEL[a.type] || a.type;
+        return `<button class="activity-nav-btn ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" onclick="switchActivity('${a.id}')">
+          <span class="nav-num-circle">
+            ${idx + 1}
+            <span class="check-icon"><i class="fas fa-check"></i></span>
+          </span>
+          <div class="nav-info">
+            <div class="nav-title">${escapeHtml(a.title)}</div>
+            <span class="nav-type ${a.type}">${typeLabel}</span>
+          </div>
+        </button>`;
+      }).join('');
+    }
+
+    function checkActivityCompleted(activityId) {
+      const sub = allSubmissions.find(s => String(s.activity_id) === String(activityId));
+      if (sub && (sub.status === 'submitted' || sub.status === 'graded')) return true;
+      const refl = allReflections.find(r => String(r.activity_id) === String(activityId));
+      if (refl) return true;
+      return false;
+    }
+
+    // ============================================
+    // SWITCH ACTIVITY
+    // ============================================
+    async function switchActivity(activityId) {
+      // Save pending changes dari aktivitas sebelumnya
+      if (activeActivityId && saveTimers[activeActivityId]) {
+        clearTimeout(saveTimers[activeActivityId]);
+        await flushSave(activeActivityId);
+      }
+
+      activeActivityId = activityId;
+      renderActivityList();
+      await renderActiveActivity();
+      updateFooterNav();
+      document.getElementById('previewContent').scrollTop = 0;
+    }
+
+    async function renderActiveActivity() {
+      const activity = activities.find(a => String(a.id) === String(activeActivityId));
+      if (!activity) return;
+
+      const content = document.getElementById('previewContent');
+      const icon = ACTIVITY_TYPE_ICON[activity.type] || 'fa-file';
+      const typeLabel = ACTIVITY_TYPE_LABEL[activity.type] || activity.type;
+      const isCompleted = checkActivityCompleted(activity.id);
+      const sub = allSubmissions.find(s => String(s.activity_id) === String(activity.id));
+
+      // Ambil komponen
+      let components = [];
+      try {
+        components = await getActivityComponents(activity.id);
+      } catch (e) {
+        content.innerHTML = `<div class="empty-state" style="color:var(--danger);"><p>Gagal load: ${escapeHtml(e.message)}</p></div>`;
+        return;
+      }
+
+      // Cek apakah aktivitas punya LKPD/asesmen/refleksi (untuk tombol submit)
+      const hasSubmitComponent = components.some(c => c.component_type === 'tombol_submit' || c.component_type === 'tombol_submit_refleksi');
+      const isRefleksi = activity.type === 'refleksi';
+
+      const bodyHtml = components.length === 0
+        ? `<div class="empty-state" style="padding:2rem 1rem;"><span class="emoji">📄</span><h3>Belum Ada Konten</h3></div>`
+        : components.map(c => `<div class="component-block">${renderComponent(c.component_type, c.component_data || {}, activity, c)}</div>`).join('');
+
+      // Tombol submit global (kalau tidak ada tombol submit di komponen)
+      let globalSubmitHtml = '';
+      if (!hasSubmitComponent && (activity.type === 'lkpd' || activity.type === 'asesmen' || activity.type === 'refleksi')) {
+        const submitLabel = isCompleted ? '✓ Sudah Dikumpulkan' : (isRefleksi ? 'Kirim Refleksi' : 'Kumpulkan Jawaban');
+        const submitIcon = isCompleted ? 'fa-check-circle' : 'fa-paper-plane';
+        globalSubmitHtml = `
+          <div class="submit-btn-preview" style="margin-top:1.5rem;">
+            <button onclick="submitCurrentActivity()" ${isCompleted ? 'disabled' : ''}>
+              <i class="fas ${submitIcon}"></i> ${submitLabel}
+            </button>
+          </div>`;
+      }
+
+      // Nilai & feedback dari guru
+      let scoreHtml = '';
+      if (sub && sub.score !== null && sub.score !== undefined) {
+        scoreHtml = `
+          <div style="margin-top:1.5rem; padding:1rem 1.2rem; background:var(--success-light, #d1fae5); border-left:4px solid var(--success); border-radius:8px;">
+            <div style="font-weight:800; color:var(--success-dark); font-size:0.9rem; margin-bottom:0.4rem;">
+              <i class="fas fa-star"></i> Nilai: ${parseFloat(sub.score)}
+            </div>
+            ${sub.teacher_feedback ? `<div style="font-size:0.85rem; color:#065f46;"><strong>Feedback:</strong> ${escapeHtml(sub.teacher_feedback)}</div>` : ''}
+          </div>`;
+      }
+
+      content.innerHTML = `
+        <div class="activity-render">
+          <div class="activity-render-header">
+            <div class="activity-render-eyebrow ${activity.type}"><i class="fas ${icon}"></i> ${typeLabel}</div>
+            <div class="activity-render-title">${escapeHtml(activity.title)}</div>
+            ${isCompleted ? '<span class="activity-render-status done"><i class="fas fa-check-circle"></i> Sudah Dikerjakan</span>' : ''}
+          </div>
+          <div class="activity-render-body">
+            ${bodyHtml}
+            ${globalSubmitHtml}
+            ${scoreHtml}
+          </div>
+        </div>`;
+    }
+
+    // ============================================
+    // RENDER COMPONENT (31 TIPE)
+    // ============================================
+    function renderComponent(type, data, activity, comp) {
+      // Ambil jawaban tersimpan dari cache
+      const activityAnswers = getActivityAnswers(activity.id);
+      const savedAnswer = activityAnswers[comp.id];
+      const savedValue = savedAnswer ? savedAnswer.value : null;
+
+      // ============ TEKS ============
+      if (type === 'text') {
+        return data.html || '';
+      }
+
+      if (type === 'heading') {
+        const level = data.level || 'h2';
+        const text = data.text || '';
+        const color = data.color || '';
+        const align = data.align || 'left';
+        const styleArr = [];
+        if (color) styleArr.push('color: ' + color);
+        styleArr.push('text-align: ' + align);
+        return `<div class="heading-render-block ${level}" style="${styleArr.join('; ')}">${escapeHtml(text)}</div>`;
+      }
+
+      // ============ MEDIA ============
+      if (type === 'image') {
+        const url = data.url || '';
+        const caption = data.caption || '';
+        const align = data.align || 'center';
+        if (!url) return '';
+        const displayUrl = convertDriveUrl(url, 'image');
+        const alignMap = { left: 'flex-start', center: 'center', right: 'flex-end' };
+        return `<div style="display:flex; flex-direction:column; align-items:${alignMap[align]};">
+          <img src="${escapeHtml(displayUrl)}" alt="${escapeHtml(data.alt || '')}" loading="lazy" referrerpolicy="no-referrer">
+          ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; font-style:italic; margin-top:0.3rem;">${escapeHtml(caption)}</div>` : ''}
+        </div>`;
+      }
+
+      if (type === 'video') {
+        const url = data.url || '';
+        const caption = data.caption || '';
+        if (!url) return '';
+        const embedUrl = toEmbedVideoUrl(url);
+        if (!embedUrl) return `<p style="color:var(--danger); font-size:0.85rem;">⚠️ Video tidak dapat dimuat</p>`;
+        return `<div>
+          <div style="position:relative; padding-bottom:56.25%; height:0; border-radius:8px; overflow:hidden; background:#000;">
+            <iframe src="${escapeHtml(embedUrl)}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          </div>
+          ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-top:0.4rem;">${escapeHtml(caption)}</div>` : ''}
+        </div>`;
+      }
+
+      if (type === 'audio') {
+        const url = data.url || '';
+        if (!url) return '';
+        return `<div>
+          <audio controls style="width:100%;"><source src="${escapeHtml(url)}"></audio>
+          ${data.caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-top:0.3rem;">${escapeHtml(data.caption)}</div>` : ''}
+        </div>`;
+      }
+
+      if (type === 'table') {
+        const columns = data.columns || [];
+        const rows = data.rows || [];
+        const widths = data.widths || [];
+        if (columns.length === 0) return '';
+        return `<div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; font-size:0.85rem; table-layout:fixed;">
+            <thead><tr style="background:var(--orange-light);">${columns.map((c, i) => `<th style="padding:0.55rem 0.75rem; border:1px solid var(--border); text-align:left; font-weight:700; color:var(--orange-dark); ${widths[i] ? 'width:' + widths[i] + '%' : ''}">${escapeHtml(c)}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map(row => `<tr>${columns.map((_, i) => `<td style="padding:0.55rem 0.75rem; border:1px solid var(--border); word-break:break-word;">${escapeHtml(row[i] || '')}</td>`).join('')}</tr>`).join('')}</tbody>
+          </table>
+        </div>`;
+      }
+
+      if (type === 'note') {
+        const v = data.variant || 'info';
+        const vMap = {
+          info: { bg: '#dbeafe', color: '#1e40af', border: '#3b82f6', icon: 'fa-circle-info' },
+          success: { bg: '#d1fae5', color: '#047857', border: '#10b981', icon: 'fa-circle-check' },
+          warning: { bg: '#fef3c7', color: '#92400e', border: '#f59e0b', icon: 'fa-triangle-exclamation' },
+          danger: { bg: '#fee2e2', color: '#b91c1c', border: '#ef4444', icon: 'fa-circle-xmark' }
+        };
+        const vm = vMap[v] || vMap.info;
+        return `<div style="padding:0.9rem 1.1rem; background:${vm.bg}; border-left:4px solid ${vm.border}; border-radius:8px; color:${vm.color};">
+          ${data.title ? `<div style="font-weight:800; margin-bottom:0.3rem; display:flex; align-items:center; gap:6px;"><i class="fas ${vm.icon}"></i> ${escapeHtml(data.title)}</div>` : ''}
+          <div style="font-size:0.88rem; line-height:1.6; white-space:pre-wrap;">${escapeHtml(data.text || '')}</div>
+        </div>`;
+      }
+
+      if (type === 'accordion') {
+        const items = data.items || [];
+        if (items.length === 0) return '';
+        return items.map(it => `<details style="margin-bottom:0.5rem; background:var(--bg-soft); border-radius:8px; border:1px solid var(--border);">
+          <summary style="padding:0.7rem 1rem; cursor:pointer; font-weight:700;">${escapeHtml(it.title || 'Tanpa judul')}</summary>
+          <div style="padding:0.8rem 1rem; border-top:1px solid var(--border); white-space:pre-wrap;">${escapeHtml(it.content || '')}</div>
+        </details>`).join('');
+      }
+
+      if (type === 'file') {
+        if (!data.url) return '';
+        return `<a href="${escapeHtml(data.url)}" target="_blank" rel="noopener" style="text-decoration:none; display:block;">
+          <div style="display:flex; align-items:center; gap:0.9rem; padding:0.9rem 1.1rem; background:var(--orange-lighter); border:1px solid var(--orange-light); border-radius:8px;">
+            <div style="width:44px; height:44px; background:var(--orange); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.2rem;"><i class="fas fa-file-arrow-down"></i></div>
+            <div style="flex:1;">
+              <div style="font-weight:700; color:var(--orange-dark);">${escapeHtml(data.label || 'Download File')}</div>
+              ${data.description ? `<div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(data.description)}</div>` : ''}
+            </div>
+            <i class="fas fa-download" style="color:var(--orange);"></i>
+          </div>
+        </a>`;
+      }
+
+      if (type === 'embed') {
+        if (!data.url) return '';
+        return `<iframe src="${escapeHtml(data.url)}" style="width:100%; height:${data.height || 500}px; border:1px solid var(--border); border-radius:8px; background:white;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+      }
+
+      // ============ LKPD (INTERACTIVE) ============
+      if (type === 'identitas_siswa') {
+        const fields = [];
+        if (data.show_name !== false) fields.push({ label: 'Nama', value: currentUser.name || '-' });
+        if (data.show_nisn !== false) fields.push({ label: 'NISN', value: currentUser.nisn || '-' });
+        if (data.show_kelas) fields.push({ label: 'Kelas', value: currentPlan?.classes?.name || '-' });
+        if (data.show_tanggal) fields.push({ label: 'Tanggal', value: new Date().toLocaleDateString('id-ID') });
+        return `<div class="identitas-box">
+          <div style="font-weight:800; color:var(--orange-dark); margin-bottom:0.6rem; font-size:0.9rem;"><i class="fas fa-id-card"></i> ${escapeHtml(data.label || 'Identitas Siswa')}</div>
+          ${fields.map(f => `<div class="identitas-row"><span class="label">${escapeHtml(f.label)}</span><span class="value">${escapeHtml(f.value)}</span></div>`).join('')}
+        </div>`;
+      }
+
+      if (type === 'petunjuk') {
+        return `<div class="petunjuk-box">
+          <div class="petunjuk-title"><i class="fas fa-circle-info"></i> ${escapeHtml(data.title || 'Petunjuk')}</div>
+          <div class="petunjuk-text">${escapeHtml(data.text || '')}</div>
+        </div>`;
+      }
+
+      if (type === 'input_teks') {
+        const val = savedValue !== null ? savedValue : '';
+        return `<div class="lkpd-field">
+          <label class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}${data.required ? '<span class="req">*</span>' : ''}</label>
+          <input type="text" class="lkpd-input" 
+            placeholder="${escapeHtml(data.placeholder || '')}" 
+            value="${escapeHtml(val)}"
+            oninput="onAnswerChange('${activity.id}', '${comp.id}', this.value)">
+        </div>`;
+      }
+
+      if (type === 'textarea') {
+        const val = savedValue !== null ? savedValue : '';
+        return `<div class="lkpd-field">
+          <label class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}${data.required ? '<span class="req">*</span>' : ''}</label>
+          <textarea class="lkpd-input lkpd-textarea" 
+            placeholder="${escapeHtml(data.placeholder || '')}" 
+            rows="${data.rows || 4}"
+            oninput="onAnswerChange('${activity.id}', '${comp.id}', this.value)">${escapeHtml(val)}</textarea>
+        </div>`;
+      }
+
+      if (type === 'checkbox' || type === 'radio') {
+        const opts = data.options || [];
+        const inputType = type === 'radio' ? 'radio' : 'checkbox';
+        const savedArr = Array.isArray(savedValue) ? savedValue : (savedValue ? [savedValue] : []);
+        return `<div class="lkpd-field">
+          <label class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}${data.required ? '<span class="req">*</span>' : ''}</label>
+          ${opts.map((o, i) => {
+            const isChecked = savedArr.includes(o);
+            return `<label class="lkpd-option-item ${isChecked ? 'checked' : ''}" onclick="toggleOption(this, '${activity.id}', '${comp.id}', '${inputType}', ${i})">
+              <input type="${inputType}" name="opt_${comp.id}" ${isChecked ? 'checked' : ''}>
+              <span>${escapeHtml(o)}</span>
+            </label>`;
+          }).join('')}
+        </div>`;
+      }
+
+      if (type === 'dropdown') {
+        const opts = data.options || [];
+        const val = savedValue !== null ? savedValue : '';
+        return `<div class="lkpd-field">
+          <label class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}${data.required ? '<span class="req">*</span>' : ''}</label>
+          <select class="lkpd-input" onchange="onAnswerChange('${activity.id}', '${comp.id}', this.value)">
+            <option value="">-- Pilih --</option>
+            ${opts.map(o => `<option value="${escapeHtml(o)}" ${val === o ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}
+          </select>
+        </div>`;
+      }
+
+      if (type === 'tabel_isian') {
+        const columns = data.columns || [];
+        const rows = data.rows || [];
+        if (columns.length === 0) return '';
+        const savedTable = savedAnswer && savedAnswer.value ? savedAnswer.value : {};
+        return `<div class="lkpd-field">
+          ${data.label ? `<label class="lkpd-label">${escapeHtml(data.label)}</label>` : ''}
+          <div class="tabel-isian-wrap">
+            <table class="tabel-isian-table">
+              <thead><tr>${columns.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
+              <tbody>${rows.map((r, ri) => `<tr>${columns.map((_, ci) => {
+                const cellKey = 'r' + ri + '_c' + ci;
+                const cellVal = savedTable[cellKey] || '';
+                return `<td><input type="text" placeholder="${escapeHtml(r[ci] || '...')}" value="${escapeHtml(cellVal)}" oninput="onTableCellChange('${activity.id}', '${comp.id}', '${cellKey}', this.value)"></td>`;
+              }).join('')}</tr>`).join('')}</tbody>
+            </table>
+          </div>
+        </div>`;
+      }
+
+      if (type === 'penilaian_diri') {
+        const min = data.min || 1;
+        const max = data.max || 5;
+        const labels = data.labels || [];
+        const opts = [];
+        for (let i = min; i <= max; i++) {
+          const lbl = labels[i - min] || `Skala ${i}`;
+          const isChecked = String(savedValue) === String(i);
+          opts.push(`<label class="penilaian-diri-item ${isChecked ? 'checked' : ''}" onclick="selectPenilaianDiri(this, '${activity.id}', '${comp.id}', ${i})">
+            <input type="radio" name="pd_${comp.id}" ${isChecked ? 'checked' : ''}>
+            <strong>${i}</strong> — ${escapeHtml(lbl)}
+          </label>`);
+        }
+        return `<div class="lkpd-field">
+          <label class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}</label>
+          ${opts.join('')}
+        </div>`;
+      }
+
+      if (type === 'tombol_submit') {
+        // Tombol ini dirender di bawah body (lihat renderActiveActivity)
+        return '';
+      }
+
+      // ============ ASESMEN (INTERACTIVE) ============
+      if (type === 'asesmen_setting') {
+        return `<div class="asesmen-setting-box">
+          <div class="asesmen-setting-title"><i class="fas fa-gear"></i> Pengaturan Asesmen</div>
+          <div class="asesmen-setting-info">
+            ${data.title ? `<div><strong>Judul:</strong> ${escapeHtml(data.title)}</div>` : ''}
+            ${data.description ? `<div><strong>Deskripsi:</strong> ${escapeHtml(data.description)}</div>` : ''}
+            <div><strong>Durasi:</strong> ${data.duration || 30} menit</div>
+          </div>
+        </div>`;
+      }
+
+      if (type === 'soal_pg') {
+        const opts = data.options || [];
+        return `<div class="asesmen-soal-box">
+          <div class="asesmen-soal-num">PG · ${data.points || 10} poin</div>
+          <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
+          ${opts.map((o, i) => {
+            const isChecked = String(savedValue) === String(i);
+            return `<label class="asesmen-jawaban-item ${isChecked ? 'checked' : ''}" onclick="selectAsesmenOption(this, '${activity.id}', '${comp.id}', ${i})">
+              <input type="radio" name="pg_${comp.id}" ${isChecked ? 'checked' : ''}>
+              <div class="asesmen-jawaban-label">${String.fromCharCode(65+i)}</div>
+              <div>${escapeHtml(o)}</div>
+            </label>`;
+          }).join('')}
+        </div>`;
+      }
+
+      if (type === 'soal_pg_kompleks') {
+        const opts = data.options || [];
+        const savedArr = Array.isArray(savedValue) ? savedValue : [];
+        return `<div class="asesmen-soal-box">
+          <div class="asesmen-soal-num">PG Kompleks · ${data.points || 15} poin</div>
+          <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
+          ${opts.map((o, i) => {
+            const isChecked = savedArr.includes(i);
+            return `<label class="asesmen-jawaban-item ${isChecked ? 'checked' : ''}" onclick="toggleAsesmenCheckbox(this, '${activity.id}', '${comp.id}', ${i})">
+              <input type="checkbox" ${isChecked ? 'checked' : ''}>
+              <div class="asesmen-jawaban-label">${String.fromCharCode(65+i)}</div>
+              <div>${escapeHtml(o)}</div>
+            </label>`;
+          }).join('')}
+        </div>`;
+      }
+
+      if (type === 'soal_esai') {
+        const val = savedValue !== null ? savedValue : '';
+        return `<div class="asesmen-soal-box">
+          <div class="asesmen-soal-num">Esai · ${data.points || 20} poin</div>
+          <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
+          <textarea class="lkpd-input lkpd-textarea" placeholder="Jawaban esai..." rows="6"
+            oninput="onAnswerChange('${activity.id}', '${comp.id}', this.value)">${escapeHtml(val)}</textarea>
+        </div>`;
+      }
+
+      if (type === 'soal_menjodohkan') {
+        const left = data.left || [];
+        const right = data.right || [];
+        const savedPairs = savedAnswer && savedAnswer.value ? savedAnswer.value : {};
+        return `<div class="asesmen-soal-box">
+          <div class="asesmen-soal-num">Menjodohkan · ${data.points || 15} poin</div>
+          <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada instruksi)')}</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+            <div>
+              ${left.map((l, i) => `<div style="padding:0.5rem 0.7rem; background:white; border-radius:6px; margin-bottom:0.4rem; font-size:0.85rem;"><strong>${i+1}.</strong> ${escapeHtml(l)}</div>`).join('')}
+            </div>
+            <div>
+              ${left.map((_, i) => {
+                const selected = savedPairs[i] || '';
+                return `<select class="lkpd-input" style="margin-bottom:0.4rem; padding:0.4rem 0.6rem; font-size:0.82rem;" onchange="onMenjodohkanChange('${activity.id}', '${comp.id}', ${i}, this.value)">
+                  <option value="">-- Pilih pasangan --</option>
+                  ${right.map((r, ri) => `<option value="${String.fromCharCode(65+ri)}" ${selected === String.fromCharCode(65+ri) ? 'selected' : ''}>${String.fromCharCode(65+ri)}. ${escapeHtml(r)}</option>`).join('')}
+                </select>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>`;
+      }
+
+      if (type === 'soal_benar_salah') {
+        const savedVal = savedValue;
+        return `<div class="asesmen-soal-box">
+          <div class="asesmen-soal-num">Benar/Salah · ${data.points || 5} poin</div>
+          <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pernyataan)')}</div>
+          <div style="display:flex; gap:0.6rem;">
+            <label class="asesmen-jawaban-item ${savedVal === true || savedVal === 'true' ? 'checked' : ''}" style="flex:1; justify-content:center;" onclick="selectBS(this, '${activity.id}', '${comp.id}', true)">
+              <input type="radio" name="bs_${comp.id}" ${savedVal === true || savedVal === 'true' ? 'checked' : ''}> BENAR
+            </label>
+            <label class="asesmen-jawaban-item ${savedVal === false || savedVal === 'false' ? 'checked' : ''}" style="flex:1; justify-content:center;" onclick="selectBS(this, '${activity.id}', '${comp.id}', false)">
+              <input type="radio" name="bs_${comp.id}" ${savedVal === false || savedVal === 'false' ? 'checked' : ''}> SALAH
+            </label>
+          </div>
+        </div>`;
+      }
+
+      // ============ REFLEKSI ============
+      if (type === 'pertanyaan_refleksi') {
+        const val = savedValue !== null ? savedValue : '';
+        const isTextarea = (data.answer_type || 'textarea') === 'textarea';
+        return `<div class="refleksi-question-box">
+          <div class="refleksi-question-title"><i class="fas fa-question"></i> Pertanyaan Refleksi</div>
+          <div class="refleksi-question-text">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
+          ${isTextarea 
+            ? `<textarea class="lkpd-input lkpd-textarea" placeholder="${escapeHtml(data.placeholder || 'Refleksimu...')}" oninput="onAnswerChange('${activity.id}', '${comp.id}', this.value)">${escapeHtml(val)}</textarea>`
+            : `<input type="text" class="lkpd-input" placeholder="${escapeHtml(data.placeholder || 'Refleksimu...')}" value="${escapeHtml(val)}" oninput="onAnswerChange('${activity.id}', '${comp.id}', this.value)">`}
+        </div>`;
+      }
+
+      if (type === 'mood_tracker') {
+        const opts = data.options || [];
+        return `<div class="refleksi-question-box">
+          <div class="refleksi-question-title"><i class="fas fa-face-smile"></i> ${escapeHtml(data.label || 'Mood Tracker')}</div>
+          <div class="mood-grid">
+            ${opts.map((o, i) => {
+              const parts = o.split(' ');
+              const emoji = parts[0] || '😐';
+              const label = parts.slice(1).join(' ') || o;
+              const isChecked = savedValue === o;
+              return `<div class="mood-item-card ${isChecked ? 'checked' : ''}" onclick="selectMood(this, '${activity.id}', '${comp.id}', '${escapeHtml(o)}')">
+                <span class="mood-emoji">${emoji}</span>
+                <span>${escapeHtml(label)}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }
+
+      if (type === 'target_belajar') {
+        const val = savedValue !== null ? savedValue : '';
+        return `<div class="refleksi-question-box">
+          <div class="refleksi-question-title"><i class="fas fa-bullseye"></i> Target Belajar</div>
+          <div class="refleksi-question-text">${escapeHtml(data.label || '(Belum ada label)')}</div>
+          <input type="text" class="lkpd-input" placeholder="${escapeHtml(data.placeholder || 'Targetmu...')}" value="${escapeHtml(val)}" oninput="onAnswerChange('${activity.id}', '${comp.id}', this.value)">
+        </div>`;
+      }
+
+      if (type === 'tombol_submit_refleksi') {
+        return '';
+      }
+
+      // ============ DISKUSI ============
+      if (type === 'topik_diskusi') {
+        return `<div class="diskusi-topik-box">
+          <div class="diskusi-topik-title"><i class="fas fa-comment-dots"></i> ${escapeHtml(data.title || 'Topik Diskusi')}</div>
+          <div class="diskusi-topik-desc">${escapeHtml(data.description || '')}</div>
+        </div>`;
+      }
+
+      if (type === 'aturan_diskusi') {
+        return `<div class="diskusi-aturan-box">
+          <div class="diskusi-aturan-title"><i class="fas fa-scroll"></i> ${escapeHtml(data.title || 'Aturan Diskusi')}</div>
+          <div class="diskusi-aturan-text">${escapeHtml(data.text || '')}</div>
+        </div>`;
+      }
+
+      if (type === 'kolom_komentar') {
+        return renderKomentarBox(activity, data);
+      }
+
+      return `<p style="color:var(--text-muted); font-style:italic; font-size:0.85rem;">[Komponen "${escapeHtml(type)}"]</p>`;
+    }
+
+    // ============================================
+    // KOMENTAR (forum per aktivitas)
+    // ============================================
+    function renderKomentarBox(activity, data) {
+      const posts = allForumPosts.filter(p => String(p.activity_id) === String(activity.id) && !p.parent_id);
+
+      const postsHtml = posts.length === 0
+        ? `<div style="text-align:center; padding:1rem; color:var(--text-muted); font-size:0.82rem; font-style:italic;">Belum ada komentar. Mulai diskusi!</div>`
+        : posts.map(p => {
+            const author = p.profiles || {};
+            const role = author.role || 'siswa';
+            const initials = (author.name || '?').charAt(0).toUpperCase();
+            return `<div class="komentar-item">
+              <div class="komentar-item-header">
+                <div class="komentar-author-avatar">${initials}</div>
+                <span class="komentar-author-name">${escapeHtml(author.name || '-')}</span>
+                <span class="komentar-role-badge ${role}">${role === 'guru' ? 'Guru' : 'Siswa'}</span>
+                <span class="komentar-time">${formatDate(p.created_at)}</span>
+              </div>
+              <div class="komentar-body">${escapeHtml(p.body || '')}</div>
+            </div>`;
+          }).join('');
+
+      return `<div class="komentar-box">
+        <div class="komentar-header"><i class="fas fa-comments"></i> ${escapeHtml(data.label || 'Diskusi Kelas')}</div>
+        <div class="komentar-list">${postsHtml}</div>
+        <div class="komentar-form">
+          <input type="text" id="komentarInput_${activity.id}" placeholder="${escapeHtml(data.placeholder || 'Tulis komentar...')}" maxlength="500" onkeypress="if(event.key==='Enter')submitKomentar('${activity.id}')">
+          <button onclick="submitKomentar('${activity.id}')"><i class="fas fa-paper-plane"></i> Kirim</button>
+        </div>
+      </div>`;
+    }
+
+    // ============================================
+    // ANSWER MANAGEMENT (auto-save)
+    // ============================================
+    function getActivityAnswers(activityId) {
+      // Cari di submission atau reflection
+      const sub = allSubmissions.find(s => String(s.activity_id) === String(activityId));
+      if (sub && sub.answers && typeof sub.answers === 'object') {
+        return sub.answers;
+      }
+      const refl = allReflections.find(r => String(r.activity_id) === String(activityId));
+      if (refl && refl.answers && typeof refl.answers === 'object') {
+        return refl.answers;
+      }
+      if (answersCache[activityId]) return answersCache[activityId];
+      return {};
+    }
+
+    function onAnswerChange(activityId, compId, value) {
+      if (!answersCache[activityId]) answersCache[activityId] = {};
+      answersCache[activityId][compId] = { value };
+      debounceSave(activityId);
+    }
+
+    function onTableCellChange(activityId, compId, cellKey, value) {
+      if (!answersCache[activityId]) answersCache[activityId] = {};
+      if (!answersCache[activityId][compId]) answersCache[activityId][compId] = { value: {} };
+      if (typeof answersCache[activityId][compId].value !== 'object') {
+        answersCache[activityId][compId].value = {};
+      }
+      answersCache[activityId][compId].value[cellKey] = value;
+      debounceSave(activityId);
+    }
+
+    function onMenjodohkanChange(activityId, compId, leftIdx, value) {
+      if (!answersCache[activityId]) answersCache[activityId] = {};
+      if (!answersCache[activityId][compId]) answersCache[activityId][compId] = { value: {} };
+      if (typeof answersCache[activityId][compId].value !== 'object') {
+        answersCache[activityId][compId].value = {};
+      }
+      answersCache[activityId][compId].value[leftIdx] = value;
+      debounceSave(activityId);
+    }
+
+    function toggleOption(labelEl, activityId, compId, inputType, optionIndex) {
+      setTimeout(() => {
+        const container = labelEl.parentElement;
+        const checkedValues = [];
+        container.querySelectorAll('input[type="' + inputType + '"]:checked').forEach((input, idx) => {
+          const parentLabel = input.closest('.lkpd-option-item');
+          const text = parentLabel.querySelector('span').textContent;
+          checkedValues.push(text);
+          parentLabel.classList.add('checked');
+        });
+        container.querySelectorAll('.lkpd-option-item').forEach(l => {
+          const input = l.querySelector('input');
+          if (!input.checked) l.classList.remove('checked');
+        });
+
+        if (!answersCache[activityId]) answersCache[activityId] = {};
+        answersCache[activityId][compId] = { value: inputType === 'radio' ? checkedValues[0] : checkedValues };
+        debounceSave(activityId);
+      }, 10);
+    }
+
+    function selectPenilaianDiri(labelEl, activityId, compId, value) {
+      setTimeout(() => {
+        const container = labelEl.parentElement;
+        container.querySelectorAll('.penilaian-diri-item').forEach(l => l.classList.remove('checked'));
+        labelEl.classList.add('checked');
+
+        if (!answersCache[activityId]) answersCache[activityId] = {};
+        answersCache[activityId][compId] = { value: value };
+        debounceSave(activityId);
+      }, 10);
+    }
+
+    function selectAsesmenOption(labelEl, activityId, compId, optionIndex) {
+      setTimeout(() => {
+        const container = labelEl.parentElement;
+        container.querySelectorAll('.asesmen-jawaban-item').forEach(l => l.classList.remove('checked'));
+        labelEl.classList.add('checked');
+
+        if (!answersCache[activityId]) answersCache[activityId] = {};
+        answersCache[activityId][compId] = { value: optionIndex };
+        debounceSave(activityId);
+      }, 10);
+    }
+
+    function toggleAsesmenCheckbox(labelEl, activityId, compId, optionIndex) {
+      setTimeout(() => {
+        const container = labelEl.parentElement;
+        const checkedIndices = [];
+        container.querySelectorAll('.asesmen-jawaban-item input[type="checkbox"]').forEach((input, idx) => {
+          const parentLabel = input.closest('.asesmen-jawaban-item');
+          if (input.checked) {
+            parentLabel.classList.add('checked');
+            checkedIndices.push(idx);
+          } else {
+            parentLabel.classList.remove('checked');
+          }
+        });
+
+        if (!answersCache[activityId]) answersCache[activityId] = {};
+        answersCache[activityId][compId] = { value: checkedIndices };
+        debounceSave(activityId);
+      }, 10);
+    }
+
+    function selectBS(labelEl, activityId, compId, value) {
+      setTimeout(() => {
+        const container = labelEl.parentElement;
+        container.querySelectorAll('.asesmen-jawaban-item').forEach(l => l.classList.remove('checked'));
+        labelEl.classList.add('checked');
+
+        if (!answersCache[activityId]) answersCache[activityId] = {};
+        answersCache[activityId][compId] = { value: value };
+        debounceSave(activityId);
+      }, 10);
+    }
+
+    function selectMood(labelEl, activityId, compId, value) {
+      setTimeout(() => {
+        const container = labelEl.parentElement;
+        container.querySelectorAll('.mood-item-card').forEach(l => l.classList.remove('checked'));
+        labelEl.classList.add('checked');
+
+        if (!answersCache[activityId]) answersCache[activityId] = {};
+        answersCache[activityId][compId] = { value: value };
+        debounceSave(activityId);
+      }, 10);
+    }
+
+    // ============================================
+    // DEBOUNCE SAVE
+    // ============================================
+    function debounceSave(activityId) {
+      if (saveTimers[activityId]) clearTimeout(saveTimers[activityId]);
+      saveTimers[activityId] = setTimeout(async () => {
+        await flushSave(activityId);
+      }, 2000);
+    }
+
+    async function flushSave(activityId) {
+      if (!answersCache[activityId]) return;
+
+      const activity = activities.find(a => String(a.id) === String(activityId));
+      if (!activity) return;
+
+      const isRefleksi = activity.type === 'refleksi';
+      const answers = answersCache[activityId];
+
+      try {
+        const client = initSupabase();
+
+        if (isRefleksi) {
+          // Simpan ke reflections
+          const { data: existing } = await client.from('reflections')
+            .select('id').eq('activity_id', activityId).eq('student_id', currentUser.id).maybeSingle();
+
+          if (existing) {
+            await client.from('reflections').update({ answers, submitted_at: new Date().toISOString() }).eq('id', existing.id);
+          } else {
+            await client.from('reflections').insert([{ activity_id: activityId, student_id: currentUser.id, answers }]);
+          }
+        } else {
+          // Simpan ke submissions (sebagai draft, status = 'submitted' atau 'draft')
+          const { data: existing } = await client.from('submissions')
+            .select('id').eq('activity_id', activityId).eq('student_id', currentUser.id).maybeSingle();
+
+          if (existing) {
+            await client.from('submissions').update({ answers }).eq('id', existing.id);
+          } else {
+            await client.from('submissions').insert([{
+              activity_id: activityId,
+              student_id: currentUser.id,
+              answers,
+              status: 'draft'
+            }]);
+          }
+        }
+
+        showSaveIndicator();
+        delete saveTimers[activityId];
+      } catch (err) {
+        console.error('Save error:', err);
+        showToast('Gagal auto-save: ' + err.message, 'error');
+      }
+    }
+
+    // ============================================
+    // SUBMIT ACTIVITY (final)
+    // ============================================
+    async function submitCurrentActivity() {
+      if (submitting) return;
+      const activity = activities.find(a => String(a.id) === String(activeActivityId));
+      if (!activity) return;
+
+      if (!confirm('Kumpulkan jawaban Anda? Setelah dikumpulkan, Anda masih bisa mengubah, tapi akan ditandai sebagai revisi.')) return;
+
+      submitting = true;
+
+      try {
+        // Flush pending changes dulu
+        if (saveTimers[activity.id]) {
+          clearTimeout(saveTimers[activity.id]);
+          await flushSave(activity.id);
+        }
+
+        const client = initSupabase();
+        const isRefleksi = activity.type === 'refleksi';
+
+        if (isRefleksi) {
+          // Reflections sudah tersimpan, cukup update submitted_at
+          await client.from('reflections')
+            .update({ submitted_at: new Date().toISOString() })
+            .eq('activity_id', activity.id)
+            .eq('student_id', currentUser.id);
+        } else {
+          // Update submission status ke submitted
+          const { data: existing } = await client.from('submissions')
+            .select('id').eq('activity_id', activity.id).eq('student_id', currentUser.id).maybeSingle();
+
+          if (existing) {
+            await client.from('submissions').update({
+              status: 'submitted',
+              submitted_at: new Date().toISOString()
+            }).eq('id', existing.id);
+          } else {
+            await client.from('submissions').insert([{
+              activity_id: activity.id,
+              student_id: currentUser.id,
+              answers: {},
+              status: 'submitted',
+              submitted_at: new Date().toISOString()
+            }]);
+          }
+
+          // Update progress
+          try {
+            await upsertProgress({
+              studentId: currentUser.id,
+              unitId: currentUnit.id,
+              activityId: activity.id,
+              status: 'completed',
+              completedAt: new Date().toISOString()
+            });
+          } catch (e) { console.warn('Progress error:', e); }
+        }
+
+        showToast('✅ Aktivitas berhasil dikumpulkan!', 'success');
+
+        // Reload data
+        await loadUserSubmissions(currentUnit.id);
+        renderActivityList();
+        await renderActiveActivity();
+        updateProgressBadge();
+      } catch (err) {
+        console.error('Submit error:', err);
+        showToast('Gagal submit: ' + err.message, 'error');
+      } finally {
+        submitting = false;
+      }
+    }
+
+    // ============================================
+    // KOMENTAR (forum per aktivitas)
+    // ============================================
+    async function submitKomentar(activityId) {
+      const input = document.getElementById('komentarInput_' + activityId);
+      if (!input) return;
+      const body = input.value.trim();
+      if (!body) return;
+
+      const activity = activities.find(a => String(a.id) === String(activityId));
+      if (!activity) return;
+
+      try {
+        const client = initSupabase();
+        const { error } = await client.from('forum_posts').insert([{
+          unit_id: currentUnit.id,
+          activity_id: activityId,
+          class_id: currentPlan?.class_id,
+          subject_id: currentPlan?.subject_id,
+          author_id: currentUser.id,
+          title: null,
+          body: body,
+          parent_id: null
+        }]);
+
+        if (error) throw error;
+
+        input.value = '';
+        showToast('✅ Komentar terkirim', 'success');
+
+        // Reload forum posts
+        await loadUserSubmissions(currentUnit.id);
+        await renderActiveActivity();
+      } catch (err) {
+        console.error('Komentar error:', err);
+        showToast('Gagal kirim komentar: ' + err.message, 'error');
+      }
+    }
+
+    // ============================================
+    // NAVIGATION
+    // ============================================
+    function updateFooterNav() {
+      const footer = document.getElementById('footerNav');
+      if (activities.length === 0) { footer.style.display = 'none'; return; }
+      footer.style.display = 'flex';
+      const idx = activities.findIndex(a => String(a.id) === String(activeActivityId));
+      document.getElementById('navCurrentNum').textContent = idx + 1;
+      document.getElementById('navTotalNum').textContent = activities.length;
+      document.getElementById('btnPrevAct').disabled = idx <= 0;
+      document.getElementById('btnNextAct').disabled = idx >= activities.length - 1;
+      updateProgressBadge();
+    }
+
+    function updateProgressBadge() {
+      const total = activities.length;
+      const done = activities.filter(a => checkActivityCompleted(a.id)).length;
+      document.getElementById('progressText').textContent = done + '/' + total;
+    }
+
+    function goToPrevActivity() {
+      const idx = activities.findIndex(a => String(a.id) === String(activeActivityId));
+      if (idx > 0) switchActivity(activities[idx - 1].id);
+    }
+    function goToNextActivity() {
+      const idx = activities.findIndex(a => String(a.id) === String(activeActivityId));
+      if (idx < activities.length - 1) switchActivity(activities[idx + 1].id);
+    }
+
+    function exitUnit() {
+      // Save pending dulu
+      Object.keys(saveTimers).forEach(aid => {
+        clearTimeout(saveTimers[aid]);
+        flushSave(aid);
+      });
+
+      if (window.self !== window.top) {
+        window.parent.postMessage({ type: 'SISWA_BACK', view: 'mapel' }, '*');
+      } else {
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function formatDate(iso) {
+      if (!iso) return '-';
+      try {
+        const d = new Date(iso);
+        const now = new Date();
+        const diff = (now - d) / 1000;
+        if (diff < 60) return 'Baru saja';
+        if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
+        if (diff < 604800) return Math.floor(diff / 86400) + ' hari lalu';
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch { return iso; }
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function showSaveIndicator() {
+      const ind = document.getElementById('saveIndicator');
+      ind.classList.add('show');
+      clearTimeout(window._saveTimer);
+      window._saveTimer = setTimeout(() => ind.classList.remove('show'), 1500);
+    }
+
+    // Flush save saat close tab
+    window.addEventListener('beforeunload', () => {
+      Object.keys(saveTimers).forEach(aid => {
+        clearTimeout(saveTimers[aid]);
+        flushSave(aid);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress Siswa — Tembok Belajar</title>
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #10b981; --green-dark: #047857; --green-light: #d1fae5; --green-lighter: #ecfdf5;
+      --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+
+    /* TOOLBAR */
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--green); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+    .btn-primary {
+      background: var(--green); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--green-dark); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--green); color: var(--green);
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--green-light); }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+
+    /* FILTER */
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 1fr 1fr auto;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .filter-group label i { color: var(--green); }
+    .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+    .filter-select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* STATS */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem; margin-bottom: 1rem;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.2rem;
+      display: flex; align-items: center; gap: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .stat-icon.green { background: var(--green-light); color: var(--green-dark); }
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.orange { background: #fed7aa; color: #ea580c; }
+    .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+    .stat-info { flex: 1; min-width: 0; }
+    .stat-value { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 2px; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+
+    /* TABLE */
+    .table-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table thead { background: var(--bg-soft); }
+    .data-table th {
+      padding: 0.85rem 1rem; text-align: left; font-weight: 700;
+      color: var(--text-muted); border-bottom: 2px solid var(--border);
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+      vertical-align: middle; color: var(--text);
+    }
+    .data-table tbody tr:hover { background: var(--green-lighter); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    .nama-siswa { font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .avatar-mini {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--green-dark));
+      color: white; display: inline-flex;
+      align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.75rem; flex-shrink: 0;
+    }
+    .nisn-teks { font-size: 0.75rem; color: var(--text-muted); font-family: 'Courier New', monospace; }
+
+    /* PROGRESS BAR */
+    .progress-wrap {
+      display: flex; align-items: center; gap: 0.5rem;
+      min-width: 140px;
+    }
+    .progress-bar-mini {
+      flex: 1; height: 8px;
+      background: #e2e8f0; border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill-mini {
+      height: 100%;
+      background: var(--green);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .progress-fill-mini.high { background: var(--green); }
+    .progress-fill-mini.mid { background: var(--warning); }
+    .progress-fill-mini.low { background: var(--danger); }
+    .progress-text {
+      font-size: 0.78rem; font-weight: 800;
+      color: var(--text); min-width: 40px; text-align: right;
+    }
+
+    .avg-score {
+      font-weight: 800; font-size: 1rem;
+    }
+    .avg-score.high { color: var(--green-dark); }
+    .avg-score.mid { color: var(--warning); }
+    .avg-score.low { color: var(--danger); }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 0.68rem; font-weight: 700; white-space: nowrap;
+    }
+    .status-pill.good { background: var(--green-light); color: var(--green-dark); }
+    .status-pill.warn { background: #fef3c7; color: #92400e; }
+    .status-pill.bad { background: #fee2e2; color: #b91c1c; }
+    .status-pill.neutral { background: #e2e8f0; color: #475569; }
+
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition); font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover { background: var(--green-light); border-color: var(--green); color: var(--green); }
+
+    .empty-row {
+      text-align: center; padding: 4rem 1.5rem; color: var(--text-muted);
+    }
+    .empty-row .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-row h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-row p { font-size: 0.85rem; line-height: 1.6; max-width: 400px; margin: 0 auto; }
+
+    .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
+    .spinner {
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem; width: 100%; max-width: 640px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 92vh; overflow-y: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--text); margin-bottom: 1rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--green); }
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; flex-wrap: wrap;
+    }
+
+    .detail-header {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.9rem 1.1rem; background: var(--green-lighter);
+      border-radius: 10px; margin-bottom: 1rem;
+      border-left: 3px solid var(--green);
+    }
+    .detail-header-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--green-dark));
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.2rem; flex-shrink: 0;
+    }
+    .detail-header-info { flex: 1; min-width: 0; }
+    .detail-header-name { font-weight: 800; font-size: 1rem; color: var(--text); }
+    .detail-header-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    .unit-list-item {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 0.9rem 1.1rem; margin-bottom: 0.6rem;
+      border-left: 3px solid var(--border);
+      transition: var(--transition);
+    }
+    .unit-list-item.completed { border-left-color: var(--green); background: var(--green-lighter); }
+    .unit-list-item.in-progress { border-left-color: var(--warning); }
+    .unit-list-item.not-started { border-left-color: #cbd5e1; }
+
+    .unit-list-item-header {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 0.8rem; margin-bottom: 0.5rem;
+    }
+    .unit-list-item-title {
+      font-weight: 700; font-size: 0.88rem; color: var(--text);
+      flex: 1;
+    }
+    .unit-list-item-pct {
+      font-weight: 800; font-size: 1rem; flex-shrink: 0;
+    }
+
+    .unit-activity-list {
+      display: flex; flex-direction: column; gap: 0.3rem;
+      margin-top: 0.5rem; padding-top: 0.5rem;
+      border-top: 1px dashed var(--border);
+    }
+    .unit-activity-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.78rem; padding: 0.3rem 0;
+    }
+    .unit-activity-icon {
+      width: 20px; height: 20px; border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.6rem; flex-shrink: 0;
+    }
+    .unit-activity-icon.done { background: var(--green); color: white; }
+    .unit-activity-icon.pending { background: #e2e8f0; color: var(--text-muted); }
+    .unit-activity-name { flex: 1; color: var(--text-secondary); }
+    .unit-activity-type { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--text);
+      color: white; padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--danger); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .data-table th, .data-table td { padding: 0.55rem 0.5rem; font-size: 0.78rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+
+    <!-- TOOLBAR -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#progress';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-chart-line"></i>
+          <span>
+            Progress Siswa
+            <small>Pantau perkembangan belajar siswa per unit</small>
+          </span>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-outline" onclick="loadData()">
+          <i class="fas fa-rotate"></i> Muat Ulang
+        </button>
+        <button class="btn-primary" onclick="exportCSV()">
+          <i class="fas fa-download"></i> Export CSV
+        </button>
+      </div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="filterKelas"><i class="fas fa-school"></i> Kelas</label>
+          <select id="filterKelas" class="filter-select" onchange="onKelasChange()">
+            <option value="">-- Pilih Kelas --</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterUnit"><i class="fas fa-book"></i> Unit</label>
+          <select id="filterUnit" class="filter-select" onchange="loadProgressData()" disabled>
+            <option value="">-- Pilih Unit --</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <button class="btn-outline" onclick="loadProgressData()" style="justify-content: center;">
+            <i class="fas fa-search"></i> Tampilkan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat data...</p>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- STATS -->
+      <div class="stats-row" id="statsRow"></div>
+
+      <!-- TABLE -->
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">No</th>
+                <th>Nama Siswa</th>
+                <th style="width:130px;">NISN</th>
+                <th style="width:200px;">Progress Unit</th>
+                <th style="width:100px;">Aktivitas</th>
+                <th style="width:100px;">Rata Nilai</th>
+                <th style="width:120px;">Status</th>
+                <th style="width:80px;">Detail</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="8" class="empty-row">Pilih kelas dan unit untuk melihat progress.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MODAL: DETAIL SISWA -->
+  <div class="modal-overlay" id="modalDetail">
+    <div class="modal-card">
+      <h2><i class="fas fa-user"></i> Detail Progress Siswa</h2>
+      <div id="detailBody">
+        <div style="text-align:center; padding:2rem;"><div class="spinner"></div></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDetail()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/core/cache.js"></script>
+<script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let myAssignments = [];
+    let myClasses = [];          // kelas unik dari teacher_assign
+    let myPlans = [];            // annual_plans guru
+    let currentClassId = null;
+    let currentUnitId = null;
+    let currentUnit = null;
+    let currentPlan = null;
+    let allStudents = [];        // siswa di kelas
+    let allActivities = [];      // aktivitas di unit
+    let allSubmissions = [];     // submission di unit
+    let allGrades = [];          // grade di unit
+    let progressData = [];       // hasil gabungan
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+
+      await loadInitialData();
+    })();
+
+    async function loadInitialData() {
+      try {
+        myAssignments = await getMyTeachingAssignments(currentUser.id);
+        myPlans = await getMyAnnualPlans(currentUser.id);
+
+        // Extract unique classes
+        const classMap = {};
+        myAssignments.forEach(a => {
+          if (a.classes) classMap[String(a.class_id)] = a.classes;
+        });
+        myClasses = Object.values(classMap).sort((a, b) =>
+          (a.name || '').localeCompare(b.name || '')
+        );
+
+        // Populate kelas filter
+        const selKelas = document.getElementById('filterKelas');
+        selKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+          myClasses.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.grade ? ' (' + escapeHtml(c.grade) + ')' : ''}</option>`).join('');
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('pageContent').classList.remove('hidden');
+      } catch (err) {
+        console.error('Init error:', err);
+        document.getElementById('loading').innerHTML =
+          `<p style="color:var(--danger);">Gagal memuat: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    function onKelasChange() {
+      const kelasId = document.getElementById('filterKelas').value;
+      const selUnit = document.getElementById('filterUnit');
+      currentClassId = kelasId ? parseInt(kelasId) : null;
+      currentUnitId = null;
+
+      if (!kelasId) {
+        selUnit.innerHTML = '<option value="">-- Pilih Unit --</option>';
+        selUnit.disabled = true;
+        resetTable();
+        return;
+      }
+
+      // Filter plans by class
+      const plansForClass = myPlans.filter(p => String(p.class_id) === String(kelasId));
+
+      if (plansForClass.length === 0) {
+        selUnit.innerHTML = '<option value="">Tidak ada perencanaan di kelas ini</option>';
+        selUnit.disabled = true;
+        resetTable();
+        return;
+      }
+
+      // Ambil semua unit dari plans di kelas ini
+      loadUnitsForClass(plansForClass);
+    }
+
+    async function loadUnitsForClass(plansForClass) {
+      const selUnit = document.getElementById('filterUnit');
+      selUnit.innerHTML = '<option value="">-- Pilih Unit --</option>';
+      selUnit.disabled = false;
+
+      try {
+        const allUnits = [];
+        for (const plan of plansForClass) {
+          const units = await getUnits(plan.id);
+          units.forEach(u => {
+            allUnits.push({ ...u, _plan: plan });
+          });
+        }
+
+        if (allUnits.length === 0) {
+          selUnit.innerHTML = '<option value="">Belum ada unit di kelas ini</option>';
+          selUnit.disabled = true;
+          return;
+        }
+
+        selUnit.innerHTML = '<option value="">-- Pilih Unit --</option>' +
+          allUnits.map(u => {
+            const plan = u._plan;
+            const semester = plan.semester ? ' · Sem ' + plan.semester : '';
+            return `<option value="${u.id}">${escapeHtml(u.title)}${semester}</option>`;
+          }).join('');
+      } catch (err) {
+        console.error('Load units error:', err);
+        selUnit.innerHTML = '<option value="">Gagal memuat unit</option>';
+      }
+    }
+
+    // ============================================
+    // LOAD PROGRESS
+    // ============================================
+    async function loadProgressData() {
+      const unitId = document.getElementById('filterUnit').value;
+      if (!unitId) {
+        resetTable();
+        return;
+      }
+
+      currentUnitId = unitId;
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="empty-row">Memuat progress...</td></tr>';
+
+      try {
+        const client = initSupabase();
+
+        // 1. Ambil unit
+        currentUnit = await getUnitById(unitId);
+        if (!currentUnit) throw new Error('Unit tidak ditemukan.');
+        currentPlan = currentUnit.annual_plans;
+
+        // 2. Ambil siswa kelas
+        const enrollments = await getStudentsInClass(currentPlan.class_id);
+        allStudents = (enrollments || [])
+          .map(e => e.profiles)
+          .filter(Boolean)
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        // 3. Ambil aktivitas unit
+        allActivities = await getUnitActivities(unitId);
+        const activityIds = allActivities.map(a => a.id);
+
+        // 4. Ambil submissions & grades
+        allSubmissions = [];
+        allGrades = [];
+        if (activityIds.length > 0) {
+          const { data: subs } = await client.from('submissions')
+            .select('id, activity_id, student_id, submitted_at, status')
+            .in('activity_id', activityIds);
+          allSubmissions = subs || [];
+
+          const subIds = allSubmissions.map(s => s.id);
+          if (subIds.length > 0) {
+            const { data: grs } = await client.from('grades')
+              .select('submission_id, student_id, score')
+              .in('submission_id', subIds);
+            allGrades = grs || [];
+          }
+        }
+
+        // 5. Build progress data
+        buildProgressData();
+
+        document.getElementById('loading').classList.add('hidden');
+      } catch (err) {
+        console.error('Load progress error:', err);
+        document.getElementById('loading').innerHTML =
+          `<p style="color:var(--danger);">Gagal memuat: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    function buildProgressData() {
+      // Map: submissions by "activityId:studentId"
+      const subMap = {};
+      allSubmissions.forEach(s => {
+        subMap[s.activity_id + ':' + s.student_id] = s;
+      });
+
+      // Map: grades by "activityId:studentId"
+      const gradeMap = {};
+      allGrades.forEach(g => {
+        const sub = allSubmissions.find(s => s.id === g.submission_id);
+        if (sub) gradeMap[sub.activity_id + ':' + sub.student_id] = g;
+      });
+
+      progressData = allStudents.map(st => {
+        let completed = 0;
+        let graded = 0;
+        let scoreSum = 0;
+        const activityStatuses = allActivities.map(a => {
+          const key = a.id + ':' + st.id;
+          const sub = subMap[key];
+          const grade = gradeMap[key];
+          if (sub) completed++;
+          if (grade) { graded++; scoreSum += parseFloat(grade.score) || 0; }
+          return {
+            activity: a,
+            submitted: !!sub,
+            grade: grade || null
+          };
+        });
+
+        const totalActivities = allActivities.length;
+        const percent = totalActivities > 0 ? Math.round((completed / totalActivities) * 100) : 0;
+        const avgScore = graded > 0 ? (scoreSum / graded).toFixed(1) : null;
+
+        let status = 'neutral';
+        if (percent === 100 && (graded === totalActivities)) status = 'good';
+        else if (percent >= 75) status = 'warn';
+        else if (percent < 50 && percent > 0) status = 'bad';
+        else if (percent === 0) status = 'neutral';
+
+        return {
+          student: st,
+          completed,
+          graded,
+          totalActivities,
+          percent,
+          avgScore,
+          status,
+          activityStatuses
+        };
+      });
+
+      renderStats();
+      renderTable();
+    }
+
+    function renderStats() {
+      const totalSiswa = progressData.length;
+      const avgPercent = totalSiswa > 0
+        ? Math.round(progressData.reduce((s, d) => s + d.percent, 0) / totalSiswa)
+        : 0;
+      const complete = progressData.filter(d => d.percent === 100).length;
+      const needAttention = progressData.filter(d => d.status === 'bad').length;
+
+      document.getElementById('statsRow').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${totalSiswa}</div>
+            <div class="stat-label">Total Siswa</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-chart-pie"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${avgPercent}%</div>
+            <div class="stat-label">Rata-rata Progress</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${complete}</div>
+            <div class="stat-label">Siswa Selesai</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange"><i class="fas fa-triangle-exclamation"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${needAttention}</div>
+            <div class="stat-label">Perlu Perhatian</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+
+      if (progressData.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="8" class="empty-row">
+            <span class="emoji">👥</span>
+            <h3>Belum Ada Siswa</h3>
+            <p>Belum ada siswa terdaftar di kelas ini.</p>
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = progressData.map((d, i) => {
+        const initials = (d.student.name || '?').charAt(0).toUpperCase();
+        const pctClass = d.percent >= 75 ? 'high' : d.percent >= 50 ? 'mid' : 'low';
+        const scoreClass = d.avgScore
+          ? (parseFloat(d.avgScore) >= 75 ? 'high' : parseFloat(d.avgScore) >= 60 ? 'mid' : 'low')
+          : '';
+        const statusMap = {
+          good: { cls: 'good', icon: 'fa-circle-check', label: 'Selesai' },
+          warn: { cls: 'warn', icon: 'fa-clock', label: 'Sedang Berjalan' },
+          bad: { cls: 'bad', icon: 'fa-circle-exclamation', label: 'Perlu Perhatian' },
+          neutral: { cls: 'neutral', icon: 'fa-circle-dot', label: 'Belum Mulai' }
+        };
+        const st = statusMap[d.status] || statusMap.neutral;
+
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td>
+              <div class="nama-siswa">
+                <span class="avatar-mini">${initials}</span>
+                <span>${escapeHtml(d.student.name || '-')}</span>
+              </div>
+            </td>
+            <td class="nisn-teks">${escapeHtml(d.student.nisn || '-')}</td>
+            <td>
+              <div class="progress-wrap">
+                <div class="progress-bar-mini">
+                  <div class="progress-fill-mini ${pctClass}" style="width:${d.percent}%;"></div>
+                </div>
+                <span class="progress-text">${d.percent}%</span>
+              </div>
+            </td>
+            <td><strong>${d.completed}</strong> / ${d.totalActivities}</td>
+            <td><span class="avg-score ${scoreClass}">${d.avgScore || '-'}</span></td>
+            <td>
+              <span class="status-pill ${st.cls}"><i class="fas ${st.icon}"></i> ${st.label}</span>
+            </td>
+            <td>
+              <button class="btn-icon" onclick="openDetail('${d.student.id}')" title="Detail">
+                <i class="fas fa-eye"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ============================================
+    // DETAIL SISWA
+    // ============================================
+    function openDetail(studentId) {
+      const d = progressData.find(p => String(p.student.id) === String(studentId));
+      if (!d) return;
+
+      document.getElementById('modalDetail').classList.add('active');
+      const body = document.getElementById('detailBody');
+      const initials = (d.student.name || '?').charAt(0).toUpperCase();
+      const pctClass = d.percent >= 75 ? 'high' : d.percent >= 50 ? 'mid' : 'low';
+
+      const activityListHtml = d.activityStatuses.map(({ activity, submitted, grade }) => {
+        const iconClass = submitted ? 'done' : 'pending';
+        const icon = submitted ? 'fa-check' : 'fa-minus';
+        const gradeTxt = grade ? `<strong>${parseFloat(grade.score)}</strong>` : '<span style="color:var(--text-muted);">-</span>';
+        const typeLabel = (activity.type || '').toUpperCase();
+        return `
+          <div class="unit-activity-item">
+            <div class="unit-activity-icon ${iconClass}"><i class="fas ${icon}"></i></div>
+            <div class="unit-activity-name">${escapeHtml(activity.title)}</div>
+            <span class="unit-activity-type">${typeLabel}</span>
+            <div style="margin-left:auto; font-size:0.75rem;">${gradeTxt}</div>
+          </div>
+        `;
+      }).join('');
+
+      body.innerHTML = `
+        <div class="detail-header">
+          <div class="detail-header-avatar">${initials}</div>
+          <div class="detail-header-info">
+            <div class="detail-header-name">${escapeHtml(d.student.name)}</div>
+            <div class="detail-header-meta">
+              ${escapeHtml(d.student.nisn || '-')} · ${escapeHtml(currentPlan?.classes?.name || '-')}
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-wrap" style="margin-bottom:1rem;">
+          <div class="progress-bar-mini">
+            <div class="progress-fill-mini ${pctClass}" style="width:${d.percent}%;"></div>
+          </div>
+          <span class="progress-text">${d.percent}%</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-bottom:1rem;">
+          <div style="background:var(--bg-soft); padding:0.7rem 1rem; border-radius:8px; text-align:center;">
+            <div style="font-weight:800; font-size:1.2rem; color:var(--green-dark);">${d.completed}/${d.totalActivities}</div>
+            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Aktivitas Selesai</div>
+          </div>
+          <div style="background:var(--bg-soft); padding:0.7rem 1rem; border-radius:8px; text-align:center;">
+            <div style="font-weight:800; font-size:1.2rem; color:var(--green-dark);">${d.avgScore || '-'}</div>
+            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Rata-rata Nilai</div>
+          </div>
+        </div>
+
+        <div style="font-weight:800; font-size:0.85rem; color:var(--text); margin-bottom:0.5rem;">
+          <i class="fas fa-list-check" style="color:var(--green);"></i> Detail Aktivitas
+        </div>
+        <div class="unit-activity-list" style="border-top:none; margin-top:0;">
+          ${activityListHtml || '<div style="text-align:center; padding:1rem; color:var(--text-muted); font-style:italic;">Belum ada aktivitas</div>'}
+        </div>
+      `;
+    }
+
+    function closeDetail() {
+      document.getElementById('modalDetail').classList.remove('active');
+    }
+
+    // ============================================
+    // RESET & UTILS
+    // ============================================
+    function resetTable() {
+      document.getElementById('tableBody').innerHTML =
+        '<tr><td colspan="8" class="empty-row">Pilih kelas dan unit untuk melihat progress.</td></tr>';
+      document.getElementById('statsRow').innerHTML = '';
+    }
+
+    function exportCSV() {
+      if (progressData.length === 0) {
+        showToast('Tidak ada data untuk diexport.', 'error');
+        return;
+      }
+
+      const headers = ['No', 'Nama Siswa', 'NISN', 'Progress (%)', 'Aktivitas Selesai', 'Total Aktivitas', 'Rata Nilai', 'Status'];
+      const rows = progressData.map((d, i) => [
+        i + 1,
+        d.student.name || '-',
+        d.student.nisn || '-',
+        d.percent,
+        d.completed,
+        d.totalActivities,
+        d.avgScore || '-',
+        d.status === 'good' ? 'Selesai' : d.status === 'warn' ? 'Sedang Berjalan' : d.status === 'bad' ? 'Perlu Perhatian' : 'Belum Mulai'
+      ]);
+
+      const csv = [headers, ...rows]
+        .map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const unitTitle = currentUnit?.title || 'Unit';
+      a.download = `Progress_${unitTitle}_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('📥 CSV berhasil diunduh', 'success');
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeDetail();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Penilaian — Tembok Belajar</title>
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #10b981; --green-dark: #047857; --green-light: #d1fae5; --green-lighter: #ecfdf5;
+      --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--green); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+    .btn-primary {
+      background: var(--green); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--green-dark);
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--green); color: var(--green);
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--green-light); }
+
+    /* FILTER */
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.7rem;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .filter-group label i { color: var(--green); }
+    .filter-select {
+      width: 100%; padding: 0.55rem 2rem 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+    }
+    .filter-select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+    .filter-select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* STATS */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem; margin-bottom: 1rem;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.2rem;
+      display: flex; align-items: center; gap: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.orange { background: #fed7aa; color: #ea580c; }
+    .stat-icon.green { background: #d1fae5; color: #059669; }
+    .stat-icon.gray { background: #e2e8f0; color: #64748b; }
+    .stat-info { flex: 1; min-width: 0; }
+    .stat-value { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 2px; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+
+    /* TABLE */
+    .table-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table thead { background: var(--bg-soft); }
+    .data-table th {
+      padding: 0.85rem 1rem; text-align: left; font-weight: 700;
+      color: var(--text-muted); border-bottom: 2px solid var(--border);
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.85rem 1rem; border-bottom: 1px solid var(--border);
+      vertical-align: middle; color: var(--text);
+    }
+    .data-table tbody tr:hover { background: var(--green-lighter); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    .nama-siswa { font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .avatar-mini {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--green-dark));
+      color: white; display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.75rem; flex-shrink: 0;
+    }
+    .nisn-teks { font-size: 0.75rem; color: var(--text-muted); font-family: 'Courier New', monospace; }
+
+    .status-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-weight: 700; font-size: 0.7rem; white-space: nowrap;
+    }
+    .status-submitted { background: #fef3c7; color: #92400e; }
+    .status-graded { background: var(--green-light); color: var(--green-dark); }
+    .status-belum { background: #f1f5f9; color: #64748b; }
+
+    .skor-value { font-weight: 800; font-size: 1rem; }
+    .skor-value.high { color: var(--green-dark); }
+    .skor-value.mid { color: var(--warning); }
+    .skor-value.low { color: var(--danger); }
+    .skor-empty { color: var(--text-muted); font-style: italic; font-weight: 400; font-size: 0.85rem; }
+
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition); font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover { background: var(--green-light); border-color: var(--green); color: var(--green); }
+    .btn-icon.primary { background: var(--green); color: white; border-color: var(--green); }
+    .btn-icon.primary:hover { background: var(--green-dark); }
+
+    .empty-row { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    .empty-row .emoji { font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
+
+    .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
+    .spinner {
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem; width: 100%; max-width: 720px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 92vh; overflow-y: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--text); margin-bottom: 0.5rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--green); }
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.2rem; flex-wrap: wrap;
+    }
+    .form-label {
+      display: block; font-size: 0.75rem; font-weight: 700;
+      margin-bottom: 0.45rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-label .req { color: var(--danger); }
+    .form-textarea {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.9rem;
+    }
+    .form-textarea:focus {
+      border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+
+    .alert { margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.83rem; line-height: 1.5; }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    /* DETAIL SUBMISSION */
+    .detail-header {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.9rem 1.1rem; background: var(--green-lighter);
+      border-radius: 10px; margin-bottom: 1rem;
+      border-left: 3px solid var(--green);
+    }
+    .detail-header-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--green-dark));
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .detail-header-info { flex: 1; min-width: 0; }
+    .detail-header-name { font-weight: 800; font-size: 1rem; color: var(--text); }
+    .detail-header-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    .answers-section {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem 1.2rem; margin-bottom: 1rem;
+      border: 1px solid var(--border);
+    }
+    .answers-title {
+      font-size: 0.78rem; font-weight: 700; color: var(--text);
+      text-transform: uppercase; letter-spacing: 0.3px;
+      margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px;
+    }
+    .answers-title i { color: var(--green); }
+    .answer-item {
+      background: white; border-radius: 8px; padding: 0.7rem 1rem;
+      margin-bottom: 0.5rem; border-left: 3px solid var(--green-light);
+    }
+    .answer-item:last-child { margin-bottom: 0; }
+    .answer-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 0.3rem; }
+    .answer-value { font-size: 0.88rem; color: var(--text); line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .answer-empty { color: var(--text-muted); font-style: italic; font-size: 0.85rem; }
+
+    .score-section {
+      background: white; border-radius: 10px;
+      padding: 1.2rem; border: 2px solid var(--green-light);
+    }
+    .score-section-title {
+      font-size: 0.85rem; font-weight: 800; color: var(--green-dark);
+      margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px;
+    }
+    .score-section-title i { color: var(--green); }
+    .score-input-wrap {
+      display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem;
+    }
+    .score-input {
+      width: 100px; padding: 0.6rem 0.8rem;
+      border: 2px solid var(--green-light); border-radius: 8px;
+      font-size: 1rem; font-weight: 800; text-align: center;
+      font-family: inherit; outline: none;
+    }
+    .score-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+    .score-max { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--text);
+      color: white; padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--danger); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .filter-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .data-table th, .data-table td { padding: 0.55rem 0.5rem; font-size: 0.78rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#nilai';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-clipboard-check"></i>
+          <span>
+            Penilaian Aktivitas
+            <small>Pilih mapel, kelas, unit, dan aktivitas untuk menilai</small>
+          </span>
+        </h1>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-outline" onclick="loadAll()">
+          <i class="fas fa-rotate"></i> Muat Ulang
+        </button>
+      </div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="filterMapel"><i class="fas fa-book"></i> Mapel</label>
+          <select id="filterMapel" class="filter-select" onchange="onMapelChange()">
+            <option value="">-- Pilih Mapel --</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterKelas"><i class="fas fa-school"></i> Kelas</label>
+          <select id="filterKelas" class="filter-select" onchange="onKelasChange()" disabled>
+            <option value="">-- Pilih Kelas --</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterUnit"><i class="fas fa-layer-group"></i> Unit</label>
+          <select id="filterUnit" class="filter-select" onchange="onUnitChange()" disabled>
+            <option value="">-- Pilih Unit --</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterAktivitas"><i class="fas fa-file-pen"></i> Aktivitas</label>
+          <select id="filterAktivitas" class="filter-select" onchange="onAktivitasChange()" disabled>
+            <option value="">-- Pilih Aktivitas --</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row" id="statsRow"></div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:50px;">No</th>
+              <th>Nama Siswa</th>
+              <th style="width:130px;">NISN</th>
+              <th style="width:150px;">Waktu Submit</th>
+              <th style="width:120px;">Status</th>
+              <th style="width:100px;">Skor</th>
+              <th style="width:100px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="7" class="empty-row">Pilih mapel, kelas, unit, dan aktivitas untuk melihat siswa.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL NILAI -->
+  <div class="modal-overlay" id="modalNilai">
+    <div class="modal-card">
+      <h2><i class="fas fa-star"></i> Nilai Submission</h2>
+
+      <div class="detail-header" id="detailHeader"></div>
+
+      <div class="answers-section">
+        <div class="answers-title">
+          <i class="fas fa-file-lines"></i> Jawaban Siswa
+        </div>
+        <div id="answersContainer"></div>
+      </div>
+
+      <div class="score-section">
+        <div class="score-section-title">
+          <i class="fas fa-award"></i> Penilaian
+        </div>
+        <label class="form-label">Skor <span class="req">*</span></label>
+        <div class="score-input-wrap">
+          <input type="number" id="inputScore" class="score-input" min="0" max="100" placeholder="0">
+          <span class="score-max" id="scoreMax">/ 100</span>
+        </div>
+
+        <label class="form-label">Feedback / Catatan (opsional)</label>
+        <textarea id="inputFeedback" class="form-textarea" placeholder="Tulis catatan untuk siswa..." maxlength="1000"></textarea>
+
+        <div id="nilaiError" class="alert alert-error hidden"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeNilaiModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveNilai" onclick="saveNilai()">
+          <i class="fas fa-save"></i> Simpan Nilai
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/core/cache.js"></script>
+  <script src="../assets/js/core/cache.js"></script>
+<script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+    <script>
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let myAssignments = [];        // teacher_assign guru ini
+    let myPlans = [];              // annual_plans guru ini
+    let currentMapel = null;
+    let currentKelasId = null;
+    let currentUnitId = null;
+    let currentActivityId = null;
+    let currentActivity = null;
+    let currentPlan = null;
+    let allStudents = [];
+    let allSubmissions = [];
+    let mergedData = [];
+    let editingSubmissionId = null;
+    let currentSubmission = null;
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+      await loadAll();
+    })();
+
+    async function loadAll() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-row"><div class="spinner" style="margin: 0 auto;"></div>Memuat...</td></tr>';
+
+      try {
+        myAssignments = await getMyTeachingAssignments(currentUser.id);
+        myPlans = await getMyAnnualPlans(currentUser.id);
+
+        populateMapelFilter();
+        resetStats();
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-row">Pilih mapel, kelas, unit, dan aktivitas untuk melihat siswa.</td></tr>';
+      } catch (err) {
+        console.error('Load error:', err);
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-row" style="color:var(--danger);">Gagal memuat: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    // ============================================
+    // FILTER BERTINGKAT
+    // ============================================
+    function populateMapelFilter() {
+      const sel = document.getElementById('filterMapel');
+      const subjectsMap = {};
+      myAssignments.forEach(a => {
+        if (a.subjects) subjectsMap[String(a.subject_id)] = a.subjects;
+      });
+      const list = Object.values(subjectsMap).sort((a, b) =>
+        (a.name || '').localeCompare(b.name || '')
+      );
+      sel.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
+        list.map(s => `<option value="${s.id}">${escapeHtml(s.name)}${s.code ? ' (' + escapeHtml(s.code) + ')' : ''}</option>`).join('');
+    }
+
+    async function onMapelChange() {
+      const mapelId = document.getElementById('filterMapel').value;
+      const selKelas = document.getElementById('filterKelas');
+      const selUnit = document.getElementById('filterUnit');
+      const selAktivitas = document.getElementById('filterAktivitas');
+      const tbody = document.getElementById('tableBody');
+
+      currentMapel = mapelId ? parseInt(mapelId) : null;
+      currentKelasId = null;
+      currentUnitId = null;
+      currentActivityId = null;
+
+      selKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+      selUnit.innerHTML = '<option value="">-- Pilih Unit --</option>';
+      selAktivitas.innerHTML = '<option value="">-- Pilih Aktivitas --</option>';
+      selKelas.disabled = true;
+      selUnit.disabled = true;
+      selAktivitas.disabled = true;
+      resetStats();
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-row">Pilih kelas.</td></tr>';
+
+      if (!currentMapel) return;
+
+      // Kelas = unik dari assignment guru untuk mapel ini
+      const classMap = {};
+      myAssignments
+        .filter(a => String(a.subject_id) === String(currentMapel))
+        .forEach(a => { if (a.classes) classMap[String(a.class_id)] = a.classes; });
+
+      const classes = Object.values(classMap).sort((a, b) =>
+        (a.name || '').localeCompare(b.name || '')
+      );
+
+      if (classes.length === 0) {
+        selKelas.innerHTML = '<option value="">(Tidak ada kelas diampu)</option>';
+        return;
+      }
+
+      selKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+        classes.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.grade ? ' (' + escapeHtml(c.grade) + ')' : ''}</option>`).join('');
+      selKelas.disabled = false;
+    }
+
+    async function onKelasChange() {
+      const kelasId = document.getElementById('filterKelas').value;
+      const selUnit = document.getElementById('filterUnit');
+      const selAktivitas = document.getElementById('filterAktivitas');
+      const tbody = document.getElementById('tableBody');
+
+      currentKelasId = kelasId ? parseInt(kelasId) : null;
+      currentUnitId = null;
+      currentActivityId = null;
+
+      selUnit.innerHTML = '<option value="">-- Pilih Unit --</option>';
+      selAktivitas.innerHTML = '<option value="">-- Pilih Aktivitas --</option>';
+      selUnit.disabled = true;
+      selAktivitas.disabled = true;
+      resetStats();
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-row">Pilih unit.</td></tr>';
+
+      if (!currentKelasId) return;
+
+      try {
+        // Cari annual_plan yang cocok (mapel + kelas)
+        const plansForClass = myPlans.filter(p =>
+          String(p.subject_id) === String(currentMapel) &&
+          String(p.class_id) === String(currentKelasId)
+        );
+
+        let units = [];
+        for (const p of plansForClass) {
+          try {
+            const us = await getUnits(p.id);
+            us.forEach(u => units.push({ ...u, _plan: p }));
+          } catch (e) { /* ignore */ }
+        }
+
+        if (units.length === 0) {
+          selUnit.innerHTML = '<option value="">(Belum ada unit di kelas ini)</option>';
+          return;
+        }
+
+        units.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        selUnit.innerHTML = '<option value="">-- Pilih Unit --</option>' +
+          units.map(u => `<option value="${u.id}">${escapeHtml(u.title)}${u.status === 'draft' ? ' (draft)' : ''}</option>`).join('');
+        selUnit.disabled = false;
+      } catch (err) {
+        console.error('Load units error:', err);
+        selUnit.innerHTML = '<option value="">(Gagal memuat unit)</option>';
+      }
+    }
+
+    async function onUnitChange() {
+      const unitId = document.getElementById('filterUnit').value;
+      const selAktivitas = document.getElementById('filterAktivitas');
+      const tbody = document.getElementById('tableBody');
+
+      currentUnitId = unitId || null;
+      currentActivityId = null;
+
+      selAktivitas.innerHTML = '<option value="">-- Pilih Aktivitas --</option>';
+      selAktivitas.disabled = true;
+      resetStats();
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-row">Pilih aktivitas.</td></tr>';
+
+      if (!currentUnitId) return;
+
+      try {
+        const acts = await getUnitActivities(currentUnitId);
+        if (acts.length === 0) {
+          selAktivitas.innerHTML = '<option value="">(Belum ada aktivitas di unit ini)</option>';
+          return;
+        }
+        selAktivitas.innerHTML = '<option value="">-- Pilih Aktivitas --</option>' +
+          acts.map(a => `<option value="${a.id}">${escapeHtml(a.title)} (${escapeHtml(a.type || '')})</option>`).join('');
+        selAktivitas.disabled = false;
+      } catch (err) {
+        console.error('Load activities error:', err);
+        selAktivitas.innerHTML = '<option value="">(Gagal memuat aktivitas)</option>';
+      }
+    }
+
+    async function onAktivitasChange() {
+      const actId = document.getElementById('filterAktivitas').value;
+      currentActivityId = actId || null;
+
+      if (!currentActivityId) {
+        resetStats();
+        document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" class="empty-row">Pilih aktivitas.</td></tr>';
+        return;
+      }
+
+      await loadSubmissions();
+    }
+
+    // ============================================
+    // LOAD SISWA + SUBMISSIONS
+    // ============================================
+    async function loadSubmissions() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-row"><div class="spinner" style="margin: 0 auto;"></div>Memuat submission...</td></tr>';
+
+      try {
+        const client = initSupabase();
+
+        // Ambil info aktivitas + plan
+        currentActivity = await getActivityById(currentActivityId);
+        if (!currentActivity) throw new Error('Aktivitas tidak ditemukan.');
+
+        const unit = currentActivity.units;
+        if (!unit) throw new Error('Unit tidak ditemukan.');
+
+        currentPlan = await getAnnualPlanById(unit.annual_plan_id);
+
+        // Ambil siswa di kelas
+        const enrollments = await getStudentsInClass(currentKelasId);
+        allStudents = (enrollments || [])
+          .map(e => e.profiles)
+          .filter(Boolean)
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        // Ambil submission
+        allSubmissions = await getSubmissionsByActivity(currentActivityId, true);
+
+        // Merge siswa + submission (semua siswa muncul, meskipun belum submit)
+        const subMap = {};
+        allSubmissions.forEach(s => { subMap[String(s.student_id)] = s; });
+
+        mergedData = allStudents.map(st => {
+          const sub = subMap[String(st.id)];
+          return {
+            student: st,
+            submission: sub || null,
+            status: sub
+              ? (sub.status === 'graded' ? 'graded' : 'submitted')
+              : 'belum',
+            score: sub ? sub.score : null,
+            submittedAt: sub ? sub.submitted_at : null
+          };
+        });
+
+        renderStats();
+        renderTable();
+      } catch (err) {
+        console.error('Load submissions error:', err);
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-row" style="color:var(--danger);">Gagal memuat: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    // ============================================
+    // STATS
+    // ============================================
+    function resetStats() {
+      document.getElementById('statsRow').innerHTML = '';
+    }
+
+    function renderStats() {
+      const total = mergedData.length;
+      const submitted = mergedData.filter(d => d.status === 'submitted').length;
+      const graded = mergedData.filter(d => d.status === 'graded').length;
+      const belum = mergedData.filter(d => d.status === 'belum').length;
+
+      const stats = [
+        { icon: 'fa-users', color: 'blue', value: total, label: 'Total Siswa' },
+        { icon: 'fa-clock', color: 'orange', value: submitted, label: 'Menunggu Dinilai' },
+        { icon: 'fa-check-circle', color: 'green', value: graded, label: 'Sudah Dinilai' },
+        { icon: 'fa-circle-xmark', color: 'gray', value: belum, label: 'Belum Submit' }
+      ];
+
+      document.getElementById('statsRow').innerHTML = stats.map(s => `
+        <div class="stat-card">
+          <div class="stat-icon ${s.color}"><i class="fas ${s.icon}"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${s.value}</div>
+            <div class="stat-label">${s.label}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================
+    // TABLE
+    // ============================================
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+
+      if (mergedData.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="7" class="empty-row">
+            <span class="emoji">👥</span>
+            Belum ada siswa di kelas ini.
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = mergedData.map((d, i) => {
+        const initials = (d.student.name || '?').charAt(0).toUpperCase();
+        const statusBadge = {
+          submitted: '<span class="status-badge status-submitted">⏳ Menunggu</span>',
+          graded: '<span class="status-badge status-graded">✓ Dinilai</span>',
+          belum: '<span class="status-badge status-belum">— Belum</span>'
+        }[d.status];
+
+        let skorHtml = '<span class="skor-empty">-</span>';
+        if (d.score !== null && d.score !== undefined) {
+          const num = parseFloat(d.score);
+          const cls = num >= 80 ? 'high' : num >= 60 ? 'mid' : 'low';
+          skorHtml = `<span class="skor-value ${cls}">${num}</span>`;
+        }
+
+        let waktu = '-';
+        if (d.submittedAt) {
+          try {
+            const dt = new Date(d.submittedAt);
+            waktu = dt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                  + ' ' + dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+          } catch (e) { waktu = '-'; }
+        }
+
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td>
+              <div class="nama-siswa">
+                <span class="avatar-mini">${initials}</span>
+                <span>${escapeHtml(d.student.name || '-')}</span>
+              </div>
+            </td>
+            <td class="nisn-teks">${escapeHtml(d.student.nisn || '-')}</td>
+            <td style="font-size:0.78rem; color:var(--text-muted);">${waktu}</td>
+            <td>${statusBadge}</td>
+            <td>${skorHtml}</td>
+            <td>
+              ${d.submission
+                ? `<button class="btn-icon primary" title="${d.status === 'graded' ? 'Edit Nilai' : 'Beri Nilai'}" onclick="openNilaiModal('${d.submission.id}')">
+                     <i class="fas fa-${d.status === 'graded' ? 'pen' : 'star'}"></i>
+                   </button>`
+                : `<button class="btn-icon" disabled title="Siswa belum submit" style="opacity:0.4;">
+                     <i class="fas fa-eye"></i>
+                   </button>`
+              }
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ============================================
+    // MODAL NILAI
+    // ============================================
+        async function openNilaiModal(submissionId) {
+      editingSubmissionId = submissionId;
+      document.getElementById('nilaiError').classList.add('hidden');
+      document.getElementById('btnSaveNilai').disabled = false;
+      document.getElementById('btnSaveNilai').innerHTML = '<i class="fas fa-save"></i> Simpan Nilai';
+
+      // Tampilkan loading di body jawaban
+      document.getElementById('answersContainer').innerHTML =
+        '<div style="text-align:center; padding:1rem;"><div class="spinner" style="margin:0 auto;"></div></div>';
+      document.getElementById('detailHeader').innerHTML = '';
+      document.getElementById('modalNilai').classList.add('active');
+
+      try {
+        currentSubmission = await getSubmissionById(submissionId);
+      } catch (err) {
+        showToast('Gagal memuat submission: ' + err.message, 'error');
+        document.getElementById('answersContainer').innerHTML =
+          '<div class="answer-empty" style="color:var(--danger);">Gagal memuat: ' + escapeHtml(err.message) + '</div>';
+        return;
+      }
+
+      // Ambil komponen aktivitas (untuk menerjemahkan jawaban)
+      let components = [];
+      if (currentActivity && currentActivity.id) {
+        try {
+          components = await getActivityComponents(currentActivity.id);
+        } catch (e) {
+          console.warn('Gagal memuat komponen aktivitas:', e);
+        }
+      }
+
+      const student = currentSubmission.profiles || {};
+      const initials = (student.name || '?').charAt(0).toUpperCase();
+      document.getElementById('detailHeader').innerHTML = `
+        <div class="detail-header-avatar">${initials}</div>
+        <div class="detail-header-info">
+          <div class="detail-header-name">${escapeHtml(student.name || '-')}</div>
+          <div class="detail-header-meta">
+            ${escapeHtml(student.nisn || '-')} ·
+            Submit: ${currentSubmission.submitted_at ? new Date(currentSubmission.submitted_at).toLocaleString('id-ID') : '-'}
+          </div>
+        </div>
+      `;
+
+      renderAnswers(currentSubmission.answers || {}, components);
+
+      document.getElementById('inputScore').value =
+        currentSubmission.score !== null && currentSubmission.score !== undefined ? currentSubmission.score : '';
+      document.getElementById('inputFeedback').value = currentSubmission.teacher_feedback || '';
+    }
+
+    function closeNilaiModal() {
+      document.getElementById('modalNilai').classList.remove('active');
+      editingSubmissionId = null;
+      currentSubmission = null;
+    }
+
+        function renderAnswers(answers, components) {
+      const container = document.getElementById('answersContainer');
+
+      if (!answers || typeof answers !== 'object' || Object.keys(answers).length === 0) {
+        container.innerHTML = '<div class="answer-empty">Siswa belum mengisi jawaban.</div>';
+        return;
+      }
+
+      // Buat map component_id → component
+      const compMap = {};
+      (components || []).forEach(c => { compMap[String(c.id)] = c; });
+
+      const entries = Object.entries(answers);
+      if (entries.length === 0) {
+        container.innerHTML = '<div class="answer-empty">Siswa belum mengisi jawaban.</div>';
+        return;
+      }
+
+      // Urutkan sesuai order_index komponen
+      entries.sort((a, b) => {
+        const ca = compMap[a[0]];
+        const cb = compMap[b[0]];
+        const oa = ca ? (ca.order_index || 0) : 9999;
+        const ob = cb ? (cb.order_index || 0) : 9999;
+        return oa - ob;
+      });
+
+      const items = entries.map(([compId, ansObj]) => {
+        const comp = compMap[String(compId)];
+        const value = ansObj && typeof ansObj === 'object' && 'value' in ansObj ? ansObj.value : ansObj;
+
+        // Kalau komponen tidak ditemukan (mungkin sudah dihapus) → tampilkan fallback
+        if (!comp) {
+          let fallbackVal = value;
+          if (typeof fallbackVal === 'object') fallbackVal = JSON.stringify(fallbackVal, null, 2);
+          return `
+            <div class="answer-item" style="border-left-color:#94a3b8;">
+              <div class="answer-label">Komponen tidak ditemukan (ID: ${escapeHtml(compId)})</div>
+              <div class="answer-value" style="font-family:'Courier New',monospace; font-size:0.8rem;">${escapeHtml(String(fallbackVal))}</div>
+            </div>
+          `;
+        }
+
+        return renderAnswerItem(comp, value);
+      });
+
+      container.innerHTML = items.join('');
+    }
+
+    function renderAnswerItem(comp, value) {
+      const type = comp.component_type;
+      const data = comp.component_data || {};
+      const typeLabel = {
+        soal_pg: 'Pilihan Ganda',
+        soal_pg_kompleks: 'PG Kompleks',
+        soal_esai: 'Esai',
+        soal_menjodohkan: 'Menjodohkan',
+        soal_benar_salah: 'Benar/Salah',
+        input_teks: 'Isian Teks',
+        textarea: 'Uraian',
+        checkbox: 'Checkbox',
+        radio: 'Pilihan',
+        dropdown: 'Dropdown',
+        tabel_isian: 'Tabel Isian',
+        penilaian_diri: 'Penilaian Diri',
+        pertanyaan_refleksi: 'Refleksi',
+        mood_tracker: 'Mood',
+        target_belajar: 'Target Belajar',
+        asesmen_setting: 'Pengaturan Asesmen'
+      }[type] || type;
+
+      // ============ SOAL PG ============
+      if (type === 'soal_pg') {
+        const opts = data.options || [];
+        const correctIdx = data.correct;
+        const selectedIdx = parseInt(value);
+        const selectedText = !isNaN(selectedIdx) && opts[selectedIdx] ? opts[selectedIdx] : '(tidak dijawab)';
+        const isCorrect = selectedIdx === correctIdx;
+        return `
+          <div class="answer-item" style="border-left-color: ${isCorrect ? 'var(--green)' : 'var(--danger)'};">
+            <div class="answer-label">${escapeHtml(typeLabel)} · ${data.points || 10} poin ${isCorrect ? '✓ Benar' : '✗ Salah'}</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.4rem;">${escapeHtml(data.question || '-')}</div>
+              <div style="background: ${isCorrect ? 'var(--green-lighter)' : '#fee2e2'}; padding:0.5rem 0.8rem; border-radius:6px; margin-bottom:0.3rem;">
+                <strong>Jawaban siswa:</strong> ${escapeHtml(selectedText)}
+              </div>
+              ${!isCorrect && opts[correctIdx] ? `<div style="font-size:0.78rem; color:var(--green-dark);"><strong>Kunci:</strong> ${escapeHtml(opts[correctIdx])}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ SOAL PG KOMPLEKS ============
+      if (type === 'soal_pg_kompleks') {
+        const opts = data.options || [];
+        const correctArr = Array.isArray(data.correct) ? data.correct : [];
+        const selectedArr = Array.isArray(value) ? value : [];
+        const selectedTexts = selectedArr.map(i => opts[i] || `Opsi ${i}`).filter(Boolean);
+        const correctTexts = correctArr.map(i => opts[i] || `Opsi ${i}`).filter(Boolean);
+        return `
+          <div class="answer-item" style="border-left-color: var(--purple);">
+            <div class="answer-label">${escapeHtml(typeLabel)} · ${data.points || 15} poin</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.4rem;">${escapeHtml(data.question || '-')}</div>
+              <div style="background: var(--purple); color: white; padding:0.5rem 0.8rem; border-radius:6px; margin-bottom:0.3rem;">
+                <strong>Jawaban siswa:</strong><br>
+                ${selectedTexts.length > 0 ? selectedTexts.map(t => '• ' + escapeHtml(t)).join('<br>') : '(tidak dijawab)'}
+              </div>
+              <div style="font-size:0.78rem; color:var(--green-dark);">
+                <strong>Kunci:</strong><br>
+                ${correctTexts.map(t => '• ' + escapeHtml(t)).join('<br>')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ SOAL ESAI ============
+      if (type === 'soal_esai') {
+        const answerText = value || '(kosong)';
+        return `
+          <div class="answer-item" style="border-left-color: var(--purple);">
+            <div class="answer-label">${escapeHtml(typeLabel)} · ${data.points || 20} poin</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.4rem;">${escapeHtml(data.question || '-')}</div>
+              <div style="background: var(--bg-soft); padding:0.6rem 0.9rem; border-radius:6px; white-space:pre-wrap; line-height:1.6;">${escapeHtml(String(answerText))}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ SOAL BENAR/SALAH ============
+      if (type === 'soal_benar_salah') {
+        const isTrue = value === true || value === 'true';
+        const isFalse = value === false || value === 'false';
+        const selected = isTrue ? 'BENAR' : isFalse ? 'SALAH' : '(tidak dijawab)';
+        const correct = data.correct === true ? 'BENAR' : 'SALAH';
+        const isCorrect = (isTrue && data.correct === true) || (isFalse && data.correct === false);
+        return `
+          <div class="answer-item" style="border-left-color: ${isCorrect ? 'var(--green)' : 'var(--danger)'};">
+            <div class="answer-label">${escapeHtml(typeLabel)} · ${data.points || 5} poin ${isCorrect ? '✓ Benar' : '✗ Salah'}</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.4rem;">${escapeHtml(data.question || '-')}</div>
+              <div style="background: ${isCorrect ? 'var(--green-lighter)' : '#fee2e2'}; padding:0.5rem 0.8rem; border-radius:6px;">
+                <strong>Jawaban siswa:</strong> ${escapeHtml(selected)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ SOAL MENJODOHKAN ============
+      if (type === 'soal_menjodohkan') {
+        const left = data.left || [];
+        const right = data.right || [];
+        const pairs = (value && typeof value === 'object') ? value : {};
+        const rows = left.map((l, i) => {
+          const chosenLetter = pairs[i] || '';
+          let chosenText = '';
+          if (chosenLetter) {
+            const idx = chosenLetter.charCodeAt(0) - 65;
+            chosenText = right[idx] || '';
+          }
+          return `<tr><td style="padding:4px 8px; border:1px solid var(--border);">${escapeHtml(l)}</td><td style="padding:4px 8px; border:1px solid var(--border);">${chosenLetter ? chosenLetter + '. ' + escapeHtml(chosenText) : '(kosong)'}</td></tr>`;
+        }).join('');
+        return `
+          <div class="answer-item" style="border-left-color: var(--purple);">
+            <div class="answer-label">${escapeHtml(typeLabel)} · ${data.points || 15} poin</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.4rem;">${escapeHtml(data.question || '-')}</div>
+              <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                <thead><tr style="background:var(--bg-soft);"><th style="padding:4px 8px; border:1px solid var(--border); text-align:left;">Kiri</th><th style="padding:4px 8px; border:1px solid var(--border); text-align:left;">Jawaban</th></tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ INPUT TEKS ============
+      if (type === 'input_teks') {
+        return `
+          <div class="answer-item">
+            <div class="answer-label">${escapeHtml(typeLabel)}</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.3rem;">${escapeHtml(data.label || '-')}</div>
+              <div style="background: var(--bg-soft); padding:0.5rem 0.8rem; border-radius:6px;">${escapeHtml(String(value || '(kosong)'))}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ TEXTAREA ============
+      if (type === 'textarea') {
+        return `
+          <div class="answer-item">
+            <div class="answer-label">${escapeHtml(typeLabel)}</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.3rem;">${escapeHtml(data.label || '-')}</div>
+              <div style="background: var(--bg-soft); padding:0.5rem 0.8rem; border-radius:6px; white-space:pre-wrap;">${escapeHtml(String(value || '(kosong)'))}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ CHECKBOX / RADIO / DROPDOWN ============
+      if (type === 'checkbox' || type === 'radio' || type === 'dropdown') {
+        const opts = data.options || [];
+        const selected = Array.isArray(value) ? value : (value ? [value] : []);
+        return `
+          <div class="answer-item">
+            <div class="answer-label">${escapeHtml(typeLabel)}</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.3rem;">${escapeHtml(data.label || '-')}</div>
+              <div style="background: var(--bg-soft); padding:0.5rem 0.8rem; border-radius:6px;">
+                ${selected.length > 0 ? selected.map(s => '• ' + escapeHtml(s)).join('<br>') : '(kosong)'}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ TABEL ISIAN ============
+      if (type === 'tabel_isian') {
+        const columns = data.columns || [];
+        const rows = data.rows || [];
+        const savedTable = (value && typeof value === 'object') ? value : {};
+        const rowsHtml = rows.map((r, ri) => {
+          const cells = columns.map((_, ci) => {
+            const cellKey = 'r' + ri + '_c' + ci;
+            const cellVal = savedTable[cellKey] || '';
+            return `<td style="padding:4px 8px; border:1px solid var(--border);">${escapeHtml(cellVal || '(kosong)')}</td>`;
+          }).join('');
+          return `<tr>${cells}</tr>`;
+        }).join('');
+        return `
+          <div class="answer-item">
+            <div class="answer-label">${escapeHtml(typeLabel)}</div>
+            <div class="answer-value">
+              ${data.label ? `<div style="font-weight:700; margin-bottom:0.3rem;">${escapeHtml(data.label)}</div>` : ''}
+              <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                  <thead><tr style="background:var(--green-lighter);">${columns.map(c => `<th style="padding:4px 8px; border:1px solid var(--border); text-align:left;">${escapeHtml(c)}</th>`).join('')}</tr></thead>
+                  <tbody>${rowsHtml}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ PENILAIAN DIRI ============
+      if (type === 'penilaian_diri') {
+        const min = data.min || 1;
+        const max = data.max || 5;
+        const labels = data.labels || [];
+        const selected = parseInt(value);
+        const lbl = (!isNaN(selected) && labels[selected - min]) ? labels[selected - min] : `Skala ${selected || '-'}`;
+        return `
+          <div class="answer-item">
+            <div class="answer-label">${escapeHtml(typeLabel)}</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.3rem;">${escapeHtml(data.label || '-')}</div>
+              <div style="background: var(--bg-soft); padding:0.5rem 0.8rem; border-radius:6px;">
+                Skala <strong>${escapeHtml(String(selected || '-'))}</strong> — ${escapeHtml(lbl)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ PERTANYAAN REFLEKSI ============
+      if (type === 'pertanyaan_refleksi') {
+        return `
+          <div class="answer-item" style="border-left-color: var(--pink);">
+            <div class="answer-label">${escapeHtml(typeLabel)}</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.3rem;">${escapeHtml(data.question || '-')}</div>
+              <div style="background: #fce7f3; padding:0.5rem 0.8rem; border-radius:6px; white-space:pre-wrap;">${escapeHtml(String(value || '(kosong)'))}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ MOOD TRACKER ============
+      if (type === 'mood_tracker') {
+        return `
+          <div class="answer-item" style="border-left-color: var(--pink);">
+            <div class="answer-label">${escapeHtml(typeLabel)}</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.3rem;">${escapeHtml(data.label || '-')}</div>
+              <div style="background: #fce7f3; padding:0.5rem 0.8rem; border-radius:6px; font-size:1rem;">${escapeHtml(String(value || '(kosong)'))}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ TARGET BELAJAR ============
+      if (type === 'target_belajar') {
+        return `
+          <div class="answer-item" style="border-left-color: var(--pink);">
+            <div class="answer-label">${escapeHtml(typeLabel)}</div>
+            <div class="answer-value">
+              <div style="font-weight:700; margin-bottom:0.3rem;">${escapeHtml(data.label || '-')}</div>
+              <div style="background: #fce7f3; padding:0.5rem 0.8rem; border-radius:6px;">${escapeHtml(String(value || '(kosong)'))}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============ FALLBACK (tipe lain yang tidak dikenal) ============
+      let displayValue = value;
+      if (typeof displayValue === 'object' && displayValue !== null) {
+        displayValue = JSON.stringify(displayValue, null, 2);
+      } else if (displayValue === null || displayValue === undefined || displayValue === '') {
+        displayValue = '(kosong)';
+      }
+      return `
+        <div class="answer-item" style="border-left-color:#94a3b8;">
+          <div class="answer-label">${escapeHtml(typeLabel)}</div>
+          <div class="answer-value">${escapeHtml(String(displayValue))}</div>
+        </div>
+      `;
+    }
+
+    async function saveNilai() {
+      if (!editingSubmissionId) return;
+
+      const scoreStr = document.getElementById('inputScore').value.trim();
+      const feedback = document.getElementById('inputFeedback').value.trim();
+      const errBox = document.getElementById('nilaiError');
+      const btn = document.getElementById('btnSaveNilai');
+
+      errBox.classList.add('hidden');
+
+      if (!scoreStr) {
+        errBox.textContent = 'Skor wajib diisi.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const score = parseFloat(scoreStr);
+      if (isNaN(score) || score < 0) {
+        errBox.textContent = 'Skor harus angka ≥ 0.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (score > 100) {
+        errBox.textContent = 'Skor maksimal 100.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        await gradeSubmission({
+          submissionId: editingSubmissionId,
+          score: score,
+          teacherFeedback: feedback || null
+        });
+        closeNilaiModal();
+        showToast('✅ Nilai berhasil disimpan', 'success');
+
+        await loadSubmissions();
+      } catch (err) {
+        console.error('Save nilai error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + (err.message || 'Unknown error');
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan Nilai';
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeNilaiModal();
+    });
+  </script>
+</body>
+</html>

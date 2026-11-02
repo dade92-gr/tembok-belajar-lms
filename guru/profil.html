@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil Saya — Tembok Belajar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #10b981; --green-dark: #047857; --green-light: #d1fae5; --green-lighter: #ecfdf5;
+      --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    .page-container { max-width: 1000px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+
+    /* TOOLBAR */
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.2rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--green); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+
+    /* HERO */
+    .profile-hero {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      color: white;
+      margin-bottom: 1.2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+    .profile-hero::after {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .profile-hero-content {
+      display: flex; align-items: center; gap: 1.5rem;
+      position: relative; z-index: 1; flex-wrap: wrap;
+    }
+    .profile-avatar-big {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 3px solid rgba(255,255,255,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; font-weight: 800; color: white;
+      flex-shrink: 0; backdrop-filter: blur(10px);
+    }
+    .profile-hero-info { flex: 1; min-width: 0; }
+    .profile-hero-name {
+      font-size: 1.5rem; font-weight: 800;
+      margin-bottom: 0.3rem; line-height: 1.2;
+    }
+    .profile-hero-email {
+      font-size: 0.88rem; opacity: 0.9; margin-bottom: 0.6rem;
+    }
+    .profile-hero-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 3px 12px; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 600;
+      backdrop-filter: blur(10px);
+    }
+    .hero-badge i { font-size: 0.75rem; }
+
+    .profile-hero-stats {
+      display: flex; gap: 1.5rem;
+      margin-top: 1.2rem; padding-top: 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      position: relative; z-index: 1; flex-wrap: wrap;
+    }
+    .hero-stat { display: flex; flex-direction: column; gap: 2px; }
+    .hero-stat-value { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+    .hero-stat-label {
+      font-size: 0.7rem; opacity: 0.85; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+
+    /* PANEL */
+    .panel {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.2rem;
+    }
+    .panel-title {
+      font-size: 0.95rem; font-weight: 700; color: var(--text);
+      margin-bottom: 1rem; padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--green-light);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .panel-title i { color: var(--green); font-size: 0.9rem; }
+
+    /* INFO GRID */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .info-item {
+      padding: 0.9rem 1.1rem;
+      background: var(--bg-soft);
+      border-radius: 10px;
+      border-left: 3px solid var(--green);
+    }
+    .info-label {
+      font-size: 0.68rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      margin-bottom: 0.3rem;
+    }
+    .info-value {
+      font-size: 0.9rem; font-weight: 600; color: var(--text);
+      word-break: break-word;
+    }
+    .info-value.empty { color: var(--text-muted); font-style: italic; font-weight: 400; }
+
+    /* KELAS LIST */
+    .kelas-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.7rem;
+    }
+    .kelas-item {
+      padding: 0.9rem 1rem;
+      background: var(--green-lighter);
+      border-radius: 10px;
+      border-left: 3px solid var(--green);
+      display: flex; align-items: center; gap: 0.7rem;
+    }
+    .kelas-item-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--green); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .kelas-item-info { flex: 1; min-width: 0; }
+    .kelas-item-name {
+      font-size: 0.88rem; font-weight: 700; color: var(--text);
+    }
+    .kelas-item-meta {
+      font-size: 0.72rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    /* FORM */
+    .form-label {
+      display: block; font-size: 0.75rem; font-weight: 700;
+      margin-bottom: 0.4rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-input, .form-textarea {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.9rem;
+    }
+    .form-input:focus, .form-textarea:focus {
+      border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .form-input:disabled {
+      background: var(--bg-soft); cursor: not-allowed; color: var(--text-muted);
+    }
+    .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+    .form-hint {
+      font-size: 0.72rem; color: var(--text-muted);
+      margin-top: -0.6rem; margin-bottom: 0.9rem;
+      padding-left: 4px; line-height: 1.5;
+    }
+
+    /* BUTTONS */
+    .btn-primary {
+      background: var(--green); color: white; border: none;
+      padding: 0.65rem 1.2rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--green-dark);
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-danger {
+      background: var(--danger); color: white; border: none;
+      padding: 0.65rem 1.2rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: #dc2626;
+      box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+      transform: translateY(-1px);
+    }
+
+    /* ALERT */
+    .alert {
+      margin-top: 0.8rem; padding: 0.75rem 1rem;
+      border-radius: 8px; font-size: 0.82rem; line-height: 1.5;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-success { background: var(--green-light); color: var(--green-dark); border: 1px solid #a7f3d0; }
+    .alert i { font-size: 0.95rem; flex-shrink: 0; margin-top: 2px; }
+
+    /* LOADING */
+    .loading-box {
+      text-align: center; padding: 4rem 1rem;
+      color: var(--text-muted); font-size: 0.9rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--text);
+      color: white; padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--danger); }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .info-grid { grid-template-columns: 1fr; }
+      .profile-hero-content { flex-direction: column; text-align: center; }
+      .profile-hero-badges { justify-content: center; }
+      .profile-avatar-big { width: 80px; height: 80px; font-size: 2rem; }
+      .profile-hero-stats { justify-content: center; }
+    }
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-container">
+
+    <!-- TOOLBAR -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#profil';return false;}">
+          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+        <h1>
+          <i class="fas fa-user-cog"></i>
+          <span>
+            Profil Saya
+            <small>Kelola akun dan keamanan</small>
+          </span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat profil...</p>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+
+      <!-- HERO -->
+      <div class="profile-hero">
+        <div class="profile-hero-content">
+          <div class="profile-avatar-big" id="heroAvatar">?</div>
+          <div class="profile-hero-info">
+            <div class="profile-hero-name" id="heroName">Memuat...</div>
+            <div class="profile-hero-email" id="heroEmail">-</div>
+            <div class="profile-hero-badges">
+              <span class="hero-badge" id="badgeRole">
+                <i class="fas fa-chalkboard-teacher"></i> Guru
+              </span>
+              <span class="hero-badge" id="badgeSchool">
+                <i class="fas fa-school"></i> -
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-hero-stats" id="heroStats">
+          <div class="hero-stat">
+            <div class="hero-stat-value" id="statKelas">0</div>
+            <div class="hero-stat-label">Kelas Diampu</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value" id="statMapel">0</div>
+            <div class="hero-stat-label">Mata Pelajaran</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value" id="statUnit">0</div>
+            <div class="hero-stat-label">Total Unit</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value" id="statSiswa">0</div>
+            <div class="hero-stat-label">Total Siswa</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KELAS DIAMPU -->
+      <div class="panel" id="panelKelas" style="display:none;">
+        <h2 class="panel-title">
+          <i class="fas fa-school"></i> Kelas & Mapel yang Diampu
+        </h2>
+        <div class="kelas-list" id="kelasList"></div>
+      </div>
+
+      <!-- INFORMASI AKUN -->
+      <div class="panel">
+        <h2 class="panel-title">
+          <i class="fas fa-id-card"></i> Informasi Akun
+        </h2>
+        <div class="info-grid" id="infoGrid"></div>
+      </div>
+
+      <!-- EDIT PROFIL -->
+      <div class="panel">
+        <h2 class="panel-title">
+          <i class="fas fa-pen"></i> Edit Profil
+        </h2>
+
+        <label class="form-label" for="inputName">Nama Lengkap <span style="color:var(--danger);">*</span></label>
+        <input type="text" id="inputName" class="form-input" placeholder="Nama lengkap" maxlength="100">
+
+        <label class="form-label" for="inputEmail">Email</label>
+        <input type="email" id="inputEmail" class="form-input" disabled>
+        <p class="form-hint">Email tidak bisa diubah sendiri. Hubungi operator sekolah jika perlu.</p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+          <div>
+            <label class="form-label" for="inputNoHp">No HP</label>
+            <input type="text" id="inputNoHp" class="form-input" placeholder="081234567890" maxlength="20">
+          </div>
+          <div>
+            <label class="form-label" for="inputAgama">Agama</label>
+            <select id="inputAgama" class="form-input" style="appearance:none; background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%2364748b%27 d=%27M6 8L1 3h10z%27/%3E%3C/svg%3E'); background-repeat:no-repeat; background-position:right 14px center; padding-right:35px; cursor:pointer;">
+              <option value="">-- Pilih --</option>
+              <option value="Islam">Islam</option>
+              <option value="Kristen">Kristen</option>
+              <option value="Katolik">Katolik</option>
+              <option value="Hindu">Hindu</option>
+              <option value="Buddha">Buddha</option>
+              <option value="Konghucu">Konghucu</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="form-label" for="inputAlamat">Alamat</label>
+        <textarea id="inputAlamat" class="form-textarea" placeholder="Alamat lengkap" maxlength="500"></textarea>
+
+        <div id="nameAlert" class="alert hidden"></div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:0.4rem;">
+          <button class="btn-primary" id="btnSaveProfile" onclick="saveProfile()">
+            <i class="fas fa-save"></i> Simpan Perubahan
+          </button>
+        </div>
+      </div>
+
+      <!-- GANTI PASSWORD -->
+      <div class="panel">
+        <h2 class="panel-title">
+          <i class="fas fa-key"></i> Ganti Password
+        </h2>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
+          Gunakan password yang kuat (minimal 6 karakter). Jangan bagikan password Anda kepada siapa pun.
+        </p>
+
+        <label class="form-label" for="inputPassword">Password Baru <span style="color:var(--danger);">*</span></label>
+        <input type="password" id="inputPassword" class="form-input" placeholder="Minimal 6 karakter" maxlength="100" autocomplete="new-password">
+
+        <label class="form-label" for="inputPasswordConfirm">Konfirmasi Password Baru <span style="color:var(--danger);">*</span></label>
+        <input type="password" id="inputPasswordConfirm" class="form-input" placeholder="Ketik ulang password baru" maxlength="100" autocomplete="new-password">
+
+        <div id="passwordAlert" class="alert hidden"></div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:0.4rem;">
+          <button class="btn-primary" id="btnSavePassword" onclick="savePassword()">
+            <i class="fas fa-key"></i> Ganti Password
+          </button>
+        </div>
+      </div>
+
+      <!-- LOGOUT -->
+      <div class="panel">
+        <h2 class="panel-title">
+          <i class="fas fa-sign-out-alt"></i> Keluar dari Akun
+        </h2>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
+          Anda akan keluar dari sesi ini. Anda perlu login kembali untuk mengakses Tembok Belajar.
+        </p>
+        <button class="btn-danger" onclick="doLogout()">
+          <i class="fas fa-sign-out-alt"></i> Keluar Sekarang
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/core/cache.js"></script>
+<script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let profileData = null;
+    let schoolData = null;
+    let myAssignments = [];
+    let myPlans = [];
+    let totalUnits = 0;
+    let totalStudents = 0;
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+
+      await loadAllData();
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+    })();
+
+    async function loadAllData() {
+      try {
+        // 1. Ambil profile lengkap
+        const client = initSupabase();
+        const { data: profile, error } = await client.from('profiles')
+          .select('*').eq('id', currentUser.id).single();
+        if (error) throw error;
+        profileData = profile;
+
+        // 2. Ambil sekolah
+        if (profileData.school_id) {
+          try {
+            schoolData = await getSchool(profileData.school_id);
+          } catch (e) { console.warn('School load error:', e); }
+        }
+
+        // 3. Ambil teaching assignments
+        try {
+          myAssignments = await getMyTeachingAssignments(currentUser.id);
+        } catch (e) { console.warn('Assignments error:', e); }
+
+        // 4. Ambil annual plans
+        try {
+          myPlans = await getMyAnnualPlans(currentUser.id);
+        } catch (e) { console.warn('Plans error:', e); }
+
+        // 5. Hitung total unit
+        totalUnits = 0;
+        for (const plan of myPlans) {
+          try {
+            const units = await getUnits(plan.id);
+            totalUnits += units.length;
+          } catch (e) { /* ignore */ }
+        }
+
+        // 6. Hitung total siswa (dari enrollment kelas yang diampu)
+        const classIds = [...new Set(myAssignments.map(a => a.class_id))];
+        let studentIds = new Set();
+        for (const cid of classIds) {
+          try {
+            const students = await getStudentsInClass(cid);
+            (students || []).forEach(s => {
+              if (s.profiles?.id) studentIds.add(s.profiles.id);
+            });
+          } catch (e) { /* ignore */ }
+        }
+        totalStudents = studentIds.size;
+
+        renderProfile();
+      } catch (err) {
+        console.error('Load data error:', err);
+        document.getElementById('loading').innerHTML =
+          `<p style="color:var(--danger);">Gagal memuat: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    // ============================================
+    // RENDER
+    // ============================================
+    function renderProfile() {
+      const p = profileData;
+
+      // Hero
+      document.getElementById('heroAvatar').textContent = (p.name || '?').charAt(0).toUpperCase();
+      document.getElementById('heroName').textContent = p.name || '-';
+      document.getElementById('heroEmail').textContent = p.email || '-';
+
+      // Badge school
+      document.getElementById('badgeSchool').innerHTML =
+        `<i class="fas fa-school"></i> ${escapeHtml(schoolData?.name || '-')}`;
+
+      // Stats
+      const uniqueClasses = new Set(myAssignments.map(a => a.class_id));
+      const uniqueSubjects = new Set(myAssignments.map(a => a.subject_id));
+      document.getElementById('statKelas').textContent = uniqueClasses.size;
+      document.getElementById('statMapel').textContent = uniqueSubjects.size;
+      document.getElementById('statUnit').textContent = totalUnits;
+      document.getElementById('statSiswa').textContent = totalStudents;
+
+      // Kelas list
+      if (myAssignments.length > 0) {
+        document.getElementById('panelKelas').style.display = 'block';
+        const byClass = {};
+        myAssignments.forEach(a => {
+          const cid = String(a.class_id);
+          if (!byClass[cid]) {
+            byClass[cid] = { class: a.classes, subjects: [] };
+          }
+          if (a.subjects && !byClass[cid].subjects.find(s => s.id === a.subjects.id)) {
+            byClass[cid].subjects.push(a.subjects);
+          }
+        });
+
+        document.getElementById('kelasList').innerHTML = Object.values(byClass).map(item => `
+          <div class="kelas-item">
+            <div class="kelas-item-icon"><i class="fas fa-school"></i></div>
+            <div class="kelas-item-info">
+              <div class="kelas-item-name">${escapeHtml(item.class?.name || '-')}${item.class?.grade ? ' (' + escapeHtml(item.class.grade) + ')' : ''}</div>
+              <div class="kelas-item-meta">
+                <i class="fas fa-book" style="color:var(--green); font-size:0.65rem;"></i>
+                ${escapeHtml(item.subjects.map(s => s.name).join(', ') || '-')}
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Info grid
+      const infoItems = [
+        { label: 'NIP', value: p.nip || '-' },
+        { label: 'NUPTK', value: p.nuptk || '-' },
+        { label: 'NIK', value: p.nik || '-' },
+        { label: 'Jenis Kelamin', value: p.jenis_kelamin === 'L' ? 'Laki-laki' : p.jenis_kelamin === 'P' ? 'Perempuan' : '-' },
+        { label: 'Tempat Lahir', value: p.tempat_lahir || '-' },
+        { label: 'Tanggal Lahir', value: p.tanggal_lahir ? formatTanggal(p.tanggal_lahir) : '-' },
+        { label: 'Agama', value: p.agama || '-' },
+        { label: 'No HP', value: p.no_hp || '-' },
+        { label: 'Alamat', value: p.alamat || '-' },
+        { label: 'Status Pegawai', value: p.status_pegawai || '-' },
+        { label: 'Pendidikan Terakhir', value: p.pendidikan_terakhir || '-' },
+        { label: 'Mapel Utama', value: p.mapel_utama || '-' }
+      ];
+
+      document.getElementById('infoGrid').innerHTML = infoItems.map(i => `
+        <div class="info-item">
+          <div class="info-label">${escapeHtml(i.label)}</div>
+          <div class="info-value ${i.value === '-' ? 'empty' : ''}">${escapeHtml(i.value)}</div>
+        </div>
+      `).join('');
+
+      // Isi form
+      document.getElementById('inputName').value = p.name || '';
+      document.getElementById('inputEmail').value = p.email || '';
+      document.getElementById('inputNoHp').value = p.no_hp || '';
+      document.getElementById('inputAgama').value = p.agama || '';
+      document.getElementById('inputAlamat').value = p.alamat || '';
+    }
+
+    // ============================================
+    // SAVE PROFILE
+    // ============================================
+    async function saveProfile() {
+      const name = document.getElementById('inputName').value.trim();
+      const noHp = document.getElementById('inputNoHp').value.trim();
+      const agama = document.getElementById('inputAgama').value;
+      const alamat = document.getElementById('inputAlamat').value.trim();
+      const alertEl = document.getElementById('nameAlert');
+      const btn = document.getElementById('btnSaveProfile');
+
+      alertEl.classList.add('hidden');
+
+      if (!name) {
+        showAlert(alertEl, 'Nama tidak boleh kosong.', 'error');
+        return;
+      }
+      if (name.length < 2) {
+        showAlert(alertEl, 'Nama minimal 2 karakter.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        const client = initSupabase();
+        const updates = {
+          name,
+          no_hp: noHp || null,
+          agama: agama || null,
+          alamat: alamat || null
+        };
+
+        const { error } = await client.from('profiles')
+          .update(updates).eq('id', currentUser.id);
+        if (error) throw error;
+
+        // Update local state
+        profileData = { ...profileData, ...updates };
+        currentUser.name = name;
+
+        renderProfile();
+        showAlert(alertEl, '✅ Profil berhasil diperbarui.', 'success');
+        showToast('✅ Profil berhasil diperbarui');
+      } catch (err) {
+        console.error('Save profile error:', err);
+        showAlert(alertEl, 'Gagal menyimpan: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
+      }
+    }
+
+    // ============================================
+    // SAVE PASSWORD
+    // ============================================
+    async function savePassword() {
+      const pw1 = document.getElementById('inputPassword').value;
+      const pw2 = document.getElementById('inputPasswordConfirm').value;
+      const alertEl = document.getElementById('passwordAlert');
+      const btn = document.getElementById('btnSavePassword');
+
+      alertEl.classList.add('hidden');
+
+      if (!pw1 || pw1.length < 6) {
+        showAlert(alertEl, 'Password minimal 6 karakter.', 'error');
+        return;
+      }
+      if (pw1 !== pw2) {
+        showAlert(alertEl, 'Konfirmasi password tidak cocok.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        const client = initSupabase();
+        const { error } = await client.auth.updateUser({ password: pw1 });
+        if (error) throw error;
+
+        document.getElementById('inputPassword').value = '';
+        document.getElementById('inputPasswordConfirm').value = '';
+        showAlert(alertEl, '✅ Password berhasil diubah. Gunakan password baru untuk login berikutnya.', 'success');
+        showToast('🔑 Password berhasil diubah');
+      } catch (err) {
+        console.error('Save password error:', err);
+        showAlert(alertEl, 'Gagal mengubah password: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-key"></i> Ganti Password';
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function showAlert(el, msg, type) {
+      el.textContent = msg;
+      el.className = 'alert alert-' + (type === 'error' ? 'error' : 'success');
+      el.classList.remove('hidden');
+    }
+
+    function formatTanggal(tgl) {
+      if (!tgl) return '-';
+      try {
+        const d = new Date(tgl + 'T00:00:00');
+        if (isNaN(d.getTime())) return tgl;
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      } catch { return tgl; }
+    }
+
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+    }
+  </script>
+</body>
+</html>

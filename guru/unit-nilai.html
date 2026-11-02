@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Penilaian Aktivitas — Tembok Belajar</title>
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #10b981; --green-dark: #047857; --green-light: #d1fae5; --green-lighter: #ecfdf5;
+      --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+
+    /* TOOLBAR */
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--green); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+
+    /* ACTIVITY INFO BAR */
+    .activity-info-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.2rem 1.4rem;
+      margin-bottom: 1rem; position: relative; overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .activity-info-card::before {
+      content: ''; position: absolute; left: 0; top: 0;
+      width: 4px; height: 100%; background: var(--green);
+    }
+    .activity-info-eyebrow {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 10px; border-radius: 6px;
+      font-size: 0.65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      margin-bottom: 0.4rem;
+    }
+    .activity-info-eyebrow.lkpd { background: #fef3c7; color: #92400e; }
+    .activity-info-eyebrow.asesmen { background: #ede9fe; color: #6d28d9; }
+    .activity-info-eyebrow.refleksi { background: #fce7f3; color: #be185d; }
+    .activity-info-eyebrow.materi { background: #dbeafe; color: #1e40af; }
+    .activity-info-eyebrow.diskusi { background: #d1fae5; color: #047857; }
+    .activity-info-eyebrow.custom { background: #f1f5f9; color: #475569; }
+    .activity-info-title {
+      font-size: 1.2rem; font-weight: 800; color: var(--text);
+      margin-bottom: 0.3rem; line-height: 1.3;
+    }
+    .activity-info-meta {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      font-size: 0.78rem; color: var(--text-muted);
+    }
+    .activity-info-meta span { display: inline-flex; align-items: center; gap: 5px; }
+    .activity-info-meta i { color: var(--green); }
+
+    /* STATS */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem; margin-bottom: 1rem;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.2rem;
+      display: flex; align-items: center; gap: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .stat-icon.green { background: var(--green-light); color: var(--green-dark); }
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.orange { background: #fed7aa; color: #ea580c; }
+    .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+    .stat-info { flex: 1; min-width: 0; }
+    .stat-value { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 2px; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+
+    /* FILTER */
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr auto;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .filter-group label i { color: var(--green); }
+    .filter-input, .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
+    }
+    .btn-reset {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-muted); padding: 0.55rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-reset:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+
+    /* TABLE */
+    .table-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table thead { background: var(--bg-soft); }
+    .data-table th {
+      padding: 0.85rem 1rem; text-align: left; font-weight: 700;
+      color: var(--text-muted); border-bottom: 2px solid var(--border);
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.85rem 1rem; border-bottom: 1px solid var(--border);
+      vertical-align: middle; color: var(--text);
+    }
+    .data-table tbody tr:hover { background: var(--green-lighter); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    .nama-siswa { font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .avatar-mini {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--green-dark));
+      color: white; display: inline-flex;
+      align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.75rem; flex-shrink: 0;
+    }
+    .nisn-teks { font-size: 0.75rem; color: var(--text-muted); font-family: 'Courier New', monospace; }
+    .waktu-teks { font-size: 0.78rem; color: var(--text-muted); }
+
+    .status-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-weight: 700; font-size: 0.7rem; white-space: nowrap;
+    }
+    .status-submitted { background: #fef3c7; color: #92400e; }
+    .status-graded { background: var(--green-light); color: var(--green-dark); }
+    .status-belum { background: #f1f5f9; color: #64748b; }
+
+    .skor-value { font-weight: 800; font-size: 1rem; }
+    .skor-value.high { color: var(--green-dark); }
+    .skor-value.mid { color: var(--warning); }
+    .skor-value.low { color: var(--danger); }
+    .skor-empty { color: var(--text-muted); font-style: italic; font-weight: 400; font-size: 0.85rem; }
+
+    .action-btns { display: flex; gap: 6px; }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition); font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover { background: var(--green-light); border-color: var(--green); color: var(--green); }
+    .btn-icon.primary { background: var(--green); color: white; border-color: var(--green); }
+    .btn-icon.primary:hover { background: var(--green-dark); }
+
+    .empty-row {
+      text-align: center; padding: 3rem 1rem; color: var(--text-muted);
+    }
+    .empty-row .emoji { font-size: 3rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
+
+    /* LOADING */
+    .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
+    .spinner {
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    .spinner-sm {
+      width: 20px; height: 20px;
+      border: 2px solid var(--green-light); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem; width: 100%; max-width: 720px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 92vh; overflow-y: auto;
+    }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--text); margin-bottom: 0.5rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--green); }
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.2rem; flex-wrap: wrap;
+    }
+    .form-label {
+      display: block; font-size: 0.75rem; font-weight: 700;
+      margin-bottom: 0.45rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-label .req { color: var(--danger); }
+    .form-input, .form-textarea {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.9rem;
+    }
+    .form-input:focus, .form-textarea:focus {
+      border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .alert {
+      margin-top: 1rem; padding: 0.75rem 1rem;
+      border-radius: 8px; font-size: 0.83rem; line-height: 1.5;
+    }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    /* DETAIL SUBMISSION */
+    .detail-header {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.9rem 1.1rem; background: var(--green-lighter);
+      border-radius: 10px; margin-bottom: 1rem;
+      border-left: 3px solid var(--green);
+    }
+    .detail-header-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--green-dark));
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .detail-header-info { flex: 1; min-width: 0; }
+    .detail-header-name { font-weight: 800; font-size: 1rem; color: var(--text); }
+    .detail-header-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    .answers-section {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem 1.2rem; margin-bottom: 1rem;
+      border: 1px solid var(--border);
+    }
+    .answers-title {
+      font-size: 0.78rem; font-weight: 700; color: var(--text);
+      text-transform: uppercase; letter-spacing: 0.3px;
+      margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px;
+    }
+    .answers-title i { color: var(--green); }
+    .answer-item {
+      background: white; border-radius: 8px; padding: 0.7rem 1rem;
+      margin-bottom: 0.5rem; border-left: 3px solid var(--green-light);
+    }
+    .answer-item:last-child { margin-bottom: 0; }
+    .answer-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 0.3rem; }
+    .answer-value { font-size: 0.88rem; color: var(--text); line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .answer-empty { color: var(--text-muted); font-style: italic; font-size: 0.85rem; }
+
+    .score-section {
+      background: white; border-radius: 10px;
+      padding: 1.2rem; border: 2px solid var(--green-light);
+    }
+    .score-section-title {
+      font-size: 0.85rem; font-weight: 800; color: var(--green-dark);
+      margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px;
+    }
+    .score-section-title i { color: var(--green); }
+    .score-input-wrap {
+      display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem;
+    }
+    .score-input {
+      width: 100px; padding: 0.6rem 0.8rem;
+      border: 2px solid var(--green-light); border-radius: 8px;
+      font-size: 1rem; font-weight: 800; text-align: center;
+      font-family: inherit; outline: none;
+    }
+    .score-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+    .score-max { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--text);
+      color: white; padding: 1rem 1.4rem; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--danger); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .data-table th, .data-table td { padding: 0.55rem 0.5rem; font-size: 0.78rem; }
+      .avatar-mini { width: 28px; height: 28px; font-size: 0.68rem; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+
+    <!-- TOOLBAR -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="javascript:void(0)" class="btn-back" onclick="goBack()">
+          <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+        <h1>
+          <i class="fas fa-clipboard-check"></i>
+          <span>
+            Penilaian Aktivitas
+            <small id="pageSubtitle">Memuat...</small>
+          </span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat data penilaian...</p>
+    </div>
+
+    <div id="pageContent" class="hidden">
+
+      <!-- ACTIVITY INFO -->
+      <div class="activity-info-card" id="activityInfo">
+        <div class="activity-info-eyebrow" id="actTypeEyebrow">-</div>
+        <div class="activity-info-title" id="actTitle">-</div>
+        <div class="activity-info-meta" id="actMeta"></div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-row" id="statsRow"></div>
+
+      <!-- FILTER -->
+      <div class="filter-card">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="searchInput"><i class="fas fa-search"></i> Cari Siswa</label>
+            <input type="text" id="searchInput" class="filter-input" placeholder="Cari nama atau NISN siswa..." oninput="applyFilter()">
+          </div>
+          <div class="filter-group">
+            <label for="filterStatus"><i class="fas fa-circle-check"></i> Status</label>
+            <select id="filterStatus" class="filter-select" onchange="applyFilter()">
+              <option value="">Semua Status</option>
+              <option value="submitted">Menunggu Dinilai</option>
+              <option value="graded">Sudah Dinilai</option>
+              <option value="belum">Belum Submit</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filterSort"><i class="fas fa-sort"></i> Urutkan</label>
+            <select id="filterSort" class="filter-select" onchange="applyFilter()">
+              <option value="name">Nama (A-Z)</option>
+              <option value="submitted">Terbaru Submit</option>
+              <option value="score">Skor Tertinggi</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <button class="btn-reset" onclick="resetFilter()">
+              <i class="fas fa-rotate-left"></i> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">No</th>
+                <th>Nama Siswa</th>
+                <th style="width:130px;">NISN</th>
+                <th style="width:150px;">Waktu Submit</th>
+                <th style="width:120px;">Status</th>
+                <th style="width:100px;">Skor</th>
+                <th style="width:100px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="7" class="empty-row">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: Nilai Submission -->
+  <div class="modal-overlay" id="modalNilai">
+    <div class="modal-card">
+      <h2><i class="fas fa-star"></i> Nilai Submission</h2>
+
+      <div class="detail-header" id="detailHeader"></div>
+
+      <div class="answers-section">
+        <div class="answers-title">
+          <i class="fas fa-file-lines"></i> Jawaban Siswa
+        </div>
+        <div id="answersContainer"></div>
+      </div>
+
+      <div class="score-section">
+        <div class="score-section-title">
+          <i class="fas fa-award"></i> Penilaian
+        </div>
+        <label class="form-label">Skor <span class="req">*</span></label>
+        <div class="score-input-wrap">
+          <input type="number" id="inputScore" class="score-input" min="0" max="100" placeholder="0">
+          <span class="score-max" id="scoreMax">/ 100</span>
+        </div>
+
+        <label class="form-label">Feedback / Catatan (opsional)</label>
+        <textarea id="inputFeedback" class="form-textarea" placeholder="Tulis catatan untuk siswa..." maxlength="1000"></textarea>
+
+        <div id="nilaiError" class="alert alert-error hidden"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeNilaiModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveNilai" onclick="saveNilai()">
+          <i class="fas fa-save"></i> Simpan Nilai
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../assets/js/core/cache.js"></script>
+<script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script>
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let activityId = null;
+    let currentActivity = null;
+    let currentUnit = null;
+    let currentPlan = null;
+    let allStudents = [];         // siswa terdaftar di kelas (dari enrollments)
+    let allSubmissions = [];      // submission siswa untuk aktivitas ini
+    let mergedData = [];          // gabungan siswa + submission
+    let filteredData = [];
+    let editingSubmissionId = null;
+    let currentSubmission = null;
+
+    const ACTIVITY_TYPE_LABEL = {
+      materi: 'Materi', lkpd: 'LKPD', asesmen: 'Asesmen',
+      refleksi: 'Refleksi', diskusi: 'Diskusi', custom: 'Custom'
+    };
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('guru');
+      if (!currentUser) return;
+
+      const params = new URLSearchParams(window.location.search);
+      activityId = params.get('activityId');
+      if (!activityId) {
+        document.getElementById('loading').innerHTML = '<p style="color:var(--danger);">Parameter activityId tidak ditemukan.</p>';
+        return;
+      }
+
+      try {
+        await loadAllData();
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('pageContent').classList.remove('hidden');
+      } catch (err) {
+        console.error('Init error:', err);
+        document.getElementById('loading').innerHTML =
+          `<div style="text-align:center; color:var(--danger); padding:2rem;">
+            <i class="fas fa-triangle-exclamation" style="font-size:2rem; margin-bottom:1rem;"></i>
+            <p>${escapeHtml(err.message)}</p>
+          </div>`;
+      }
+    })();
+
+    // ============================================
+    // LOAD ALL DATA
+    // ============================================
+    async function loadAllData() {
+      // 1. Ambil activity info
+      currentActivity = await getActivityById(activityId);
+      if (!currentActivity) throw new Error('Aktivitas tidak ditemukan.');
+
+      // 2. Ambil unit
+      currentUnit = currentActivity.units;
+      if (!currentUnit) throw new Error('Unit tidak ditemukan.');
+
+      // 3. Ambil plan (untuk kelas + mapel)
+      currentPlan = await getAnnualPlanById(currentUnit.annual_plan_id);
+      if (!currentPlan) throw new Error('Perencanaan tidak ditemukan.');
+
+      // 4. Verify ownership
+      if (String(currentPlan.teacher_id) !== String(currentUser.id)) {
+        throw new Error('Anda tidak berhak menilai aktivitas ini.');
+      }
+
+      // 5. Render header
+      renderHeader();
+
+      // 6. Ambil siswa di kelas (dari enrollments)
+      const enrollments = await getStudentsInClass(currentPlan.class_id);
+      allStudents = (enrollments || [])
+        .map(e => e.profiles)
+        .filter(Boolean)
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+      // 7. Ambil submission
+      await loadSubmissions();
+
+      // 8. Merge: semua siswa (meskipun belum submit) + submission
+      mergeData();
+
+      // 9. Render
+      renderStats();
+      applyFilter();
+    }
+
+    async function loadSubmissions() {
+      try {
+        allSubmissions = await getSubmissionsByActivity(activityId);
+      } catch (err) {
+        console.warn('Load submissions error:', err);
+        allSubmissions = [];
+      }
+    }
+
+    function mergeData() {
+      const subMap = {};
+      allSubmissions.forEach(s => {
+        subMap[String(s.student_id)] = s;
+      });
+
+      mergedData = allStudents.map(st => {
+        const sub = subMap[String(st.id)];
+        return {
+          student: st,
+          submission: sub || null,
+          status: sub 
+            ? (sub.status === 'graded' ? 'graded' : 'submitted')
+            : 'belum',
+          score: sub ? sub.score : null,
+          submittedAt: sub ? sub.submitted_at : null
+        };
+      });
+    }
+
+    // ============================================
+    // RENDER HEADER
+    // ============================================
+    function renderHeader() {
+      const typeLabel = ACTIVITY_TYPE_LABEL[currentActivity.type] || currentActivity.type;
+      document.getElementById('actTypeEyebrow').textContent = typeLabel;
+      document.getElementById('actTypeEyebrow').className = 'activity-info-eyebrow ' + currentActivity.type;
+      document.getElementById('actTitle').textContent = currentActivity.title;
+      document.getElementById('actMeta').innerHTML = `
+        <span><i class="fas fa-layer-group"></i> ${escapeHtml(currentUnit.title || '-')}</span>
+        <span><i class="fas fa-school"></i> ${escapeHtml(currentPlan.classes?.name || '-')}</span>
+        <span><i class="fas fa-book"></i> ${escapeHtml(currentPlan.subjects?.name || '-')}</span>
+      `;
+      document.getElementById('pageSubtitle').textContent = 
+        currentActivity.title + ' · ' + (currentPlan.classes?.name || '-');
+    }
+
+    // ============================================
+    // RENDER STATS
+    // ============================================
+    function renderStats() {
+      const total = mergedData.length;
+      const submitted = mergedData.filter(d => d.status === 'submitted').length;
+      const graded = mergedData.filter(d => d.status === 'graded').length;
+      const belum = mergedData.filter(d => d.status === 'belum').length;
+
+      const stats = [
+        { icon: 'fa-users', color: 'blue', value: total, label: 'Total Siswa' },
+        { icon: 'fa-clock', color: 'orange', value: submitted, label: 'Menunggu Dinilai' },
+        { icon: 'fa-check-circle', color: 'green', value: graded, label: 'Sudah Dinilai' },
+        { icon: 'fa-circle-xmark', color: 'purple', value: belum, label: 'Belum Submit' }
+      ];
+
+      document.getElementById('statsRow').innerHTML = stats.map(s => `
+        <div class="stat-card">
+          <div class="stat-icon ${s.color}"><i class="fas ${s.icon}"></i></div>
+          <div class="stat-info">
+            <div class="stat-value">${s.value}</div>
+            <div class="stat-label">${s.label}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================
+    // FILTER
+    // ============================================
+    function applyFilter() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const status = document.getElementById('filterStatus').value;
+      const sort = document.getElementById('filterSort').value;
+
+      filteredData = mergedData.filter(d => {
+        const nama = (d.student.name || '').toLowerCase();
+        const nisn = (d.student.nisn || '').toLowerCase();
+        const matchKeyword = !keyword || nama.includes(keyword) || nisn.includes(keyword);
+        const matchStatus = !status || d.status === status;
+        return matchKeyword && matchStatus;
+      });
+
+      if (sort === 'name') {
+        filteredData.sort((a, b) => (a.student.name || '').localeCompare(b.student.name || ''));
+      } else if (sort === 'submitted') {
+        filteredData.sort((a, b) => {
+          if (!a.submittedAt && !b.submittedAt) return 0;
+          if (!a.submittedAt) return 1;
+          if (!b.submittedAt) return -1;
+          return new Date(b.submittedAt) - new Date(a.submittedAt);
+        });
+      } else if (sort === 'score') {
+        filteredData.sort((a, b) => {
+          const sa = a.score === null || a.score === undefined ? -1 : parseFloat(a.score);
+          const sb = b.score === null || b.score === undefined ? -1 : parseFloat(b.score);
+          return sb - sa;
+        });
+      }
+
+      renderTable();
+    }
+
+    function resetFilter() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterSort').value = 'name';
+      applyFilter();
+    }
+
+    // ============================================
+    // RENDER TABLE
+    // ============================================
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+
+      if (filteredData.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="7" class="empty-row">
+            <span class="emoji">📋</span>
+            ${mergedData.length === 0 
+              ? 'Belum ada siswa di kelas ini.' 
+              : 'Tidak ada siswa yang cocok dengan filter.'}
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filteredData.map((d, i) => {
+        const initials = (d.student.name || '?').charAt(0).toUpperCase();
+        const statusBadge = {
+          submitted: '<span class="status-badge status-submitted">⏳ Menunggu</span>',
+          graded: '<span class="status-badge status-graded">✓ Dinilai</span>',
+          belum: '<span class="status-badge status-belum">— Belum</span>'
+        }[d.status];
+
+        let skorHtml = '<span class="skor-empty">-</span>';
+        if (d.score !== null && d.score !== undefined) {
+          const num = parseFloat(d.score);
+          const cls = num >= 80 ? 'high' : num >= 60 ? 'mid' : 'low';
+          skorHtml = `<span class="skor-value ${cls}">${num}</span>`;
+        }
+
+        let waktu = '-';
+        if (d.submittedAt) {
+          try {
+            const dt = new Date(d.submittedAt);
+            waktu = dt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                  + ' ' + dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+          } catch (e) { waktu = '-'; }
+        }
+
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td>
+              <div class="nama-siswa">
+                <span class="avatar-mini">${initials}</span>
+                <span>${escapeHtml(d.student.name || '-')}</span>
+              </div>
+            </td>
+            <td class="nisn-teks">${escapeHtml(d.student.nisn || '-')}</td>
+            <td class="waktu-teks">${waktu}</td>
+            <td>${statusBadge}</td>
+            <td>${skorHtml}</td>
+            <td>
+              <div class="action-btns">
+                ${d.submission 
+                  ? `<button class="btn-icon primary" title="${d.status === 'graded' ? 'Edit Nilai' : 'Beri Nilai'}" onclick="openNilaiModal('${d.submission.id}')">
+                       <i class="fas fa-${d.status === 'graded' ? 'pen' : 'star'}"></i>
+                     </button>`
+                  : `<button class="btn-icon" disabled title="Siswa belum submit" style="opacity:0.4;">
+                       <i class="fas fa-eye"></i>
+                     </button>`
+                }
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ============================================
+    // MODAL NILAI
+    // ============================================
+    async function openNilaiModal(submissionId) {
+      editingSubmissionId = submissionId;
+      document.getElementById('nilaiError').classList.add('hidden');
+      document.getElementById('btnSaveNilai').disabled = false;
+      document.getElementById('btnSaveNilai').innerHTML = '<i class="fas fa-save"></i> Simpan Nilai';
+
+      // Ambil submission full
+      try {
+        currentSubmission = await getSubmissionById(submissionId);
+      } catch (err) {
+        showToast('Gagal memuat submission: ' + err.message, 'error');
+        return;
+      }
+
+      // Header
+      const student = currentSubmission.profiles || {};
+      const initials = (student.name || '?').charAt(0).toUpperCase();
+      document.getElementById('detailHeader').innerHTML = `
+        <div class="detail-header-avatar">${initials}</div>
+        <div class="detail-header-info">
+          <div class="detail-header-name">${escapeHtml(student.name || '-')}</div>
+          <div class="detail-header-meta">
+            ${escapeHtml(student.nisn || '-')} · 
+            Submit: ${currentSubmission.submitted_at ? new Date(currentSubmission.submitted_at).toLocaleString('id-ID') : '-'}
+          </div>
+        </div>
+      `;
+
+      // Answers
+      renderAnswers(currentSubmission.answers || {});
+
+      // Score + feedback
+      document.getElementById('inputScore').value = 
+        currentSubmission.score !== null && currentSubmission.score !== undefined ? currentSubmission.score : '';
+      document.getElementById('inputFeedback').value = currentSubmission.teacher_feedback || '';
+
+      document.getElementById('modalNilai').classList.add('active');
+    }
+
+    function closeNilaiModal() {
+      document.getElementById('modalNilai').classList.remove('active');
+      editingSubmissionId = null;
+      currentSubmission = null;
+    }
+
+    function renderAnswers(answers) {
+      const container = document.getElementById('answersContainer');
+
+      // Kalau answers bukan objek atau kosong
+      if (!answers || typeof answers !== 'object' || Object.keys(answers).length === 0) {
+        container.innerHTML = '<div class="answer-empty">Siswa belum mengisi jawaban.</div>';
+        return;
+      }
+
+      // Kalau array (dari komponen berindeks)
+      const entries = Array.isArray(answers)
+        ? answers.map((v, i) => [`Jawaban #${i + 1}`, v])
+        : Object.entries(answers);
+
+      if (entries.length === 0) {
+        container.innerHTML = '<div class="answer-empty">Siswa belum mengisi jawaban.</div>';
+        return;
+      }
+
+      container.innerHTML = entries.map(([key, value]) => {
+        let displayValue = value;
+        if (typeof value === 'object' && value !== null) {
+          displayValue = JSON.stringify(value, null, 2);
+        } else if (value === null || value === undefined || value === '') {
+          displayValue = '(kosong)';
+        }
+        return `
+          <div class="answer-item">
+            <div class="answer-label">${escapeHtml(key)}</div>
+            <div class="answer-value">${escapeHtml(String(displayValue))}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function saveNilai() {
+      if (!editingSubmissionId) return;
+
+      const scoreStr = document.getElementById('inputScore').value.trim();
+      const feedback = document.getElementById('inputFeedback').value.trim();
+      const errBox = document.getElementById('nilaiError');
+      const btn = document.getElementById('btnSaveNilai');
+
+      errBox.classList.add('hidden');
+
+      if (!scoreStr) {
+        errBox.textContent = 'Skor wajib diisi.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const score = parseFloat(scoreStr);
+      if (isNaN(score) || score < 0) {
+        errBox.textContent = 'Skor harus angka ≥ 0.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (score > 100) {
+        errBox.textContent = 'Skor maksimal 100.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        await gradeSubmission({
+          submissionId: editingSubmissionId,
+          score: score,
+          teacherFeedback: feedback || null
+        });
+        closeNilaiModal();
+        showToast('✅ Nilai berhasil disimpan', 'success');
+        
+        // Reload submissions + table
+        await loadSubmissions();
+        mergeData();
+        renderStats();
+        applyFilter();
+      } catch (err) {
+        console.error('Save nilai error:', err);
+        errBox.textContent = 'Gagal menyimpan: ' + (err.message || 'Unknown error');
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan Nilai';
+      }
+    }
+
+    // ============================================
+    // NAVIGATION
+    // ============================================
+    function goBack() {
+      if (window.self !== window.top) {
+        window.parent.postMessage({ type: 'GURU_BACK', view: 'mapel' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeNilaiModal();
+    });
+  </script>
+</body>
+</html>

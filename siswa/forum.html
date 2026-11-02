@@ -4,589 +4,409 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forum Diskusi — Tembok Belajar</title>
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- PATCH 1 -->
-  <script>
-    (function() {
-      function applyEmbedMode() {
-        if (new URLSearchParams(window.location.search).get('embed') === '1') {
-          document.documentElement.classList.add('tb-embed');
-          if (document.body) document.body.classList.add('tb-embed');
-        }
-      }
-      applyEmbedMode();
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applyEmbedMode);
-      }
-      window.addEventListener('load', applyEmbedMode);
-    })();
-  </script>
-
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scrollbar-gutter: stable; }
-
     :root {
-      --primary: #3b82f6;
-      --primary-dark: #2563eb;
-      --primary-light: #dbeafe;
-      --primary-lighter: #eff6ff;
-      --navy: #1e293b;
-      --navy-dark: #0f172a;
-      --success: #10b981;
-      --success-light: #d1fae5;
-      --warning: #f59e0b;
-      --warning-light: #fef3c7;
-      --danger: #ef4444;
-      --danger-light: #fee2e2;
-      --bg: #f1f5f9;
-      --bg-soft: #f8fafc;
-      --surface: #ffffff;
-      --text: #0f172a;
-      --text-secondary: #334155;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --header-height: 68px;
-      --radius: 12px;
-      --radius-lg: 16px;
-      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --orange: #f59e0b; --orange-dark: #d97706; --orange-light: #fef3c7; --orange-lighter: #fffbeb;
+      --primary: #3b82f6; --success: #10b981; --success-dark: #047857; --warning: #f59e0b; --danger: #ef4444;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
       --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
       --transition: all 0.2s ease;
     }
-
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
     }
-
-    /* PATCH 2 */
-    html.tb-embed .btn-back,
     body.tb-embed .btn-back { display: none !important; }
-    html.tb-embed .page-container,
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
     body.tb-embed .page-container {
-      padding-top: calc(var(--header-height) + 1rem);
-      padding-bottom: 2rem;
-    }
-    html.tb-embed .back-nav,
-    body.tb-embed .back-nav { display: none !important; }
-    html.tb-embed .app-header,
-    body.tb-embed .app-header { display: none !important; }
-
-    .page-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem 1.5rem 3rem;
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
     }
 
+    /* TOOLBAR */
     .page-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      gap: 1rem;
-      margin-bottom: 1.2rem;
-      flex-wrap: wrap;
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
     }
     .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
-
     .btn-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      padding: 0.45rem 0.9rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      font-weight: 600;
-      font-family: inherit;
-      text-decoration: none;
-      transition: var(--transition);
-      width: fit-content;
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
     }
-    .btn-back:hover {
-      background: var(--primary-light);
-      border-color: var(--primary);
-      color: var(--primary-dark);
-    }
-
+    .btn-back:hover { background: var(--orange-light); border-color: var(--orange); color: var(--orange-dark); }
     .page-toolbar h1 {
-      font-size: 1.5rem;
-      color: var(--navy);
-      font-weight: 800;
-      letter-spacing: -0.3px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
     }
-    .page-toolbar h1 i { color: var(--primary); font-size: 1.3rem; }
+    .page-toolbar h1 i { color: var(--orange); font-size: 1.3rem; }
     .page-toolbar h1 small {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 400;
-      color: var(--text-muted);
-      margin-top: 4px;
-      letter-spacing: 0;
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
     }
-
-    /* CONTEXT SELECTOR */
-    .context-selector {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      padding: 1rem 1.2rem;
-      margin-bottom: 1.2rem;
-      box-shadow: var(--shadow-sm);
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      align-items: end;
-    }
-
-    .selector-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      position: relative;
-    }
-
-    .context-selector label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .context-selector label i { color: var(--primary); }
-
-    .context-selector select {
-      width: 100%;
-      padding: 0.6rem 0.9rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-family: inherit;
-      cursor: pointer;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      transition: var(--transition);
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 34px;
-    }
-    .context-selector select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-    }
-    .context-selector select:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      background-color: var(--bg-soft);
-    }
-
-    /* PANEL */
-    .panel {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      padding: 1.4rem;
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 1.2rem;
-    }
-
-    .panel-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 1rem;
-      padding-bottom: 0.6rem;
-      border-bottom: 2px solid var(--primary-light);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .panel-title-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .panel-title i { color: var(--primary); font-size: 0.9rem; }
-
-    .badge-count {
-      background: var(--primary);
-      color: white;
-      padding: 2px 10px;
-      border-radius: 999px;
-      font-size: 0.7rem;
-      font-weight: 700;
-    }
-
-    /* FORM */
-    .form-label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 700;
-      margin-bottom: 0.4rem;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 0.65rem 0.9rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      transition: var(--transition);
-      margin-bottom: 0.9rem;
-    }
-    .form-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-    }
-    textarea.form-input {
-      resize: vertical;
-      min-height: 80px;
-      line-height: 1.6;
-    }
-
+    .toolbar-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
     .btn-primary {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.6rem 1.1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      font-family: inherit;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
+      background: var(--orange); color: white; border: none;
+      padding: 0.6rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
     }
     .btn-primary:hover:not(:disabled) {
-      background: var(--primary-dark);
-      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+      background: var(--orange-dark);
+      box-shadow: 0 4px 12px rgba(245,158,11,0.3);
       transform: translateY(-1px);
     }
     .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-    /* POST LIST */
-    .post-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+    .btn-outline {
+      background: var(--surface); border: 1.5px solid var(--orange); color: var(--orange);
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition); display: inline-flex;
+      align-items: center; gap: 6px; white-space: nowrap;
     }
-
-    .post {
-      background: var(--bg-soft);
-      border-radius: 12px;
-      padding: 1rem 1.2rem;
-      border-left: 4px solid var(--primary);
-      border-top: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+    .btn-outline:hover { background: var(--orange-light); }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
       transition: var(--transition);
     }
-    .post:hover {
-      box-shadow: var(--shadow-sm);
-      border-left-color: var(--primary-dark);
-    }
-
-    .post-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.7rem;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .post-author {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--navy);
-    }
-    .author-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.85rem;
-      flex-shrink: 0;
-    }
-    .author-name {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .post-time {
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      font-weight: 400;
-      margin-top: 2px;
-    }
-
-    .badge-role {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      background: #fef3c7;
-      color: #92400e;
-      padding: 1px 7px;
-      border-radius: 6px;
-      font-size: 0.62rem;
-      font-weight: 800;
-      letter-spacing: 0.3px;
-    }
-
-    .post-title {
-      font-weight: 700;
-      color: var(--navy);
-      font-size: 0.95rem;
-      margin-bottom: 0.4rem;
-    }
-    .post-body {
-      font-size: 0.85rem;
-      color: var(--text);
-      line-height: 1.65;
-      margin-bottom: 0.7rem;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    /* REPLIES */
-    .reply-list {
-      margin-top: 0.9rem;
-      padding-top: 0.9rem;
-      border-top: 1px dashed var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-    }
-
-    .reply {
-      background: var(--surface);
-      padding: 0.7rem 1rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-    .reply-header {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 0.3rem;
-      font-size: 0.75rem;
-      flex-wrap: wrap;
-    }
-    .reply-header strong {
-      color: var(--navy);
-      font-weight: 700;
-    }
-    .reply-header .time {
-      color: var(--text-muted);
-      font-size: 0.68rem;
-    }
-    .reply-body {
-      color: var(--text);
-      white-space: pre-wrap;
-      font-size: 0.83rem;
-      line-height: 1.6;
-      word-break: break-word;
-    }
-
-    .reply-empty {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      padding: 0.3rem;
-      font-style: italic;
-    }
-
-    /* ACTIONS */
-    .post-actions {
-      display: flex;
-      gap: 6px;
-      margin-top: 0.6rem;
-      flex-wrap: wrap;
-    }
-
-    .btn-sm-outline {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 5px 12px;
-      border-radius: 8px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      cursor: pointer;
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger {
+      background: var(--danger); color: white; border: none;
+      padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
       transition: var(--transition);
-      font-family: inherit;
-      color: var(--text-secondary);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
     }
-    .btn-sm-outline:hover {
-      background: var(--primary-lighter);
-      border-color: var(--primary);
-      color: var(--primary-dark);
-    }
-    .btn-sm-outline.danger:hover {
-      background: var(--danger-light);
-      border-color: var(--danger);
-      color: var(--danger);
-    }
-    .btn-sm-outline i { font-size: 0.75rem; }
+    .btn-danger:hover { background: #dc2626; }
 
-    /* REPLY FORM */
-    .reply-form {
-      margin-top: 0.7rem;
-      padding-top: 0.7rem;
-      border-top: 1px solid var(--border);
-      display: none;
+    /* TABS */
+    .forum-tabs {
+      display: flex; gap: 0.4rem; margin-bottom: 1rem;
+      border-bottom: 2px solid var(--border); overflow-x: auto;
     }
-    .reply-form.active { display: block; }
-    .reply-form textarea {
-      margin-bottom: 0.5rem;
+    .forum-tab {
+      background: transparent; border: none;
+      padding: 0.8rem 1.3rem; cursor: pointer;
+      font-size: 0.88rem; font-weight: 700;
+      color: var(--text-muted); font-family: inherit;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: var(--transition); white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .forum-tab:hover { color: var(--text); background: var(--bg-soft); }
+    .forum-tab.active { color: var(--orange-dark); border-bottom-color: var(--orange); }
+    .forum-tab .tab-count {
+      background: var(--orange-light); color: var(--orange-dark);
+      padding: 1px 8px; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 800;
+    }
+    .forum-tab.active .tab-count { background: var(--orange); color: white; }
+
+    /* FILTER */
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .filter-group label i { color: var(--orange); }
+    .filter-input, .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
     }
 
-    /* EMPTY */
-    .empty-msg {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 2.5rem 1rem;
-      font-size: 0.85rem;
+    /* TOPIC LIST */
+    .topic-list { display: flex; flex-direction: column; gap: 0.7rem; }
+    .topic-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.2rem;
+      cursor: pointer; transition: var(--transition);
+      position: relative;
     }
-    .empty-msg .emoji {
-      font-size: 2.2rem;
-      display: block;
-      margin-bottom: 0.5rem;
-      opacity: 0.4;
-    }
-    .empty-msg strong { color: var(--text); }
+    .topic-card:hover { border-color: var(--orange); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .topic-card.pinned { border-left: 4px solid var(--warning); background: #fffbf0; }
 
-    /* LOADING */
-    .loading-box {
-      text-align: center;
-      padding: 4rem 1rem;
-      color: var(--text-muted);
-      font-size: 0.9rem;
+    .topic-header {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 0.7rem; margin-bottom: 0.4rem;
     }
+    .topic-title {
+      font-size: 1rem; font-weight: 800; color: var(--text);
+      line-height: 1.4; flex: 1;
+    }
+    .topic-badges { display: flex; gap: 0.3rem; flex-shrink: 0; flex-wrap: wrap; }
+    .topic-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 8px; border-radius: 6px;
+      font-size: 0.65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .topic-badge.unit { background: #dbeafe; color: #1e40af; }
+    .topic-badge.aktivitas { background: #fef3c7; color: #92400e; }
+    .topic-badge.pinned { background: #fef3c7; color: #92400e; }
+
+    .topic-body-preview {
+      font-size: 0.85rem; color: var(--text-muted);
+      line-height: 1.6; margin-bottom: 0.6rem;
+      display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .topic-meta {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      font-size: 0.72rem; color: var(--text-muted);
+      padding-top: 0.6rem; border-top: 1px solid var(--border);
+    }
+    .topic-meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .topic-meta i { color: var(--orange); font-size: 0.7rem; }
+    .topic-meta strong { color: var(--text); }
+    .reply-count-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--orange-lighter); color: var(--orange-dark);
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 700;
+    }
+
+    /* EMPTY / LOADING */
+    .empty-row {
+      text-align: center; padding: 4rem 1.5rem; color: var(--text-muted);
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 2px dashed var(--border);
+    }
+    .empty-row .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-row h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-row p { font-size: 0.85rem; line-height: 1.6; max-width: 400px; margin: 0 auto 1rem; }
+
+    .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
     .spinner {
-      width: 40px; height: 40px;
-      margin: 0 auto 1rem;
-      border: 3px solid var(--primary-light);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--orange-light); border-top-color: var(--orange);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .hidden { display: none !important; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem; overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 1.8rem; width: 100%; max-width: 640px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.25s ease; margin: auto;
+      max-height: 92vh; overflow-y: auto;
+    }
+    .modal-card.wide { max-width: 820px; }
+    .modal-card h2 {
+      font-size: 1.2rem; color: var(--text); margin-bottom: 0.5rem;
+      font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-card h2 i { color: var(--orange); }
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.2rem; flex-wrap: wrap;
+    }
+    .form-label {
+      display: block; font-size: 0.75rem; font-weight: 700;
+      margin-bottom: 0.45rem; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .form-label .req { color: var(--danger); }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.88rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+      margin-bottom: 0.9rem;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 35px; cursor: pointer;
+    }
+    .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .alert {
+      margin-top: 0.8rem; padding: 0.75rem 1rem;
+      border-radius: 8px; font-size: 0.83rem; line-height: 1.5;
+    }
+    .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    /* THREAD */
+    .thread-header {
+      background: var(--orange-lighter); border-left: 4px solid var(--orange);
+      padding: 1rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem;
+    }
+    .thread-header-title {
+      font-size: 1.1rem; font-weight: 800; color: var(--text);
+      margin-bottom: 0.4rem; line-height: 1.4;
+    }
+    .thread-header-meta {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      font-size: 0.75rem; color: var(--text-muted);
+    }
+    .thread-header-meta strong { color: var(--text); }
+
+    .thread-posts { display: flex; flex-direction: column; gap: 0.8rem; }
+    .post-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem 1.2rem;
+      position: relative;
+    }
+    .post-item.opening { background: var(--orange-lighter); border-color: var(--orange-light); }
+    .post-item.reply { margin-left: 1.5rem; }
+    .post-item.reply::before {
+      content: ''; position: absolute; left: -1rem; top: 1rem;
+      width: 1rem; height: 2px; background: var(--border);
+    }
+    .post-header {
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-bottom: 0.6rem; flex-wrap: wrap;
+    }
+    .post-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .post-author-info { flex: 1; min-width: 0; }
+    .post-author-name {
+      font-size: 0.85rem; font-weight: 700; color: var(--text);
+      display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+    }
+    .post-author-role {
+      display: inline-block; padding: 1px 6px;
+      border-radius: 4px; font-size: 0.6rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .post-author-role.guru { background: var(--success-light, #d1fae5); color: var(--success-dark); }
+    .post-author-role.siswa { background: #dbeafe; color: #1e40af; }
+    .post-time { font-size: 0.7rem; color: var(--text-muted); }
+    .post-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .btn-icon-mini {
+      width: 28px; height: 28px; border-radius: 6px;
+      border: 1px solid var(--border); background: white;
+      cursor: pointer; font-size: 0.7rem;
+      color: var(--text-secondary); display: inline-flex;
+      align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+    .btn-icon-mini:hover { background: var(--orange-light); border-color: var(--orange); color: var(--orange-dark); }
+    .btn-icon-mini.danger:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+
+    .post-body {
+      font-size: 0.88rem; color: var(--text-secondary);
+      line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+    }
+    .post-edited-tag {
+      display: inline-block; margin-left: 6px;
+      font-size: 0.65rem; color: var(--text-muted); font-style: italic;
+    }
+
+    .reply-form-area {
+      margin-top: 1rem; padding: 1rem;
+      background: var(--bg-soft); border-radius: 10px;
+      border: 1px dashed var(--border);
+    }
+    .reply-form-area textarea {
+      width: 100%; min-height: 70px;
+      padding: 0.6rem 0.9rem; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.85rem; font-family: inherit;
+      outline: none; resize: vertical; margin-bottom: 0.5rem;
+    }
+    .reply-form-area textarea:focus {
+      border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
 
     /* TOAST */
     .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--navy);
-      color: white;
-      padding: 1rem 1.4rem;
-      border-radius: 10px;
+      position: fixed; bottom: 24px; right: 24px; background: var(--text);
+      color: white; padding: 1rem 1.4rem; border-radius: 10px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      font-size: 0.85rem;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      opacity: 0;
-      transform: translateY(20px);
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateY(20px);
       transition: all 0.3s ease;
-      z-index: 3000;
-      max-width: 400px;
-      line-height: 1.5;
+      z-index: 3000; max-width: 400px; line-height: 1.5;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.error { background: var(--danger); }
     .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
 
-    /* BACK NAV */
-    .back-nav {
-      text-align: center;
-      margin-top: 2rem;
-    }
-    .btn-back-full {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface);
-      color: var(--text-secondary);
-      padding: 0.6rem 1.5rem;
-      border-radius: 999px;
-      text-decoration: none;
-      font-weight: 600;
-      border: 1px solid var(--border);
-      font-size: 0.85rem;
-      transition: var(--transition);
-    }
-    .btn-back-full:hover {
-      background: var(--primary-lighter);
-      border-color: var(--primary);
-      color: var(--primary-dark);
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 640px) {
-      .context-selector { grid-template-columns: 1fr; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @media (max-width: 768px) {
       :root { --header-height: 60px; }
       .page-container { padding: 1rem 1rem 2rem; }
-      html.tb-embed .page-container,
-      body.tb-embed .page-container {
-        padding-top: calc(var(--header-height) + 0.8rem);
-      }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
       .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .post-item.reply { margin-left: 0.6rem; }
+      .modal-card { padding: 1.2rem; }
     }
   </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
 </head>
 <body>
 
   <div class="page-container">
 
+    <!-- TOOLBAR -->
     <div class="page-toolbar">
       <div class="page-toolbar-left">
         <a href="dashboard.html" class="btn-back" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#forum';return false;}">
@@ -600,6 +420,52 @@
           </span>
         </h1>
       </div>
+      <div class="toolbar-actions">
+        <button class="btn-outline" onclick="loadAllData()">
+          <i class="fas fa-rotate"></i> Muat Ulang
+        </button>
+        <button class="btn-primary" onclick="openCreateTopicModal()">
+          <i class="fas fa-plus"></i> Buat Topik
+        </button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="forum-tabs">
+      <button class="forum-tab active" data-tab="unit" onclick="switchTab('unit')">
+        <i class="fas fa-book"></i>
+        Forum Unit
+        <span class="tab-count" id="unitTabCount">0</span>
+      </button>
+      <button class="forum-tab" data-tab="aktivitas" onclick="switchTab('aktivitas')">
+        <i class="fas fa-file-pen"></i>
+        Forum Aktivitas
+        <span class="tab-count" id="aktivitasTabCount">0</span>
+      </button>
+    </div>
+
+    <!-- FILTER -->
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="searchInput"><i class="fas fa-search"></i> Cari Topik</label>
+          <input type="text" id="searchInput" class="filter-input" placeholder="Cari judul atau isi diskusi..." oninput="applyFilter()">
+        </div>
+        <div class="filter-group">
+          <label for="filterKelas"><i class="fas fa-school"></i> Kelas</label>
+          <select id="filterKelas" class="filter-select" onchange="applyFilter()">
+            <option value="">Semua Kelas</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterSort"><i class="fas fa-sort"></i> Urutkan</label>
+          <select id="filterSort" class="filter-select" onchange="applyFilter()">
+            <option value="newest">Terbaru</option>
+            <option value="oldest">Terlama</option>
+            <option value="replies">Terbanyak Reply</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <!-- LOADING -->
@@ -610,74 +476,106 @@
 
     <!-- CONTENT -->
     <div id="pageContent" class="hidden">
-
-      <!-- Context Selector -->
-      <div class="context-selector">
-        <div class="selector-group">
-          <label for="selSubject"><i class="fas fa-book"></i> Mapel</label>
-          <select id="selSubject" onchange="onSubjectChange()" disabled>
-            <option value="">-- Memuat... --</option>
-          </select>
-        </div>
-        <div class="selector-group">
-          <label for="selClass"><i class="fas fa-school"></i> Kelas</label>
-          <select id="selClass" onchange="onKelasChange()" disabled>
-            <option value="">-- Pilih Mapel dulu --</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Form Buat Topik -->
-      <div class="panel" id="panelNewPost" style="display:none;">
-        <h2 class="panel-title">
-          <div class="panel-title-left">
-            <i class="fas fa-pen"></i> Buat Topik Diskusi Baru
-          </div>
-        </h2>
-        <label class="form-label">Judul Topik</label>
-        <input type="text" id="inputTitle" class="form-input" placeholder="Contoh: Pertanyaan tentang Bab 3" maxlength="200">
-        <label class="form-label">Isi / Pertanyaan</label>
-        <textarea id="inputBody" class="form-input" placeholder="Tulis pertanyaan atau topik diskusi..." rows="3"></textarea>
-        <button class="btn-primary" id="btnPost" onclick="submitPost()">
-          <i class="fas fa-paper-plane"></i> Posting
-        </button>
-      </div>
-
-      <!-- Daftar Topik -->
-      <div class="panel">
-        <h2 class="panel-title">
-          <div class="panel-title-left">
-            <i class="fas fa-list"></i> Daftar Diskusi
-          </div>
-          <span class="badge-count" id="postCount" style="display:none;">0</span>
-        </h2>
-        <div class="post-list" id="postList">
-          <div class="empty-msg">
-            <span class="emoji">💬</span>
-            Pilih Mapel & Kelas di atas
-          </div>
-        </div>
-      </div>
-
-      <div class="back-nav">
-        <a href="dashboard.html" class="btn-back-full" onclick="if(window.self!==window.top){window.top.location.href='dashboard.html#forum';return false;}">
-          <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
-        </a>
-      </div>
+      <div id="topicList" class="topic-list"></div>
     </div>
 
   </div>
 
+  <!-- MODAL: CREATE TOPIC -->
+  <div class="modal-overlay" id="modalCreateTopic">
+    <div class="modal-card">
+      <h2><i class="fas fa-plus"></i> Buat Topik Diskusi</h2>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
+        Buat topik baru untuk berdiskusi dengan guru dan teman sekelas.
+      </p>
+
+      <label class="form-label">Lokasi Diskusi <span class="req">*</span></label>
+      <select id="inputLocation" class="form-select">
+        <option value="">-- Pilih Lokasi --</option>
+        <optgroup label="Per Unit" id="optgroupUnit"></optgroup>
+        <optgroup label="Per Aktivitas" id="optgroupAktivitas"></optgroup>
+      </select>
+
+      <label class="form-label">Judul Topik <span class="req">*</span></label>
+      <input type="text" id="inputTopicTitle" class="form-input" placeholder="Contoh: Bagaimana cara kerja ekosistem?" maxlength="200">
+
+      <label class="form-label">Isi Diskusi <span class="req">*</span></label>
+      <textarea id="inputTopicBody" class="form-textarea" placeholder="Tulis pertanyaan atau topik diskusi..." maxlength="3000"></textarea>
+
+      <div id="createTopicError" class="alert alert-error hidden"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeCreateTopicModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveTopic" onclick="saveNewTopic()">
+          <i class="fas fa-paper-plane"></i> Kirim
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VIEW THREAD -->
+  <div class="modal-overlay" id="modalThread">
+    <div class="modal-card wide">
+      <div id="threadContent">
+        <div style="text-align:center; padding:2rem;"><div class="spinner"></div></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeThreadModal()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT POST -->
+  <div class="modal-overlay" id="modalEditPost">
+    <div class="modal-card">
+      <h2><i class="fas fa-pen"></i> Edit Post</h2>
+      <label class="form-label">Isi Post <span class="req">*</span></label>
+      <textarea id="editPostBody" class="form-textarea" placeholder="Isi diskusi..." maxlength="3000" style="min-height:140px;"></textarea>
+      <div id="editPostError" class="alert alert-error hidden"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeEditPostModal()">Batal</button>
+        <button class="btn-primary" id="btnSaveEdit" onclick="saveEditPost()">
+          <i class="fas fa-save"></i> Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DELETE POST -->
+  <div class="modal-overlay" id="modalDeletePost">
+    <div class="modal-card" style="max-width:440px;">
+      <h2 style="color:var(--danger);"><i class="fas fa-trash"></i> Hapus Post?</h2>
+      <p id="deletePostMessage" style="color:var(--text); margin-bottom:0.8rem;"></p>
+      <p style="font-size:0.75rem; color:#92400e; background:#fef3c7; padding:0.6rem 0.8rem; border-radius:8px; margin-bottom:1rem; border-left:3px solid var(--warning);">
+        ⚠️ Post yang dihapus tidak bisa dikembalikan. Semua reply di bawahnya juga akan terhapus.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Batal</button>
+        <button class="btn-danger" id="btnConfirmDelete" onclick="confirmDeletePost()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
-  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/core/cache.js"></script>
+<script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
+    // ============================================
+    // STATE
+    // ============================================
     let currentUser = null;
-    let allAssigns = [];
-    let allPosts = [];
-    let currentSubjectId = null;
-    let currentClassId = null;
+    let myClassIds = [];            // kelas siswa
+    let myUnits = [];               // units published di kelas siswa
+    let myActivities = [];          // unit_activities tipe diskusi di kelas siswa
+    let allTopics = [];
+    let filteredTopics = [];
+    let topicsReplyMap = {};
+    let activeTab = 'unit';
+    let activeThreadId = null;
+    let editingPostId = null;
+    let deletingPostId = null;
 
     // ============================================
     // INIT
@@ -687,351 +585,608 @@
       currentUser = await requireAuth('siswa');
       if (!currentUser) return;
 
-      try {
-        allAssigns = await getMyEnrolledSubjects(currentUser.id);
-
-        // Isi dropdown subject (unique)
-        const subjectsMap = {};
-        allAssigns.forEach(a => {
-          if (a.subjects) subjectsMap[a.subjects.id] = a.subjects;
-        });
-        const sel = document.getElementById('selSubject');
-        sel.innerHTML = '<option value="">-- Pilih Mapel --</option>' +
-          Object.values(subjectsMap).map(s => `<option value="${s.id}">${esc(s.name)}${s.code ? ' (' + esc(s.code) + ')' : ''}</option>`).join('');
-        sel.disabled = false;
-
-        // Prefill dari siswa_context
-        let prefillSubjectId = null;
-        let prefillClassId = null;
-
-        const ctx = sessionStorage.getItem('siswa_context');
-        if (ctx) {
-          try {
-            const parsed = JSON.parse(ctx);
-            prefillSubjectId = parsed.subjectId;
-            prefillClassId = parsed.classId;
-          } catch (e) {}
-        }
-
-        if (prefillSubjectId && subjectsMap[prefillSubjectId]) {
-          sel.value = String(prefillSubjectId);
-          populateKelasDropdown(prefillSubjectId, prefillClassId);
-        }
-      } catch (err) {
-        console.error('Init error:', err);
-      }
-
+      await loadAllData();
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
     })();
 
-    // ============================================
-    // SUBJECT CHANGE
-    // ============================================
-    function onSubjectChange() {
-      const sid = parseInt(document.getElementById('selSubject').value) || null;
-      if (!sid) {
-        document.getElementById('selClass').innerHTML = '<option value="">-- Pilih Mapel dulu --</option>';
-        document.getElementById('selClass').disabled = true;
-        resetPosts();
-        return;
-      }
-      populateKelasDropdown(sid, null);
-      resetPosts();
-    }
-
-    function populateKelasDropdown(sid, selectedClassId) {
-      const selClass = document.getElementById('selClass');
-      const classes = allAssigns.filter(a => a.subjects && a.subjects.id === sid)
-        .map(a => a.classes).filter(Boolean)
-        .filter((v, i, self) => self.findIndex(x => x.id === v.id) === i);
-
-      if (classes.length === 0) {
-        selClass.innerHTML = '<option value="">-- Tidak ada kelas --</option>';
-        selClass.disabled = true;
-        return;
-      }
-
-      selClass.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
-        classes.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-      selClass.disabled = false;
-
-      if (selectedClassId && classes.find(c => c.id === selectedClassId)) {
-        selClass.value = String(selectedClassId);
-        onKelasChange();
-      } else if (classes.length === 1) {
-        selClass.value = String(classes[0].id);
-        onKelasChange();
-      }
-    }
-
-    function onKelasChange() {
-      const sid = parseInt(document.getElementById('selSubject').value) || null;
-      const cid = parseInt(document.getElementById('selClass').value) || null;
-
-      if (!sid || !cid) {
-        resetPosts();
-        return;
-      }
-      currentSubjectId = sid;
-      currentClassId = cid;
-
-      // Simpan ke siswa_context
-      try {
-        const ctx = JSON.parse(sessionStorage.getItem('siswa_context') || '{}');
-        ctx.subjectId = sid;
-        ctx.classId = cid;
-        ctx.subjectName = document.getElementById('selSubject').selectedOptions[0]?.textContent || '';
-        ctx.className = document.getElementById('selClass').selectedOptions[0]?.textContent || '';
-        sessionStorage.setItem('siswa_context', JSON.stringify(ctx));
-      } catch (e) {}
-
-      loadPosts();
-    }
-
-    function resetPosts() {
-      allPosts = [];
-      document.getElementById('panelNewPost').style.display = 'none';
-      document.getElementById('postCount').style.display = 'none';
-      document.getElementById('postList').innerHTML = `
-        <div class="empty-msg">
-          <span class="emoji">💬</span>
-          Pilih Mapel & Kelas di atas
-        </div>`;
-    }
-
-    // ============================================
-    // LOAD POSTS
-    // ============================================
-    async function loadPosts() {
-      const list = document.getElementById('postList');
-      list.innerHTML = '<div class="empty-msg">Memuat diskusi...</div>';
-      document.getElementById('panelNewPost').style.display = 'block';
-      document.getElementById('postCount').style.display = 'none';
+    async function loadAllData() {
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('pageContent').classList.add('hidden');
 
       try {
-        allPosts = await getForumPosts(currentClassId, currentSubjectId);
-        await renderPosts();
-      } catch (err) {
-        console.error('loadPosts error:', err);
-        list.innerHTML = `
-          <div class="empty-msg" style="color:var(--danger);">
-            <span class="emoji">⚠️</span>
-            <strong>Gagal memuat diskusi</strong><br>
-            <small>${esc(err.message)}</small>
-          </div>`;
-      }
-    }
+        const client = initSupabase();
 
-    async function renderPosts() {
-      const c = document.getElementById('postList');
-      const countEl = document.getElementById('postCount');
+        // 1. Ambil kelas siswa
+        let enrollments = [];
+        try { enrollments = await getStudentClasses(currentUser.id); } catch (e) { console.warn(e); }
+        myClassIds = enrollments.map(e => e.classes?.id).filter(Boolean);
 
-      if (!allPosts || allPosts.length === 0) {
-        c.innerHTML = `
-          <div class="empty-msg">
-            <span class="emoji">💬</span>
-            Belum ada topik diskusi.<br>
-            Buat topik pertama di form atas!
-          </div>`;
-        countEl.style.display = 'none';
-        return;
-      }
-
-      countEl.textContent = allPosts.length;
-      countEl.style.display = 'inline-block';
-
-      // Load semua replies parallel
-      const postsWithReplies = await Promise.all(
-        allPosts.map(async (p) => {
-          let replies = [];
+        // 2. Ambil semua unit published di kelas siswa
+        myUnits = [];
+        for (const cid of myClassIds) {
           try {
-            replies = await getForumReplies(p.id);
-          } catch (e) {
-            console.warn('Gagal load replies untuk post', p.id, e);
-          }
-          return { post: p, replies };
-        })
-      );
+            const units = await getUnitsPublishedByClass(cid);
+            units.forEach(u => myUnits.push(u));
+          } catch (e) { /* ignore */ }
+        }
 
-      let html = '';
-      for (const { post: p, replies } of postsWithReplies) {
-        const author = p.profiles;
-        const isGuru = author && author.role === 'guru';
-        const isMine = author && author.id === currentUser.id;
+        // Dedup
+        const unitMap = {};
+        myUnits.forEach(u => { unitMap[String(u.id)] = u; });
+        myUnits = Object.values(unitMap);
 
-        const authorInitial = (author?.name || '?').charAt(0).toUpperCase();
-        const createdDate = new Date(p.created_at).toLocaleString('id-ID', {
-          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
-
-        const repliesHtml = replies.length === 0
-          ? '<div class="reply-empty">Belum ada balasan</div>'
-          : replies.map(r => {
-              const rAuthor = r.profiles;
-              const rIsGuru = rAuthor && rAuthor.role === 'guru';
-              const rDate = new Date(r.created_at).toLocaleString('id-ID', {
-                day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        // 3. Ambil aktivitas tipe diskusi dari unit-unit
+        myActivities = [];
+        for (const unit of myUnits) {
+          try {
+            const acts = await getUnitActivities(unit.id);
+            const diskusiActs = acts.filter(a => a.type === 'diskusi');
+            diskusiActs.forEach(a => {
+              myActivities.push({
+                ...a,
+                _unit: unit
               });
-              return `
-                <div class="reply">
-                  <div class="reply-header">
-                    <strong>${esc(rAuthor?.name || '-')}</strong>
-                    ${rIsGuru ? '<span class="badge-role">GURU</span>' : ''}
-                    <span class="time">${rDate}</span>
-                  </div>
-                  <div class="reply-body">${esc(r.body || '')}</div>
-                </div>`;
-            }).join('');
+            });
+          } catch (e) { /* ignore */ }
+        }
 
-        html += `
-          <div class="post">
-            <div class="post-header">
-              <div class="post-author">
-                <div class="author-avatar">${esc(authorInitial)}</div>
-                <div>
-                  <div class="author-name">
-                    ${esc(author?.name || '-')}
-                    ${isGuru ? '<span class="badge-role">GURU</span>' : ''}
-                  </div>
-                  <div class="post-time">
-                    <i class="fas fa-clock"></i> ${createdDate}
-                  </div>
-                </div>
+        // 4. Ambil semua topik forum
+        await loadTopics();
+        renderTabCounts();
+        populateKelasFilter();
+
+        // Set default tab
+        applyFilter();
+      } catch (err) {
+        console.error('Load all data error:', err);
+        showToast('Gagal memuat: ' + err.message, 'error');
+      }
+    }
+
+    async function loadTopics() {
+      const client = initSupabase();
+      const unitIds = myUnits.map(u => u.id);
+      const activityIds = myActivities.map(a => a.id);
+
+      if (unitIds.length === 0 && activityIds.length === 0) {
+        allTopics = [];
+        topicsReplyMap = {};
+        return;
+      }
+
+      let query = client.from('forum_posts')
+        .select(`
+          id, unit_id, activity_id, class_id, subject_id, title, body, parent_id, created_at, updated_at, author_id, is_pinned,
+          profiles!forum_posts_author_id_fkey (id, name, role)
+        `)
+        .is('parent_id', null)
+        .order('created_at', { ascending: false });
+
+      const orConditions = [];
+      if (unitIds.length > 0) orConditions.push(`unit_id.in.(${unitIds.join(',')})`);
+      if (activityIds.length > 0) orConditions.push(`activity_id.in.(${activityIds.join(',')})`);
+      query = query.or(orConditions.join(','));
+
+      const { data: topics, error } = await query;
+      if (error) throw error;
+      allTopics = topics || [];
+
+      // Ambil jumlah reply per topik
+      topicsReplyMap = {};
+      if (allTopics.length > 0) {
+        const topicIds = allTopics.map(t => t.id);
+        const { data: replies } = await client.from('forum_posts')
+          .select('id, parent_id')
+          .in('parent_id', topicIds);
+        (replies || []).forEach(r => {
+          topicsReplyMap[r.parent_id] = (topicsReplyMap[r.parent_id] || 0) + 1;
+        });
+      }
+    }
+
+    function populateKelasFilter() {
+      const classes = {};
+      myUnits.forEach(u => {
+        const cls = u.annual_plans?.classes;
+        if (cls) classes[String(cls.id)] = cls;
+      });
+      const sel = document.getElementById('filterKelas');
+      sel.innerHTML = '<option value="">Semua Kelas</option>' +
+        Object.values(classes).map(c =>
+          `<option value="${c.id}">${escapeHtml(c.name)}</option>`
+        ).join('');
+    }
+
+    function renderTabCounts() {
+      const unitCount = allTopics.filter(t => t.unit_id).length;
+      const aktCount = allTopics.filter(t => t.activity_id).length;
+      document.getElementById('unitTabCount').textContent = unitCount;
+      document.getElementById('aktivitasTabCount').textContent = aktCount;
+    }
+
+    // ============================================
+    // TABS
+    // ============================================
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.forum-tab').forEach(el => {
+        el.classList.toggle('active', el.dataset.tab === tab);
+      });
+      applyFilter();
+    }
+
+    // ============================================
+    // FILTER
+    // ============================================
+    function applyFilter() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const kelasFilter = document.getElementById('filterKelas').value;
+      const sort = document.getElementById('filterSort').value;
+
+      let filtered = allTopics.filter(t => {
+        if (activeTab === 'unit' && !t.unit_id) return false;
+        if (activeTab === 'aktivitas' && !t.activity_id) return false;
+        if (keyword) {
+          const title = (t.title || '').toLowerCase();
+          const body = (t.body || '').toLowerCase();
+          const author = (t.profiles?.name || '').toLowerCase();
+          if (!title.includes(keyword) && !body.includes(keyword) && !author.includes(keyword)) return false;
+        }
+        if (kelasFilter && String(t.class_id) !== String(kelasFilter)) return false;
+        return true;
+      });
+
+      if (sort === 'newest') filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      else if (sort === 'oldest') filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      else if (sort === 'replies') filtered.sort((a, b) => (topicsReplyMap[b.id] || 0) - (topicsReplyMap[a.id] || 0));
+
+      filteredTopics = filtered;
+      renderTopicList();
+    }
+
+    // ============================================
+    // RENDER LIST
+    // ============================================
+    function renderTopicList() {
+      const container = document.getElementById('topicList');
+
+      if (filteredTopics.length === 0) {
+        const isUnit = activeTab === 'unit';
+        container.innerHTML = `
+          <div class="empty-row">
+            <span class="emoji">${isUnit ? '📚' : '📝'}</span>
+            <h3>Belum Ada Topik Diskusi</h3>
+            <p>${isUnit
+              ? 'Mulai diskusi baru di level unit untuk bertanya atau berbagi dengan guru dan teman.'
+              : 'Belum ada diskusi di aktivitas. Tunggu guru membuat topik atau mulai dari tab Unit.'}</p>
+            <button class="btn-primary" onclick="openCreateTopicModal()">
+              <i class="fas fa-plus"></i> Buat Topik Pertama
+            </button>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = filteredTopics.map(t => {
+        const author = t.profiles || {};
+        const authorName = author.name || 'Anonim';
+        const authorRole = author.role || 'siswa';
+        const replyCount = topicsReplyMap[t.id] || 0;
+        const isUnit = !!t.unit_id;
+
+        let label = '-';
+        if (isUnit) {
+          const unit = myUnits.find(u => String(u.id) === String(t.unit_id));
+          if (unit) label = unit.annual_plans?.classes?.name + ' · ' + unit.title;
+        } else {
+          const act = myActivities.find(a => String(a.id) === String(t.activity_id));
+          if (act) label = act._unit?.annual_plans?.classes?.name + ' · ' + act.title;
+        }
+
+        return `
+          <div class="topic-card ${t.is_pinned ? 'pinned' : ''}" onclick="openThread('${t.id}')">
+            <div class="topic-header">
+              <div class="topic-title">${escapeHtml(t.title)}</div>
+              <div class="topic-badges">
+                ${t.is_pinned ? '<span class="topic-badge pinned">📌 Pinned</span>' : ''}
+                <span class="topic-badge ${isUnit ? 'unit' : 'aktivitas'}">
+                  <i class="fas fa-${isUnit ? 'book' : 'file-pen'}"></i>
+                  ${isUnit ? 'Unit' : 'Aktivitas'}
+                </span>
               </div>
             </div>
-            <div class="post-title">${esc(p.title)}</div>
-            <div class="post-body">${esc(p.body || '')}</div>
-
-            <div class="reply-list">
-              ${repliesHtml}
+            <div class="topic-body-preview">${escapeHtml(t.body || '')}</div>
+            <div class="topic-meta">
+              <span><i class="fas fa-${authorRole === 'guru' ? 'chalkboard-teacher' : 'user-graduate'}"></i> <strong>${escapeHtml(authorName)}</strong></span>
+              <span><i class="fas fa-location-dot"></i> ${escapeHtml(label)}</span>
+              <span><i class="fas fa-clock"></i> ${formatDate(t.created_at)}</span>
+              <span class="reply-count-badge"><i class="fas fa-comments"></i> ${replyCount} balasan</span>
             </div>
-
-            <div class="post-actions">
-              <button class="btn-sm-outline" onclick="toggleReplyForm(${p.id})">
-                <i class="fas fa-reply"></i> Balas
-              </button>
-              ${isMine ? `
-                <button class="btn-sm-outline danger" onclick="deletePostConfirm(${p.id})">
-                  <i class="fas fa-trash"></i> Hapus
-                </button>
-              ` : ''}
-            </div>
-
-            <div class="reply-form" id="replyForm-${p.id}">
-              <textarea id="replyBody-${p.id}" class="form-input" placeholder="Tulis balasan..." rows="2"></textarea>
-              <button class="btn-primary" onclick="submitReply(${p.id})" style="font-size:0.78rem; padding:0.5rem 1rem;">
-                <i class="fas fa-paper-plane"></i> Kirim Balasan
-              </button>
-            </div>
-          </div>
-        `;
-      }
-
-      c.innerHTML = html;
-    }
-
-    function toggleReplyForm(postId) {
-      const el = document.getElementById('replyForm-' + postId);
-      if (!el) return;
-      const isOpen = el.classList.contains('active');
-      document.querySelectorAll('.reply-form.active').forEach(f => f.classList.remove('active'));
-      if (!isOpen) {
-        el.classList.add('active');
-        const ta = el.querySelector('textarea');
-        if (ta) setTimeout(() => ta.focus(), 100);
-      }
+          </div>`;
+      }).join('');
     }
 
     // ============================================
-    // SUBMIT POST
+    // CREATE TOPIC
     // ============================================
-    async function submitPost() {
-      if (!currentSubjectId || !currentClassId) {
-        alert('Pilih Mapel & Kelas terlebih dahulu.');
-        return;
+    function openCreateTopicModal() {
+      document.getElementById('inputLocation').value = '';
+      document.getElementById('inputTopicTitle').value = '';
+      document.getElementById('inputTopicBody').value = '';
+      document.getElementById('createTopicError').classList.add('hidden');
+      document.getElementById('btnSaveTopic').disabled = false;
+      document.getElementById('btnSaveTopic').innerHTML = '<i class="fas fa-paper-plane"></i> Kirim';
+
+      const unitGroup = document.getElementById('optgroupUnit');
+      const actGroup = document.getElementById('optgroupAktivitas');
+
+      unitGroup.innerHTML = myUnits.map(u => {
+        const kelas = u.annual_plans?.classes?.name || '-';
+        return `<option value="unit:${u.id}">${escapeHtml(kelas)} · ${escapeHtml(u.title)}</option>`;
+      }).join('');
+
+      if (myActivities.length === 0) {
+        actGroup.innerHTML = '<option disabled>(Belum ada aktivitas diskusi)</option>';
+      } else {
+        actGroup.innerHTML = myActivities.map(a => {
+          const kelas = a._unit?.annual_plans?.classes?.name || '-';
+          return `<option value="aktivitas:${a.id}">${escapeHtml(kelas)} · ${escapeHtml(a.title)}</option>`;
+        }).join('');
       }
 
-      const title = document.getElementById('inputTitle').value.trim();
-      const body = document.getElementById('inputBody').value.trim();
-      if (!title) {
-        alert('Judul wajib diisi');
-        return;
-      }
+      document.getElementById('modalCreateTopic').classList.add('active');
+    }
 
-      const btn = document.getElementById('btnPost');
+    function closeCreateTopicModal() {
+      document.getElementById('modalCreateTopic').classList.remove('active');
+    }
+
+    async function saveNewTopic() {
+      const location = document.getElementById('inputLocation').value;
+      const title = document.getElementById('inputTopicTitle').value.trim();
+      const body = document.getElementById('inputTopicBody').value.trim();
+      const errBox = document.getElementById('createTopicError');
+      const btn = document.getElementById('btnSaveTopic');
+
+      errBox.classList.add('hidden');
+      if (!location) { errBox.textContent = 'Pilih lokasi diskusi.'; errBox.classList.remove('hidden'); return; }
+      if (!title) { errBox.textContent = 'Judul wajib diisi.'; errBox.classList.remove('hidden'); return; }
+      if (!body) { errBox.textContent = 'Isi diskusi wajib diisi.'; errBox.classList.remove('hidden'); return; }
+
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memposting...';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
 
       try {
-        await createForumPost({
-          classId: currentClassId,
-          subjectId: currentSubjectId,
-          authorId: currentUser.id,
+        const [type, id] = location.split(':');
+        const client = initSupabase();
+
+        let unitId = null, activityId = null, classId = null, subjectId = null;
+
+        if (type === 'unit') {
+          unitId = id;
+          const unit = myUnits.find(u => String(u.id) === String(id));
+          if (unit) {
+            classId = unit.annual_plans?.class_id;
+            subjectId = unit.annual_plans?.subject_id;
+          }
+        } else {
+          activityId = id;
+          const act = myActivities.find(a => String(a.id) === String(id));
+          if (act) {
+            unitId = act._unit?.id;
+            classId = act._unit?.annual_plans?.class_id;
+            subjectId = act._unit?.annual_plans?.subject_id;
+          }
+        }
+
+        const { error } = await client.from('forum_posts').insert([{
+          unit_id: unitId,
+          activity_id: activityId,
+          class_id: classId,
+          subject_id: subjectId,
+          author_id: currentUser.id,
           title,
-          body
-        });
-        document.getElementById('inputTitle').value = '';
-        document.getElementById('inputBody').value = '';
-        showToast('✅ Topik berhasil diposting');
-        await loadPosts();
+          body,
+          parent_id: null
+        }]);
+
+        if (error) throw error;
+
+        closeCreateTopicModal();
+        showToast('✅ Topik diskusi berhasil dibuat', 'success');
+        await loadTopics();
+        renderTabCounts();
+        applyFilter();
       } catch (err) {
-        console.error('submitPost error:', err);
-        alert('Gagal: ' + err.message);
-      } finally {
+        console.error('Save topic error:', err);
+        errBox.textContent = 'Gagal: ' + (err.message || 'Unknown error');
+        errBox.classList.remove('hidden');
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Posting';
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim';
       }
     }
 
     // ============================================
-    // SUBMIT REPLY
+    // OPEN THREAD
     // ============================================
-    async function submitReply(parentId) {
-      const ta = document.getElementById('replyBody-' + parentId);
-      if (!ta) return;
-      const body = ta.value.trim();
-      if (!body) {
-        alert('Balasan tidak boleh kosong');
-        return;
-      }
+    async function openThread(topicId) {
+      activeThreadId = topicId;
+      const modal = document.getElementById('modalThread');
+      const content = document.getElementById('threadContent');
+      content.innerHTML = '<div style="text-align:center; padding:2rem;"><div class="spinner"></div></div>';
+      modal.classList.add('active');
 
       try {
-        await createForumPost({
-          classId: currentClassId,
-          subjectId: currentSubjectId,
-          authorId: currentUser.id,
-          title: 'Re:',
-          body,
-          parentId
-        });
-        showToast('✅ Balasan dikirim');
-        await renderPosts();
+        const client = initSupabase();
+
+        // Ambil topik
+        const { data: topic, error: e1 } = await client.from('forum_posts')
+          .select(`
+            id, unit_id, activity_id, title, body, created_at, updated_at, author_id,
+            profiles!forum_posts_author_id_fkey (id, name, role)
+          `)
+          .eq('id', topicId)
+          .single();
+        if (e1) throw e1;
+
+        // Ambil replies
+        const { data: replies, error: e2 } = await client.from('forum_posts')
+          .select(`
+            id, body, created_at, updated_at, author_id,
+            profiles!forum_posts_author_id_fkey (id, name, role)
+          `)
+          .eq('parent_id', topicId)
+          .order('created_at', { ascending: true });
+        if (e2) throw e2;
+
+        renderThread(topic, replies || []);
       } catch (err) {
-        console.error('submitReply error:', err);
-        alert('Gagal: ' + err.message);
+        console.error('Open thread error:', err);
+        content.innerHTML = `<div style="color:var(--danger); padding:1rem;">Gagal: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function closeThreadModal() {
+      document.getElementById('modalThread').classList.remove('active');
+      activeThreadId = null;
+    }
+
+    function renderThread(topic, replies) {
+      const content = document.getElementById('threadContent');
+      const author = topic.profiles || {};
+      const authorName = author.name || 'Anonim';
+
+      let location = '-';
+      if (topic.unit_id) {
+        const unit = myUnits.find(u => String(u.id) === String(topic.unit_id));
+        if (unit) location = unit.annual_plans?.classes?.name + ' · ' + unit.title;
+      } else if (topic.activity_id) {
+        const act = myActivities.find(a => String(a.id) === String(topic.activity_id));
+        if (act) location = act._unit?.annual_plans?.classes?.name + ' · ' + act.title;
+      }
+
+      content.innerHTML = `
+        <div class="thread-header">
+          <div class="thread-header-title">${escapeHtml(topic.title)}</div>
+          <div class="thread-header-meta">
+            <span><i class="fas fa-user"></i> <strong>${escapeHtml(authorName)}</strong></span>
+            <span><i class="fas fa-location-dot"></i> ${escapeHtml(location)}</span>
+            <span><i class="fas fa-clock"></i> ${formatDate(topic.created_at)}</span>
+          </div>
+        </div>
+        <div class="thread-posts">
+          ${renderPostItem(topic, 'opening')}
+          ${replies.map(r => renderPostItem(r, 'reply')).join('')}
+        </div>
+        <div class="reply-form-area">
+          <label class="form-label" style="margin-bottom:0.4rem;">Balas Diskusi</label>
+          <textarea id="replyBodyInput" placeholder="Tulis balasan..." maxlength="2000"></textarea>
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="btn-primary" onclick="submitReply()">
+              <i class="fas fa-paper-plane"></i> Kirim Balasan
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPostItem(post, extraClass) {
+      const author = post.profiles || {};
+      const authorName = author.name || 'Anonim';
+      const authorRole = author.role || 'siswa';
+      const initials = authorName.charAt(0).toUpperCase();
+      const isOwner = String(post.author_id) === String(currentUser.id);
+      const edited = post.updated_at && post.created_at && post.updated_at !== post.created_at;
+      const roleClass = authorRole === 'guru' ? 'guru' : 'siswa';
+      const roleLabel = authorRole === 'guru' ? 'Guru' : 'Siswa';
+
+      return `
+        <div class="post-item ${extraClass}">
+          <div class="post-header">
+            <div class="post-avatar" style="${authorRole === 'guru' ? 'background:linear-gradient(135deg,var(--success),var(--success-dark));' : ''}">${initials}</div>
+            <div class="post-author-info">
+              <div class="post-author-name">
+                ${escapeHtml(authorName)}
+                <span class="post-author-role ${roleClass}">${roleLabel}</span>
+              </div>
+              <div class="post-time">${formatDate(post.created_at)}</div>
+            </div>
+            ${isOwner ? `
+              <div class="post-actions">
+                <button class="btn-icon-mini" title="Edit" onclick="openEditPost('${post.id}')">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn-icon-mini danger" title="Hapus" onclick="openDeletePost('${post.id}', ${extraClass === 'opening'})">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            ` : ''}
+          </div>
+          <div class="post-body">${escapeHtml(post.body || '')}${edited ? '<span class="post-edited-tag">(diedit)</span>' : ''}</div>
+        </div>
+      `;
+    }
+
+    async function submitReply() {
+      if (!activeThreadId) return;
+      const textarea = document.getElementById('replyBodyInput');
+      const body = textarea.value.trim();
+      if (!body) { showToast('Balasan tidak boleh kosong', 'error'); return; }
+
+      try {
+        const client = initSupabase();
+        const { data: topic } = await client.from('forum_posts')
+          .select('unit_id, activity_id, class_id, subject_id')
+          .eq('id', activeThreadId)
+          .single();
+
+        const { error } = await client.from('forum_posts').insert([{
+          unit_id: topic?.unit_id || null,
+          activity_id: topic?.activity_id || null,
+          class_id: topic?.class_id || null,
+          subject_id: topic?.subject_id || null,
+          author_id: currentUser.id,
+          title: null,
+          body: body,
+          parent_id: activeThreadId
+        }]);
+
+        if (error) throw error;
+
+        textarea.value = '';
+        showToast('✅ Balasan terkirim', 'success');
+        await openThread(activeThreadId);
+        await loadTopics();
+        renderTabCounts();
+        applyFilter();
+      } catch (err) {
+        console.error('Reply error:', err);
+        showToast('Gagal: ' + err.message, 'error');
+      }
+    }
+
+    // ============================================
+    // EDIT POST
+    // ============================================
+    function openEditPost(postId) {
+      editingPostId = postId;
+      const client = initSupabase();
+      document.getElementById('editPostError').classList.add('hidden');
+      document.getElementById('btnSaveEdit').disabled = false;
+      document.getElementById('btnSaveEdit').innerHTML = '<i class="fas fa-save"></i> Simpan';
+
+      client.from('forum_posts').select('body').eq('id', postId).single()
+        .then(({ data, error }) => {
+          if (error) { showToast('Gagal load: ' + error.message, 'error'); return; }
+          document.getElementById('editPostBody').value = data.body || '';
+          document.getElementById('modalEditPost').classList.add('active');
+        });
+    }
+
+    function closeEditPostModal() {
+      document.getElementById('modalEditPost').classList.remove('active');
+      editingPostId = null;
+    }
+
+    async function saveEditPost() {
+      if (!editingPostId) return;
+      const body = document.getElementById('editPostBody').value.trim();
+      const errBox = document.getElementById('editPostError');
+      const btn = document.getElementById('btnSaveEdit');
+
+      errBox.classList.add('hidden');
+      if (!body) { errBox.textContent = 'Isi tidak boleh kosong.'; errBox.classList.remove('hidden'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      try {
+        const client = initSupabase();
+        const { error } = await client.from('forum_posts')
+          .update({ body, updated_at: new Date().toISOString() })
+          .eq('id', editingPostId);
+        if (error) throw error;
+
+        closeEditPostModal();
+        showToast('✅ Post diperbarui', 'success');
+        await openThread(activeThreadId);
+        await loadTopics();
+        applyFilter();
+      } catch (err) {
+        console.error('Edit post error:', err);
+        errBox.textContent = 'Gagal: ' + err.message;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
       }
     }
 
     // ============================================
     // DELETE POST
     // ============================================
-    async function deletePostConfirm(id) {
-      if (!confirm('Hapus topik ini beserta semua balasannya?')) return;
+    function openDeletePost(postId, isOpening) {
+      deletingPostId = postId;
+      document.getElementById('deletePostMessage').innerHTML =
+        isOpening ? 'Hapus topik diskusi ini beserta semua balasannya?' : 'Hapus balasan ini?';
+      document.getElementById('btnConfirmDelete').disabled = false;
+      document.getElementById('btnConfirmDelete').textContent = 'Ya, Hapus';
+      document.getElementById('modalDeletePost').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('modalDeletePost').classList.remove('active');
+      deletingPostId = null;
+    }
+
+    async function confirmDeletePost() {
+      if (!deletingPostId) return;
+      const btn = document.getElementById('btnConfirmDelete');
+      btn.disabled = true;
+      btn.textContent = 'Menghapus...';
+
       try {
-        await deleteForumPost(id);
-        showToast('🗑️ Topik dihapus');
-        await loadPosts();
+        const client = initSupabase();
+        const { error } = await client.from('forum_posts').delete().eq('id', deletingPostId);
+        if (error) throw error;
+
+        closeDeleteModal();
+        showToast('🗑️ Post dihapus', 'success');
+
+        if (String(deletingPostId) === String(activeThreadId)) {
+          closeThreadModal();
+        } else if (activeThreadId) {
+          await openThread(activeThreadId);
+        }
+
+        await loadTopics();
+        renderTabCounts();
+        applyFilter();
       } catch (err) {
-        console.error('deletePost error:', err);
-        alert('Gagal: ' + err.message);
+        console.error('Delete error:', err);
+        showToast('Gagal: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Ya, Hapus';
       }
     }
 
     // ============================================
     // UTILS
     // ============================================
-    function esc(t) {
+    function formatDate(iso) {
+      if (!iso) return '-';
+      try {
+        const d = new Date(iso);
+        const now = new Date();
+        const diff = (now - d) / 1000;
+        if (diff < 60) return 'Baru saja';
+        if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
+        if (diff < 604800) return Math.floor(diff / 86400) + ' hari lalu';
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch { return iso; }
+    }
+
+    function escapeHtml(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');
       d.textContent = String(t);
@@ -1043,8 +1198,17 @@
       t.textContent = msg;
       t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
       clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
     }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeCreateTopicModal();
+        closeThreadModal();
+        closeEditPostModal();
+        closeDeleteModal();
+      }
+    });
   </script>
 </body>
 </html>

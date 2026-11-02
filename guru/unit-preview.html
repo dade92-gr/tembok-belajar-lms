@@ -14,7 +14,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --green: #10b981; --green-dark: #047857; --green-light: #d1fae5; --green-lighter: #ecfdf5;
-      --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444;
+      --primary: #3b82f6; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6; --pink: #ec4899;
       --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
       --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
       --border: #e2e8f0; --radius: 12px;
@@ -35,7 +35,9 @@
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; padding: 0 1rem;
       gap: 1rem; box-shadow: var(--shadow-sm); z-index: 50;
+      overflow-x: auto; overflow-y: hidden;
     }
+    .preview-topbar::-webkit-scrollbar { height: 3px; }
     .btn-back {
       display: inline-flex; align-items: center; gap: 6px;
       background: var(--surface); border: 1px solid var(--border);
@@ -45,7 +47,7 @@
       flex-shrink: 0;
     }
     .btn-back:hover { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
-    .topbar-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .topbar-title { flex: 1; min-width: 200px; display: flex; flex-direction: column; }
     .topbar-title-main {
       font-size: 0.95rem; font-weight: 800; color: var(--text);
       line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -226,6 +228,215 @@
     .heading-render-block.h2 { font-size: 1.4rem; }
     .heading-render-block.h3 { font-size: 1.15rem; }
 
+    /* LKPD read-only */
+    .lkpd-field { margin-bottom: 0.6rem; }
+    .lkpd-label { font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
+    .lkpd-label .req { color: var(--danger); margin-left: 2px; }
+    .lkpd-readonly-input {
+      width: 100%; padding: 0.55rem 0.85rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.85rem; color: var(--text-muted);
+      background: var(--bg-soft); font-family: inherit;
+      font-style: italic;
+    }
+    .lkpd-readonly-textarea {
+      width: 100%; padding: 0.55rem 0.85rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.85rem; color: var(--text-muted);
+      background: var(--bg-soft); font-family: inherit;
+      font-style: italic; resize: vertical; min-height: 80px;
+    }
+    .lkpd-option-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.8rem; margin-bottom: 0.4rem;
+      background: var(--bg-soft); border-radius: 6px;
+      font-size: 0.85rem; color: var(--text-secondary);
+      border: 1px solid transparent;
+    }
+    .lkpd-option-item input { pointer-events: none; accent-color: var(--green); }
+    .identitas-box {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem 1.2rem; border-left: 3px solid var(--green);
+    }
+    .identitas-row {
+      display: flex; gap: 1rem; padding: 0.3rem 0;
+      font-size: 0.85rem; flex-wrap: wrap;
+    }
+    .identitas-row .label { font-weight: 600; color: var(--text-muted); min-width: 100px; }
+    .identitas-row .value { color: var(--text); font-weight: 600; }
+    .petunjuk-box {
+      background: #fef3c7; border-left: 4px solid var(--warning);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .petunjuk-box .petunjuk-title {
+      font-weight: 800; color: #92400e; margin-bottom: 0.5rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .petunjuk-box .petunjuk-text {
+      font-size: 0.88rem; color: #78350f; white-space: pre-wrap; line-height: 1.6;
+    }
+    .tabel-isian-wrap { overflow-x: auto; }
+    .tabel-isian-table {
+      width: 100%; border-collapse: collapse; font-size: 0.85rem;
+    }
+    .tabel-isian-table th {
+      padding: 0.5rem 0.7rem; background: var(--green-lighter);
+      border: 1px solid var(--border); text-align: left;
+      font-weight: 700; color: var(--green-dark);
+    }
+    .tabel-isian-table td {
+      padding: 0.5rem 0.7rem; border: 1px solid var(--border);
+      color: var(--text-muted); font-style: italic;
+    }
+    .penilaian-diri-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.8rem; margin-bottom: 0.4rem;
+      background: var(--bg-soft); border-radius: 6px;
+      font-size: 0.85rem; color: var(--text-secondary);
+    }
+    .submit-btn-preview {
+      text-align: center; padding: 1rem;
+      background: var(--green-lighter); border: 2px dashed var(--green);
+      border-radius: 8px;
+    }
+    .submit-btn-preview button {
+      padding: 0.7rem 1.8rem; background: var(--green); color: white;
+      border: none; border-radius: 8px; font-weight: 700;
+      font-size: 0.9rem; cursor: not-allowed; opacity: 0.8;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: inherit;
+    }
+
+    /* ASESMEN */
+    .asesmen-setting-box {
+      background: #ede9fe; border-left: 4px solid var(--purple);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .asesmen-setting-title {
+      font-weight: 800; color: #6d28d9; margin-bottom: 0.5rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .asesmen-setting-info { font-size: 0.85rem; color: #5b21b6; display: flex; flex-direction: column; gap: 4px; }
+    .asesmen-setting-info strong { color: #4c1d95; }
+    .asesmen-soal-box {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem 1.2rem; border-left: 3px solid var(--purple);
+      margin-bottom: 0.6rem;
+    }
+    .asesmen-soal-num {
+      display: inline-block; background: var(--purple); color: white;
+      padding: 2px 10px; border-radius: 4px;
+      font-size: 0.68rem; font-weight: 700; margin-bottom: 0.5rem;
+    }
+    .asesmen-soal-question {
+      font-size: 0.92rem; font-weight: 600; color: var(--text);
+      margin-bottom: 0.7rem; line-height: 1.5;
+    }
+    .asesmen-jawaban-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.8rem; margin-bottom: 0.3rem;
+      background: white; border-radius: 6px;
+      font-size: 0.85rem; border: 1px solid var(--border);
+    }
+    .asesmen-jawaban-item input { pointer-events: none; accent-color: var(--purple); }
+    .asesmen-jawaban-label {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--bg-soft); display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.72rem; flex-shrink: 0;
+    }
+    .asesmen-jodoh-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    .asesmen-jodoh-col { display: flex; flex-direction: column; gap: 0.4rem; }
+    .asesmen-jodoh-item {
+      padding: 0.45rem 0.7rem; background: white;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.82rem;
+    }
+    .asesmen-jodoh-item strong { color: var(--purple); margin-right: 4px; }
+    .asesmen-bs-row {
+      display: flex; gap: 0.6rem;
+    }
+    .asesmen-bs-item {
+      flex: 1; padding: 0.6rem;
+      border: 2px solid var(--border); border-radius: 6px;
+      text-align: center; font-weight: 700;
+      font-size: 0.85rem; background: white; color: var(--text-secondary);
+    }
+
+    /* REFLEKSI */
+    .refleksi-question-box {
+      background: #fce7f3; border-left: 4px solid var(--pink);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .refleksi-question-title {
+      font-weight: 800; color: #be185d; margin-bottom: 0.5rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .refleksi-question-text {
+      font-size: 0.9rem; color: #831843; margin-bottom: 0.6rem;
+      line-height: 1.6;
+    }
+    .mood-grid {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .mood-item-card {
+      flex: 1; min-width: 80px;
+      display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+      padding: 0.7rem; background: white;
+      border: 2px solid var(--border); border-radius: 8px;
+      font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+    }
+    .mood-item-card .mood-emoji { font-size: 2rem; line-height: 1; }
+
+    /* DISKUSI */
+    .diskusi-topik-box {
+      background: #d1fae5; border-left: 4px solid var(--green);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .diskusi-topik-title {
+      font-weight: 800; color: #047857; margin-bottom: 0.5rem;
+      font-size: 0.95rem; display: flex; align-items: center; gap: 6px;
+    }
+    .diskusi-topik-desc {
+      font-size: 0.88rem; color: #065f46; white-space: pre-wrap;
+      line-height: 1.6;
+    }
+    .diskusi-aturan-box {
+      background: #fef3c7; border-left: 4px solid var(--warning);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .diskusi-aturan-title {
+      font-weight: 800; color: #92400e; margin-bottom: 0.5rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .diskusi-aturan-text {
+      font-size: 0.85rem; color: #78350f; white-space: pre-wrap;
+      line-height: 1.6;
+    }
+    .komentar-box {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem; border: 1px solid var(--border);
+    }
+    .komentar-header {
+      font-weight: 800; color: #047857; margin-bottom: 0.6rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .komentar-input-preview {
+      display: flex; gap: 0.5rem;
+      padding: 0.5rem; background: white;
+      border: 1px solid var(--border); border-radius: 8px;
+    }
+    .komentar-input-preview input {
+      flex: 1; border: none; outline: none; font-family: inherit;
+      font-size: 0.85rem; color: var(--text-muted); font-style: italic;
+    }
+    .komentar-input-preview button {
+      padding: 0.3rem 0.8rem; background: var(--green); color: white;
+      border: none; border-radius: 6px; font-weight: 700;
+      font-size: 0.75rem; opacity: 0.6; cursor: not-allowed;
+    }
+
     /* Footer nav */
     .preview-footer-nav {
       background: var(--surface); border-top: 1px solid var(--border);
@@ -252,12 +463,10 @@
     .footer-nav-btn.secondary:hover:not(:disabled) { border-color: var(--green); color: var(--green-dark); }
     .footer-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Empty + loading */
     .empty-state { text-align: center; padding: 4rem 1.5rem; color: var(--text-muted); max-width: 500px; margin: 0 auto; }
     .empty-state .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
     .empty-state h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
     .empty-state p { font-size: 0.85rem; line-height: 1.6; }
-    .empty-state .sub-text { font-size: 0.78rem; margin-top: 0.5rem; color: var(--text-muted); }
 
     .loading-box {
       display: flex; align-items: center; justify-content: center;
@@ -307,7 +516,7 @@
         <div class="topbar-title-main" id="topbarTitle">-</div>
         <div class="topbar-title-sub" id="topbarSub">-</div>
       </div>
-      <select id="kelasSelector" class="kelas-selector" onchange="onKelasChange()" title="Pilih kelas untuk preview">
+      <select id="kelasSelector" class="kelas-selector" onchange="onKelasChange()" title="Pilih kelas">
         <option value="">Memuat...</option>
       </select>
       <span class="preview-mode-badge"><i class="fas fa-eye"></i> Preview</span>
@@ -349,7 +558,8 @@
     </div>
   </div>
 
-  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/core/cache.js"></script>
+<script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
   <script>
     // ============================================
@@ -357,11 +567,12 @@
     // ============================================
     let currentUser = null;
     let currentUnit = null;
-    let unitClasses = [];          // semua kelas yang terkait unit
+    let currentPlan = null;
+    let unitClasses = [];
     let selectedClassId = null;
-    let activities = [];           // activities yang akan dirender (dari snapshot ATAU live)
+    let activities = [];
     let activeActivityId = null;
-    let renderSource = 'live';     // 'snapshot' | 'live'
+    let renderSource = 'live';
 
     const ACTIVITY_TYPE_LABEL = {
       materi: 'Materi', lkpd: 'LKPD', asesmen: 'Asesmen',
@@ -377,15 +588,8 @@
     // ============================================
     function extractDriveId(url) {
       if (!url) return null;
-      const patterns = [
-        /\/file\/d\/([a-zA-Z0-9_-]+)/,
-        /\/d\/([a-zA-Z0-9_-]+)/,
-        /[?&]id=([a-zA-Z0-9_-]+)/
-      ];
-      for (const p of patterns) {
-        const m = url.match(p);
-        if (m) return m[1];
-      }
+      const patterns = [/\/file\/d\/([a-zA-Z0-9_-]+)/, /\/d\/([a-zA-Z0-9_-]+)/, /[?&]id=([a-zA-Z0-9_-]+)/];
+      for (const p of patterns) { const m = url.match(p); if (m) return m[1]; }
       return null;
     }
     function convertDriveUrl(url, type = 'image') {
@@ -418,7 +622,7 @@
 
       const unitId = new URLSearchParams(window.location.search).get('unitId');
       if (!unitId) {
-        document.getElementById('loadingScreen').innerHTML = '<p style="color:var(--danger);">Parameter unitId tidak ditemukan.</p>';
+        document.getElementById('loadingScreen').innerHTML = '<p style="color:var(--danger);">unitId tidak ditemukan.</p>';
         return;
       }
 
@@ -439,17 +643,19 @@
           <span><i class="fas fa-graduation-cap"></i> Semester ${escapeHtml(String(currentUnit.annual_plans?.semester || '-'))}</span>
         `;
 
-        // Load kelas terkait
         await loadKelasSelector();
-
-        // Render
         await loadAndRender();
-        
+
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('previewScreen').classList.remove('hidden');
       } catch (err) {
         console.error('Init error:', err);
-        document.getElementById('loadingScreen').innerHTML = `<div style="text-align:center; color:var(--danger); padding:2rem;"><i class="fas fa-triangle-exclamation" style="font-size:2rem; margin-bottom:1rem;"></i><p>${escapeHtml(err.message)}</p><button class="btn-back" onclick="exitPreview()" style="margin-top:1rem;"><i class="fas fa-arrow-left"></i> Kembali</button></div>`;
+        document.getElementById('loadingScreen').innerHTML =
+          `<div style="text-align:center; color:var(--danger); padding:2rem;">
+            <i class="fas fa-triangle-exclamation" style="font-size:2rem; margin-bottom:1rem;"></i>
+            <p>${escapeHtml(err.message)}</p>
+            <button class="btn-back" onclick="exitPreview()" style="margin-top:1rem;"><i class="fas fa-arrow-left"></i> Kembali</button>
+          </div>`;
       }
     })();
 
@@ -465,18 +671,13 @@
         sel.innerHTML = unitClasses.map(uc => {
           const name = uc.classes?.name || '-';
           const grade = uc.classes?.grade ? ' — ' + uc.classes.grade : '';
-          const status = uc.is_published 
-            ? '✓ Published' 
-            : '○ Draft';
-          return `<option value="${uc.class_id}">${escapeHtml(name + grade)} (${status})</option>`;
+          const status = uc.is_published ? '✓' : '○';
+          return `<option value="${uc.class_id}">${escapeHtml(name + grade)} ${status}</option>`;
         }).join('');
-        // Default: pilih kelas pertama yang published, kalau tidak ada pilih pertama
         const firstPublished = unitClasses.find(uc => uc.is_published);
         selectedClassId = String((firstPublished || unitClasses[0]).class_id);
         sel.value = selectedClassId;
-      } catch (err) {
-        console.error('Load kelas selector error:', err);
-      }
+      } catch (err) { console.error('Load kelas error:', err); }
     }
 
     function onKelasChange() {
@@ -486,31 +687,20 @@
     }
 
     async function loadAndRender() {
-      if (!selectedClassId) {
-        document.getElementById('activityNavList').innerHTML = '<div style="padding:1rem; text-align:center; font-size:0.8rem; color:var(--text-muted);">Pilih kelas</div>';
-        return;
-      }
-
+      if (!selectedClassId) return;
       const uc = unitClasses.find(u => String(u.class_id) === String(selectedClassId));
-      if (!uc) {
-        document.getElementById('activityNavList').innerHTML = '<div style="padding:1rem; text-align:center; font-size:0.8rem; color:var(--text-muted);">Kelas tidak ditemukan</div>';
-        return;
-      }
+      if (!uc) return;
 
       const list = document.getElementById('activityNavList');
       list.innerHTML = '<div style="padding:1rem; text-align:center;"><div class="spinner"></div></div>';
 
-      // Strategi: pakai snapshot kalau ada, fallback ke live
-      let useSnapshot = uc.is_published && uc.published_version && uc.published_version.activities;
+      const useSnapshot = uc.is_published && uc.published_version && uc.published_version.activities;
 
       if (useSnapshot) {
         renderSource = 'snapshot';
         activities = uc.published_version.activities.map(a => ({
-          id: a.id,
-          title: a.title,
-          type: a.type,
-          order_index: a.order_index,
-          _components: a.components || []    // sudah include components
+          id: a.id, title: a.title, type: a.type, order_index: a.order_index,
+          _components: a.components || []
         }));
         document.getElementById('activityCountBadge').textContent = activities.length;
         renderActivityList();
@@ -520,48 +710,32 @@
           renderActivityList();
           updateFooterNav();
         } else {
-          document.getElementById('previewContent').innerHTML = `<div class="empty-state"><span class="emoji">📭</span><h3>Unit Masih Kosong</h3><p>Belum ada aktivitas di unit ini.</p></div>`;
+          document.getElementById('previewContent').innerHTML = `<div class="empty-state"><span class="emoji">📭</span><h3>Unit Masih Kosong</h3><p>Belum ada aktivitas.</p></div>`;
         }
       } else {
-        // Fallback: baca live (untuk unit lama yang belum pernah publish)
         renderSource = 'live';
         try {
           activities = await getUnitActivities(currentUnit.id);
           document.getElementById('activityCountBadge').textContent = activities.length;
-          
           if (activities.length === 0) {
             document.getElementById('activityNavList').innerHTML = '';
-            document.getElementById('previewContent').innerHTML = `
-              <div class="empty-state">
-                <span class="emoji">📭</span>
-                <h3>Belum Ada Aktivitas</h3>
-                <p>Unit ini belum di-publish ke kelas ini.</p>
-                <p class="sub-text">Kembali ke editor dan klik "Publish" untuk mendistribusikan konten.</p>
-              </div>`;
+            document.getElementById('previewContent').innerHTML = `<div class="empty-state"><span class="emoji">📭</span><h3>Belum Ada Aktivitas</h3><p>Unit ini belum di-publish ke kelas ini.</p></div>`;
             return;
           }
-
           renderActivityList();
           activeActivityId = activities[0].id;
           await renderActivityFromLive(activities[0]);
           renderActivityList();
           updateFooterNav();
         } catch (err) {
-          console.error('Load live activities error:', err);
-          document.getElementById('previewContent').innerHTML = `<div class="empty-state" style="color:var(--danger);"><p>Gagal memuat: ${escapeHtml(err.message)}</p></div>`;
+          document.getElementById('previewContent').innerHTML = `<div class="empty-state" style="color:var(--danger);"><p>Gagal: ${escapeHtml(err.message)}</p></div>`;
         }
       }
     }
 
-    // ============================================
-    // RENDER LIST
-    // ============================================
     function renderActivityList() {
       const list = document.getElementById('activityNavList');
-      if (activities.length === 0) {
-        list.innerHTML = '<div style="padding:1rem; text-align:center; font-size:0.8rem; color:var(--text-muted);">Kosong</div>';
-        return;
-      }
+      if (activities.length === 0) { list.innerHTML = '<div style="padding:1rem; text-align:center; font-size:0.8rem; color:var(--text-muted);">Kosong</div>'; return; }
       list.innerHTML = activities.map((a, idx) => {
         const isActive = String(a.id) === String(activeActivityId);
         const typeLabel = ACTIVITY_TYPE_LABEL[a.type] || a.type;
@@ -579,7 +753,6 @@
       if (String(activityId) === String(activeActivityId)) return;
       activeActivityId = activityId;
       renderActivityList();
-      
       if (renderSource === 'snapshot') {
         const act = activities.find(a => String(a.id) === String(activityId));
         if (act) renderActivityFromSnapshot(act);
@@ -591,19 +764,14 @@
       document.getElementById('previewContent').scrollTop = 0;
     }
 
-    // ============================================
-    // RENDER FROM SNAPSHOT
-    // ============================================
     function renderActivityFromSnapshot(activity) {
       const content = document.getElementById('previewContent');
       const icon = ACTIVITY_TYPE_ICON[activity.type] || 'fa-file';
       const typeLabel = ACTIVITY_TYPE_LABEL[activity.type] || activity.type;
       const comps = activity._components || [];
-
       const bodyHtml = comps.length === 0
-        ? `<div class="empty-state" style="padding:2rem 1rem;"><span class="emoji">📄</span><h3>Belum Ada Konten</h3><p>Aktivitas ini belum memiliki komponen.</p></div>`
+        ? `<div class="empty-state" style="padding:2rem 1rem;"><span class="emoji">📄</span><h3>Belum Ada Konten</h3></div>`
         : comps.map(c => `<div class="component-block">${renderComponentReadOnly(c.component_type, c.component_data || {})}</div>`).join('');
-
       content.innerHTML = `
         <div class="activity-render">
           <div class="activity-render-header">
@@ -614,27 +782,19 @@
         </div>`;
     }
 
-    // ============================================
-    // RENDER FROM LIVE
-    // ============================================
     async function renderActivityFromLive(activity) {
       const content = document.getElementById('previewContent');
       const icon = ACTIVITY_TYPE_ICON[activity.type] || 'fa-file';
       const typeLabel = ACTIVITY_TYPE_LABEL[activity.type] || activity.type;
       content.innerHTML = '<div style="text-align:center; padding:3rem;"><div class="spinner"></div></div>';
-
       let comps = [];
-      try {
-        comps = await getActivityComponents(activity.id);
-      } catch (err) {
-        content.innerHTML = `<div class="empty-state" style="color:var(--danger);"><p>Gagal memuat: ${escapeHtml(err.message)}</p></div>`;
+      try { comps = await getActivityComponents(activity.id); } catch (err) {
+        content.innerHTML = `<div class="empty-state" style="color:var(--danger);"><p>Gagal: ${escapeHtml(err.message)}</p></div>`;
         return;
       }
-
       const bodyHtml = comps.length === 0
-        ? `<div class="empty-state" style="padding:2rem 1rem;"><span class="emoji">📄</span><h3>Belum Ada Konten</h3><p>Aktivitas ini belum memiliki komponen.</p></div>`
+        ? `<div class="empty-state" style="padding:2rem 1rem;"><span class="emoji">📄</span><h3>Belum Ada Konten</h3></div>`
         : comps.map(c => `<div class="component-block">${renderComponentReadOnly(c.component_type, c.component_data || {})}</div>`).join('');
-
       content.innerHTML = `
         <div class="activity-render">
           <div class="activity-render-header">
@@ -646,9 +806,11 @@
     }
 
     // ============================================
-    // COMPONENT RENDER (READ-ONLY) — dipakai oleh kedua sumber
+    // RENDER COMPONENT — 31 TIPE
     // ============================================
     function renderComponentReadOnly(type, data) {
+
+      // ============ TEKS ============
       if (type === 'text') {
         return data.html || '<p style="color:var(--text-muted); font-style:italic;">(Konten kosong)</p>';
       }
@@ -664,6 +826,7 @@
         return `<div class="heading-render-block ${level}" style="${styleArr.join('; ')}">${escapeHtml(text)}</div>`;
       }
 
+      // ============ MEDIA ============
       if (type === 'image') {
         const url = data.url || '';
         const alt = data.alt || '';
@@ -673,8 +836,7 @@
         const displayUrl = convertDriveUrl(url, 'image');
         const alignMap = { left: 'flex-start', center: 'center', right: 'flex-end' };
         return `<div style="display:flex; flex-direction:column; align-items:${alignMap[align]};">
-          <img src="${escapeHtml(displayUrl)}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-          <div style="display:none; padding:0.7rem; background:#fef3c7; color:#92400e; border-radius:8px; font-size:0.8rem;">⚠️ Gambar gagal dimuat. Cek URL atau sharing file.</div>
+          <img src="${escapeHtml(displayUrl)}" alt="${escapeHtml(alt)}" loading="lazy" referrerpolicy="no-referrer">
           ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; font-style:italic; margin-top:0.3rem;">${escapeHtml(caption)}</div>` : ''}
         </div>`;
       }
@@ -698,7 +860,7 @@
         const caption = data.caption || '';
         if (!url) return '';
         return `<div>
-          <audio controls style="width:100%; margin-bottom:0.4rem;"><source src="${escapeHtml(url)}" type="audio/mpeg"></audio>
+          <audio controls style="width:100%; margin-bottom:0.4rem;"><source src="${escapeHtml(url)}"></audio>
           ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; font-style:italic;">${escapeHtml(caption)}</div>` : ''}
         </div>`;
       }
@@ -721,13 +883,13 @@
         const title = data.title || '';
         const text = data.text || '';
         if (!title && !text) return '';
-        const variantMap = {
+        const vMap = {
           info: { bg: '#dbeafe', color: '#1e40af', border: '#3b82f6', icon: 'fa-circle-info' },
           success: { bg: '#d1fae5', color: '#047857', border: '#10b981', icon: 'fa-circle-check' },
           warning: { bg: '#fef3c7', color: '#92400e', border: '#f59e0b', icon: 'fa-triangle-exclamation' },
           danger: { bg: '#fee2e2', color: '#b91c1c', border: '#ef4444', icon: 'fa-circle-xmark' }
         };
-        const v = variantMap[variant] || variantMap.info;
+        const v = vMap[variant] || vMap.info;
         return `<div style="padding:0.9rem 1.1rem; background:${v.bg}; border-left:4px solid ${v.border}; border-radius:8px; color:${v.color};">
           ${title ? `<div style="font-weight:800; margin-bottom:0.3rem; display:flex; align-items:center; gap:6px;"><i class="fas ${v.icon}"></i> ${escapeHtml(title)}</div>` : ''}
           <div style="font-size:0.88rem; line-height:1.6; white-space:pre-wrap;">${escapeHtml(text)}</div>
@@ -767,7 +929,231 @@
         return `<iframe src="${escapeHtml(url)}" style="width:100%; height:${height}px; border:1px solid var(--border); border-radius:8px; background:white;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
       }
 
-      return `<p style="color:var(--text-muted); font-style:italic; font-size:0.85rem;">[Komponen "${escapeHtml(type)}" — belum didukung]</p>`;
+      // ============ LKPD ============
+      if (type === 'identitas_siswa') {
+        const fields = [];
+        if (data.show_name !== false) fields.push({ label: 'Nama', value: '(otomatis)' });
+        if (data.show_nisn !== false) fields.push({ label: 'NISN', value: '(otomatis)' });
+        if (data.show_kelas) fields.push({ label: 'Kelas', value: '(otomatis)' });
+        if (data.show_tanggal) fields.push({ label: 'Tanggal', value: '(hari ini)' });
+        return `<div class="identitas-box">
+          <div style="font-weight:800; color:var(--green-dark); margin-bottom:0.6rem; font-size:0.9rem;"><i class="fas fa-id-card"></i> ${escapeHtml(data.label || 'Identitas Siswa')}</div>
+          ${fields.map(f => `<div class="identitas-row"><span class="label">${escapeHtml(f.label)}</span><span class="value" style="color:var(--text-muted); font-style:italic;">${escapeHtml(f.value)}</span></div>`).join('')}
+        </div>`;
+      }
+
+      if (type === 'petunjuk') {
+        return `<div class="petunjuk-box">
+          <div class="petunjuk-title"><i class="fas fa-circle-info"></i> ${escapeHtml(data.title || 'Petunjuk')}</div>
+          <div class="petunjuk-text">${escapeHtml(data.text || '')}</div>
+        </div>`;
+      }
+
+      if (type === 'input_teks') {
+        return `<div class="lkpd-field">
+          <div class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}${data.required ? '<span class="req">*</span>' : ''}</div>
+          <input type="text" class="lkpd-readonly-input" placeholder="${escapeHtml(data.placeholder || 'Jawaban siswa...')}" readonly>
+        </div>`;
+      }
+
+      if (type === 'textarea') {
+        return `<div class="lkpd-field">
+          <div class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}${data.required ? '<span class="req">*</span>' : ''}</div>
+          <textarea class="lkpd-readonly-textarea" placeholder="${escapeHtml(data.placeholder || 'Jawaban siswa...')}" readonly style="min-height:${(data.rows || 4) * 24}px;"></textarea>
+        </div>`;
+      }
+
+      if (type === 'checkbox' || type === 'radio') {
+        const opts = data.options || [];
+        const inputType = type === 'radio' ? 'radio' : 'checkbox';
+        return `<div class="lkpd-field">
+          <div class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}${data.required ? '<span class="req">*</span>' : ''}</div>
+          ${opts.map(o => `<label class="lkpd-option-item"><input type="${inputType}" disabled> ${escapeHtml(o)}</label>`).join('')}
+        </div>`;
+      }
+
+      if (type === 'dropdown') {
+        const opts = data.options || [];
+        return `<div class="lkpd-field">
+          <div class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}${data.required ? '<span class="req">*</span>' : ''}</div>
+          <select class="lkpd-readonly-input" disabled>
+            <option>-- Pilih --</option>
+            ${opts.map(o => `<option>${escapeHtml(o)}</option>`).join('')}
+          </select>
+        </div>`;
+      }
+
+      if (type === 'tabel_isian') {
+        const columns = data.columns || [];
+        const rows = data.rows || [];
+        if (columns.length === 0) return '';
+        return `<div class="lkpd-field">
+          ${data.label ? `<div class="lkpd-label">${escapeHtml(data.label)}</div>` : ''}
+          <div class="tabel-isian-wrap">
+            <table class="tabel-isian-table">
+              <thead><tr>${columns.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
+              <tbody>${rows.map(r => `<tr>${columns.map((_, i) => `<td>(jawaban siswa)</td>`).join('')}</tr>`).join('')}</tbody>
+            </table>
+          </div>
+        </div>`;
+      }
+
+      if (type === 'penilaian_diri') {
+        const min = data.min || 1;
+        const max = data.max || 5;
+        const labels = data.labels || [];
+        const opts = [];
+        for (let i = min; i <= max; i++) {
+          const lbl = labels[i - min] || `Skala ${i}`;
+          opts.push(`<label class="penilaian-diri-item"><input type="radio" disabled> <strong>${i}</strong> — ${escapeHtml(lbl)}</label>`);
+        }
+        return `<div class="lkpd-field">
+          <div class="lkpd-label">${escapeHtml(data.label || '(Belum ada label)')}</div>
+          ${opts.join('')}
+        </div>`;
+      }
+
+      if (type === 'tombol_submit') {
+        return `<div class="submit-btn-preview">
+          <button><i class="fas fa-paper-plane"></i> ${escapeHtml(data.label || 'Kumpulkan Jawaban')}</button>
+        </div>`;
+      }
+
+      // ============ ASESMEN ============
+      if (type === 'asesmen_setting') {
+        return `<div class="asesmen-setting-box">
+          <div class="asesmen-setting-title"><i class="fas fa-gear"></i> Pengaturan Asesmen</div>
+          <div class="asesmen-setting-info">
+            ${data.title ? `<div><strong>Judul:</strong> ${escapeHtml(data.title)}</div>` : ''}
+            ${data.description ? `<div><strong>Deskripsi:</strong> ${escapeHtml(data.description)}</div>` : ''}
+            <div><strong>Durasi:</strong> ${data.duration || 30} menit</div>
+            <div><strong>Auto-grade:</strong> ${data.auto_grade ? 'Ya (otomatis untuk PG)' : 'Manual'}</div>
+          </div>
+        </div>`;
+      }
+
+      if (type === 'soal_pg') {
+        const opts = data.options || [];
+        return `<div class="asesmen-soal-box">
+          <div class="asesmen-soal-num">PG · ${data.points || 10} poin</div>
+          <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
+          ${opts.map((o, i) => `<label class="asesmen-jawaban-item"><input type="radio" name="pg_${data.question?.substring(0,10) || i}" disabled><div class="asesmen-jawaban-label">${String.fromCharCode(65+i)}</div><div>${escapeHtml(o)}</div></label>`).join('')}
+        </div>`;
+      }
+
+      if (type === 'soal_pg_kompleks') {
+        const opts = data.options || [];
+        return `<div class="asesmen-soal-box">
+          <div class="asesmen-soal-num">PG Kompleks · ${data.points || 15} poin</div>
+          <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
+          ${opts.map((o, i) => `<label class="asesmen-jawaban-item"><input type="checkbox" disabled><div class="asesmen-jawaban-label">${String.fromCharCode(65+i)}</div><div>${escapeHtml(o)}</div></label>`).join('')}
+        </div>`;
+      }
+
+      if (type === 'soal_esai') {
+        return `<div class="asesmen-soal-box">
+          <div class="asesmen-soal-num">Esai · ${data.points || 20} poin</div>
+          <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
+          ${data.guide ? `<div style="font-size:0.78rem; color:var(--text-muted); background:white; padding:0.5rem 0.8rem; border-radius:6px; border-left:3px solid var(--purple); margin-bottom:0.6rem;"><strong>Panduan:</strong> ${escapeHtml(data.guide)}</div>` : ''}
+          <textarea class="lkpd-readonly-textarea" placeholder="Jawaban esai siswa..." readonly style="min-height:100px;"></textarea>
+        </div>`;
+      }
+
+      if (type === 'soal_menjodohkan') {
+        const left = data.left || [];
+        const right = data.right || [];
+        return `<div class="asesmen-soal-box">
+          <div class="asesmen-soal-num">Menjodohkan · ${data.points || 15} poin</div>
+          <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada instruksi)')}</div>
+          <div class="asesmen-jodoh-grid">
+            <div class="asesmen-jodoh-col">
+              ${left.map((l, i) => `<div class="asesmen-jodoh-item"><strong>${i+1}.</strong> ${escapeHtml(l)}</div>`).join('')}
+            </div>
+            <div class="asesmen-jodoh-col">
+              ${right.map((r, i) => `<div class="asesmen-jodoh-item"><strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(r)}</div>`).join('')}
+            </div>
+          </div>
+        </div>`;
+      }
+
+      if (type === 'soal_benar_salah') {
+        return `<div class="asesmen-soal-box">
+          <div class="asesmen-soal-num">Benar/Salah · ${data.points || 5} poin</div>
+          <div class="asesmen-soal-question">${escapeHtml(data.question || '(Belum ada pernyataan)')}</div>
+          <div class="asesmen-bs-row">
+            <div class="asesmen-bs-item">BENAR</div>
+            <div class="asesmen-bs-item">SALAH</div>
+          </div>
+        </div>`;
+      }
+
+      // ============ REFLEKSI ============
+      if (type === 'pertanyaan_refleksi') {
+        const isTextarea = (data.answer_type || 'textarea') === 'textarea';
+        return `<div class="refleksi-question-box">
+          <div class="refleksi-question-title"><i class="fas fa-question"></i> Pertanyaan Refleksi</div>
+          <div class="refleksi-question-text">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
+          ${isTextarea 
+            ? `<textarea class="lkpd-readonly-textarea" placeholder="${escapeHtml(data.placeholder || 'Refleksi siswa...')}" readonly></textarea>`
+            : `<input type="text" class="lkpd-readonly-input" placeholder="${escapeHtml(data.placeholder || 'Refleksi siswa...')}" readonly>`}
+        </div>`;
+      }
+
+      if (type === 'mood_tracker') {
+        const opts = data.options || [];
+        return `<div class="refleksi-question-box">
+          <div class="refleksi-question-title"><i class="fas fa-face-smile"></i> ${escapeHtml(data.label || 'Mood Tracker')}</div>
+          <div class="mood-grid">
+            ${opts.map(o => {
+              const parts = o.split(' ');
+              const emoji = parts[0] || '😐';
+              const label = parts.slice(1).join(' ') || o;
+              return `<div class="mood-item-card"><span class="mood-emoji">${emoji}</span><span>${escapeHtml(label)}</span></div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }
+
+      if (type === 'target_belajar') {
+        return `<div class="refleksi-question-box">
+          <div class="refleksi-question-title"><i class="fas fa-bullseye"></i> Target Belajar</div>
+          <div class="refleksi-question-text">${escapeHtml(data.label || '(Belum ada label)')}</div>
+          <input type="text" class="lkpd-readonly-input" placeholder="${escapeHtml(data.placeholder || 'Target siswa...')}" readonly>
+        </div>`;
+      }
+
+      if (type === 'tombol_submit_refleksi') {
+        return `<div class="submit-btn-preview" style="background:#fce7f3; border-color:var(--pink);">
+          <button style="background:var(--pink);"><i class="fas fa-paper-plane"></i> ${escapeHtml(data.label || 'Kirim Refleksi')}</button>
+        </div>`;
+      }
+
+      // ============ DISKUSI ============
+      if (type === 'topik_diskusi') {
+        return `<div class="diskusi-topik-box">
+          <div class="diskusi-topik-title"><i class="fas fa-comment-dots"></i> ${escapeHtml(data.title || 'Topik Diskusi')}</div>
+          <div class="diskusi-topik-desc">${escapeHtml(data.description || '')}</div>
+        </div>`;
+      }
+
+      if (type === 'aturan_diskusi') {
+        return `<div class="diskusi-aturan-box">
+          <div class="diskusi-aturan-title"><i class="fas fa-scroll"></i> ${escapeHtml(data.title || 'Aturan Diskusi')}</div>
+          <div class="diskusi-aturan-text">${escapeHtml(data.text || '')}</div>
+        </div>`;
+      }
+
+      if (type === 'kolom_komentar') {
+        return `<div class="komentar-box">
+          <div class="komentar-header"><i class="fas fa-comments"></i> ${escapeHtml(data.label || 'Diskusi Kelas')}</div>
+          <div class="komentar-input-preview">
+            <input type="text" placeholder="${escapeHtml(data.placeholder || 'Tulis komentar...')}" readonly>
+            <button>Kirim</button>
+          </div>
+        </div>`;
+      }
+
+      return `<p style="color:var(--text-muted); font-style:italic; font-size:0.85rem;">[Komponen "${escapeHtml(type)}"]</p>`;
     }
 
     // ============================================
@@ -793,9 +1179,6 @@
       if (idx < activities.length - 1) switchActivity(activities[idx + 1].id);
     }
 
-    // ============================================
-    // EXIT
-    // ============================================
     function exitPreview() {
       if (window.self !== window.top) {
         window.parent.postMessage({ type: 'GURU_GOTO', target: 'editor', params: { unitId: currentUnit.id } }, '*');
@@ -804,9 +1187,6 @@
       }
     }
 
-    // ============================================
-    // UTILS
-    // ============================================
     function escapeHtml(t) {
       if (t === null || t === undefined) return '';
       const d = document.createElement('div');

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapel Saya — Tembok Belajar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --orange: #f59e0b; --orange-dark: #d97706; --orange-light: #fef3c7; --orange-lighter: #fffbeb;
+      --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
+      --bg: #f1f5f9; --bg-soft: #f8fafc; --surface: #ffffff;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --header-height: 68px;
+      --radius: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    body.tb-embed .btn-back { display: none !important; }
+    .page-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    body.tb-embed .page-container {
+      padding-top: calc(var(--header-height) + 1rem); padding-bottom: 2rem;
+    }
+    .page-toolbar {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .page-toolbar-left { display: flex; flex-direction: column; gap: 0.6rem; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.45rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; text-decoration: none;
+      transition: var(--transition); width: fit-content;
+    }
+    .btn-back:hover { background: var(--orange-light); border-color: var(--orange); color: var(--orange-dark); }
+    .page-toolbar h1 {
+      font-size: 1.5rem; color: var(--text); font-weight: 800;
+      letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px;
+    }
+    .page-toolbar h1 i { color: var(--orange); font-size: 1.3rem; }
+    .page-toolbar h1 small {
+      display: block; font-size: 0.8rem; font-weight: 400;
+      color: var(--text-muted); margin-top: 4px; letter-spacing: 0;
+    }
+
+    /* INFO BAR */
+    .info-bar {
+      background: var(--orange-lighter); border-radius: 10px;
+      padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.82rem;
+      color: var(--orange-dark); font-weight: 500; display: flex;
+      align-items: center; gap: 8px;
+      border: 1px solid rgba(245,158,11,0.2); flex-wrap: wrap;
+    }
+    .info-bar i { color: var(--orange); }
+    .info-bar strong { color: var(--text); }
+
+    /* FILTER */
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border); padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .filter-row {
+      display: grid; grid-template-columns: 2fr 1fr auto;
+      gap: 0.7rem; align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label {
+      font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .filter-group label i { color: var(--orange); }
+    .filter-input, .filter-select {
+      width: 100%; padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit;
+      background: var(--surface); color: var(--text);
+      outline: none; transition: var(--transition);
+    }
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
+    .filter-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; cursor: pointer;
+    }
+    .btn-reset {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-muted); padding: 0.55rem 0.9rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: inherit; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-reset:hover { background: #fee2e2; border-color: var(--danger); color: var(--danger); }
+
+    /* KELAS TABS */
+    .kelas-tabs {
+      display: flex; gap: 0.4rem; margin-bottom: 1rem;
+      border-bottom: 2px solid var(--border); overflow-x: auto;
+    }
+    .kelas-tab {
+      background: transparent; border: none;
+      padding: 0.7rem 1.2rem; cursor: pointer;
+      font-size: 0.85rem; font-weight: 700;
+      color: var(--text-muted); font-family: inherit;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: var(--transition); white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .kelas-tab:hover { color: var(--text); background: var(--bg-soft); }
+    .kelas-tab.active { color: var(--orange-dark); border-bottom-color: var(--orange); }
+
+    /* UNIT GRID */
+    .unit-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .unit-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.3rem;
+      position: relative; overflow: hidden;
+      transition: var(--transition); cursor: pointer;
+    }
+    .unit-card::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 4px; height: 100%; background: var(--orange);
+    }
+    .unit-card:hover {
+      transform: translateY(-3px); box-shadow: var(--shadow-md);
+      border-color: var(--orange);
+    }
+    .unit-card.completed::before { background: var(--success); }
+    .unit-card.in-progress::before { background: var(--warning); }
+
+    .unit-card-header {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 0.6rem; margin-bottom: 0.7rem;
+    }
+    .unit-title {
+      font-size: 1.05rem; font-weight: 800; color: var(--text);
+      line-height: 1.3; flex: 1;
+    }
+    .unit-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 0.68rem; font-weight: 700;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .unit-badge.new { background: #dbeafe; color: #1e40af; }
+    .unit-badge.in-progress { background: #fef3c7; color: #92400e; }
+    .unit-badge.completed { background: #d1fae5; color: #047857; }
+
+    .unit-desc {
+      font-size: 0.82rem; color: var(--text-muted);
+      line-height: 1.5; margin-bottom: 0.9rem;
+      display: -webkit-box; -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical; overflow: hidden;
+      min-height: 2.4em;
+    }
+    .unit-meta {
+      display: flex; gap: 1rem; font-size: 0.72rem;
+      color: var(--text-muted); padding-top: 0.7rem;
+      border-top: 1px solid var(--border); margin-bottom: 0.7rem;
+      flex-wrap: wrap;
+    }
+    .unit-meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .unit-meta i { color: var(--orange); font-size: 0.7rem; }
+
+    .unit-progress-bar {
+      height: 6px; background: #e2e8f0;
+      border-radius: 999px; overflow: hidden; margin-bottom: 0.5rem;
+    }
+    .unit-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--orange), var(--orange-dark));
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .unit-progress-fill.completed { background: var(--success); }
+    .unit-progress-text {
+      display: flex; justify-content: space-between;
+      font-size: 0.72rem; color: var(--text-muted);
+      margin-bottom: 0.7rem;
+    }
+    .unit-progress-text strong { color: var(--text); }
+
+    .unit-actions {
+      display: flex; gap: 0.4rem;
+    }
+    .btn-buka {
+      flex: 1; padding: 0.5rem 0.9rem;
+      background: var(--orange); color: white;
+      border: none; border-radius: 8px;
+      cursor: pointer; font-size: 0.8rem;
+      font-weight: 700; font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 5px;
+    }
+    .btn-buka:hover {
+      background: var(--orange-dark);
+      box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    }
+    .btn-buka.completed { background: var(--success); }
+    .btn-buka.completed:hover { background: #047857; box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+
+    /* EMPTY / LOADING */
+    .empty-row {
+      text-align: center; padding: 4rem 1.5rem;
+      color: var(--text-muted);
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 2px dashed var(--border);
+      grid-column: 1 / -1;
+    }
+    .empty-row .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-row h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-row p { font-size: 0.85rem; line-height: 1.6; max-width: 400px; margin: 0 auto; }
+
+    .loading-box { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
+    .spinner {
+      width: 40px; height: 40px; margin: 0 auto 1rem;
+      border: 3px solid var(--orange-light); border-top-color: var(--orange);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    @media (max-width: 900px) {
+      .filter-row { grid-template-columns: 1fr 1fr; }
+      .filter-row .btn-reset { grid-column: 1 / -1; }
+    }
+    @media (max-width: 768px) {
+      :root { --header-height: 60px; }
+      .page-container { padding: 1rem 1rem 2rem; }
+      body.tb-embed .page-container { padding-top: calc(var(--header-height) + 0.8rem); }
+      .page-toolbar h1 { font-size: 1.25rem; }
+      .filter-row { grid-template-columns: 1fr; }
+      .unit-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script>
+    (function() {
+      if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => document.body.classList.add('tb-embed'));
+        } else { document.body.classList.add('tb-embed'); }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="page-container">
+
+    <!-- TOOLBAR -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-left">
+        <a href="javascript:void(0)" class="btn-back" onclick="goBack()">
+          <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+        <h1>
+          <i class="fas fa-book"></i>
+          <span>
+            <span id="subjectTitle">Mapel Saya</span>
+            <small id="subjectSubtitle">Daftar mapel yang Anda ikuti</small>
+          </span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- FILTER (hanya tampil di mode detail) -->
+    <div class="filter-card" id="filterCard" style="display:none;">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="searchInput"><i class="fas fa-search"></i> Cari Unit</label>
+          <input type="text" id="searchInput" class="filter-input" placeholder="Cari judul unit atau deskripsi..." oninput="applyFilter()">
+        </div>
+        <div class="filter-group">
+          <label for="filterStatus"><i class="fas fa-circle-check"></i> Status</label>
+          <select id="filterStatus" class="filter-select" onchange="applyFilter()">
+            <option value="">Semua Status</option>
+            <option value="new">Belum Dibuka</option>
+            <option value="in-progress">Sedang Berjalan</option>
+            <option value="completed">Selesai</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <button class="btn-reset" onclick="resetFilter()">
+            <i class="fas fa-rotate-left"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INFO BAR (hanya tampil di mode detail) -->
+    <div class="info-bar" id="infoBar" style="display:none;">
+      <i class="fas fa-info-circle"></i>
+      <span>
+        Mapel: <strong id="infoSubjectName">-</strong> ·
+        Unit: <strong id="infoTotalUnit">0</strong> ·
+        Selesai: <strong id="infoCompleted">0</strong>
+      </span>
+    </div>
+
+    <!-- KELAS TABS (mode detail, jika >1 kelas) -->
+    <div class="kelas-tabs" id="kelasTabs" style="display:none;"></div>
+
+    <!-- LOADING -->
+    <div id="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p>Memuat...</p>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" class="hidden">
+      <div id="unitGrid" class="unit-grid"></div>
+    </div>
+
+  </div>
+
+  <script src="../assets/js/core/cache.js"></script>
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/supabase.js"></script>
+    <script>
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let currentSubject = null;
+    let subjectIdFromUrl = null;
+    let allUnits = [];
+    let filteredUnits = [];
+    let activeClassId = null;
+    let progressData = [];
+    let mode = 'list';  // 'list' atau 'detail'
+
+    // ============================================
+    // INIT
+    // ============================================
+    (async () => {
+      initSupabase();
+      currentUser = await requireAuth('siswa');
+      if (!currentUser) return;
+
+      subjectIdFromUrl = new URLSearchParams(window.location.search).get('subjectId');
+
+      if (!subjectIdFromUrl) {
+        mode = 'list';
+        await loadModeList();
+      } else {
+        mode = 'detail';
+        await loadModeDetail();
+      }
+    })();
+
+    // ============================================
+    // MODE LIST: tampilkan semua mapel siswa
+    // ============================================
+    async function loadModeList() {
+      try {
+        document.getElementById('subjectTitle').textContent = 'Mapel Saya';
+        document.getElementById('subjectSubtitle').textContent = 'Semua mata pelajaran yang Anda ikuti';
+        document.getElementById('filterCard').style.display = 'none';
+        document.getElementById('infoBar').style.display = 'none';
+        document.getElementById('kelasTabs').style.display = 'none';
+
+        const subjectsData = await getMyEnrolledSubjects(currentUser.id);
+
+        // Kelompokkan per mapel
+        const bySubject = {};
+        (subjectsData || []).forEach(s => {
+          const sid = String(s.subject_id);
+          if (!bySubject[sid]) {
+            bySubject[sid] = {
+              subject: s.subjects,
+              classes: [],
+              teachers: []
+            };
+          }
+          if (s.classes) bySubject[sid].classes.push(s.classes);
+          if (s.profiles?.name) bySubject[sid].teachers.push(s.profiles.name);
+        });
+
+        const subjectList = Object.values(bySubject);
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('pageContent').classList.remove('hidden');
+
+        const grid = document.getElementById('unitGrid');
+
+        if (subjectList.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-row">
+              <span class="emoji">📚</span>
+              <h3>Belum Ada Mapel</h3>
+              <p>Anda belum terdaftar di kelas apapun. Hubungi operator sekolah.</p>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = subjectList.map(s => {
+          const kelasNames = [...new Set(s.classes.map(c => c.name))].filter(Boolean);
+          const teacherNames = [...new Set(s.teachers)].join(', ');
+          return `
+            <div class="unit-card" onclick="openSubjectDetail('${s.subject.id}')">
+              <div class="unit-card-header">
+                <div class="unit-title">${escapeHtml(s.subject.name)}</div>
+                ${s.subject.code ? `<span class="unit-badge new">${escapeHtml(s.subject.code)}</span>` : ''}
+              </div>
+              <div class="unit-desc">
+                <div style="margin-bottom:0.4rem;"><i class="fas fa-chalkboard-teacher" style="color:var(--orange);"></i> ${escapeHtml(teacherNames || '-')}</div>
+                <div><i class="fas fa-school" style="color:var(--orange);"></i> ${escapeHtml(kelasNames.join(', ') || '-')}</div>
+              </div>
+              <div class="unit-meta">
+                <span><i class="fas fa-layer-group"></i> ${kelasNames.length} kelas</span>
+              </div>
+              <div class="unit-actions">
+                <button class="btn-buka" onclick="event.stopPropagation(); openSubjectDetail('${s.subject.id}')">
+                  <i class="fas fa-arrow-right"></i> Buka Mapel
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Load mode list error:', err);
+        document.getElementById('loading').innerHTML =
+          `<div style="text-align:center; color:var(--danger); padding:2rem;">
+            <i class="fas fa-triangle-exclamation" style="font-size:2rem; margin-bottom:1rem;"></i>
+            <p>Gagal memuat: ${escapeHtml(err.message)}</p>
+          </div>`;
+      }
+    }
+
+    function openSubjectDetail(subjectId) {
+      if (window.self !== window.top) {
+        window.parent.postMessage({
+          type: 'SISWA_GOTO',
+          target: 'mapel',
+          params: { subjectId }
+        }, '*');
+      } else {
+        window.location.href = 'mapel-list.html?embed=1&subjectId=' + subjectId;
+      }
+    }
+
+    // ============================================
+    // MODE DETAIL: mapel tertentu
+    // ============================================
+    async function loadModeDetail() {
+      try {
+        // Ambil info subject + kelas dari enrollments
+        const subjectsData = await getMyEnrolledSubjects(currentUser.id);
+        const subjectInfo = subjectsData.find(s => String(s.subject_id) === String(subjectIdFromUrl));
+        if (!subjectInfo) throw new Error('Mapel tidak ditemukan atau Anda tidak terdaftar di mapel ini.');
+
+        currentSubject = subjectInfo.subjects;
+        document.getElementById('subjectTitle').textContent = currentSubject.name;
+        document.getElementById('subjectSubtitle').textContent =
+          'Daftar unit pembelajaran' + (currentSubject.code ? ' · ' + currentSubject.code : '');
+        document.title = currentSubject.name + ' — Tembok Belajar';
+
+        // Ambil semua kelas untuk mapel ini
+        const classesForSubject = subjectsData
+          .filter(s => String(s.subject_id) === String(subjectIdFromUrl))
+          .map(s => s.classes)
+          .filter(Boolean);
+        const uniqueClasses = {};
+        classesForSubject.forEach(c => { uniqueClasses[String(c.id)] = c; });
+        const classesList = Object.values(uniqueClasses);
+
+        // Ambil progress siswa
+        try {
+          progressData = await getMyProgress(currentUser.id);
+        } catch (e) {
+          console.warn('Progress error:', e);
+        }
+
+        // Render kelas tabs (jika >1 kelas)
+        if (classesList.length > 1) {
+          renderKelasTabs(classesList);
+        }
+
+        // Load units
+        await loadAllUnits(classesList);
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('pageContent').classList.remove('hidden');
+        document.getElementById('filterCard').style.display = 'block';
+        document.getElementById('infoBar').style.display = 'flex';
+      } catch (err) {
+        console.error('Load mode detail error:', err);
+        document.getElementById('loading').innerHTML =
+          `<div style="text-align:center; color:var(--danger); padding:2rem;">
+            <i class="fas fa-triangle-exclamation" style="font-size:2rem; margin-bottom:1rem;"></i>
+            <p>${escapeHtml(err.message)}</p>
+            <button onclick="goBack()" style="margin-top:1rem; padding:0.5rem 1rem; border:1px solid #e2e8f0; background:white; border-radius:8px; cursor:pointer; font-family:inherit;">
+              <i class="fas fa-arrow-left"></i> Kembali
+            </button>
+          </div>`;
+      }
+    }
+
+    // ============================================
+    // KELAS TABS
+    // ============================================
+    function renderKelasTabs(classesList) {
+      const container = document.getElementById('kelasTabs');
+      container.style.display = 'flex';
+      container.innerHTML = `
+        <button class="kelas-tab active" onclick="switchKelas(null, this)">
+          <i class="fas fa-layer-group"></i> Semua Kelas
+        </button>
+        ${classesList.map(c => `
+          <button class="kelas-tab" onclick="switchKelas('${c.id}', this)">
+            <i class="fas fa-school"></i> ${escapeHtml(c.name)}
+          </button>
+        `).join('')}
+      `;
+    }
+
+    function switchKelas(classId, btn) {
+      activeClassId = classId;
+      document.querySelectorAll('.kelas-tab').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilter();
+    }
+
+    // ============================================
+    // LOAD UNITS
+    // ============================================
+    async function loadAllUnits(classesList) {
+      const grid = document.getElementById('unitGrid');
+      grid.innerHTML = '<div class="empty-row"><div class="spinner"></div><p>Memuat unit...</p></div>';
+
+      try {
+        const allUnitsTemp = [];
+
+        for (const c of classesList) {
+          try {
+            const units = await getUnitsPublishedByClass(c.id);
+            const filtered = units.filter(u =>
+              String(u.annual_plans?.subject_id) === String(subjectIdFromUrl)
+            );
+            filtered.forEach(u => {
+              allUnitsTemp.push({
+                ...u,
+                _classId: c.id,
+                _className: c.name
+              });
+            });
+          } catch (e) {
+            console.warn('Load unit kelas ' + c.id + ':', e);
+          }
+        }
+
+        // Deduplicate by unit id
+        const unitMap = {};
+        allUnitsTemp.forEach(u => {
+          const uid = String(u.id);
+          if (!unitMap[uid]) {
+            unitMap[uid] = { ...u, _classNames: [u._className] };
+          } else {
+            if (!unitMap[uid]._classNames.includes(u._className)) {
+              unitMap[uid]._classNames.push(u._className);
+            }
+          }
+        });
+
+        allUnits = Object.values(unitMap);
+
+        // Hitung progress per unit
+        for (const unit of allUnits) {
+          try {
+            const { data: acts } = await supabaseClient
+              .from('unit_activities')
+              .select('id')
+              .eq('unit_id', unit.id);
+            const activityIds = (acts || []).map(a => a.id);
+            unit._totalActivities = activityIds.length;
+
+            if (activityIds.length === 0) {
+              unit._completedActivities = 0;
+              unit._percent = 0;
+            } else {
+              const { data: subs } = await supabaseClient
+                .from('submissions')
+                .select('id')
+                .eq('student_id', currentUser.id)
+                .in('activity_id', activityIds);
+              const submitted = (subs || []).length;
+
+              let submittedReflections = 0;
+              try {
+                const { data: refl } = await supabaseClient
+                  .from('reflections')
+                  .select('id')
+                  .eq('student_id', currentUser.id)
+                  .in('activity_id', activityIds);
+                submittedReflections = (refl || []).length;
+              } catch (e) {}
+
+              const totalDone = Math.max(submitted, submittedReflections);
+              unit._completedActivities = totalDone;
+              unit._percent = Math.round((totalDone / activityIds.length) * 100);
+            }
+          } catch (e) {
+            unit._totalActivities = 0;
+            unit._completedActivities = 0;
+            unit._percent = 0;
+          }
+        }
+
+        allUnits.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+        document.getElementById('infoSubjectName').textContent = currentSubject.name;
+        document.getElementById('infoTotalUnit').textContent = allUnits.length;
+
+        applyFilter();
+      } catch (err) {
+        console.error('Load units error:', err);
+        grid.innerHTML = `<div class="empty-row" style="color:var(--danger);">
+          <i class="fas fa-triangle-exclamation" style="font-size:2rem; margin-bottom:1rem;"></i>
+          <h3>Gagal Memuat</h3>
+          <p>${escapeHtml(err.message)}</p>
+        </div>`;
+      }
+    }
+
+    // ============================================
+    // FILTER
+    // ============================================
+    function applyFilter() {
+      const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const status = document.getElementById('filterStatus').value;
+
+      filteredUnits = allUnits.filter(u => {
+        if (activeClassId && String(u._classId) !== String(activeClassId)) return false;
+
+        if (keyword) {
+          const title = (u.title || '').toLowerCase();
+          const desc = (u.description || '').toLowerCase();
+          if (!title.includes(keyword) && !desc.includes(keyword)) return false;
+        }
+
+        if (status) {
+          const unitStatus = getUnitStatus(u);
+          if (unitStatus !== status) return false;
+        }
+
+        return true;
+      });
+
+      const completed = allUnits.filter(u => u._percent === 100).length;
+      document.getElementById('infoCompleted').textContent = completed;
+
+      renderUnitGrid();
+    }
+
+    function resetFilter() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterStatus').value = '';
+      applyFilter();
+    }
+
+    function getUnitStatus(unit) {
+      if (unit._percent === 100) return 'completed';
+      if (unit._percent > 0) return 'in-progress';
+      return 'new';
+    }
+
+        // ============================================
+    // RENDER UNIT GRID
+    // ============================================
+    function renderUnitGrid() {
+      const grid = document.getElementById('unitGrid');
+
+      if (filteredUnits.length === 0) {
+        const hasUnits = allUnits.length > 0;
+        grid.innerHTML = `
+          <div class="empty-row">
+            <span class="emoji">${hasUnits ? '🔍' : '📚'}</span>
+            <h3>${hasUnits ? 'Tidak Ada Unit Cocok' : 'Belum Ada Unit'}</h3>
+            <p>${hasUnits
+              ? 'Coba ubah filter atau kata kunci pencarian Anda.'
+              : 'Guru belum mempublikasikan unit untuk mapel ini. Coba kembali nanti.'}</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = filteredUnits.map(u => {
+        const status = getUnitStatus(u);
+        const statusConfig = {
+          'new': { cls: 'new', icon: 'fa-circle-plus', label: 'Baru' },
+          'in-progress': { cls: 'in-progress', icon: 'fa-clock', label: 'Sedang Berjalan' },
+          'completed': { cls: 'completed', icon: 'fa-circle-check', label: 'Selesai' }
+        }[status];
+        const btnCls = status === 'completed' ? 'completed' : '';
+
+        return `
+          <div class="unit-card ${status}" onclick="openUnit('${u.id}')">
+            <div class="unit-card-header">
+              <div class="unit-title">${escapeHtml(u.title)}</div>
+              <span class="unit-badge ${statusConfig.cls}">
+                <i class="fas ${statusConfig.icon}"></i> ${statusConfig.label}
+              </span>
+            </div>
+            <div class="unit-desc">${escapeHtml(u.description || 'Belum ada deskripsi.')}</div>
+            <div class="unit-meta">
+              <span><i class="fas fa-layer-group"></i> ${u._totalActivities} aktivitas</span>
+              ${u._classNames.length > 0 ? `<span><i class="fas fa-school"></i> ${escapeHtml(u._classNames.join(', '))}</span>` : ''}
+            </div>
+            <div class="unit-progress-bar">
+              <div class="unit-progress-fill ${status === 'completed' ? 'completed' : ''}" style="width:${u._percent}%;"></div>
+            </div>
+            <div class="unit-progress-text">
+              <span><strong>${u._completedActivities}</strong> / ${u._totalActivities} selesai</span>
+              <span><strong>${u._percent}%</strong></span>
+            </div>
+            <div class="unit-actions">
+              <button class="btn-buka ${btnCls}">
+                <i class="fas fa-${status === 'completed' ? 'eye' : 'play'}"></i>
+                ${status === 'completed' ? 'Lihat Kembali' : status === 'in-progress' ? 'Lanjutkan' : 'Mulai Belajar'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ============================================
+    // NAVIGATION
+    // ============================================
+    function openUnit(unitId) {
+      if (window.self !== window.top) {
+        window.parent.postMessage({
+          type: 'SISWA_GOTO',
+          target: 'unit-view',
+          params: { unitId }
+        }, '*');
+      } else {
+        window.location.href = 'unit-view.html?embed=1&unitId=' + unitId;
+      }
+    }
+
+    function goBack() {
+      if (window.self !== window.top) {
+        window.parent.postMessage({ type: 'SISWA_BACK', view: 'home' }, '*');
+      } else {
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    // ============================================
+    // UTILS
+    // ============================================
+    function escapeHtml(t) {
+      if (t === null || t === undefined) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>
