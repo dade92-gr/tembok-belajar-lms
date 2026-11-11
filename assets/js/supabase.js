@@ -2,7 +2,7 @@
 // SUPABASE.JS — TEMBOK BELAJAR (AUTO-GENERATED)
 // JANGAN EDIT FILE INI LANGSUNG!
 // Edit file di assets/js/db/*.js lalu jalankan: node build.js
-// Generated: 2026-11-02T07:05:42.091Z
+// Generated: 2026-11-11T00:13:23.889Z
 // ============================================
 
 // Cache WAJIB di-load via <script src="../assets/js/core/cache.js"></script> SEBELUM supabase.js
