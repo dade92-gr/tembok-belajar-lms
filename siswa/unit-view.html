@@ -502,6 +502,57 @@
       .nav-info-text { width: 100%; justify-content: center; }
       .preview-topbar { flex-wrap: wrap; height: auto; padding: 0.5rem; gap: 0.5rem; }
     }
+    /* Tracker indicators */
+.tracker-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--orange-lighter); color: var(--orange-dark);
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 700;
+  border: 1px solid var(--orange-light);
+  margin-top: 0.5rem;
+}
+.tracker-badge.done { background: #d1fae5; color: var(--success-dark); border-color: #a7f3d0; }
+.tracker-progress-bar {
+  height: 4px; background: #e2e8f0; border-radius: 999px;
+  overflow: hidden; margin-top: 0.4rem;
+}
+.tracker-progress-fill {
+  height: 100%; background: var(--orange);
+  border-radius: 999px; transition: width 0.3s ease;
+}
+
+/* Locked activity */
+.activity-nav-btn.locked {
+  opacity: 0.5; cursor: not-allowed; position: relative;
+}
+.activity-nav-btn.locked::after {
+  content: '🔒';
+  position: absolute; right: 0.6rem; top: 50%;
+  transform: translateY(-50%); font-size: 0.9rem;
+}
+
+/* Locked activity main view */
+.locked-activity-msg {
+  text-align: center; padding: 3rem 1.5rem;
+  background: var(--bg-soft); border-radius: var(--radius);
+  border: 2px dashed var(--border);
+}
+.locked-activity-msg .icon {
+  width: 80px; height: 80px; margin: 0 auto 1rem;
+  border-radius: 50%; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; color: var(--text-muted);
+}
+.locked-activity-msg h3 {
+  font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem;
+}
+.locked-activity-msg p {
+  font-size: 0.85rem; color: var(--text-muted);
+  max-width: 400px; margin: 0 auto 1rem;
+}
+.nav-type.lembar_aktivitas { background: #fef3c7; color: #92400e; }
+.activity-render-eyebrow.lembar_aktivitas { background: #fef3c7; color: #92400e; }
+.activity-type-badge.lembar_aktivitas { background: #fef3c7; color: #92400e; }
   </style>
   <script>
     (function() {
@@ -583,6 +634,7 @@
   <script src="../assets/js/core/cache.js"></script>
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/siswa/completion-tracker.js"></script>
   <script>
     // ============================================
     // STATE
@@ -600,15 +652,25 @@
     let saveTimers = {};
     let submitting = false;
     let autoCompleteTimers = {};  // FIX A3: timer per activity, bisa dibatalkan
+    let gatingMap = {};              // { [activityId]: { unlocked, reason, missing } }
+let activeTrackers = [];         // tracker aktif (untuk stop saat ganti aktivitas)
+let unitAccess = null;           // hasil checkStudentUnitAccess
+let currentAttemptNumber = 1;    // untuk multi-attempt
 
-    const ACTIVITY_TYPE_LABEL = {
-      materi: 'Materi', lkpd: 'LKPD', asesmen: 'Asesmen',
-      refleksi: 'Refleksi', diskusi: 'Diskusi', custom: 'Custom'
-    };
-    const ACTIVITY_TYPE_ICON = {
-      materi: 'fa-book', lkpd: 'fa-file-pen', asesmen: 'fa-clipboard-check',
-      refleksi: 'fa-brain', diskusi: 'fa-comments', custom: 'fa-wrench'
-    };
+const ACTIVITY_TYPE_LABEL = {
+  materi: '📖 Materi',
+  lkpd: '📝 Lembar Aktivitas',          // backward compat (data lama)
+  lembar_aktivitas: '📝 Lembar Aktivitas',
+  asesmen: '✍️ Asesmen',
+  refleksi: '💭 Refleksi',
+  diskusi: '💬 Diskusi',
+  custom: '🔧 Custom',
+};
+const ACTIVITY_TYPE_ICON = {
+  materi: 'fa-book', lkpd: 'fa-file-pen', lembar_aktivitas: 'fa-file-pen',
+  asesmen: 'fa-clipboard-check', refleksi: 'fa-brain',
+  diskusi: 'fa-comments', custom: 'fa-wrench'
+};
 
     // ============================================
     // DRIVE URL CONVERTER
@@ -657,15 +719,43 @@
       try {
         await loadUnitAndActivities(unitId);
         await loadUserSubmissions(unitId);
+        // Batch check gating untuk semua aktivitas
+try {
+  gatingMap = await checkAllActivitiesGating(currentUser.id, unitId);
+} catch (e) {
+  console.warn('checkAllActivitiesGating error:', e);
+  gatingMap = {};
+}
 
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('unitScreen').classList.remove('hidden');
+// Cek remedial banner
+if (unitAccess && unitAccess.access === 'remedial') {
+  showRemedialBanner();
+}
+
+function showRemedialBanner() {
+  const banner = document.createElement('div');
+  banner.style.cssText = 'background:linear-gradient(135deg,#fef3c7,#fde68a); border-left:4px solid #f59e0b; padding:0.8rem 1rem; border-radius:8px; margin:0.5rem; font-size:0.85rem; color:#92400e; display:flex; align-items:center; gap:0.6rem;';
+  banner.innerHTML = `
+    <i class="fas fa-redo-alt" style="font-size:1.2rem;"></i>
+    <div style="flex:1;">
+      <div style="font-weight:800;">Mode Remedial Aktif</div>
+      <div style="font-size:0.78rem;">Anda bisa mengulang aktivitas di unit ini. Nilai akhir dibatasi passing grade.</div>
+    </div>
+  `;
+  const container = document.querySelector('.preview-main');
+  if (container) container.insertBefore(banner, container.firstChild);
+}
 
         if (activities.length > 0) {
           activeActivityId = activities[0].id;
           renderActivityList();
           await renderActiveActivity();
           updateFooterNav();
+          if (!checkActivityCompleted(activities[0].id)) {
+  await startActivityTrackers(activities[0].id);
+}
         } else {
           document.getElementById('previewContent').innerHTML = `
             <div class="empty-state">
@@ -690,6 +780,13 @@
     // ============================================
     async function loadUnitAndActivities(unitId) {
       currentUnit = await getUnitById(unitId);
+      // Cek akses unit
+try {
+  unitAccess = await checkStudentUnitAccess(currentUser.id, unitId);
+} catch (e) {
+  console.warn('checkStudentUnitAccess error:', e);
+  unitAccess = { access: 'full', reason: 'fallback' };
+}
       if (!currentUnit) throw new Error('Unit tidak ditemukan.');
       if (currentUnit.status !== 'published') throw new Error('Unit ini belum dipublikasikan.');
 
@@ -757,25 +854,30 @@
     // RENDER ACTIVITY LIST
     // ============================================
     function renderActivityList() {
-      const list = document.getElementById('activityNavList');
-      if (activities.length === 0) { list.innerHTML = ''; return; }
+  const list = document.getElementById('activityNavList');
+  if (activities.length === 0) { list.innerHTML = ''; return; }
 
-      list.innerHTML = activities.map((a, idx) => {
-        const isActive = String(a.id) === String(activeActivityId);
-        const isCompleted = checkActivityCompleted(a.id);
-        const typeLabel = ACTIVITY_TYPE_LABEL[a.type] || a.type;
-        return `<button class="activity-nav-btn ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" onclick="switchActivity('${a.id}')">
-          <span class="nav-num-circle">
-            ${idx + 1}
-            <span class="check-icon"><i class="fas fa-check"></i></span>
-          </span>
-          <div class="nav-info">
-            <div class="nav-title">${escapeHtml(a.title)}</div>
-            <span class="nav-type ${a.type}">${typeLabel}</span>
-          </div>
-        </button>`;
-      }).join('');
-    }
+  list.innerHTML = activities.map((a, idx) => {
+    const isActive = String(a.id) === String(activeActivityId);
+    const isCompleted = checkActivityCompleted(a.id);
+    const gating = gatingMap[a.id] || { unlocked: true };
+    const isLocked = !gating.unlocked;
+    const typeLabel = ACTIVITY_TYPE_LABEL[a.type] || a.type;
+
+    return `<button class="activity-nav-btn ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}" 
+      onclick="switchActivity('${a.id}')"
+      title="${isLocked ? 'Terkunci' : ''}">
+      <span class="nav-num-circle">
+        ${idx + 1}
+        <span class="check-icon"><i class="fas fa-check"></i></span>
+      </span>
+      <div class="nav-info">
+        <div class="nav-title">${escapeHtml(a.title)}</div>
+        <span class="nav-type ${a.type}">${typeLabel}</span>
+      </div>
+    </button>`;
+  }).join('');
+}
 
     function checkActivityCompleted(activityId) {
       const sub = allSubmissions.find(s => String(s.activity_id) === String(activityId));
@@ -794,25 +896,235 @@
     // SWITCH ACTIVITY
     // ============================================
     async function switchActivity(activityId) {
-      if (activeActivityId && saveTimers[activeActivityId]) {
-        clearTimeout(saveTimers[activeActivityId]);
-        await flushSave(activeActivityId);
+  // Cek locked
+  const gating = gatingMap[activityId] || { unlocked: true };
+  if (!gating.unlocked) {
+    const missingNames = (gating.missing || []).map(m => m.title).join(', ');
+    showToast(`🔒 Selesaikan dulu: ${missingNames || 'aktivitas sebelumnya'}`, 'error');
+    return;
+  }
+
+  // Stop tracker aktivitas lama
+  stopActiveTrackers();
+
+  if (activeActivityId && saveTimers[activeActivityId]) {
+    clearTimeout(saveTimers[activeActivityId]);
+    await flushSave(activeActivityId);
+  }
+
+  if (activeActivityId && autoCompleteTimers[activeActivityId]) {
+    clearTimeout(autoCompleteTimers[activeActivityId]);
+    delete autoCompleteTimers[activeActivityId];
+  }
+
+  activeActivityId = activityId;
+  renderActivityList();
+  await renderActiveActivity();
+  updateFooterNav();
+  document.getElementById('previewContent').scrollTop = 0;
+
+  // Start tracker baru (kalau belum selesai)
+  if (!checkActivityCompleted(activityId)) {
+    await startActivityTrackers(activityId);
+  }
+}
+
+// ============================================
+// TRACKER MANAGEMENT
+// ============================================
+function stopActiveTrackers() {
+  activeTrackers.forEach(t => {
+    try { t.stop(); } catch (e) {}
+  });
+  activeTrackers = [];
+}
+
+async function startActivityTrackers(activityId) {
+  const activity = activities.find(a => String(a.id) === String(activityId));
+  if (!activity) return;
+
+  const meta = await getActivityMeta(activityId);
+  if (!meta) return;
+
+  const mode = meta.completion_mode || 'manual';
+  const metaJson = meta.metadata || {};
+  const content = document.getElementById('previewContent');
+  const actAnswers = getActivityAnswers(activityId);
+  const existingCompletion = await getCompletionData(currentUser.id, activityId);
+  const completionData = existingCompletion?.completion_data || {};
+
+  const onComplete = async (data) => {
+    try {
+      await markActivityComplete(activityId, data);
+    } catch (e) { console.warn('mark complete error:', e); }
+  };
+
+  // Cek video components
+  const components = await getActivityComponents(activityId);
+  const videoComps = components.filter(c => c.component_type === 'video');
+  
+  // MODE: video_watch
+  if (mode === 'video_watch' && videoComps.length > 0) {
+    for (const vc of videoComps) {
+      const url = vc.component_data?.url || '';
+      const ytId = CompletionTracker.extractYouTubeId(url);
+      const isDrive = CompletionTracker.isDriveUrl(url);
+      const threshold = metaJson.video_threshold_percent || 95;
+
+      if (ytId) {
+        // YouTube tracker
+        const containerId = `yt-player-${vc.id}`;
+        const container = document.getElementById(containerId);
+        if (container) {
+          const tracker = new CompletionTracker.YouTubeTracker({
+            containerId,
+            videoId: ytId,
+            thresholdPercent: threshold,
+            onUpdate: (pct) => updateTrackerUI(activityId, pct, threshold, 'Video'),
+            onSave: async (data) => {
+              try {
+                await upsertVideoWatch({
+                  studentId: currentUser.id,
+                  activityId,
+                  componentId: vc.id,
+                  ...data
+                });
+              } catch (e) { console.warn('save video error:', e); }
+            },
+            onComplete: onComplete
+          });
+          await tracker.init();
+          activeTrackers.push(tracker);
+        }
+      } else if (isDrive) {
+        // Drive timer
+        const duration = metaJson.video_duration_seconds || 0;
+        if (duration > 0) {
+          const tracker = new CompletionTracker.DriveTimerTracker({
+            durationSeconds: duration,
+            thresholdPercent: threshold,
+            onUpdate: (elapsed, target, pct) => {
+              updateTrackerUI(activityId, pct, threshold, 'Video (Drive)');
+            },
+            onComplete: onComplete
+          });
+          tracker.start();
+          activeTrackers.push(tracker);
+        }
       }
-
-      // FIX A3: batalkan auto-complete timer aktivitas sebelumnya
-      if (activeActivityId && autoCompleteTimers[activeActivityId]) {
-        clearTimeout(autoCompleteTimers[activeActivityId]);
-        delete autoCompleteTimers[activeActivityId];
-      }
-
-      activeActivityId = activityId;
-      renderActivityList();
-      await renderActiveActivity();
-      updateFooterNav();
-      document.getElementById('previewContent').scrollTop = 0;
-
-      await tryAutoCompleteActivity(activityId);
     }
+  }
+
+  // MODE: time_spent
+  if (mode === 'time_spent' || mode === 'composite') {
+    const threshold = metaJson.min_active_seconds || 120;
+    const tracker = new CompletionTracker.TimeTracker({
+      thresholdSeconds: threshold,
+      onUpdate: (elapsed, target) => {
+        const pct = Math.min(100, Math.round((elapsed / target) * 100));
+        updateTrackerUI(activityId, pct, target, 'Waktu', `${elapsed}/${target}s`);
+      },
+      onComplete: (mode === 'composite' ? null : onComplete),
+      onSave: async (elapsed) => {
+        try {
+          await updateCompletionData({
+            studentId: currentUser.id,
+            unitId: currentUnit.id,
+            activityId,
+            status: 'in_progress',
+            completionData: { active_seconds: elapsed }
+          });
+        } catch (e) { console.warn('save time error:', e); }
+      }
+    });
+    tracker.start();
+    activeTrackers.push(tracker);
+  }
+
+  // MODE: scroll / composite
+  if (mode === 'scroll' || mode === 'composite') {
+    const threshold = metaJson.min_scroll_percent || 80;
+    const tracker = new CompletionTracker.ScrollTracker({
+      container: content,
+      thresholdPercent: threshold,
+      onUpdate: (pct, target) => {
+        updateTrackerUI(activityId, pct, target, 'Scroll');
+      },
+      onComplete: (mode === 'composite' ? null : onComplete)
+    });
+    tracker.start();
+    activeTrackers.push(tracker);
+  }
+
+  // MODE: composite → cek semua harus done
+  if (mode === 'composite') {
+    // Setelah semua tracker selesai, cek combined
+    const checkComposite = async () => {
+      const completion = await getCompletionData(currentUser.id, activityId);
+      const data = completion?.completion_data || {};
+      const hasTime = (data.active_seconds || 0) >= (metaJson.min_active_seconds || 120);
+      const hasScroll = (data.scroll_percent || 0) >= (metaJson.min_scroll_percent || 80);
+      // Video: cek dari activity_video_watches
+      let hasVideo = true;
+      if (videoComps.length > 0) {
+        hasVideo = true;
+        for (const vc of videoComps) {
+          const vw = await getVideoWatch(currentUser.id, activityId, vc.id);
+          if (!vw || !vw.completed_at) { hasVideo = false; break; }
+        }
+      }
+      if (hasTime && hasScroll && hasVideo) {
+        await markActivityComplete(activityId, { composite: true });
+      }
+    };
+    // Polling tiap 5 detik
+    const compositeInterval = setInterval(checkComposite, 5000);
+    activeTrackers.push({ stop: () => clearInterval(compositeInterval) });
+  }
+}
+
+function updateTrackerUI(activityId, current, target, label, extra) {
+  // Tambahkan badge kecil di activity render header
+  let badge = document.getElementById('trackerBadge');
+  if (!badge) {
+    const header = document.querySelector('.activity-render-header');
+    if (!header) return;
+    badge = document.createElement('div');
+    badge.id = 'trackerBadge';
+    badge.className = 'tracker-badge';
+    header.appendChild(badge);
+  }
+  const pct = Math.min(100, current);
+  badge.innerHTML = `<i class="fas fa-chart-simple"></i> ${label}: ${pct}% ${extra ? '('+extra+')' : ''}`;
+  if (pct >= 100) badge.classList.add('done');
+}
+
+async function markActivityComplete(activityId, data) {
+  try {
+    await upsertProgress({
+      studentId: currentUser.id,
+      unitId: currentUnit.id,
+      activityId,
+      status: 'completed',
+      completedAt: new Date().toISOString()
+    });
+    await updateCompletionData({
+      studentId: currentUser.id,
+      unitId: currentUnit.id,
+      activityId,
+      status: 'completed',
+      completionData: data,
+      completed: true
+    });
+    await loadUserSubmissions(currentUnit.id);
+    renderActivityList();
+    updateProgressBadge();
+    showSaveIndicator();
+    showToast('✅ Aktivitas selesai!', 'success');
+  } catch (e) {
+    console.warn('mark complete error:', e);
+  }
+}
 
     // ============================================
     // AUTO-PROGRESS
@@ -861,6 +1173,23 @@
       if (!activity) return;
 
       const content = document.getElementById('previewContent');
+        // Cek locked
+  const gating = gatingMap[activity.id] || { unlocked: true };
+  if (!gating.unlocked) {
+    const missing = gating.missing || [];
+    content.innerHTML = `
+      <div class="locked-activity-msg">
+        <div class="icon"><i class="fas fa-lock"></i></div>
+        <h3>Aktivitas Terkunci</h3>
+        <p>Untuk membuka aktivitas ini, selesaikan dulu:</p>
+        <div style="display:flex; flex-direction:column; gap:0.4rem; max-width:300px; margin:0 auto 1rem;">
+          ${missing.map(m => `<div style="padding:0.5rem; background:white; border-radius:6px; font-weight:600;">${escapeHtml(m.title)}</div>`).join('')}
+        </div>
+        ${missing[0] ? `<button onclick="switchActivity('${missing[0].id}')" class="footer-nav-btn primary"><i class="fas fa-arrow-right"></i> Buka Aktivitas</button>` : ''}
+      </div>
+    `;
+    return;
+  }
       const icon = ACTIVITY_TYPE_ICON[activity.type] || 'fa-file';
       const typeLabel = ACTIVITY_TYPE_LABEL[activity.type] || activity.type;
       const isCompleted = checkActivityCompleted(activity.id);
@@ -957,10 +1286,23 @@
       }
 
       if (type === 'video') {
-        const url = data.url || '';
-        const caption = data.caption || '';
-        if (!url) return '';
-        const embedUrl = toEmbedVideoUrl(url);
+  const url = data.url || '';
+  const caption = data.caption || '';
+  if (!url) return '';
+  
+  // Cek YouTube — pakai container untuk API
+  const ytId = CompletionTracker.extractYouTubeId(url);
+  if (ytId) {
+    return `<div>
+      <div id="yt-player-${comp.id}" style="position:relative; padding-bottom:56.25%; height:0; border-radius:8px; overflow:hidden; background:#000;">
+        <div style="position:absolute; inset:0;"></div>
+      </div>
+      ${caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-top:0.4rem;">${escapeHtml(caption)}</div>` : ''}
+    </div>`;
+  }
+  
+  // Non-YouTube (Drive / embed) — pakai iframe biasa
+  const embedUrl = toEmbedVideoUrl(url);
         if (!embedUrl) return `<p style="color:var(--danger); font-size:0.85rem;">⚠️ Video tidak dapat dimuat</p>`;
         return `<div>
           <div style="position:relative; padding-bottom:56.25%; height:0; border-radius:8px; overflow:hidden; background:#000;">
@@ -1727,8 +2069,9 @@
       const idx = activities.findIndex(a => String(a.id) === String(activeActivityId));
       if (idx < activities.length - 1) switchActivity(activities[idx + 1].id);
     }
-
+  
     function exitUnit() {
+      stopActiveTrackers();
       Object.keys(saveTimers).forEach(aid => {
         clearTimeout(saveTimers[aid]);
         flushSave(aid);

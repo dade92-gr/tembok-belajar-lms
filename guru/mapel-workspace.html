@@ -444,6 +444,7 @@
   <script src="../assets/js/core/cache.js"></script>
 <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/guru/remedial-settings-modal.js"></script>
     <script>
     let currentUser = null;
     let currentSubject = null;
@@ -674,10 +675,13 @@
                 <i class="fas fa-eye"></i> Preview
               </button>
             </div>
-            <div class="unit-actions-row2" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.4rem;">
+            <div class="unit-actions-row2" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.4rem;">
               <button class="btn-unit" style="background:white;color:var(--primary);border-color:var(--primary);" onclick="openKelolaKelas('${u.id}')" title="Kelola kelas">
                 <i class="fas fa-users"></i> Kelas
               </button>
+              <button class="btn-unit" style="background:white;color:var(--warning);border-color:var(--warning);" onclick="openRemedialSettings('${u.id}')" title="Atur remedial">
+  <i class="fas fa-redo-alt"></i> Remedial
+</button>
               <button class="btn-unit publish" onclick="openPublish('${u.id}')" title="Publish ke kelas">
                 <i class="fas fa-globe"></i> Publish
               </button>
@@ -1172,6 +1176,14 @@
         closePublishModal();
       }
     });
+    // Tambahkan di bawah fungsi previewUnit atau di mana saja
+function openRemedialSettings(unitId) {
+  if (typeof RemedialSettings !== 'undefined') {
+    RemedialSettings.open(unitId);
+  } else {
+    alert('Modul remedial belum termuat. Refresh halaman.');
+  }
+}
   </script>
 </body>
 </html>

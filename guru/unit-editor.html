@@ -85,9 +85,22 @@
       align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;
     }
     .btn-kelas:hover { background: #dbeafe; }
+    .btn-secondary {
+      background: #64748b; color: white; border: none;
+      padding: 0.55rem 1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger {
+      background: var(--danger); color: white; border: none;
+      padding: 0.55rem 1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .btn-danger:hover { background: #dc2626; }
     .editor-layout { display: flex; height: calc(100vh - 60px); overflow: hidden; }
 
-    /* LEFT PANEL */
     .panel-left {
       width: 280px; background: var(--surface); border-right: 1px solid var(--border);
       display: flex; flex-direction: column; flex-shrink: 0;
@@ -149,7 +162,6 @@
     .empty-activity { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.8rem; line-height: 1.6; }
     .empty-activity .emoji { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; opacity: 0.5; }
 
-    /* CENTER */
     .panel-center { flex: 1; overflow-y: auto; padding: 1.5rem; background: var(--bg); }
     .panel-center::-webkit-scrollbar { width: 8px; }
     .panel-center::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -256,6 +268,259 @@
     }
     .lkpd-option-item input { pointer-events: none; }
 
+    .lkpd-field { margin-bottom: 0.6rem; }
+    .lkpd-label { font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
+    .lkpd-label .req { color: var(--danger); margin-left: 2px; }
+    .lkpd-readonly-input {
+      width: 100%; padding: 0.55rem 0.85rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.85rem; color: var(--text-muted);
+      background: var(--bg-soft); font-family: inherit;
+      font-style: italic;
+    }
+    .lkpd-readonly-textarea {
+      width: 100%; padding: 0.55rem 0.85rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.85rem; color: var(--text-muted);
+      background: var(--bg-soft); font-family: inherit;
+      font-style: italic; resize: vertical; min-height: 80px;
+    }
+    .identitas-box {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem 1.2rem; border-left: 3px solid var(--green);
+    }
+    .identitas-row {
+      display: flex; gap: 1rem; padding: 0.3rem 0;
+      font-size: 0.85rem; flex-wrap: wrap;
+    }
+    .identitas-row .label { font-weight: 600; color: var(--text-muted); min-width: 100px; }
+    .identitas-row .value { color: var(--text); font-weight: 600; }
+    .petunjuk-box {
+      background: #fef3c7; border-left: 4px solid var(--warning);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .petunjuk-box .petunjuk-title {
+      font-weight: 800; color: #92400e; margin-bottom: 0.5rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .petunjuk-box .petunjuk-text {
+      font-size: 0.88rem; color: #78350f; white-space: pre-wrap; line-height: 1.6;
+    }
+    .tabel-isian-wrap { overflow-x: auto; }
+    .tabel-isian-table {
+      width: 100%; border-collapse: collapse; font-size: 0.85rem;
+    }
+    .tabel-isian-table th {
+      padding: 0.5rem 0.7rem; background: var(--green-lighter);
+      border: 1px solid var(--border); text-align: left;
+      font-weight: 700; color: var(--green-dark);
+    }
+    .tabel-isian-table td {
+      padding: 0.5rem 0.7rem; border: 1px solid var(--border);
+      color: var(--text-muted); font-style: italic;
+    }
+    .penilaian-diri-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.8rem; margin-bottom: 0.4rem;
+      background: var(--bg-soft); border-radius: 6px;
+      font-size: 0.85rem; color: var(--text-secondary);
+    }
+    .submit-btn-preview {
+      text-align: center; padding: 1rem;
+      background: var(--green-lighter); border: 2px dashed var(--green);
+      border-radius: 8px;
+    }
+    .submit-btn-preview button {
+      padding: 0.7rem 1.8rem; background: var(--green); color: white;
+      border: none; border-radius: 8px; font-weight: 700;
+      font-size: 0.9rem; cursor: not-allowed; opacity: 0.8;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: inherit;
+    }
+
+    .asesmen-preview-box { cursor: pointer; }
+    .asesmen-soal-preview {
+      background: var(--bg-soft); border-radius: 8px;
+      padding: 0.9rem 1.1rem; border-left: 3px solid var(--purple);
+      margin-bottom: 0.5rem;
+    }
+    .asesmen-soal-number {
+      display: inline-block; background: var(--purple); color: white;
+      padding: 1px 8px; border-radius: 4px;
+      font-size: 0.65rem; font-weight: 700; margin-bottom: 0.4rem;
+    }
+    .asesmen-soal-text {
+      font-size: 0.88rem; font-weight: 600; color: var(--text);
+      margin-bottom: 0.6rem; line-height: 1.5;
+    }
+    .asesmen-jawaban-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0.7rem; margin-bottom: 0.3rem;
+      background: white; border-radius: 6px;
+      font-size: 0.82rem; border: 1px solid var(--border);
+    }
+    .asesmen-jawaban-item.correct {
+      background: var(--green-lighter); border-color: var(--green); color: var(--green-dark); font-weight: 600;
+    }
+    .asesmen-jawaban-label {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--bg-soft); display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.72rem; flex-shrink: 0;
+    }
+    .asesmen-jawaban-item.correct .asesmen-jawaban-label {
+      background: var(--green); color: white;
+    }
+    .asesmen-setting-box {
+      background: #ede9fe; border-left: 4px solid var(--purple);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .asesmen-setting-title {
+      font-weight: 800; color: #6d28d9; margin-bottom: 0.5rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .asesmen-setting-info { font-size: 0.85rem; color: #5b21b6; display: flex; flex-direction: column; gap: 4px; }
+    .asesmen-setting-info strong { color: #4c1d95; }
+    .asesmen-soal-box {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem 1.2rem; border-left: 3px solid var(--purple);
+      margin-bottom: 0.6rem;
+    }
+    .asesmen-soal-num {
+      display: inline-block; background: var(--purple); color: white;
+      padding: 2px 10px; border-radius: 4px;
+      font-size: 0.68rem; font-weight: 700; margin-bottom: 0.5rem;
+    }
+    .asesmen-soal-question {
+      font-size: 0.92rem; font-weight: 600; color: var(--text);
+      margin-bottom: 0.7rem; line-height: 1.5;
+    }
+    .asesmen-jodoh-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    .asesmen-jodoh-col { display: flex; flex-direction: column; gap: 0.4rem; }
+    .asesmen-jodoh-item {
+      padding: 0.45rem 0.7rem; background: white;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.82rem;
+    }
+    .asesmen-jodoh-item strong { color: var(--purple); margin-right: 4px; }
+    .asesmen-bs-row { display: flex; gap: 0.6rem; }
+    .asesmen-bs-item {
+      flex: 1; padding: 0.6rem;
+      border: 2px solid var(--border); border-radius: 6px;
+      text-align: center; font-weight: 700;
+      font-size: 0.85rem; background: white; color: var(--text-secondary);
+    }
+
+    .refleksi-preview-box { cursor: pointer; }
+    .refleksi-question-box {
+      background: #fce7f3; border-left: 4px solid var(--pink);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .refleksi-question-title {
+      font-weight: 800; color: #be185d; margin-bottom: 0.5rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .refleksi-question-text {
+      font-size: 0.9rem; color: #831843; margin-bottom: 0.6rem;
+      line-height: 1.6;
+    }
+    .mood-tracker-preview {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.3rem;
+    }
+    .mood-item {
+      display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+      padding: 0.5rem 0.7rem; background: var(--bg-soft);
+      border-radius: 8px; font-size: 0.7rem; font-weight: 600;
+      min-width: 60px;
+    }
+    .mood-item .emoji-big { font-size: 1.8rem; line-height: 1; }
+    .mood-grid { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .mood-item-card {
+      flex: 1; min-width: 80px;
+      display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+      padding: 0.7rem; background: white;
+      border: 2px solid var(--border); border-radius: 8px;
+      font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+    }
+    .mood-item-card .mood-emoji { font-size: 2rem; line-height: 1; }
+
+    .diskusi-topik-box {
+      background: #d1fae5; border-left: 4px solid var(--green);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .diskusi-topik-title {
+      font-weight: 800; color: #047857; margin-bottom: 0.5rem;
+      font-size: 0.95rem; display: flex; align-items: center; gap: 6px;
+    }
+    .diskusi-topik-desc {
+      font-size: 0.88rem; color: #065f46; white-space: pre-wrap;
+      line-height: 1.6;
+    }
+    .diskusi-aturan-box {
+      background: #fef3c7; border-left: 4px solid var(--warning);
+      padding: 1rem 1.2rem; border-radius: 8px;
+    }
+    .diskusi-aturan-title {
+      font-weight: 800; color: #92400e; margin-bottom: 0.5rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .diskusi-aturan-text {
+      font-size: 0.85rem; color: #78350f; white-space: pre-wrap;
+      line-height: 1.6;
+    }
+    .komentar-box {
+      background: var(--bg-soft); border-radius: 10px;
+      padding: 1rem; border: 1px solid var(--border);
+    }
+    .komentar-header {
+      font-weight: 800; color: #047857; margin-bottom: 0.6rem;
+      font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+    }
+    .komentar-input-preview {
+      display: flex; gap: 0.5rem;
+      padding: 0.5rem; background: white;
+      border: 1px solid var(--border); border-radius: 8px;
+    }
+    .komentar-input-preview input {
+      flex: 1; border: none; outline: none; font-family: inherit;
+      font-size: 0.85rem; color: var(--text-muted); font-style: italic;
+    }
+    .komentar-input-preview button {
+      padding: 0.3rem 0.8rem; background: var(--green); color: white;
+      border: none; border-radius: 6px; font-weight: 700;
+      font-size: 0.75rem; opacity: 0.6; cursor: not-allowed;
+    }
+
+    .table-editor-wrapper { overflow: auto; margin-bottom: 0.8rem; background: var(--bg-soft); border-radius: 8px; padding: 0.6rem; max-height: 60vh; }
+    .table-editor-table { border-collapse: collapse; table-layout: fixed; width: 100%; min-width: 400px; }
+    .table-editor-table th, .table-editor-table td { padding: 0; border: 1px solid var(--border); position: relative; vertical-align: top; }
+    .table-editor-table input { width: 100%; border: none; outline: none; padding: 0.4rem 0.5rem; font-size: 0.8rem; font-family: inherit; background: transparent; box-sizing: border-box; }
+    .table-editor-table th { background: var(--green-lighter); }
+    .table-editor-table th input { font-weight: 700; color: var(--green-dark); }
+    .table-editor-table input:focus { background: #fffbea; }
+    .col-resize-handle {
+      position: absolute; top: 0; right: 0; bottom: 0;
+      width: 6px; cursor: col-resize; background: transparent; transition: background 0.15s;
+    }
+    .col-resize-handle:hover, .col-resize-handle.resizing { background: var(--green); }
+    .table-editor-table th .btn-col-del {
+      position: absolute; top: 2px; right: 8px;
+      width: 16px; height: 16px; border-radius: 3px;
+      border: none; background: rgba(239,68,68,0.15);
+      color: var(--danger); cursor: pointer; font-size: 0.55rem;
+      display: flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .table-editor-table th .btn-col-del:hover { background: var(--danger); color: white; }
+    .table-actions-row { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
+
+    .accordion-item-editor {
+      background: var(--bg-soft); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.7rem; margin-bottom: 0.5rem;
+    }
+    .accordion-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+    .accordion-item-num { font-size: 0.7rem; font-weight: 700; color: var(--green-dark); background: var(--green-lighter); padding: 1px 8px; border-radius: 4px; }
+
     .empty-canvas {
       text-align: center; padding: 4rem 1rem;
       color: var(--text-muted); background: var(--surface);
@@ -265,7 +530,6 @@
     .empty-canvas h3 { font-size: 1rem; color: var(--text); margin-bottom: 0.5rem; }
     .empty-canvas p { font-size: 0.82rem; line-height: 1.6; max-width: 350px; margin: 0 auto; }
 
-    /* RIGHT PANEL */
     .panel-right {
       width: 280px; background: var(--surface);
       border-left: 1px solid var(--border);
@@ -303,7 +567,6 @@
     }
     .panel-right-footer i { color: var(--green); }
 
-    /* MODAL */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(15,23,42,0.6);
       display: none; align-items: center; justify-content: center;
@@ -324,20 +587,6 @@
     }
     .modal-card h2 i { color: var(--green); }
     .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; flex-wrap: wrap; }
-    .btn-secondary {
-      background: #64748b; color: white; border: none;
-      padding: 0.55rem 1rem; border-radius: 8px; cursor: pointer;
-      font-size: 0.82rem; font-weight: 600; font-family: inherit;
-      transition: var(--transition);
-    }
-    .btn-secondary:hover { background: #475569; }
-    .btn-danger {
-      background: var(--danger); color: white; border: none;
-      padding: 0.55rem 1rem; border-radius: 8px; cursor: pointer;
-      font-size: 0.82rem; font-weight: 600; font-family: inherit;
-      transition: var(--transition);
-    }
-    .btn-danger:hover { background: #dc2626; }
     .form-label {
       display: block; font-size: 0.72rem; font-weight: 700;
       margin-bottom: 0.4rem; color: var(--text-secondary);
@@ -365,6 +614,8 @@
     .alert { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 8px; font-size: 0.8rem; line-height: 1.5; }
     .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
     .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .alert-success { background: var(--green-light); color: var(--green-dark); border: 1px solid #a7f3d0; }
 
     .options-editor { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.8rem; }
     .option-row { display: flex; gap: 0.4rem; align-items: center; }
@@ -408,82 +659,38 @@
       margin-bottom: 0.9rem; min-height: 60px;
       display: flex; align-items: center; line-height: 1.3; word-break: break-word;
     }
+    .heading-render-block {
+      font-weight: 800; line-height: 1.3;
+      margin: 0.8rem 0 0.4rem; padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+      word-break: break-word;
+    }
+    .heading-render-block.h1 { font-size: 1.8rem; }
+    .heading-render-block.h2 { font-size: 1.4rem; }
+    .heading-render-block.h3 { font-size: 1.15rem; }
 
-    .table-editor-wrapper { overflow: auto; margin-bottom: 0.8rem; background: var(--bg-soft); border-radius: 8px; padding: 0.6rem; max-height: 60vh; }
-    .table-editor-table { border-collapse: collapse; table-layout: fixed; width: 100%; min-width: 400px; }
-    .table-editor-table th, .table-editor-table td { padding: 0; border: 1px solid var(--border); position: relative; vertical-align: top; }
-    .table-editor-table input { width: 100%; border: none; outline: none; padding: 0.4rem 0.5rem; font-size: 0.8rem; font-family: inherit; background: transparent; box-sizing: border-box; }
-    .table-editor-table th { background: var(--green-lighter); }
-    .table-editor-table th input { font-weight: 700; color: var(--green-dark); }
-    .table-editor-table input:focus { background: #fffbea; }
-    .col-resize-handle {
-      position: absolute; top: 0; right: 0; bottom: 0;
-      width: 6px; cursor: col-resize; background: transparent; transition: background 0.15s;
+    .kelas-checklist { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.8rem; max-height: 50vh; overflow-y: auto; }
+    .kelas-check-item {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.6rem 0.8rem; background: var(--bg-soft);
+      border-radius: 8px; border: 1px solid var(--border);
+      cursor: pointer; transition: var(--transition);
     }
-    .col-resize-handle:hover, .col-resize-handle.resizing { background: var(--green); }
-    .table-editor-table th .btn-col-del {
-      position: absolute; top: 2px; right: 8px;
-      width: 16px; height: 16px; border-radius: 3px;
-      border: none; background: rgba(239,68,68,0.15);
-      color: var(--danger); cursor: pointer; font-size: 0.55rem;
-      display: flex; align-items: center; justify-content: center; padding: 0;
+    .kelas-check-item:hover { background: var(--green-lighter); border-color: var(--green-light); }
+    .kelas-check-item.checked { background: var(--green-lighter); border-color: var(--green); }
+    .kelas-check-item input[type="checkbox"] {
+      width: 18px; height: 18px; cursor: pointer;
+      accent-color: var(--green); flex-shrink: 0;
     }
-    .table-editor-table th .btn-col-del:hover { background: var(--danger); color: white; }
-    .table-actions-row { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
-
-    .accordion-item-editor {
-      background: var(--bg-soft); border: 1px solid var(--border);
-      border-radius: 8px; padding: 0.7rem; margin-bottom: 0.5rem;
+    .kelas-check-info { flex: 1; }
+    .kelas-check-name { font-weight: 700; font-size: 0.85rem; color: var(--text); }
+    .kelas-check-status {
+      display: inline-block; margin-top: 2px;
+      font-size: 0.68rem; padding: 1px 6px; border-radius: 4px;
+      font-weight: 600;
     }
-    .accordion-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
-    .accordion-item-num { font-size: 0.7rem; font-weight: 700; color: var(--green-dark); background: var(--green-lighter); padding: 1px 8px; border-radius: 4px; }
-
-    /* ASESMEN preview */
-    .asesmen-preview-box { cursor: pointer; }
-    .asesmen-soal-preview {
-      background: var(--bg-soft); border-radius: 8px;
-      padding: 0.9rem 1.1rem; border-left: 3px solid var(--purple);
-      margin-bottom: 0.5rem;
-    }
-    .asesmen-soal-number {
-      display: inline-block; background: var(--purple); color: white;
-      padding: 1px 8px; border-radius: 4px;
-      font-size: 0.65rem; font-weight: 700; margin-bottom: 0.4rem;
-    }
-    .asesmen-soal-text {
-      font-size: 0.88rem; font-weight: 600; color: var(--text);
-      margin-bottom: 0.6rem; line-height: 1.5;
-    }
-    .asesmen-jawaban-item {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.4rem 0.7rem; margin-bottom: 0.3rem;
-      background: white; border-radius: 6px;
-      font-size: 0.82rem; border: 1px solid var(--border);
-    }
-    .asesmen-jawaban-item.correct {
-      background: var(--green-lighter); border-color: var(--green); color: var(--green-dark); font-weight: 600;
-    }
-    .asesmen-jawaban-label {
-      width: 24px; height: 24px; border-radius: 50%;
-      background: var(--bg-soft); display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.72rem; flex-shrink: 0;
-    }
-    .asesmen-jawaban-item.correct .asesmen-jawaban-label {
-      background: var(--green); color: white;
-    }
-
-    /* REFLEKSI / DISKUSI preview */
-    .refleksi-preview-box { cursor: pointer; }
-    .mood-tracker-preview {
-      display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.3rem;
-    }
-    .mood-item {
-      display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
-      padding: 0.5rem 0.7rem; background: var(--bg-soft);
-      border-radius: 8px; font-size: 0.7rem; font-weight: 600;
-      min-width: 60px;
-    }
-    .mood-item .emoji-big { font-size: 1.8rem; line-height: 1; }
+    .kelas-check-status.published { background: var(--green-light); color: var(--green-dark); }
+    .kelas-check-status.draft { background: #fef3c7; color: #92400e; }
 
     .toast {
       position: fixed; bottom: 24px; right: 24px; background: var(--text);
@@ -526,6 +733,9 @@
       .panel-left, .panel-right { width: 100%; border: none; border-bottom: 1px solid var(--border); max-height: 300px; }
       .panel-center { padding: 1rem; }
     }
+    .nav-type.lembar_aktivitas { background: #fef3c7; color: #92400e; }
+.activity-render-eyebrow.lembar_aktivitas { background: #fef3c7; color: #92400e; }
+.activity-type-badge.lembar_aktivitas { background: #fef3c7; color: #92400e; }
   </style>
   <script>
     (function() {
@@ -586,60 +796,9 @@
       </main>
 
       <aside class="panel-right">
-        <div class="component-tools">
-          <div class="tool-section">
-            <div class="tool-section-title"><i class="fas fa-text-height"></i> Teks & Judul</div>
-            <button class="tool-btn" onclick="addComponent('text')" disabled id="toolText"><i class="fas fa-paragraph"></i> Teks (Rich)</button>
-            <button class="tool-btn" onclick="addComponent('heading')" disabled id="toolHeading"><i class="fas fa-heading"></i> Judul</button>
-          </div>
-          <div class="tool-section">
-            <div class="tool-section-title"><i class="fas fa-photo-film"></i> Media</div>
-            <button class="tool-btn" onclick="addComponent('image')" disabled id="toolImage"><i class="fas fa-image"></i> Gambar</button>
-            <button class="tool-btn" onclick="addComponent('video')" disabled id="toolVideo"><i class="fas fa-video"></i> Video</button>
-            <button class="tool-btn" onclick="addComponent('audio')" disabled id="toolAudio"><i class="fas fa-volume-high"></i> Audio</button>
-            <button class="tool-btn" onclick="addComponent('table')" disabled id="toolTable"><i class="fas fa-table"></i> Tabel</button>
-          </div>
-          <div class="tool-section">
-            <div class="tool-section-title"><i class="fas fa-pen-to-square"></i> LKPD</div>
-            <button class="tool-btn" onclick="addComponent('identitas_siswa')" disabled id="toolIdentitas"><i class="fas fa-id-card"></i> Identitas Siswa</button>
-            <button class="tool-btn" onclick="addComponent('petunjuk')" disabled id="toolPetunjuk"><i class="fas fa-circle-info"></i> Petunjuk</button>
-            <button class="tool-btn" onclick="addComponent('input_teks')" disabled id="toolInputTeks"><i class="fas fa-keyboard"></i> Input Teks</button>
-            <button class="tool-btn" onclick="addComponent('textarea')" disabled id="toolTextarea"><i class="fas fa-align-left"></i> Textarea</button>
-            <button class="tool-btn" onclick="addComponent('checkbox')" disabled id="toolCheckbox"><i class="fas fa-square-check"></i> Checkbox</button>
-            <button class="tool-btn" onclick="addComponent('radio')" disabled id="toolRadio"><i class="fas fa-circle-dot"></i> Radio</button>
-            <button class="tool-btn" onclick="addComponent('dropdown')" disabled id="toolDropdown"><i class="fas fa-caret-down"></i> Dropdown</button>
-            <button class="tool-btn" onclick="addComponent('tabel_isian')" disabled id="toolTabelIsian"><i class="fas fa-table-cells"></i> Tabel Isian</button>
-            <button class="tool-btn" onclick="addComponent('penilaian_diri')" disabled id="toolPenilaianDiri"><i class="fas fa-star-half-stroke"></i> Penilaian Diri</button>
-            <button class="tool-btn" onclick="addComponent('tombol_submit')" disabled id="toolTombolSubmit"><i class="fas fa-paper-plane"></i> Tombol Submit</button>
-          </div>
-          <div class="tool-section">
-            <div class="tool-section-title"><i class="fas fa-clipboard-check"></i> Asesmen</div>
-            <button class="tool-btn" onclick="addComponent('asesmen_setting')" disabled id="toolAsesmenSetting"><i class="fas fa-gear"></i> Pengaturan Asesmen</button>
-            <button class="tool-btn" onclick="addComponent('soal_pg')" disabled id="toolSoalPG"><i class="fas fa-list-ol"></i> Soal PG</button>
-            <button class="tool-btn" onclick="addComponent('soal_pg_kompleks')" disabled id="toolSoalPGK"><i class="fas fa-list-check"></i> Soal PG Kompleks</button>
-            <button class="tool-btn" onclick="addComponent('soal_esai')" disabled id="toolSoalEsai"><i class="fas fa-pen-nib"></i> Soal Esai</button>
-            <button class="tool-btn" onclick="addComponent('soal_menjodohkan')" disabled id="toolSoalJodoh"><i class="fas fa-arrows-left-right"></i> Menjodohkan</button>
-            <button class="tool-btn" onclick="addComponent('soal_benar_salah')" disabled id="toolSoalBS"><i class="fas fa-check-double"></i> Benar/Salah</button>
-          </div>
-          <div class="tool-section">
-            <div class="tool-section-title"><i class="fas fa-brain"></i> Refleksi</div>
-            <button class="tool-btn" onclick="addComponent('pertanyaan_refleksi')" disabled id="toolPertanyaanRefleksi"><i class="fas fa-question"></i> Pertanyaan Refleksi</button>
-            <button class="tool-btn" onclick="addComponent('mood_tracker')" disabled id="toolMoodTracker"><i class="fas fa-face-smile"></i> Mood Tracker</button>
-            <button class="tool-btn" onclick="addComponent('target_belajar')" disabled id="toolTargetBelajar"><i class="fas fa-bullseye"></i> Target Belajar</button>
-            <button class="tool-btn" onclick="addComponent('tombol_submit_refleksi')" disabled id="toolTombolSubmitRefleksi"><i class="fas fa-paper-plane"></i> Tombol Submit Refleksi</button>
-          </div>
-          <div class="tool-section">
-            <div class="tool-section-title"><i class="fas fa-comments"></i> Diskusi</div>
-            <button class="tool-btn" onclick="addComponent('topik_diskusi')" disabled id="toolTopikDiskusi"><i class="fas fa-comment-dots"></i> Topik Diskusi</button>
-            <button class="tool-btn" onclick="addComponent('aturan_diskusi')" disabled id="toolAturanDiskusi"><i class="fas fa-scroll"></i> Aturan Diskusi</button>
-            <button class="tool-btn" onclick="addComponent('kolom_komentar')" disabled id="toolKolomKomentar"><i class="fas fa-comment"></i> Kolom Komentar</button>
-          </div>
-          <div class="tool-section">
-            <div class="tool-section-title"><i class="fas fa-box"></i> Lainnya</div>
-            <button class="tool-btn" onclick="addComponent('note')" disabled id="toolNote"><i class="fas fa-note-sticky"></i> Note Box</button>
-            <button class="tool-btn" onclick="addComponent('accordion')" disabled id="toolAccordion"><i class="fas fa-list"></i> Accordion</button>
-            <button class="tool-btn" onclick="addComponent('file')" disabled id="toolFile"><i class="fas fa-file-arrow-down"></i> File Download</button>
-            <button class="tool-btn" onclick="addComponent('embed')" disabled id="toolEmbed"><i class="fas fa-code"></i> Embed</button>
+        <div class="component-tools" id="componentTools">
+          <div style="padding:1rem; text-align:center;">
+            <div class="spinner-sm"></div>
           </div>
         </div>
         <div class="panel-right-footer">
@@ -650,14 +809,13 @@
     </div>
   </div>
 
-   <!-- MODAL: ADD ACTIVITY -->
   <div class="modal-overlay" id="modalAddActivity">
     <div class="modal-card">
       <h2><i class="fas fa-plus"></i> Tambah Aktivitas</h2>
       <label class="form-label">Tipe Aktivitas <span class="req">*</span></label>
       <select id="inputActType" class="form-select">
         <option value="materi">📖 Materi</option>
-        <option value="lkpd">📝 LKPD</option>
+        <option value="lembar_aktivitas">📝 Lembar Aktivitas</option>
         <option value="asesmen">✍️ Asesmen</option>
         <option value="refleksi">💭 Refleksi</option>
         <option value="diskusi">💬 Diskusi</option>
@@ -673,7 +831,6 @@
     </div>
   </div>
 
-  <!-- MODAL: EDIT ACTIVITY -->
   <div class="modal-overlay" id="modalEditActivity">
     <div class="modal-card">
       <h2><i class="fas fa-pen"></i> Edit Aktivitas</h2>
@@ -682,7 +839,7 @@
       <label class="form-label">Tipe</label>
       <select id="editActType" class="form-select">
         <option value="materi">Materi</option>
-        <option value="lkpd">LKPD</option>
+        <option value="lembar_aktivitas">Lembar Aktivitas</option>
         <option value="asesmen">Asesmen</option>
         <option value="refleksi">Refleksi</option>
         <option value="diskusi">Diskusi</option>
@@ -696,7 +853,6 @@
     </div>
   </div>
 
-  <!-- MODAL: DELETE ACTIVITY -->
   <div class="modal-overlay" id="modalDeleteActivity">
     <div class="modal-card" style="max-width:440px;">
       <h2 style="color:var(--danger);"><i class="fas fa-trash"></i> Hapus Aktivitas?</h2>
@@ -711,7 +867,6 @@
     </div>
   </div>
 
-  <!-- MODAL: COLOR PICKER -->
   <div class="modal-overlay" id="modalColorPicker">
     <div class="modal-card" style="max-width: 460px;">
       <h2><i class="fas fa-palette"></i> <span id="colorPickerTitle">Pilih Warna</span></h2>
@@ -732,7 +887,6 @@
     </div>
   </div>
 
-  <!-- MODAL: HEADING -->
   <div class="modal-overlay" id="modalHeadingEditor">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-heading"></i> Edit Judul</h2>
@@ -770,7 +924,6 @@
     </div>
   </div>
 
-  <!-- MODAL: IMAGE -->
   <div class="modal-overlay" id="modalImageEditor">
     <div class="modal-card" style="max-width: 560px;">
       <h2><i class="fas fa-image"></i> Edit Gambar</h2>
@@ -802,7 +955,6 @@
     </div>
   </div>
 
-  <!-- MODAL: VIDEO -->
   <div class="modal-overlay" id="modalVideoEditor">
     <div class="modal-card" style="max-width: 560px;">
       <h2><i class="fas fa-video"></i> Edit Video</h2>
@@ -824,7 +976,6 @@
     </div>
   </div>
 
-  <!-- MODAL: AUDIO -->
   <div class="modal-overlay" id="modalAudioEditor">
     <div class="modal-card" style="max-width: 560px;">
       <h2><i class="fas fa-volume-high"></i> Edit Audio</h2>
@@ -844,7 +995,6 @@
     </div>
   </div>
 
-  <!-- MODAL: TABLE -->
   <div class="modal-overlay" id="modalTableEditor">
     <div class="modal-card" style="max-width: 880px;">
       <h2><i class="fas fa-table"></i> Edit Tabel</h2>
@@ -861,7 +1011,6 @@
     </div>
   </div>
 
-  <!-- MODAL: NOTE -->
   <div class="modal-overlay" id="modalNoteEditor">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-note-sticky"></i> Edit Note Box</h2>
@@ -893,7 +1042,6 @@
     </div>
   </div>
 
-  <!-- MODAL: ACCORDION -->
   <div class="modal-overlay" id="modalAccordionEditor">
     <div class="modal-card" style="max-width: 640px;">
       <h2><i class="fas fa-list"></i> Edit Accordion</h2>
@@ -906,7 +1054,6 @@
     </div>
   </div>
 
-  <!-- MODAL: FILE -->
   <div class="modal-overlay" id="modalFileEditor">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-file-arrow-down"></i> Edit File Download</h2>
@@ -923,7 +1070,6 @@
     </div>
   </div>
 
-  <!-- MODAL: EMBED -->
   <div class="modal-overlay" id="modalEmbedEditor">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-code"></i> Edit Embed</h2>
@@ -938,7 +1084,6 @@
     </div>
   </div>
 
-  <!-- MODAL: IDENTITAS SISWA -->
   <div class="modal-overlay" id="modalIdentitas">
     <div class="modal-card" style="max-width: 480px;">
       <h2><i class="fas fa-id-card"></i> Edit Identitas Siswa</h2>
@@ -961,7 +1106,6 @@
     </div>
   </div>
 
-  <!-- MODAL: PETUNJUK -->
   <div class="modal-overlay" id="modalPetunjuk">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-circle-info"></i> Edit Petunjuk</h2>
@@ -976,7 +1120,6 @@
     </div>
   </div>
 
-  <!-- MODAL: INPUT TEKS -->
   <div class="modal-overlay" id="modalInputTeks">
     <div class="modal-card" style="max-width: 500px;">
       <h2><i class="fas fa-keyboard"></i> Edit Input Teks</h2>
@@ -996,7 +1139,6 @@
     </div>
   </div>
 
-  <!-- MODAL: TEXTAREA -->
   <div class="modal-overlay" id="modalTextarea">
     <div class="modal-card" style="max-width: 500px;">
       <h2><i class="fas fa-align-left"></i> Edit Textarea</h2>
@@ -1018,7 +1160,6 @@
     </div>
   </div>
 
-  <!-- MODAL: OPTIONS (checkbox / radio / dropdown) -->
   <div class="modal-overlay" id="modalOptions">
     <div class="modal-card" style="max-width: 560px;">
       <h2 id="optionsModalTitle"><i class="fas fa-square-check"></i> Edit Opsi</h2>
@@ -1041,7 +1182,6 @@
     </div>
   </div>
 
-  <!-- MODAL: TABEL ISIAN -->
   <div class="modal-overlay" id="modalTabelIsian">
     <div class="modal-card" style="max-width: 780px;">
       <h2><i class="fas fa-table-cells"></i> Edit Tabel Isian</h2>
@@ -1059,7 +1199,6 @@
     </div>
   </div>
 
-  <!-- MODAL: PENILAIAN DIRI -->
   <div class="modal-overlay" id="modalPenilaianDiri">
     <div class="modal-card" style="max-width: 500px;">
       <h2><i class="fas fa-star-half-stroke"></i> Edit Penilaian Diri</h2>
@@ -1084,7 +1223,6 @@
     </div>
   </div>
 
-  <!-- MODAL: TOMBOL SUBMIT -->
   <div class="modal-overlay" id="modalTombolSubmit">
     <div class="modal-card" style="max-width: 480px;">
       <h2><i class="fas fa-paper-plane"></i> Edit Tombol Submit</h2>
@@ -1099,7 +1237,6 @@
     </div>
   </div>
 
-  <!-- MODAL: ASESMEN SETTING -->
   <div class="modal-overlay" id="modalAsesmenSetting">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-gear"></i> Pengaturan Asesmen</h2>
@@ -1127,7 +1264,6 @@
     </div>
   </div>
 
-  <!-- MODAL: SOAL PG -->
   <div class="modal-overlay" id="modalSoalPG">
     <div class="modal-card" style="max-width: 600px;">
       <h2><i class="fas fa-list-ol"></i> Edit Soal Pilihan Ganda</h2>
@@ -1157,7 +1293,6 @@
     </div>
   </div>
 
-  <!-- MODAL: SOAL PG KOMPLEKS -->
   <div class="modal-overlay" id="modalSoalPGK">
     <div class="modal-card" style="max-width: 620px;">
       <h2><i class="fas fa-list-check"></i> Edit Soal PG Kompleks</h2>
@@ -1188,7 +1323,6 @@
     </div>
   </div>
 
-  <!-- MODAL: SOAL ESAI -->
   <div class="modal-overlay" id="modalSoalEsai">
     <div class="modal-card" style="max-width: 600px;">
       <h2><i class="fas fa-pen-nib"></i> Edit Soal Esai</h2>
@@ -1213,7 +1347,6 @@
     </div>
   </div>
 
-  <!-- MODAL: SOAL MENJODOHKAN -->
   <div class="modal-overlay" id="modalSoalJodoh">
     <div class="modal-card" style="max-width: 640px;">
       <h2><i class="fas fa-arrows-left-right"></i> Edit Soal Menjodohkan</h2>
@@ -1243,7 +1376,6 @@
     </div>
   </div>
 
-  <!-- MODAL: SOAL BENAR/SALAH -->
   <div class="modal-overlay" id="modalSoalBS">
     <div class="modal-card" style="max-width: 600px;">
       <h2><i class="fas fa-check-double"></i> Edit Soal Benar/Salah</h2>
@@ -1271,7 +1403,6 @@
     </div>
   </div>
 
-  <!-- MODAL: PERTANYAAN REFLEKSI -->
   <div class="modal-overlay" id="modalPertanyaanRefleksi">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-question"></i> Edit Pertanyaan Refleksi</h2>
@@ -1291,7 +1422,6 @@
     </div>
   </div>
 
-  <!-- MODAL: MOOD TRACKER -->
   <div class="modal-overlay" id="modalMoodTracker">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-face-smile"></i> Edit Mood Tracker</h2>
@@ -1307,7 +1437,6 @@
     </div>
   </div>
 
-  <!-- MODAL: TARGET BELAJAR -->
   <div class="modal-overlay" id="modalTargetBelajar">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-bullseye"></i> Edit Target Belajar</h2>
@@ -1322,7 +1451,6 @@
     </div>
   </div>
 
-  <!-- MODAL: TOMBOL SUBMIT REFLEKSI -->
   <div class="modal-overlay" id="modalTombolSubmitRefleksi">
     <div class="modal-card" style="max-width: 480px;">
       <h2><i class="fas fa-paper-plane"></i> Edit Tombol Submit Refleksi</h2>
@@ -1337,7 +1465,6 @@
     </div>
   </div>
 
-  <!-- MODAL: TOPIK DISKUSI -->
   <div class="modal-overlay" id="modalTopikDiskusi">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-comment-dots"></i> Edit Topik Diskusi</h2>
@@ -1352,7 +1479,6 @@
     </div>
   </div>
 
-  <!-- MODAL: ATURAN DISKUSI -->
   <div class="modal-overlay" id="modalAturanDiskusi">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-scroll"></i> Edit Aturan Diskusi</h2>
@@ -1367,12 +1493,11 @@
     </div>
   </div>
 
-  <!-- MODAL: KOLOM KOMENTAR -->
   <div class="modal-overlay" id="modalKolomKomentar">
     <div class="modal-card" style="max-width: 500px;">
       <h2><i class="fas fa-comment"></i> Edit Kolom Komentar</h2>
       <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem;">
-        Komponen ini menjadi tempat siswa & guru berdiskusi. Muncul sebagai kolom komentar di halaman siswa.
+        Komponen ini menjadi tempat siswa & guru berdiskusi.
       </p>
       <label class="form-label">Label</label>
       <input type="text" id="kolomKomentarLabelInput" class="form-input" value="Diskusi Kelas" maxlength="100">
@@ -1385,7 +1510,6 @@
     </div>
   </div>
 
-  <!-- MODAL: KELOLA KELAS -->
   <div class="modal-overlay" id="modalKelolaKelas">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-users"></i> Kelola Kelas</h2>
@@ -1401,12 +1525,11 @@
     </div>
   </div>
 
-  <!-- MODAL: PUBLISH -->
   <div class="modal-overlay" id="modalPublish">
     <div class="modal-card" style="max-width: 520px;">
       <h2><i class="fas fa-globe"></i> Publish ke Kelas</h2>
       <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">
-        Pilih kelas yang akan menerima konten terbaru. Kelas yang <strong>belum terkait</strong> otomatis ditambahkan.
+        Pilih kelas yang akan menerima konten terbaru.
       </p>
       <div id="publishKelasList" class="kelas-checklist"></div>
       <div id="publishError" class="alert alert-error hidden"></div>
@@ -1420,2301 +1543,12 @@
   <div class="toast" id="toast"></div>
 
   <script src="../assets/js/core/cache.js"></script>
-<script src="../assets/js/config.js"></script>
+  <script src="../assets/js/config.js"></script>
   <script src="../assets/js/supabase.js"></script>
-  <script>
-    // ============================================
-    // STATE
-    // ============================================
-    let currentUser = null;
-    let currentUnit = null;
-    let unitClasses = [];
-    let availableClasses = [];
-    let activities = [];
-    let activeActivityId = null;
-    let components = [];
-    let editingActivityId = null;
-    let deletingActivityId = null;
-    let editingHeadingId = null;
-    let editingCompId = null;
-    let currentColorTarget = null;
-    let tableEditorState = null;
-    let accordionEditorState = null;
-    let selectedKelolaKelas = new Set();
-    let selectedPublishKelas = new Set();
-    // LKPD state
-    let lkpdEditingCompId = null;
-    let lkpdOptionsType = null;
-    let lkpdOptionsState = { label: '', options: ['Opsi 1', 'Opsi 2'], required: false };
-    let tabelIsianState = null;
-    // Asesmen state
-    let soalPGOptionsState = { question: '', options: ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D'], correct: 0, points: 10, feedback: '' };
-    let soalPGKOptionsState = { question: '', options: ['Opsi A', 'Opsi B', 'Opsi C'], correct: [0], points: 15, feedback: '' };
-    let soalJodohState = { question: '', left: ['', ''], right: ['', ''], points: 15 };
-    const quillInstances = {};
-
-    const ACTIVITY_TYPE_LABEL = {
-      materi: '📖 Materi', lkpd: '📝 LKPD', asesmen: '✍️ Asesmen',
-      refleksi: '💭 Refleksi', diskusi: '💬 Diskusi', custom: '🔧 Custom'
-    };
-
-    const PRESET_COLORS = [
-      '#fecaca', '#fed7aa', '#fef08a', '#bbf7d0', '#a7f3d0',
-      '#bae6fd', '#c7d2fe', '#ddd6fe', '#fbcfe8', '#e2e8f0',
-      '#ef4444', '#f97316', '#eab308', '#22c55e', '#10b981',
-      '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#64748b',
-      '#7f1d1d', '#7c2d12', '#713f12', '#14532d', '#064e3b',
-      '#1e3a8a', '#312e81', '#4c1d95', '#831843', '#0f172a'
-    ];
-
-    const COMPONENT_TYPE_LABEL = {
-      text: 'Teks', heading: 'Judul', image: 'Gambar', video: 'Video',
-      audio: 'Audio', table: 'Tabel', note: 'Note Box', accordion: 'Accordion',
-      file: 'File Download', embed: 'Embed',
-      identitas_siswa: 'Identitas', petunjuk: 'Petunjuk',
-      input_teks: 'Input Teks', textarea: 'Textarea',
-      checkbox: 'Checkbox', radio: 'Radio', dropdown: 'Dropdown',
-      tabel_isian: 'Tabel Isian', penilaian_diri: 'Penilaian Diri',
-      tombol_submit: 'Tombol Submit',
-      asesmen_setting: 'Setting Asesmen', soal_pg: 'Soal PG',
-      soal_pg_kompleks: 'PG Kompleks', soal_esai: 'Esai',
-      soal_menjodohkan: 'Menjodohkan', soal_benar_salah: 'Benar/Salah',
-      pertanyaan_refleksi: 'Pertanyaan Refleksi', mood_tracker: 'Mood Tracker',
-      target_belajar: 'Target Belajar', tombol_submit_refleksi: 'Tombol Refleksi',
-      topik_diskusi: 'Topik Diskusi', aturan_diskusi: 'Aturan Diskusi',
-      kolom_komentar: 'Kolom Komentar'
-    };
-
-    // ============================================
-    // DRIVE URL CONVERTER
-    // ============================================
-    function extractDriveId(url) {
-      if (!url) return null;
-      const patterns = [/\/file\/d\/([a-zA-Z0-9_-]+)/, /\/d\/([a-zA-Z0-9_-]+)/, /[?&]id=([a-zA-Z0-9_-]+)/];
-      for (const p of patterns) { const m = url.match(p); if (m) return m[1]; }
-      return null;
-    }
-    function convertDriveUrl(url, type = 'image') {
-      if (!url) return '';
-      const id = extractDriveId(url);
-      if (!id) return url;
-      if (type === 'image') return `https://drive.google.com/thumbnail?id=${id}&sz=w1600`;
-      if (type === 'video') return `https://drive.google.com/file/d/${id}/preview`;
-      return url;
-    }
-    function toEmbedVideoUrl(url) {
-      if (!url) return '';
-      const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-      if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
-      const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-      if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-      const driveId = extractDriveId(url);
-      if (driveId) return `https://drive.google.com/file/d/${driveId}/preview`;
-      if (url.includes('embed') || url.includes('/iframe')) return url;
-      return '';
-    }
-
-    // ============================================
-    // INIT
-    // ============================================
-    (async () => {
-      initSupabase();
-      currentUser = await requireAuth('guru');
-      if (!currentUser) return;
-
-      const unitId = new URLSearchParams(window.location.search).get('unitId');
-      if (!unitId) { alert('unitId tidak ditemukan.'); goBack(); return; }
-
-      try {
-        currentUnit = await getUnitById(unitId);
-        if (!currentUnit) throw new Error('Unit tidak ditemukan.');
-        const teacherId = currentUnit.annual_plans?.teacher_id;
-        if (String(teacherId) !== String(currentUser.id)) throw new Error('Anda tidak berhak mengedit unit ini.');
-
-        document.getElementById('editorTitle').textContent = currentUnit.title;
-        document.getElementById('editorSubtitle').textContent =
-          (currentUnit.annual_plans?.classes?.name || '-') + ' · ' +
-          (currentUnit.annual_plans?.subjects?.name || '-');
-        updateStatusBadge(currentUnit.status);
-
-        await loadUnitClassesData();
-        await loadActivities();
-
-        document.getElementById('loadingScreen').classList.add('hidden');
-        document.getElementById('editorScreen').classList.remove('hidden');
-      } catch (err) {
-        console.error('Init error:', err);
-        document.getElementById('loadingScreen').innerHTML =
-          `<div style="text-align:center; color:var(--danger); padding:2rem;">
-            <i class="fas fa-triangle-exclamation" style="font-size:2rem; margin-bottom:1rem;"></i>
-            <p>${escapeHtml(err.message)}</p>
-            <button class="btn-primary" onclick="goBack()" style="margin-top:1rem;"><i class="fas fa-arrow-left"></i> Kembali</button>
-          </div>`;
-      }
-    })();
-
-async function loadUnitClassesData() {
-  try {
-    unitClasses = await getUnitClasses(currentUnit.id);
-    const assignments = await getMyTeachingAssignments(currentUser.id);
-    const myClassMap = {};
-    assignments
-      .filter(a => String(a.subject_id) === String(currentUnit.annual_plans?.subject_id))
-      .forEach(a => { if (a.classes) myClassMap[String(a.class_id)] = a.classes; });
-    const myClassIds = new Set(Object.keys(myClassMap));
-    
-    // ✅ BARU: Ambil SEMUA kelas sekolah
-    let allSchoolClasses = [];
-    try {
-      allSchoolClasses = await getClasses(currentUser.school_id);
-    } catch (e) {
-      console.warn('Gagal ambil semua kelas, fallback:', e);
-      allSchoolClasses = Object.values(myClassMap);
-    }
-    availableClasses = allSchoolClasses.map(c => ({
-      ...c,
-      _isMyClass: myClassIds.has(String(c.id))
-    }));
-    
-    updateKelasLabel();
-  } catch (err) { console.error('Load kelas data error:', err); }
-}
-
-    function updateKelasLabel() {
-      document.getElementById('kelasCountLabel').textContent = 'Kelas (' + unitClasses.length + ')';
-    }
-
-    // ============================================
-    // ACTIVITIES CRUD
-    // ============================================
-    async function loadActivities() {
-      const list = document.getElementById('activityList');
-      list.innerHTML = '<div style="padding:1rem; text-align:center;"><span class="spinner-sm"></span></div>';
-      try {
-        activities = await getUnitActivities(currentUnit.id);
-        renderActivities();
-        if (activeActivityId) {
-          const exists = activities.find(a => String(a.id) === String(activeActivityId));
-          if (exists) await loadComponents(activeActivityId);
-          else { activeActivityId = null; renderEmptyCanvas(); }
-        }
-      } catch (err) {
-        list.innerHTML = `<div style="padding:1rem; color:var(--danger); font-size:0.8rem;">Gagal: ${escapeHtml(err.message)}</div>`;
-      }
-    }
-
-    function renderActivities() {
-      document.getElementById('activityCount').textContent = activities.length;
-      const list = document.getElementById('activityList');
-      if (activities.length === 0) {
-        list.innerHTML = `<div class="empty-activity"><span class="emoji">📭</span><p>Belum ada aktivitas.<br>Klik <strong>Tambah Aktivitas</strong>.</p></div>`;
-        return;
-      }
-      list.innerHTML = activities.map((a, idx) => {
-        const isActive = String(a.id) === String(activeActivityId);
-        const canUp = idx > 0;
-        const canDown = idx < activities.length - 1;
-        return `
-          <div class="activity-item ${isActive ? 'active' : ''}" onclick="selectActivity('${a.id}')">
-            <div class="activity-item-top">
-              <span class="activity-order">#${idx + 1}</span>
-              <span class="activity-title">${escapeHtml(a.title)}</span>
-            </div>
-            <span class="activity-type-badge ${a.type}">${ACTIVITY_TYPE_LABEL[a.type] || a.type}</span>
-            <div class="activity-item-actions">
-              <button class="activity-mini-btn" title="Naik" ${canUp ? '' : 'disabled'} onclick="event.stopPropagation(); moveActivity('${a.id}', -1)"><i class="fas fa-arrow-up"></i></button>
-              <button class="activity-mini-btn" title="Turun" ${canDown ? '' : 'disabled'} onclick="event.stopPropagation(); moveActivity('${a.id}', 1)"><i class="fas fa-arrow-down"></i></button>
-              <button class="activity-mini-btn" title="Edit" onclick="event.stopPropagation(); openEditActivityModal('${a.id}')"><i class="fas fa-pen"></i></button>
-              <button class="activity-mini-btn danger" title="Hapus" onclick="event.stopPropagation(); openDeleteActivityModal('${a.id}')"><i class="fas fa-trash"></i></button>
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    async function selectActivity(activityId) {
-      if (String(activityId) === String(activeActivityId)) return;
-      activeActivityId = activityId;
-      renderActivities();
-      await loadComponents(activityId);
-      enableToolButtons(true);
-    }
-
-    async function moveActivity(activityId, direction) {
-      const idx = activities.findIndex(a => String(a.id) === String(activityId));
-      if (idx < 0) return;
-      const swapIdx = idx + direction;
-      if (swapIdx < 0 || swapIdx >= activities.length) return;
-      const tmp = activities[idx]; activities[idx] = activities[swapIdx]; activities[swapIdx] = tmp;
-      try {
-        await reorderUnitActivities(activities.map((a, i) => ({ id: a.id, order_index: i + 1 })));
-        activities.forEach((a, i) => { a.order_index = i + 1; });
-        renderActivities();
-      } catch (err) { showToast('Gagal ubah urutan', 'error'); await loadActivities(); }
-    }
-
-    function openAddActivityModal() {
-      document.getElementById('inputActType').value = 'materi';
-      document.getElementById('inputActTitle').value = '';
-      document.getElementById('addActivityError').classList.add('hidden');
-      document.getElementById('btnSaveActivity').disabled = false;
-      document.getElementById('btnSaveActivity').innerHTML = '<i class="fas fa-save"></i> Simpan';
-      document.getElementById('modalAddActivity').classList.add('active');
-      setTimeout(() => document.getElementById('inputActTitle').focus(), 100);
-    }
-    function closeAddActivityModal() { document.getElementById('modalAddActivity').classList.remove('active'); }
-
-    async function saveActivity() {
-      const type = document.getElementById('inputActType').value;
-      const title = document.getElementById('inputActTitle').value.trim();
-      const errBox = document.getElementById('addActivityError');
-      const btn = document.getElementById('btnSaveActivity');
-      errBox.classList.add('hidden');
-      if (!title) { errBox.textContent = 'Judul wajib diisi.'; errBox.classList.remove('hidden'); return; }
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-      try {
-        await createUnitActivity({ unitId: currentUnit.id, title, type });
-        closeAddActivityModal();
-        showToast('✅ Aktivitas ditambahkan', 'success');
-        await loadActivities();
-      } catch (err) {
-        errBox.textContent = 'Gagal: ' + err.message;
-        errBox.classList.remove('hidden');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
-      }
-    }
-
-    function openEditActivityModal(activityId) {
-      const a = activities.find(x => String(x.id) === String(activityId));
-      if (!a) return;
-      editingActivityId = activityId;
-      document.getElementById('editActTitle').value = a.title;
-      document.getElementById('editActType').value = a.type;
-      document.getElementById('editActivityError').classList.add('hidden');
-      document.getElementById('btnUpdateActivity').disabled = false;
-      document.getElementById('btnUpdateActivity').innerHTML = '<i class="fas fa-save"></i> Simpan';
-      document.getElementById('modalEditActivity').classList.add('active');
-    }
-    function closeEditActivityModal() { document.getElementById('modalEditActivity').classList.remove('active'); editingActivityId = null; }
-
-    async function updateActivityInfo() {
-      if (!editingActivityId) return;
-      const title = document.getElementById('editActTitle').value.trim();
-      const type = document.getElementById('editActType').value;
-      const errBox = document.getElementById('editActivityError');
-      const btn = document.getElementById('btnUpdateActivity');
-      errBox.classList.add('hidden');
-      if (!title) { errBox.textContent = 'Judul wajib.'; errBox.classList.remove('hidden'); return; }
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-      try {
-        await updateUnitActivity(editingActivityId, { title, type });
-        closeEditActivityModal();
-        showToast('✅ Aktivitas diperbarui', 'success');
-        await loadActivities();
-      } catch (err) {
-        errBox.textContent = 'Gagal: ' + err.message;
-        errBox.classList.remove('hidden');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
-      }
-    }
-
-    function openDeleteActivityModal(activityId) {
-      const a = activities.find(x => String(x.id) === String(activityId));
-      if (!a) return;
-      deletingActivityId = activityId;
-      document.getElementById('deleteActivityMessage').innerHTML =
-        `Hapus aktivitas <strong>${escapeHtml(a.title)}</strong>?`;
-      document.getElementById('modalDeleteActivity').classList.add('active');
-    }
-    function closeDeleteActivityModal() { document.getElementById('modalDeleteActivity').classList.remove('active'); deletingActivityId = null; }
-
-    async function confirmDeleteActivity() {
-      if (!deletingActivityId) return;
-      const btn = document.getElementById('btnConfirmDeleteActivity');
-      btn.disabled = true;
-      btn.textContent = 'Menghapus...';
-      try {
-        await deleteUnitActivity(deletingActivityId);
-        if (String(deletingActivityId) === String(activeActivityId)) {
-          activeActivityId = null; components = [];
-          renderEmptyCanvas(); enableToolButtons(false);
-        }
-        closeDeleteActivityModal();
-        showToast('🗑️ Aktivitas dihapus', 'success');
-        await loadActivities();
-      } catch (err) {
-        showToast('Gagal: ' + err.message, 'error');
-        btn.disabled = false;
-        btn.textContent = 'Ya, Hapus';
-      }
-    }
-
-    // ============================================
-    // COMPONENTS LOADER & RENDER
-    // ============================================
-    async function loadComponents(activityId) {
-      const center = document.getElementById('panelCenter');
-      center.innerHTML = '<div style="text-align:center; padding:2rem;"><span class="spinner-sm"></span></div>';
-      try {
-        components = await getActivityComponents(activityId);
-        renderCanvas();
-      } catch (err) {
-        center.innerHTML = `<div style="padding:2rem; color:var(--danger);">Gagal: ${escapeHtml(err.message)}</div>`;
-      }
-    }
-
-    function renderCanvas() {
-      const activity = activities.find(a => String(a.id) === String(activeActivityId));
-      const center = document.getElementById('panelCenter');
-      if (!activity) { renderEmptyCanvas(); return; }
-      Object.keys(quillInstances).forEach(k => delete quillInstances[k]);
-
-      const header = `
-        <div class="canvas-header">
-          <div class="canvas-header-title">
-            <h2>${escapeHtml(activity.title)}</h2>
-            <div class="canvas-header-meta">
-              <span class="activity-type-badge ${activity.type}" style="font-size:0.65rem;">${ACTIVITY_TYPE_LABEL[activity.type] || activity.type}</span>
-              &nbsp;·&nbsp; ${components.length} komponen
-            </div>
-          </div>
-          <div class="canvas-header-actions">
-            <button class="btn-icon" onclick="openEditActivityModal('${activity.id}')" title="Edit info"><i class="fas fa-pen"></i></button>
-          </div>
-        </div>`;
-
-      if (components.length === 0) {
-        center.innerHTML = header + `<div class="empty-canvas"><span class="emoji">📄</span><h3>Belum Ada Komponen</h3><p>Klik tombol di panel kanan untuk menambahkan komponen.</p></div>`;
-        return;
-      }
-      center.innerHTML = header + `<div class="components-container">${components.map((c, idx) => renderComponentWrapper(c, idx)).join('')}</div>`;
-      components.forEach(c => { if (c.component_type === 'text') initQuillEditor(c); });
-    }
-
-    function renderComponentWrapper(comp, idx) {
-      const canUp = idx > 0;
-      const canDown = idx < components.length - 1;
-      const typeLabel = COMPONENT_TYPE_LABEL[comp.component_type] || comp.component_type;
-      return `
-        <div class="component-wrapper" data-comp-id="${comp.id}">
-          <div class="component-type-label">${typeLabel}</div>
-          <div class="component-toolbar">
-            <button class="activity-mini-btn" title="Naik" ${canUp ? '' : 'disabled'} onclick="moveComponent('${comp.id}', -1)"><i class="fas fa-arrow-up"></i></button>
-            <button class="activity-mini-btn" title="Turun" ${canDown ? '' : 'disabled'} onclick="moveComponent('${comp.id}', 1)"><i class="fas fa-arrow-down"></i></button>
-            <button class="activity-mini-btn danger" title="Hapus" onclick="removeComponent('${comp.id}')"><i class="fas fa-trash"></i></button>
-          </div>
-          <div class="component-content">${renderComponentContent(comp)}</div>
-        </div>`;
-    }
-
-    function renderComponentContent(comp) {
-      const data = comp.component_data || {};
-      const isPlaceholder = (txt) => `<span style="color:#94a3b8;font-style:italic;">${txt}</span>`;
-
-      if (comp.component_type === 'text') return `<div id="quill-${comp.id}"></div>`;
-
-      if (comp.component_type === 'heading') {
-        const level = data.level || 'h2';
-        const text = data.text || '';
-        const color = data.color || '';
-        const align = data.align || 'left';
-        const styleArr = [];
-        if (color) styleArr.push('color: ' + color);
-        styleArr.push('text-align: ' + align);
-        const innerContent = text ? escapeHtml(text) : '<span class="heading-placeholder">Klik untuk edit judul...</span>';
-        return `<div class="heading-preview" onclick="openHeadingModal('${comp.id}')"><div class="heading-preview-inner ${level}" style="${styleArr.join('; ')}">${innerContent}</div></div>`;
-      }
-
-      if (comp.component_type === 'image') {
-        const url = data.url || '';
-        if (!url) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openImageModal('${comp.id}')"><i class="fas fa-image" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan gambar')}</p></div>`;
-        const displayUrl = convertDriveUrl(url, 'image');
-        const alignMap = { left: 'flex-start', center: 'center', right: 'flex-end' };
-        return `<div style="display:flex; flex-direction:column; align-items:${alignMap[data.align || 'center']}; cursor:pointer;" onclick="openImageModal('${comp.id}')">
-          <img src="${escapeHtml(displayUrl)}" alt="${escapeHtml(data.alt || '')}" style="max-width:100%; border-radius:8px;" loading="lazy" referrerpolicy="no-referrer">
-          ${data.caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; font-style:italic; margin-top:0.4rem;">${escapeHtml(data.caption)}</div>` : ''}
-        </div>`;
-      }
-
-      if (comp.component_type === 'video') {
-        const url = data.url || '';
-        if (!url) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openVideoModal('${comp.id}')"><i class="fas fa-video" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan video')}</p></div>`;
-        const embedUrl = toEmbedVideoUrl(url);
-        return `<div style="cursor:pointer;" onclick="openVideoModal('${comp.id}')">
-          ${embedUrl ? `<div style="position:relative; padding-bottom:56.25%; height:0; border-radius:8px; overflow:hidden; background:#000;"><iframe src="${escapeHtml(embedUrl)}" style="position:absolute; inset:0; width:100%; height:100%; border:0;" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>` : `<div style="padding:1rem; background:#fef3c7; color:#92400e; border-radius:8px;">⚠️ URL tidak dikenali</div>`}
-          ${data.caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-top:0.4rem;">${escapeHtml(data.caption)}</div>` : ''}
-        </div>`;
-      }
-
-      if (comp.component_type === 'audio') {
-        const url = data.url || '';
-        if (!url) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openAudioModal('${comp.id}')"><i class="fas fa-volume-high" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan audio')}</p></div>`;
-        return `<div style="cursor:pointer;" onclick="openAudioModal('${comp.id}')">
-          <audio controls style="width:100%; margin-bottom:0.4rem;"><source src="${escapeHtml(url)}"></audio>
-          ${data.caption ? `<div style="font-size:0.78rem; color:var(--text-muted); text-align:center;">${escapeHtml(data.caption)}</div>` : ''}
-        </div>`;
-      }
-
-      if (comp.component_type === 'table') {
-        const columns = data.columns || [];
-        const rows = data.rows || [];
-        const widths = data.widths || [];
-        if (columns.length === 0) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openTableModal('${comp.id}')"><i class="fas fa-table" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan tabel')}</p></div>`;
-        return `<div style="cursor:pointer; overflow-x:auto;" onclick="openTableModal('${comp.id}')">
-          <table style="width:100%; border-collapse:collapse; font-size:0.85rem; table-layout:fixed;">
-            <thead><tr style="background:var(--green-lighter);">${columns.map((c, i) => `<th style="padding:0.5rem 0.7rem; border:1px solid var(--border); text-align:left; ${widths[i] ? 'width:' + widths[i] + '%' : ''}">${escapeHtml(c)}</th>`).join('')}</tr></thead>
-            <tbody>${rows.map(row => `<tr>${columns.map((_, i) => `<td style="padding:0.5rem 0.7rem; border:1px solid var(--border);">${escapeHtml(row[i] || '')}</td>`).join('')}</tr>`).join('')}</tbody>
-          </table>
-        </div>`;
-      }
-
-      if (comp.component_type === 'note') {
-        const v = data.variant || 'info';
-        if (!data.title && !data.text) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openNoteModal('${comp.id}')"><i class="fas fa-note-sticky" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan note')}</p></div>`;
-        const vMap = {
-          info: { bg: '#dbeafe', color: '#1e40af', border: '#3b82f6', icon: 'fa-circle-info' },
-          success: { bg: '#d1fae5', color: '#047857', border: '#10b981', icon: 'fa-circle-check' },
-          warning: { bg: '#fef3c7', color: '#92400e', border: '#f59e0b', icon: 'fa-triangle-exclamation' },
-          danger: { bg: '#fee2e2', color: '#b91c1c', border: '#ef4444', icon: 'fa-circle-xmark' }
-        };
-        const vm = vMap[v] || vMap.info;
-        return `<div style="cursor:pointer;" onclick="openNoteModal('${comp.id}')">
-          <div style="padding:0.9rem 1.1rem; background:${vm.bg}; border-left:4px solid ${vm.border}; border-radius:8px; color:${vm.color};">
-            ${data.title ? `<div style="font-weight:800; margin-bottom:0.3rem; display:flex; align-items:center; gap:6px;"><i class="fas ${vm.icon}"></i> ${escapeHtml(data.title)}</div>` : ''}
-            <div style="font-size:0.88rem; white-space:pre-wrap;">${escapeHtml(data.text || '')}</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'accordion') {
-        const items = data.items || [];
-        if (items.length === 0) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openAccordionModal('${comp.id}')"><i class="fas fa-list" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan accordion')}</p></div>`;
-        return `<div style="cursor:pointer;" onclick="openAccordionModal('${comp.id}')">
-          ${items.map(it => `<details style="margin-bottom:0.5rem; background:var(--bg-soft); border-radius:8px; border:1px solid var(--border);">
-            <summary style="padding:0.7rem 1rem; cursor:pointer; font-weight:700;">${escapeHtml(it.title || 'Tanpa judul')}</summary>
-            <div style="padding:0.8rem 1rem; border-top:1px solid var(--border); white-space:pre-wrap;">${escapeHtml(it.content || '')}</div>
-          </details>`).join('')}
-        </div>`;
-      }
-
-      if (comp.component_type === 'file') {
-        if (!data.url) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openFileModal('${comp.id}')"><i class="fas fa-file-arrow-down" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan file')}</p></div>`;
-        return `<div style="cursor:pointer;" onclick="openFileModal('${comp.id}')">
-          <div style="display:flex; align-items:center; gap:0.9rem; padding:0.9rem 1.1rem; background:var(--green-lighter); border:1px solid var(--green-light); border-radius:8px;">
-            <div style="width:44px; height:44px; background:var(--green); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-file-arrow-down"></i></div>
-            <div style="flex:1;">
-              <div style="font-weight:700; color:var(--green-dark);">${escapeHtml(data.label || 'Download File')}</div>
-              ${data.description ? `<div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(data.description)}</div>` : ''}
-            </div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'embed') {
-        if (!data.url) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openEmbedModal('${comp.id}')"><i class="fas fa-code" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan embed')}</p></div>`;
-        return `<div style="cursor:pointer;" onclick="openEmbedModal('${comp.id}')"><iframe src="${escapeHtml(data.url)}" style="width:100%; height:${data.height || 500}px; border:1px solid var(--border); border-radius:8px; background:white;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
-      }
-
-      // ============ LKPD ============
-      if (comp.component_type === 'identitas_siswa') {
-        const shows = [];
-        if (data.show_name !== false) shows.push('Nama');
-        if (data.show_nisn !== false) shows.push('NISN');
-        if (data.show_kelas) shows.push('Kelas');
-        if (data.show_tanggal) shows.push('Tanggal');
-        return `<div class="lkpd-preview-box" onclick="openIdentitasModal('${comp.id}')">
-          <div style="padding:1rem; background:var(--bg-soft); border:2px dashed var(--green-light); border-radius:8px;">
-            <div style="font-weight:800; margin-bottom:0.4rem; color:var(--green-dark); font-size:0.9rem;"><i class="fas fa-id-card"></i> ${escapeHtml(data.label || 'Identitas Siswa')}</div>
-            <div style="font-size:0.78rem; color:var(--text-muted);">Field: <strong>${shows.join(', ') || '(kosong)'}</strong> · Auto-fill</div>
-            <div class="lkpd-hint">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'petunjuk') {
-        return `<div class="lkpd-preview-box" onclick="openPetunjukModal('${comp.id}')">
-          <div style="padding:1rem 1.2rem; background:#fef3c7; border-left:4px solid var(--warning); border-radius:8px;">
-            <div style="font-weight:800; color:#92400e; margin-bottom:0.4rem; font-size:0.9rem;"><i class="fas fa-circle-info"></i> ${escapeHtml(data.title || 'Petunjuk')}</div>
-            <div style="font-size:0.85rem; color:#78350f; white-space:pre-wrap;">${escapeHtml(data.text || '(Kosong)')}</div>
-            <div class="lkpd-hint" style="background:#fde68a; color:#92400e;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'input_teks') {
-        return `<div class="lkpd-preview-box" onclick="openInputTeksModal('${comp.id}')">
-          <div class="lkpd-label-preview">${escapeHtml(data.label || '(Belum ada label)')} ${data.required ? '<span style="color:var(--danger);">*</span>' : ''}</div>
-          <input type="text" class="lkpd-input-preview" placeholder="${escapeHtml(data.placeholder || '')}" readonly>
-          <div class="lkpd-hint">Klik untuk edit</div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'textarea') {
-        return `<div class="lkpd-preview-box" onclick="openTextareaModal('${comp.id}')">
-          <div class="lkpd-label-preview">${escapeHtml(data.label || '(Belum ada label)')} ${data.required ? '<span style="color:var(--danger);">*</span>' : ''}</div>
-          <textarea class="lkpd-input-preview" rows="${data.rows || 4}" placeholder="${escapeHtml(data.placeholder || '')}" readonly></textarea>
-          <div class="lkpd-hint">Klik untuk edit</div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'checkbox' || comp.component_type === 'radio') {
-        const opts = data.options || [];
-        const inputType = comp.component_type === 'radio' ? 'radio' : 'checkbox';
-        return `<div class="lkpd-preview-box" onclick="openOptionsModal('${comp.id}', '${comp.component_type}')">
-          <div class="lkpd-label-preview">${escapeHtml(data.label || '(Belum ada label)')} ${data.required ? '<span style="color:var(--danger);">*</span>' : ''}</div>
-          ${opts.map(o => `<label class="lkpd-option-item"><input type="${inputType}" disabled> ${escapeHtml(o)}</label>`).join('')}
-          <div class="lkpd-hint">Klik untuk edit · ${opts.length} opsi</div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'dropdown') {
-        const opts = data.options || [];
-        return `<div class="lkpd-preview-box" onclick="openOptionsModal('${comp.id}', 'dropdown')">
-          <div class="lkpd-label-preview">${escapeHtml(data.label || '(Belum ada label)')} ${data.required ? '<span style="color:var(--danger);">*</span>' : ''}</div>
-          <select class="lkpd-input-preview" disabled>
-            <option>-- Pilih --</option>
-            ${opts.map(o => `<option>${escapeHtml(o)}</option>`).join('')}
-          </select>
-          <div class="lkpd-hint">Klik untuk edit · ${opts.length} opsi</div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'tabel_isian') {
-        const columns = data.columns || [];
-        const rows = data.rows || [];
-        if (columns.length === 0) return `<div style="text-align:center; padding:1.5rem; border:2px dashed var(--border); border-radius:8px; cursor:pointer;" onclick="openTabelIsianModal('${comp.id}')"><i class="fas fa-table-cells" style="font-size:2rem; color:#94a3b8; margin-bottom:0.5rem;"></i><p style="color:var(--text-muted); font-size:0.85rem;">${isPlaceholder('Klik untuk menambahkan tabel isian')}</p></div>`;
-        return `<div class="lkpd-preview-box" onclick="openTabelIsianModal('${comp.id}')">
-          ${data.label ? `<div class="lkpd-label-preview">${escapeHtml(data.label)}</div>` : ''}
-          <div style="overflow-x:auto;">
-            <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-              <thead><tr style="background:var(--green-lighter);">${columns.map(c => `<th style="padding:0.5rem 0.7rem; border:1px solid var(--border); text-align:left; font-weight:700; color:var(--green-dark);">${escapeHtml(c)}</th>`).join('')}</tr></thead>
-              <tbody>${rows.map(r => `<tr>${columns.map((_, i) => `<td style="padding:0.5rem 0.7rem; border:1px solid var(--border); color:var(--text-muted); font-style:italic;">${escapeHtml(r[i] || '(draft)')}</td>`).join('')}</tr>`).join('')}</tbody>
-            </table>
-          </div>
-          <div class="lkpd-hint">Klik untuk edit · ${rows.length}×${columns.length}</div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'penilaian_diri') {
-        const min = data.min || 1;
-        const max = data.max || 5;
-        const labels = data.labels || [];
-        const opts = [];
-        for (let i = min; i <= max; i++) {
-          const lbl = labels[i - min] || `Skala ${i}`;
-          opts.push(`<label class="lkpd-option-item"><input type="radio" disabled> ${i} — ${escapeHtml(lbl)}</label>`);
-        }
-        return `<div class="lkpd-preview-box" onclick="openPenilaianDiriModal('${comp.id}')">
-          <div class="lkpd-label-preview">${escapeHtml(data.label || '(Belum ada label)')}</div>
-          ${opts.join('')}
-          <div class="lkpd-hint">Skala ${min}-${max}</div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'tombol_submit') {
-        return `<div class="lkpd-preview-box" onclick="openTombolSubmitModal('${comp.id}')">
-          <div style="text-align:center; padding:1rem; background:var(--green-lighter); border:2px dashed var(--green); border-radius:8px;">
-            <button class="btn-primary" style="pointer-events:none; padding:0.6rem 1.5rem;">
-              <i class="fas fa-paper-plane"></i> ${escapeHtml(data.label || 'Kumpulkan Jawaban')}
-            </button>
-            <div class="lkpd-hint">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      // ============ ASESMEN ============
-      if (comp.component_type === 'asesmen_setting') {
-        return `<div class="asesmen-preview-box" onclick="openAsesmenSettingModal('${comp.id}')">
-          <div style="padding:1rem; background:#ede9fe; border-left:4px solid var(--purple); border-radius:8px;">
-            <div style="font-weight:800; color:#6d28d9; margin-bottom:0.4rem; font-size:0.9rem;"><i class="fas fa-gear"></i> Pengaturan Asesmen</div>
-            <div style="font-size:0.8rem; color:#5b21b6;">
-              <div><strong>Judul:</strong> ${escapeHtml(data.title || '-')}</div>
-              <div><strong>Durasi:</strong> ${data.duration || 30} menit</div>
-              <div><strong>Auto-grade:</strong> ${data.auto_grade ? 'Ya' : 'Tidak'}</div>
-            </div>
-            <div class="lkpd-hint" style="background:#ddd6fe; color:#6d28d9;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'soal_pg') {
-        const opts = data.options || [];
-        return `<div class="asesmen-preview-box" onclick="openSoalPGModal('${comp.id}')">
-          <div class="asesmen-soal-preview">
-            <span class="asesmen-soal-number">PG · ${data.points || 10} poin</span>
-            <div class="asesmen-soal-text">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
-            ${opts.map((o, i) => `<div class="asesmen-jawaban-item ${i === data.correct ? 'correct' : ''}"><div class="asesmen-jawaban-label">${String.fromCharCode(65+i)}</div><div>${escapeHtml(o)}</div>${i === data.correct ? '<i class="fas fa-check" style="margin-left:auto; color:var(--green);"></i>' : ''}</div>`).join('')}
-            <div class="lkpd-hint" style="background:#ddd6fe; color:#6d28d9;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'soal_pg_kompleks') {
-        const opts = data.options || [];
-        const correct = data.correct || [];
-        return `<div class="asesmen-preview-box" onclick="openSoalPGKModal('${comp.id}')">
-          <div class="asesmen-soal-preview">
-            <span class="asesmen-soal-number">PG Kompleks · ${data.points || 15} poin</span>
-            <div class="asesmen-soal-text">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
-            ${opts.map((o, i) => `<div class="asesmen-jawaban-item ${correct.includes(i) ? 'correct' : ''}"><div class="asesmen-jawaban-label">${String.fromCharCode(65+i)}</div><div>${escapeHtml(o)}</div>${correct.includes(i) ? '<i class="fas fa-check" style="margin-left:auto; color:var(--green);"></i>' : ''}</div>`).join('')}
-            <div class="lkpd-hint" style="background:#ddd6fe; color:#6d28d9;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'soal_esai') {
-        return `<div class="asesmen-preview-box" onclick="openSoalEsaiModal('${comp.id}')">
-          <div class="asesmen-soal-preview">
-            <span class="asesmen-soal-number">Esai · ${data.points || 20} poin</span>
-            <div class="asesmen-soal-text">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
-            <textarea class="lkpd-input-preview" rows="2" placeholder="Jawaban siswa..." readonly style="margin-top:0.5rem;"></textarea>
-            <div class="lkpd-hint" style="background:#ddd6fe; color:#6d28d9;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'soal_menjodohkan') {
-        const left = data.left || [];
-        const right = data.right || [];
-        return `<div class="asesmen-preview-box" onclick="openSoalJodohModal('${comp.id}')">
-          <div class="asesmen-soal-preview">
-            <span class="asesmen-soal-number">Menjodohkan · ${data.points || 15} poin</span>
-            <div class="asesmen-soal-text">${escapeHtml(data.question || '(Belum ada instruksi)')}</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-              <div>${left.map((l, i) => `<div style="padding:0.4rem 0.7rem; background:white; border-radius:6px; margin-bottom:0.3rem; font-size:0.8rem;"><strong>${i+1}.</strong> ${escapeHtml(l)}</div>`).join('')}</div>
-              <div>${right.map((r, i) => `<div style="padding:0.4rem 0.7rem; background:white; border-radius:6px; margin-bottom:0.3rem; font-size:0.8rem;"><strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(r)}</div>`).join('')}</div>
-            </div>
-            <div class="lkpd-hint" style="background:#ddd6fe; color:#6d28d9;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'soal_benar_salah') {
-        return `<div class="asesmen-preview-box" onclick="openSoalBSModal('${comp.id}')">
-          <div class="asesmen-soal-preview">
-            <span class="asesmen-soal-number">Benar/Salah · ${data.points || 5} poin</span>
-            <div class="asesmen-soal-text">${escapeHtml(data.question || '(Belum ada pernyataan)')}</div>
-            <div style="display:flex; gap:0.5rem;">
-              <span class="asesmen-jawaban-item ${data.correct === true ? 'correct' : ''}" style="flex:1; justify-content:center;">BENAR</span>
-              <span class="asesmen-jawaban-item ${data.correct === false ? 'correct' : ''}" style="flex:1; justify-content:center;">SALAH</span>
-            </div>
-            <div class="lkpd-hint" style="background:#ddd6fe; color:#6d28d9;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      // ============ REFLEKSI ============
-      if (comp.component_type === 'pertanyaan_refleksi') {
-        return `<div class="refleksi-preview-box" onclick="openPertanyaanRefleksiModal('${comp.id}')">
-          <div style="padding:1rem 1.2rem; background:#fce7f3; border-left:4px solid var(--pink); border-radius:8px;">
-            <div style="font-weight:800; color:#be185d; margin-bottom:0.4rem; font-size:0.9rem;"><i class="fas fa-question"></i> Pertanyaan Refleksi</div>
-            <div style="font-size:0.88rem; color:#831843;">${escapeHtml(data.question || '(Belum ada pertanyaan)')}</div>
-            <div class="lkpd-hint" style="background:#fbcfe8; color:#be185d;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'mood_tracker') {
-        const opts = data.options || [];
-        return `<div class="refleksi-preview-box" onclick="openMoodTrackerModal('${comp.id}')">
-          <div style="padding:1rem 1.2rem; background:#fce7f3; border-left:4px solid var(--pink); border-radius:8px;">
-            <div style="font-weight:800; color:#be185d; margin-bottom:0.6rem; font-size:0.9rem;"><i class="fas fa-face-smile"></i> ${escapeHtml(data.label || 'Mood Tracker')}</div>
-            <div class="mood-tracker-preview">
-              ${opts.map(o => {
-                const parts = o.split(' ');
-                const emoji = parts[0] || '😐';
-                const label = parts.slice(1).join(' ') || o;
-                return `<div class="mood-item"><span class="emoji-big">${emoji}</span>${escapeHtml(label)}</div>`;
-              }).join('')}
-            </div>
-            <div class="lkpd-hint" style="background:#fbcfe8; color:#be185d;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'target_belajar') {
-        return `<div class="refleksi-preview-box" onclick="openTargetBelajarModal('${comp.id}')">
-          <div style="padding:1rem 1.2rem; background:#fce7f3; border-left:4px solid var(--pink); border-radius:8px;">
-            <div style="font-weight:800; color:#be185d; margin-bottom:0.4rem; font-size:0.9rem;"><i class="fas fa-bullseye"></i> Target Belajar</div>
-            <div style="font-size:0.88rem; color:#831843; margin-bottom:0.5rem;">${escapeHtml(data.label || '(Belum ada label)')}</div>
-            <input type="text" class="lkpd-input-preview" placeholder="${escapeHtml(data.placeholder || '')}" readonly>
-            <div class="lkpd-hint" style="background:#fbcfe8; color:#be185d;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'tombol_submit_refleksi') {
-        return `<div class="refleksi-preview-box" onclick="openTombolSubmitRefleksiModal('${comp.id}')">
-          <div style="text-align:center; padding:1rem; background:#fce7f3; border:2px dashed var(--pink); border-radius:8px;">
-            <button style="pointer-events:none; padding:0.6rem 1.5rem; background:var(--pink); color:white; border:none; border-radius:8px; font-weight:700;">
-              <i class="fas fa-paper-plane"></i> ${escapeHtml(data.label || 'Kirim Refleksi')}
-            </button>
-            <div class="lkpd-hint" style="background:#fbcfe8; color:#be185d;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      // ============ DISKUSI ============
-      if (comp.component_type === 'topik_diskusi') {
-        return `<div class="refleksi-preview-box" onclick="openTopikDiskusiModal('${comp.id}')">
-          <div style="padding:1rem 1.2rem; background:#d1fae5; border-left:4px solid #10b981; border-radius:8px;">
-            <div style="font-weight:800; color:#047857; margin-bottom:0.4rem; font-size:0.9rem;"><i class="fas fa-comment-dots"></i> ${escapeHtml(data.title || 'Topik Diskusi')}</div>
-            <div style="font-size:0.85rem; color:#065f46; white-space:pre-wrap;">${escapeHtml(data.description || '(Belum ada deskripsi)')}</div>
-            <div class="lkpd-hint" style="background:#a7f3d0; color:#047857;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'aturan_diskusi') {
-        return `<div class="refleksi-preview-box" onclick="openAturanDiskusiModal('${comp.id}')">
-          <div style="padding:1rem 1.2rem; background:#fef3c7; border-left:4px solid var(--warning); border-radius:8px;">
-            <div style="font-weight:800; color:#92400e; margin-bottom:0.4rem; font-size:0.9rem;"><i class="fas fa-scroll"></i> ${escapeHtml(data.title || 'Aturan Diskusi')}</div>
-            <div style="font-size:0.85rem; color:#78350f; white-space:pre-wrap;">${escapeHtml(data.text || '(Belum ada aturan)')}</div>
-            <div class="lkpd-hint" style="background:#fde68a; color:#92400e;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      if (comp.component_type === 'kolom_komentar') {
-        return `<div class="refleksi-preview-box" onclick="openKolomKomentarModal('${comp.id}')">
-          <div style="padding:1rem 1.2rem; background:var(--bg-soft); border:2px dashed #10b981; border-radius:8px;">
-            <div style="font-weight:800; color:#047857; margin-bottom:0.4rem; font-size:0.9rem;"><i class="fas fa-comments"></i> ${escapeHtml(data.label || 'Diskusi Kelas')}</div>
-            <div style="padding:0.6rem 0.9rem; background:white; border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:0.82rem; font-style:italic;">${escapeHtml(data.placeholder || 'Tulis komentar...')}</div>
-            <div class="lkpd-hint" style="background:#a7f3d0; color:#047857;">Klik untuk edit</div>
-          </div>
-        </div>`;
-      }
-
-      return `<p style="color:var(--text-muted); font-size:0.85rem;">Tipe: ${escapeHtml(comp.component_type)}</p>`;
-    }
-
-    // ============================================
-    // QUILL
-    // ============================================
-    function initQuillEditor(comp) {
-      const container = document.getElementById('quill-' + comp.id);
-      if (!container) return;
-      const toolbarOptions = [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['blockquote', 'code-block'],
-        ['link'],
-        ['clean']
-      ];
-      const quill = new Quill(container, { theme: 'snow', modules: { toolbar: toolbarOptions }, placeholder: 'Tulis konten...' });
-      const html = (comp.component_data || {}).html || '';
-      if (html) quill.clipboard.dangerouslyPasteHTML(html);
-      const toolbar = quill.getModule('toolbar');
-      toolbar.addHandler('color', () => openColorPicker(quill, 'color'));
-      toolbar.addHandler('background', () => openColorPicker(quill, 'background'));
-      let saveTimer = null;
-      quill.on('text-change', () => {
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(async () => {
-          try {
-            const newHtml = quill.root.innerHTML;
-            await updateActivityComponent(comp.id, { component_data: { html: newHtml } });
-            const c = components.find(x => String(x.id) === String(comp.id));
-            if (c) c.component_data = { html: newHtml };
-          } catch (err) { showToast('Gagal simpan teks', 'error'); }
-        }, 800);
-      });
-      quillInstances[comp.id] = quill;
-    }
-
-    function openColorPicker(quill, type) {
-      currentColorTarget = { quill, type };
-      document.getElementById('colorPickerTitle').textContent = type === 'color' ? 'Warna Teks' : 'Warna Highlight';
-      document.getElementById('colorPresetGrid').innerHTML = PRESET_COLORS.map(c => `<div class="color-swatch" style="background:${c};" onclick="applyColor('${c}')"></div>`).join('');
-      document.getElementById('modalColorPicker').classList.add('active');
-    }
-    function closeColorPicker() { document.getElementById('modalColorPicker').classList.remove('active'); currentColorTarget = null; }
-    function applyColor(color) {
-      if (!currentColorTarget) return;
-      currentColorTarget.quill.format(currentColorTarget.type === 'color' ? 'color' : 'background', color, 'user');
-      closeColorPicker();
-    }
-    function applyCustomColor() { applyColor(document.getElementById('customColorInput').value); }
-    function removeColorFormat() {
-      if (!currentColorTarget) return;
-      currentColorTarget.quill.format(currentColorTarget.type === 'color' ? 'color' : 'background', false, 'user');
-      closeColorPicker();
-    }
-
-    // ============================================
-    // HEADING
-    // ============================================
-    function openHeadingModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingHeadingId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('headingTextInput').value = data.text || '';
-      document.getElementById('headingLevelSelect').value = data.level || 'h2';
-      document.getElementById('headingAlignSelect').value = data.align || 'left';
-      document.getElementById('headingColorInput').value = data.color || '#0f172a';
-      updateHeadingPreview();
-      document.getElementById('modalHeadingEditor').classList.add('active');
-    }
-    function closeHeadingModal() { document.getElementById('modalHeadingEditor').classList.remove('active'); editingHeadingId = null; }
-    function resetHeadingColor() { document.getElementById('headingColorInput').value = '#0f172a'; updateHeadingPreview(); }
-    function updateHeadingPreview() {
-      const text = document.getElementById('headingTextInput').value || '(Judul kosong)';
-      const level = document.getElementById('headingLevelSelect').value;
-      const align = document.getElementById('headingAlignSelect').value;
-      const color = document.getElementById('headingColorInput').value;
-      const sizes = { h1: '1.6rem', h2: '1.3rem', h3: '1.05rem' };
-      document.getElementById('headingLivePreview').innerHTML = `<div style="width:100%;font-size:${sizes[level]};font-weight:800;color:${color};text-align:${align};">${escapeHtml(text)}</div>`;
-    }
-    async function saveHeading() {
-      if (!editingHeadingId) return;
-      const comp = components.find(c => String(c.id) === String(editingHeadingId));
-      if (!comp) return;
-      const newData = {
-        text: document.getElementById('headingTextInput').value.trim(),
-        level: document.getElementById('headingLevelSelect').value,
-        align: document.getElementById('headingAlignSelect').value,
-        color: document.getElementById('headingColorInput').value
-      };
-      try {
-        await updateActivityComponent(editingHeadingId, { component_data: newData });
-        comp.component_data = newData;
-        closeHeadingModal();
-        renderCanvas();
-        showToast('✅ Judul diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // IMAGE
-    // ============================================
-    function openImageModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('imageUrlInput').value = data.url || '';
-      document.getElementById('imageAltInput').value = data.alt || '';
-      document.getElementById('imageCaptionInput').value = data.caption || '';
-      document.getElementById('imageAlignSelect').value = data.align || 'center';
-      updateImagePreview();
-      document.getElementById('modalImageEditor').classList.add('active');
-    }
-    function closeImageModal() { document.getElementById('modalImageEditor').classList.remove('active'); editingCompId = null; }
-    function updateImagePreview() {
-      const rawUrl = document.getElementById('imageUrlInput').value.trim();
-      const img = document.getElementById('imagePreviewImg');
-      const empty = document.getElementById('imagePreviewEmpty');
-      if (rawUrl) {
-        img.src = convertDriveUrl(rawUrl, 'image');
-        img.style.display = 'block'; empty.style.display = 'none';
-        img.onerror = () => { img.style.display = 'none'; empty.style.display = 'block'; empty.textContent = '⚠️ Gagal memuat. Cek URL atau sharing file.'; };
-      } else { img.style.display = 'none'; empty.style.display = 'block'; empty.textContent = 'Preview...'; }
-    }
-    async function saveImageComponent() {
-      if (!editingCompId) return;
-      const url = document.getElementById('imageUrlInput').value.trim();
-      if (!url) { showToast('URL wajib', 'error'); return; }
-      const newData = {
-        url, alt: document.getElementById('imageAltInput').value.trim(),
-        caption: document.getElementById('imageCaptionInput').value.trim(),
-        align: document.getElementById('imageAlignSelect').value
-      };
-      try {
-        await updateActivityComponent(editingCompId, { component_data: newData });
-        closeImageModal(); await loadComponents(activeActivityId);
-        showToast('✅ Gambar diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // VIDEO
-    // ============================================
-    function openVideoModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('videoUrlInput').value = data.url || '';
-      document.getElementById('videoCaptionInput').value = data.caption || '';
-      updateVideoPreview();
-      document.getElementById('modalVideoEditor').classList.add('active');
-    }
-    function closeVideoModal() { document.getElementById('modalVideoEditor').classList.remove('active'); editingCompId = null; }
-    function updateVideoPreview() {
-      const url = document.getElementById('videoUrlInput').value.trim();
-      const c = document.getElementById('videoPreviewContainer');
-      if (!url) { c.innerHTML = '<p style="color:var(--text-muted); text-align:center; font-size:0.8rem; margin:0;">Preview...</p>'; return; }
-      const embed = toEmbedVideoUrl(url);
-      if (embed) c.innerHTML = `<div style="position:relative; padding-bottom:56.25%; height:0; border-radius:8px; overflow:hidden; background:#000;"><iframe src="${escapeHtml(embed)}" style="position:absolute; inset:0; width:100%; height:100%; border:0;" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
-      else c.innerHTML = '<p style="color:var(--danger); text-align:center; font-size:0.8rem; margin:0;">⚠️ URL tidak dikenali</p>';
-    }
-    async function saveVideoComponent() {
-      if (!editingCompId) return;
-      const url = document.getElementById('videoUrlInput').value.trim();
-      if (!url) { showToast('URL wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: { url, caption: document.getElementById('videoCaptionInput').value.trim() } });
-        closeVideoModal(); await loadComponents(activeActivityId);
-        showToast('✅ Video diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // AUDIO
-    // ============================================
-    function openAudioModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('audioUrlInput').value = data.url || '';
-      document.getElementById('audioCaptionInput').value = data.caption || '';
-      updateAudioPreview();
-      document.getElementById('modalAudioEditor').classList.add('active');
-    }
-    function closeAudioModal() { document.getElementById('modalAudioEditor').classList.remove('active'); editingCompId = null; }
-    function updateAudioPreview() {
-      const url = document.getElementById('audioUrlInput').value.trim();
-      const p = document.getElementById('audioPreviewPlayer');
-      const e = document.getElementById('audioPreviewEmpty');
-      if (url) { p.querySelector('source').src = url; p.load(); p.style.display = 'block'; e.style.display = 'none'; }
-      else { p.style.display = 'none'; e.style.display = 'block'; }
-    }
-    async function saveAudioComponent() {
-      if (!editingCompId) return;
-      const url = document.getElementById('audioUrlInput').value.trim();
-      if (!url) { showToast('URL wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: { url, caption: document.getElementById('audioCaptionInput').value.trim() } });
-        closeAudioModal(); await loadComponents(activeActivityId);
-        showToast('✅ Audio diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // TABLE
-    // ============================================
-    function openTableModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      tableEditorState = {
-        columns: [...(data.columns || [])],
-        rows: (data.rows || []).map(r => [...r]),
-        widths: [...(data.widths || [])]
-      };
-      if (tableEditorState.columns.length === 0) {
-        tableEditorState.columns = ['Kolom 1', 'Kolom 2'];
-        tableEditorState.rows = [['', ''], ['', '']];
-        tableEditorState.widths = [50, 50];
-      }
-      while (tableEditorState.widths.length < tableEditorState.columns.length) {
-        tableEditorState.widths.push(100 / tableEditorState.columns.length);
-      }
-      renderTableEditor();
-      document.getElementById('modalTableEditor').classList.add('active');
-    }
-    function closeTableModal() { document.getElementById('modalTableEditor').classList.remove('active'); editingCompId = null; tableEditorState = null; }
-    function renderTableEditor() {
-      const c = document.getElementById('tableEditorContainer');
-      if (!tableEditorState || tableEditorState.columns.length === 0) { c.innerHTML = '<p style="text-align:center; padding:1rem; color:var(--text-muted);">Belum ada kolom</p>'; return; }
-      let html = '<table class="table-editor-table"><thead><tr>';
-      tableEditorState.columns.forEach((col, ci) => {
-        html += `<th style="width:${tableEditorState.widths[ci]}%" data-col="${ci}">
-          <input type="text" value="${escapeHtml(col)}" onchange="updateTableColumn(${ci}, this.value)" placeholder="Kolom ${ci+1}">
-          ${tableEditorState.columns.length > 1 ? `<button type="button" class="btn-col-del" onclick="deleteTableColumn(${ci})" title="Hapus"><i class="fas fa-xmark"></i></button>` : ''}
-          <div class="col-resize-handle" data-col="${ci}"></div>
-        </th>`;
-      });
-      html += '</tr></thead><tbody>';
-      tableEditorState.rows.forEach((row, ri) => {
-        html += '<tr>';
-        tableEditorState.columns.forEach((_, ci) => {
-          html += `<td><input type="text" value="${escapeHtml(row[ci] || '')}" onchange="updateTableCell(${ri}, ${ci}, this.value)" placeholder="Isi..."></td>`;
-        });
-        html += '</tr>';
-      });
-      html += '</tbody></table>';
-      c.innerHTML = html;
-      c.querySelectorAll('.col-resize-handle').forEach(handle => {
-        let startX = 0, startWidth = 0, colIndex = 0, tableWidth = 0;
-        handle.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          colIndex = parseInt(handle.dataset.col);
-          const th = handle.parentElement;
-          const table = th.closest('table');
-          tableWidth = table.offsetWidth;
-          startX = e.pageX; startWidth = th.offsetWidth;
-          handle.classList.add('resizing');
-          document.body.style.cursor = 'col-resize';
-          document.body.style.userSelect = 'none';
-          const onMove = (ev) => {
-            const delta = ev.pageX - startX;
-            const newW = Math.max(60, startWidth + delta);
-            const pct = (newW / tableWidth) * 100;
-            tableEditorState.widths[colIndex] = pct;
-            th.style.width = pct + '%';
-          };
-          const onUp = () => {
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-            handle.classList.remove('resizing');
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-          };
-          document.addEventListener('mousemove', onMove);
-          document.addEventListener('mouseup', onUp);
-        });
-      });
-    }
-    function addTableColumn() {
-      if (!tableEditorState) return;
-      tableEditorState.columns.push('Kolom ' + (tableEditorState.columns.length + 1));
-      tableEditorState.rows.forEach(r => r.push(''));
-      const n = tableEditorState.columns.length;
-      tableEditorState.widths = new Array(n).fill(100 / n);
-      renderTableEditor();
-    }
-    function addTableRow() {
-      if (!tableEditorState) return;
-      tableEditorState.rows.push(new Array(tableEditorState.columns.length).fill(''));
-      renderTableEditor();
-    }
-    function updateTableColumn(ci, v) { if (tableEditorState) tableEditorState.columns[ci] = v; }
-    function updateTableCell(ri, ci, v) { if (tableEditorState) tableEditorState.rows[ri][ci] = v; }
-    function deleteTableColumn(ci) {
-      if (!tableEditorState || tableEditorState.columns.length <= 1) { showToast('Minimal 1 kolom', 'error'); return; }
-      tableEditorState.columns.splice(ci, 1);
-      tableEditorState.widths.splice(ci, 1);
-      tableEditorState.rows.forEach(r => r.splice(ci, 1));
-      renderTableEditor();
-    }
-    async function saveTableComponent() {
-      if (!editingCompId || !tableEditorState) return;
-      try {
-        await updateActivityComponent(editingCompId, { component_data: tableEditorState });
-        closeTableModal(); await loadComponents(activeActivityId);
-        showToast('✅ Tabel diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // NOTE
-    // ============================================
-    function openNoteModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('noteTitleInput').value = data.title || '';
-      document.getElementById('noteTextInput').value = data.text || '';
-      document.querySelectorAll('input[name="noteVariant"]').forEach(r => { r.checked = (r.value === (data.variant || 'info')); });
-      updateNotePreview();
-      document.getElementById('modalNoteEditor').classList.add('active');
-    }
-    function closeNoteModal() { document.getElementById('modalNoteEditor').classList.remove('active'); editingCompId = null; }
-    function updateNotePreview() {
-      const v = document.querySelector('input[name="noteVariant"]:checked')?.value || 'info';
-      const title = document.getElementById('noteTitleInput').value;
-      const text = document.getElementById('noteTextInput').value;
-      const vMap = {
-        info: { bg: '#dbeafe', color: '#1e40af', border: '#3b82f6', icon: 'fa-circle-info' },
-        success: { bg: '#d1fae5', color: '#047857', border: '#10b981', icon: 'fa-circle-check' },
-        warning: { bg: '#fef3c7', color: '#92400e', border: '#f59e0b', icon: 'fa-triangle-exclamation' },
-        danger: { bg: '#fee2e2', color: '#b91c1c', border: '#ef4444', icon: 'fa-circle-xmark' }
-      };
-      const vm = vMap[v];
-      const c = document.getElementById('notePreviewContainer');
-      c.style.background = vm.bg; c.style.borderLeftColor = vm.border; c.style.color = vm.color;
-      if (!title && !text) { c.innerHTML = '<div style="font-size:0.85rem; font-style:italic; opacity:0.7;">Preview...</div>'; }
-      else {
-        c.innerHTML = `${title ? `<div style="font-weight:800; margin-bottom:0.3rem;"><i class="fas ${vm.icon}"></i> ${escapeHtml(title)}</div>` : ''}<div style="font-size:0.88rem; white-space:pre-wrap;">${escapeHtml(text)}</div>`;
-      }
-    }
-    async function saveNoteComponent() {
-      if (!editingCompId) return;
-      const variant = document.querySelector('input[name="noteVariant"]:checked')?.value || 'info';
-      const title = document.getElementById('noteTitleInput').value.trim();
-      const text = document.getElementById('noteTextInput').value.trim();
-      if (!title && !text) { showToast('Isi judul atau teks', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: { variant, title, text } });
-        closeNoteModal(); await loadComponents(activeActivityId);
-        showToast('✅ Note diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // ACCORDION
-    // ============================================
-    function openAccordionModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      accordionEditorState = { items: (data.items || []).map(it => ({ title: it.title || '', content: it.content || '' })) };
-      if (accordionEditorState.items.length === 0) accordionEditorState.items = [{ title: '', content: '' }];
-      renderAccordionEditor();
-      document.getElementById('modalAccordionEditor').classList.add('active');
-    }
-    function closeAccordionModal() { document.getElementById('modalAccordionEditor').classList.remove('active'); editingCompId = null; accordionEditorState = null; }
-    function renderAccordionEditor() {
-      const c = document.getElementById('accordionEditorContainer');
-      if (!accordionEditorState) { c.innerHTML = ''; return; }
-      c.innerHTML = accordionEditorState.items.map((it, i) => `
-        <div class="accordion-item-editor">
-          <div class="accordion-item-header">
-            <span class="accordion-item-num">Item #${i+1}</span>
-            <button class="activity-mini-btn danger" onclick="deleteAccordionItem(${i})"><i class="fas fa-trash"></i></button>
-          </div>
-          <label class="form-label">Judul</label>
-          <input type="text" class="form-input" value="${escapeHtml(it.title)}" onchange="updateAccordionTitle(${i}, this.value)" style="margin-bottom:0.5rem;">
-          <label class="form-label">Konten</label>
-          <textarea class="form-input" onchange="updateAccordionContent(${i}, this.value)" style="margin-bottom:0.5rem; min-height:60px;">${escapeHtml(it.content)}</textarea>
-        </div>
-      `).join('');
-    }
-    function addAccordionItem() {
-      if (!accordionEditorState) return;
-      accordionEditorState.items.push({ title: '', content: '' });
-      renderAccordionEditor();
-    }
-    function deleteAccordionItem(i) {
-      if (!accordionEditorState) return;
-      if (accordionEditorState.items.length <= 1) { showToast('Minimal 1 item', 'error'); return; }
-      accordionEditorState.items.splice(i, 1);
-      renderAccordionEditor();
-    }
-    function updateAccordionTitle(i, v) { if (accordionEditorState) accordionEditorState.items[i].title = v; }
-    function updateAccordionContent(i, v) { if (accordionEditorState) accordionEditorState.items[i].content = v; }
-    async function saveAccordionComponent() {
-      if (!editingCompId || !accordionEditorState) return;
-      try {
-        await updateActivityComponent(editingCompId, { component_data: accordionEditorState });
-        closeAccordionModal(); await loadComponents(activeActivityId);
-        showToast('✅ Accordion diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // FILE
-    // ============================================
-    function openFileModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('fileUrlInput').value = data.url || '';
-      document.getElementById('fileLabelInput').value = data.label || 'Download File';
-      document.getElementById('fileDescInput').value = data.description || '';
-      document.getElementById('modalFileEditor').classList.add('active');
-    }
-    function closeFileModal() { document.getElementById('modalFileEditor').classList.remove('active'); editingCompId = null; }
-    async function saveFileComponent() {
-      if (!editingCompId) return;
-      const url = document.getElementById('fileUrlInput').value.trim();
-      const label = document.getElementById('fileLabelInput').value.trim();
-      if (!url || !label) { showToast('URL & label wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: { url, label, description: document.getElementById('fileDescInput').value.trim() } });
-        closeFileModal(); await loadComponents(activeActivityId);
-        showToast('✅ File diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // EMBED
-    // ============================================
-    function openEmbedModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('embedUrlInput').value = data.url || '';
-      document.getElementById('embedHeightInput').value = data.height || 500;
-      document.getElementById('modalEmbedEditor').classList.add('active');
-    }
-    function closeEmbedModal() { document.getElementById('modalEmbedEditor').classList.remove('active'); editingCompId = null; }
-    async function saveEmbedComponent() {
-      if (!editingCompId) return;
-      const url = document.getElementById('embedUrlInput').value.trim();
-      if (!url) { showToast('URL wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: { url, height: parseInt(document.getElementById('embedHeightInput').value) || 500 } });
-        closeEmbedModal(); await loadComponents(activeActivityId);
-        showToast('✅ Embed diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // LKPD MODALS
-    // ============================================
-    function openIdentitasModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      lkpdEditingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('identitasLabelInput').value = data.label || 'Identitas Siswa';
-      document.getElementById('identitasShowName').checked = data.show_name !== false;
-      document.getElementById('identitasShowNisn').checked = data.show_nisn !== false;
-      document.getElementById('identitasShowKelas').checked = !!data.show_kelas;
-      document.getElementById('identitasShowTanggal').checked = !!data.show_tanggal;
-      document.getElementById('modalIdentitas').classList.add('active');
-    }
-    function closeIdentitasModal() { document.getElementById('modalIdentitas').classList.remove('active'); lkpdEditingCompId = null; }
-    async function saveIdentitasComponent() {
-      if (!lkpdEditingCompId) return;
-      try {
-        await updateActivityComponent(lkpdEditingCompId, { component_data: {
-          label: document.getElementById('identitasLabelInput').value.trim() || 'Identitas Siswa',
-          show_name: document.getElementById('identitasShowName').checked,
-          show_nisn: document.getElementById('identitasShowNisn').checked,
-          show_kelas: document.getElementById('identitasShowKelas').checked,
-          show_tanggal: document.getElementById('identitasShowTanggal').checked
-        }});
-        closeIdentitasModal(); await loadComponents(activeActivityId);
-        showToast('✅ Identitas diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openPetunjukModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      lkpdEditingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('petunjukTitleInput').value = data.title || 'Petunjuk Pengerjaan';
-      document.getElementById('petunjukTextInput').value = data.text || '';
-      document.getElementById('modalPetunjuk').classList.add('active');
-    }
-    function closePetunjukModal() { document.getElementById('modalPetunjuk').classList.remove('active'); lkpdEditingCompId = null; }
-    async function savePetunjukComponent() {
-      if (!lkpdEditingCompId) return;
-      const text = document.getElementById('petunjukTextInput').value.trim();
-      if (!text) { showToast('Isi petunjuk wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(lkpdEditingCompId, { component_data: {
-          title: document.getElementById('petunjukTitleInput').value.trim() || 'Petunjuk',
-          text
-        }});
-        closePetunjukModal(); await loadComponents(activeActivityId);
-        showToast('✅ Petunjuk diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openInputTeksModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      lkpdEditingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('inputTeksLabelInput').value = data.label || '';
-      document.getElementById('inputTeksPlaceholderInput').value = data.placeholder || '';
-      document.getElementById('inputTeksRequiredInput').value = data.required ? 'true' : 'false';
-      document.getElementById('modalInputTeks').classList.add('active');
-    }
-    function closeInputTeksModal() { document.getElementById('modalInputTeks').classList.remove('active'); lkpdEditingCompId = null; }
-    async function saveInputTeksComponent() {
-      if (!lkpdEditingCompId) return;
-      const label = document.getElementById('inputTeksLabelInput').value.trim();
-      if (!label) { showToast('Label wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(lkpdEditingCompId, { component_data: {
-          label,
-          placeholder: document.getElementById('inputTeksPlaceholderInput').value.trim(),
-          required: document.getElementById('inputTeksRequiredInput').value === 'true'
-        }});
-        closeInputTeksModal(); await loadComponents(activeActivityId);
-        showToast('✅ Input teks diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openTextareaModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      lkpdEditingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('textareaLabelInput').value = data.label || '';
-      document.getElementById('textareaPlaceholderInput').value = data.placeholder || '';
-      document.getElementById('textareaRowsInput').value = data.rows || 4;
-      document.getElementById('textareaRequiredInput').value = data.required ? 'true' : 'false';
-      document.getElementById('modalTextarea').classList.add('active');
-    }
-    function closeTextareaModal() { document.getElementById('modalTextarea').classList.remove('active'); lkpdEditingCompId = null; }
-    async function saveTextareaComponent() {
-      if (!lkpdEditingCompId) return;
-      const label = document.getElementById('textareaLabelInput').value.trim();
-      if (!label) { showToast('Label wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(lkpdEditingCompId, { component_data: {
-          label,
-          placeholder: document.getElementById('textareaPlaceholderInput').value.trim(),
-          rows: parseInt(document.getElementById('textareaRowsInput').value) || 4,
-          required: document.getElementById('textareaRequiredInput').value === 'true'
-        }});
-        closeTextareaModal(); await loadComponents(activeActivityId);
-        showToast('✅ Textarea diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openOptionsModal(compId, type) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      lkpdEditingCompId = compId;
-      lkpdOptionsType = type;
-      const data = comp.component_data || {};
-      lkpdOptionsState = {
-        label: data.label || '',
-        options: [...(data.options || ['Opsi 1', 'Opsi 2'])],
-        required: data.required || false
-      };
-      const titles = { checkbox: 'Checkbox (Pilih Banyak)', radio: 'Radio (Pilih Satu)', dropdown: 'Dropdown' };
-      const iconMap = { checkbox: 'square-check', radio: 'circle-dot', dropdown: 'caret-down' };
-      document.getElementById('optionsModalTitle').innerHTML = `<i class="fas fa-${iconMap[type]}"></i> Edit ${titles[type]}`;
-      document.getElementById('optionsLabelInput').value = lkpdOptionsState.label;
-      document.getElementById('optionsRequiredInput').value = lkpdOptionsState.required ? 'true' : 'false';
-      renderOptionsEditor();
-      document.getElementById('modalOptions').classList.add('active');
-    }
-    function closeOptionsModal() { document.getElementById('modalOptions').classList.remove('active'); lkpdEditingCompId = null; lkpdOptionsType = null; }
-    function renderOptionsEditor() {
-      const c = document.getElementById('optionsEditorList');
-      c.innerHTML = lkpdOptionsState.options.map((opt, i) => `
-        <div class="option-row">
-          <input type="text" class="form-input" value="${escapeHtml(opt)}" onchange="updateOptionRow(${i}, this.value)" placeholder="Opsi ${i+1}" style="margin-bottom:0;">
-          <button type="button" class="option-remove" onclick="removeOptionRow(${i})" ${lkpdOptionsState.options.length <= 1 ? 'disabled style="opacity:0.3;"' : ''}>
-            <i class="fas fa-xmark"></i>
-          </button>
-        </div>
-      `).join('');
-    }
-    function updateOptionRow(i, v) { lkpdOptionsState.options[i] = v; }
-    function addOptionRow() {
-      lkpdOptionsState.options.push('Opsi ' + (lkpdOptionsState.options.length + 1));
-      renderOptionsEditor();
-    }
-    function removeOptionRow(i) {
-      if (lkpdOptionsState.options.length <= 1) return;
-      lkpdOptionsState.options.splice(i, 1);
-      renderOptionsEditor();
-    }
-    async function saveOptionsComponent() {
-      if (!lkpdEditingCompId) return;
-      const label = document.getElementById('optionsLabelInput').value.trim();
-      if (!label) { showToast('Label wajib', 'error'); return; }
-      const validOptions = lkpdOptionsState.options.filter(o => o.trim());
-      if (validOptions.length === 0) { showToast('Minimal 1 opsi', 'error'); return; }
-      try {
-        await updateActivityComponent(lkpdEditingCompId, { component_data: {
-          label,
-          options: validOptions,
-          required: document.getElementById('optionsRequiredInput').value === 'true'
-        }});
-        closeOptionsModal(); await loadComponents(activeActivityId);
-        showToast('✅ Opsi diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openTabelIsianModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      lkpdEditingCompId = compId;
-      const data = comp.component_data || {};
-      tabelIsianState = {
-        label: data.label || '',
-        columns: [...(data.columns || [])],
-        rows: (data.rows || []).map(r => [...r])
-      };
-      if (tabelIsianState.columns.length === 0) {
-        tabelIsianState.columns = ['Kolom 1', 'Kolom 2'];
-        tabelIsianState.rows = [['', ''], ['', '']];
-      }
-      document.getElementById('tabelIsianLabelInput').value = tabelIsianState.label;
-      renderTabelIsianEditor();
-      document.getElementById('modalTabelIsian').classList.add('active');
-    }
-    function closeTabelIsianModal() { document.getElementById('modalTabelIsian').classList.remove('active'); lkpdEditingCompId = null; tabelIsianState = null; }
-    function renderTabelIsianEditor() {
-      const c = document.getElementById('tabelIsianEditorContainer');
-      if (!tabelIsianState || tabelIsianState.columns.length === 0) { c.innerHTML = '<p style="text-align:center; padding:1rem; color:var(--text-muted);">Belum ada kolom</p>'; return; }
-      let html = '<table class="table-editor-table"><thead><tr>';
-      tabelIsianState.columns.forEach((col, ci) => {
-        html += `<th><input type="text" value="${escapeHtml(col)}" onchange="updateTI_Column(${ci}, this.value)" placeholder="Kolom ${ci+1}">
-          ${tabelIsianState.columns.length > 1 ? `<button type="button" class="btn-col-del" onclick="deleteTI_Column(${ci})" title="Hapus"><i class="fas fa-xmark"></i></button>` : ''}
-        </th>`;
-      });
-      html += '</tr></thead><tbody>';
-      tabelIsianState.rows.forEach((row, ri) => {
-        html += '<tr>';
-        tabelIsianState.columns.forEach((_, ci) => {
-          html += `<td><input type="text" value="${escapeHtml(row[ci] || '')}" onchange="updateTI_Cell(${ri}, ${ci}, this.value)" placeholder="(kosong)"></td>`;
-        });
-        html += '</tr>';
-      });
-      html += '</tbody></table>';
-      c.innerHTML = html;
-    }
-    function addTI_Column() {
-      if (!tabelIsianState) return;
-      tabelIsianState.columns.push('Kolom ' + (tabelIsianState.columns.length + 1));
-      tabelIsianState.rows.forEach(r => r.push(''));
-      renderTabelIsianEditor();
-    }
-    function addTI_Row() {
-      if (!tabelIsianState) return;
-      tabelIsianState.rows.push(new Array(tabelIsianState.columns.length).fill(''));
-      renderTabelIsianEditor();
-    }
-    function updateTI_Column(ci, v) { tabelIsianState.columns[ci] = v; }
-    function updateTI_Cell(ri, ci, v) { tabelIsianState.rows[ri][ci] = v; }
-    function deleteTI_Column(ci) {
-      if (!tabelIsianState || tabelIsianState.columns.length <= 1) return;
-      tabelIsianState.columns.splice(ci, 1);
-      tabelIsianState.rows.forEach(r => r.splice(ci, 1));
-      renderTabelIsianEditor();
-    }
-    async function saveTabelIsianComponent() {
-      if (!lkpdEditingCompId || !tabelIsianState) return;
-      try {
-        await updateActivityComponent(lkpdEditingCompId, { component_data: {
-          label: document.getElementById('tabelIsianLabelInput').value.trim(),
-          columns: tabelIsianState.columns,
-          rows: tabelIsianState.rows
-        }});
-        closeTabelIsianModal(); await loadComponents(activeActivityId);
-        showToast('✅ Tabel isian diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openPenilaianDiriModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      lkpdEditingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('penilaianDiriLabelInput').value = data.label || '';
-      document.getElementById('penilaianDiriMinInput').value = data.min || 1;
-      document.getElementById('penilaianDiriMaxInput').value = data.max || 5;
-      document.getElementById('penilaianDiriLabelsInput').value = (data.labels || []).join(', ');
-      document.getElementById('modalPenilaianDiri').classList.add('active');
-    }
-    function closePenilaianDiriModal() { document.getElementById('modalPenilaianDiri').classList.remove('active'); lkpdEditingCompId = null; }
-    async function savePenilaianDiriComponent() {
-      if (!lkpdEditingCompId) return;
-      const label = document.getElementById('penilaianDiriLabelInput').value.trim();
-      if (!label) { showToast('Label wajib', 'error'); return; }
-      try {
-        const labelsRaw = document.getElementById('penilaianDiriLabelsInput').value.trim();
-        const labels = labelsRaw ? labelsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
-        await updateActivityComponent(lkpdEditingCompId, { component_data: {
-          label,
-          min: parseInt(document.getElementById('penilaianDiriMinInput').value) || 1,
-          max: parseInt(document.getElementById('penilaianDiriMaxInput').value) || 5,
-          labels
-        }});
-        closePenilaianDiriModal(); await loadComponents(activeActivityId);
-        showToast('✅ Penilaian diri diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openTombolSubmitModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      lkpdEditingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('tombolSubmitLabelInput').value = data.label || 'Kumpulkan Jawaban';
-      document.getElementById('tombolSubmitMsgInput').value = data.success_message || 'Jawaban berhasil dikumpulkan!';
-      document.getElementById('modalTombolSubmit').classList.add('active');
-    }
-    function closeTombolSubmitModal() { document.getElementById('modalTombolSubmit').classList.remove('active'); lkpdEditingCompId = null; }
-    async function saveTombolSubmitComponent() {
-      if (!lkpdEditingCompId) return;
-      try {
-        await updateActivityComponent(lkpdEditingCompId, { component_data: {
-          label: document.getElementById('tombolSubmitLabelInput').value.trim() || 'Kumpulkan Jawaban',
-          success_message: document.getElementById('tombolSubmitMsgInput').value.trim() || 'Jawaban berhasil dikumpulkan!'
-        }});
-        closeTombolSubmitModal(); await loadComponents(activeActivityId);
-        showToast('✅ Tombol diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // ASESMEN MODALS
-    // ============================================
-    function openAsesmenSettingModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('asesmenTitleInput').value = data.title || '';
-      document.getElementById('asesmenDescInput').value = data.description || '';
-      document.getElementById('asesmenDurationInput').value = data.duration || 30;
-      document.getElementById('asesmenAutoGradeInput').value = data.auto_grade ? 'true' : 'false';
-      document.getElementById('modalAsesmenSetting').classList.add('active');
-    }
-    function closeAsesmenSettingModal() { document.getElementById('modalAsesmenSetting').classList.remove('active'); editingCompId = null; }
-    async function saveAsesmenSettingComponent() {
-      if (!editingCompId) return;
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          title: document.getElementById('asesmenTitleInput').value.trim(),
-          description: document.getElementById('asesmenDescInput').value.trim(),
-          duration: parseInt(document.getElementById('asesmenDurationInput').value) || 30,
-          auto_grade: document.getElementById('asesmenAutoGradeInput').value === 'true'
-        }});
-        closeAsesmenSettingModal(); await loadComponents(activeActivityId);
-        showToast('✅ Pengaturan asesmen diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ===== SOAL PG =====
-    function openSoalPGModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      soalPGOptionsState = {
-        question: data.question || '',
-        options: [...(data.options || ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D'])],
-        correct: data.correct || 0,
-        points: data.points || 10,
-        feedback: data.feedback || ''
-      };
-      document.getElementById('soalPGQuestionInput').value = soalPGOptionsState.question;
-      document.getElementById('soalPGPointsInput').value = soalPGOptionsState.points;
-      document.getElementById('soalPGFeedbackInput').value = soalPGOptionsState.feedback;
-      renderSoalPGOptions();
-      document.getElementById('modalSoalPG').classList.add('active');
-    }
-    function closeSoalPGModal() { document.getElementById('modalSoalPG').classList.remove('active'); editingCompId = null; }
-    function renderSoalPGOptions() {
-      const c = document.getElementById('soalPGOptionsList');
-      c.innerHTML = soalPGOptionsState.options.map((opt, i) => `
-        <div class="option-row">
-          <span style="width:24px; height:24px; border-radius:50%; background:${i === soalPGOptionsState.correct ? 'var(--green)' : 'var(--bg-soft)'}; color:${i === soalPGOptionsState.correct ? 'white' : 'var(--text-secondary)'}; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; flex-shrink:0;">${String.fromCharCode(65+i)}</span>
-          <input type="text" class="form-input" value="${escapeHtml(opt)}" onchange="updateSoalPGOption(${i}, this.value)" placeholder="Opsi ${String.fromCharCode(65+i)}" style="margin-bottom:0;">
-          <button type="button" class="option-remove" onclick="removeSoalPGOption(${i})" ${soalPGOptionsState.options.length <= 2 ? 'disabled style="opacity:0.3;"' : ''}><i class="fas fa-xmark"></i></button>
-        </div>
-      `).join('');
-      // Rebuild correct dropdown
-      const sel = document.getElementById('soalPGCorrectInput');
-      sel.innerHTML = soalPGOptionsState.options.map((opt, i) =>
-        `<option value="${i}" ${i === soalPGOptionsState.correct ? 'selected' : ''}>${String.fromCharCode(65+i)} — ${escapeHtml(opt)}</option>`
-      ).join('');
-    }
-    function updateSoalPGOption(i, v) { soalPGOptionsState.options[i] = v; renderSoalPGOptions(); }
-    function addSoalPGOption() {
-      soalPGOptionsState.options.push('Opsi ' + String.fromCharCode(65 + soalPGOptionsState.options.length));
-      renderSoalPGOptions();
-    }
-    function removeSoalPGOption(i) {
-      if (soalPGOptionsState.options.length <= 2) return;
-      soalPGOptionsState.options.splice(i, 1);
-      if (soalPGOptionsState.correct >= soalPGOptionsState.options.length) soalPGOptionsState.correct = 0;
-      renderSoalPGOptions();
-    }
-    async function saveSoalPGComponent() {
-      if (!editingCompId) return;
-      const question = document.getElementById('soalPGQuestionInput').value.trim();
-      if (!question) { showToast('Pertanyaan wajib', 'error'); return; }
-      const correct = parseInt(document.getElementById('soalPGCorrectInput').value) || 0;
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          question,
-          options: soalPGOptionsState.options.filter(o => o.trim()),
-          correct,
-          points: parseInt(document.getElementById('soalPGPointsInput').value) || 10,
-          feedback: document.getElementById('soalPGFeedbackInput').value.trim()
-        }});
-        closeSoalPGModal(); await loadComponents(activeActivityId);
-        showToast('✅ Soal PG diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ===== SOAL PG KOMPLEKS =====
-    function openSoalPGKModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      soalPGKOptionsState = {
-        question: data.question || '',
-        options: [...(data.options || ['Opsi A', 'Opsi B', 'Opsi C'])],
-        correct: [...(data.correct || [0])],
-        points: data.points || 15,
-        feedback: data.feedback || ''
-      };
-      document.getElementById('soalPGKQuestionInput').value = soalPGKOptionsState.question;
-      document.getElementById('soalPGKPointsInput').value = soalPGKOptionsState.points;
-      document.getElementById('soalPGKFeedbackInput').value = soalPGKOptionsState.feedback;
-      renderSoalPGKOptions();
-      document.getElementById('modalSoalPGK').classList.add('active');
-    }
-    function closeSoalPGKModal() { document.getElementById('modalSoalPGK').classList.remove('active'); editingCompId = null; }
-    function renderSoalPGKOptions() {
-      const c = document.getElementById('soalPGKOptionsList');
-      c.innerHTML = soalPGKOptionsState.options.map((opt, i) => `
-        <div class="option-row">
-          <span style="width:24px; height:24px; border-radius:50%; background:${soalPGKOptionsState.correct.includes(i) ? 'var(--green)' : 'var(--bg-soft)'}; color:${soalPGKOptionsState.correct.includes(i) ? 'white' : 'var(--text-secondary)'}; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; flex-shrink:0;">${String.fromCharCode(65+i)}</span>
-          <input type="text" class="form-input" value="${escapeHtml(opt)}" onchange="updateSoalPGKOption(${i}, this.value)" placeholder="Opsi ${String.fromCharCode(65+i)}" style="margin-bottom:0;">
-          <button type="button" class="option-remove" onclick="removeSoalPGKOption(${i})" ${soalPGKOptionsState.options.length <= 2 ? 'disabled style="opacity:0.3;"' : ''}><i class="fas fa-xmark"></i></button>
-        </div>
-      `).join('');
-      // Correct checkboxes
-      const correctList = document.getElementById('soalPGKCorrectList');
-      correctList.innerHTML = soalPGKOptionsState.options.map((opt, i) => `
-        <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; padding:0.3rem 0.5rem; cursor:pointer;">
-          <input type="checkbox" ${soalPGKOptionsState.correct.includes(i) ? 'checked' : ''} onchange="toggleSoalPGKCorrect(${i}, this.checked)" style="accent-color:var(--green);">
-          <span><strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(opt)}</span>
-        </label>
-      `).join('');
-    }
-    function updateSoalPGKOption(i, v) { soalPGKOptionsState.options[i] = v; renderSoalPGKOptions(); }
-    function addSoalPGKOption() {
-      soalPGKOptionsState.options.push('Opsi ' + String.fromCharCode(65 + soalPGKOptionsState.options.length));
-      renderSoalPGKOptions();
-    }
-    function removeSoalPGKOption(i) {
-      if (soalPGKOptionsState.options.length <= 2) return;
-      soalPGKOptionsState.options.splice(i, 1);
-      soalPGKOptionsState.correct = soalPGKOptionsState.correct.filter(c => c !== i).map(c => c > i ? c - 1 : c);
-      renderSoalPGKOptions();
-    }
-    function toggleSoalPGKCorrect(i, checked) {
-      if (checked) {
-        if (!soalPGKOptionsState.correct.includes(i)) soalPGKOptionsState.correct.push(i);
-      } else {
-        soalPGKOptionsState.correct = soalPGKOptionsState.correct.filter(c => c !== i);
-      }
-      renderSoalPGKOptions();
-    }
-    async function saveSoalPGKComponent() {
-      if (!editingCompId) return;
-      const question = document.getElementById('soalPGKQuestionInput').value.trim();
-      if (!question) { showToast('Pertanyaan wajib', 'error'); return; }
-      if (soalPGKOptionsState.correct.length === 0) { showToast('Pilih minimal 1 jawaban benar', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          question,
-          options: soalPGKOptionsState.options.filter(o => o.trim()),
-          correct: soalPGKOptionsState.correct,
-          points: parseInt(document.getElementById('soalPGKPointsInput').value) || 15,
-          feedback: document.getElementById('soalPGKFeedbackInput').value.trim()
-        }});
-        closeSoalPGKModal(); await loadComponents(activeActivityId);
-        showToast('✅ Soal PG Kompleks diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ===== SOAL ESAI =====
-    function openSoalEsaiModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('soalEsaiQuestionInput').value = data.question || '';
-      document.getElementById('soalEsaiGuideInput').value = data.guide || '';
-      document.getElementById('soalEsaiPointsInput').value = data.points || 20;
-      document.getElementById('soalEsaiMinWordsInput').value = data.min_words || 10;
-      document.getElementById('modalSoalEsai').classList.add('active');
-    }
-    function closeSoalEsaiModal() { document.getElementById('modalSoalEsai').classList.remove('active'); editingCompId = null; }
-    async function saveSoalEsaiComponent() {
-      if (!editingCompId) return;
-      const question = document.getElementById('soalEsaiQuestionInput').value.trim();
-      if (!question) { showToast('Pertanyaan wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          question,
-          guide: document.getElementById('soalEsaiGuideInput').value.trim(),
-          points: parseInt(document.getElementById('soalEsaiPointsInput').value) || 20,
-          min_words: parseInt(document.getElementById('soalEsaiMinWordsInput').value) || 10
-        }});
-        closeSoalEsaiModal(); await loadComponents(activeActivityId);
-        showToast('✅ Soal Esai diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ===== SOAL MENJODOHKAN =====
-    function openSoalJodohModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      soalJodohState = {
-        question: data.question || '',
-        left: [...(data.left || ['', ''])],
-        right: [...(data.right || ['', ''])],
-        points: data.points || 15
-      };
-      document.getElementById('soalJodohQuestionInput').value = soalJodohState.question;
-      document.getElementById('soalJodohPointsInput').value = soalJodohState.points;
-      renderSoalJodoh();
-      document.getElementById('modalSoalJodoh').classList.add('active');
-    }
-    function closeSoalJodohModal() { document.getElementById('modalSoalJodoh').classList.remove('active'); editingCompId = null; }
-    function renderSoalJodoh() {
-      const leftC = document.getElementById('soalJodohLeftList');
-      const rightC = document.getElementById('soalJodohRightList');
-      leftC.innerHTML = soalJodohState.left.map((l, i) => `
-        <div class="option-row">
-          <input type="text" class="form-input" value="${escapeHtml(l)}" onchange="updateSoalJodohLeft(${i}, this.value)" placeholder="Kiri ${i+1}" style="margin-bottom:0;">
-          <button type="button" class="option-remove" onclick="removeSoalJodohLeft(${i})" ${soalJodohState.left.length <= 1 ? 'disabled style="opacity:0.3;"' : ''}><i class="fas fa-xmark"></i></button>
-        </div>
-      `).join('');
-      rightC.innerHTML = soalJodohState.right.map((r, i) => `
-        <div class="option-row">
-          <input type="text" class="form-input" value="${escapeHtml(r)}" onchange="updateSoalJodohRight(${i}, this.value)" placeholder="Kanan ${i+1}" style="margin-bottom:0;">
-          <button type="button" class="option-remove" onclick="removeSoalJodohRight(${i})" ${soalJodohState.right.length <= 1 ? 'disabled style="opacity:0.3;"' : ''}><i class="fas fa-xmark"></i></button>
-        </div>
-      `).join('');
-    }
-    function updateSoalJodohLeft(i, v) { soalJodohState.left[i] = v; }
-    function updateSoalJodohRight(i, v) { soalJodohState.right[i] = v; }
-    function addSoalJodohLeft() { soalJodohState.left.push(''); renderSoalJodoh(); }
-    function addSoalJodohRight() { soalJodohState.right.push(''); renderSoalJodoh(); }
-    function removeSoalJodohLeft(i) {
-      if (soalJodohState.left.length <= 1) return;
-      soalJodohState.left.splice(i, 1); renderSoalJodoh();
-    }
-    function removeSoalJodohRight(i) {
-      if (soalJodohState.right.length <= 1) return;
-      soalJodohState.right.splice(i, 1); renderSoalJodoh();
-    }
-    async function saveSoalJodohComponent() {
-      if (!editingCompId) return;
-      const question = document.getElementById('soalJodohQuestionInput').value.trim();
-      if (!question) { showToast('Instruksi wajib', 'error'); return; }
-      if (soalJodohState.left.length !== soalJodohState.right.length) {
-        showToast('Jumlah kiri dan kanan harus sama', 'error'); return;
-      }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          question,
-          left: soalJodohState.left.filter(l => l.trim()),
-          right: soalJodohState.right.filter(r => r.trim()),
-          points: parseInt(document.getElementById('soalJodohPointsInput').value) || 15
-        }});
-        closeSoalJodohModal(); await loadComponents(activeActivityId);
-        showToast('✅ Soal Menjodohkan diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ===== SOAL BENAR/SALAH =====
-    function openSoalBSModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('soalBSQuestionInput').value = data.question || '';
-      document.getElementById('soalBSCorrectInput').value = data.correct === false ? 'false' : 'true';
-      document.getElementById('soalBSPointsInput').value = data.points || 5;
-      document.getElementById('soalBSFeedbackInput').value = data.feedback || '';
-      document.getElementById('modalSoalBS').classList.add('active');
-    }
-    function closeSoalBSModal() { document.getElementById('modalSoalBS').classList.remove('active'); editingCompId = null; }
-    async function saveSoalBSComponent() {
-      if (!editingCompId) return;
-      const question = document.getElementById('soalBSQuestionInput').value.trim();
-      if (!question) { showToast('Pernyataan wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          question,
-          correct: document.getElementById('soalBSCorrectInput').value === 'true',
-          points: parseInt(document.getElementById('soalBSPointsInput').value) || 5,
-          feedback: document.getElementById('soalBSFeedbackInput').value.trim()
-        }});
-        closeSoalBSModal(); await loadComponents(activeActivityId);
-        showToast('✅ Soal Benar/Salah diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // REFLEKSI MODALS
-    // ============================================
-    function openPertanyaanRefleksiModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('pertanyaanRefleksiQuestionInput').value = data.question || '';
-      document.getElementById('pertanyaanRefleksiPlaceholderInput').value = data.placeholder || '';
-      document.getElementById('pertanyaanRefleksiTypeInput').value = data.answer_type || 'textarea';
-      document.getElementById('modalPertanyaanRefleksi').classList.add('active');
-    }
-    function closePertanyaanRefleksiModal() { document.getElementById('modalPertanyaanRefleksi').classList.remove('active'); editingCompId = null; }
-    async function savePertanyaanRefleksiComponent() {
-      if (!editingCompId) return;
-      const question = document.getElementById('pertanyaanRefleksiQuestionInput').value.trim();
-      if (!question) { showToast('Pertanyaan wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          question,
-          placeholder: document.getElementById('pertanyaanRefleksiPlaceholderInput').value.trim(),
-          answer_type: document.getElementById('pertanyaanRefleksiTypeInput').value
-        }});
-        closePertanyaanRefleksiModal(); await loadComponents(activeActivityId);
-        showToast('✅ Pertanyaan refleksi diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openMoodTrackerModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('moodTrackerLabelInput').value = data.label || '';
-      document.getElementById('moodTrackerOptionsInput').value = (data.options || []).join(', ');
-      document.getElementById('modalMoodTracker').classList.add('active');
-    }
-    function closeMoodTrackerModal() { document.getElementById('modalMoodTracker').classList.remove('active'); editingCompId = null; }
-    async function saveMoodTrackerComponent() {
-      if (!editingCompId) return;
-      const label = document.getElementById('moodTrackerLabelInput').value.trim();
-      if (!label) { showToast('Label wajib', 'error'); return; }
-      const optsRaw = document.getElementById('moodTrackerOptionsInput').value.trim();
-      const options = optsRaw ? optsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
-      try {
-        await updateActivityComponent(editingCompId, { component_data: { label, options } });
-        closeMoodTrackerModal(); await loadComponents(activeActivityId);
-        showToast('✅ Mood tracker diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openTargetBelajarModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('targetBelajarLabelInput').value = data.label || '';
-      document.getElementById('targetBelajarPlaceholderInput').value = data.placeholder || '';
-      document.getElementById('modalTargetBelajar').classList.add('active');
-    }
-    function closeTargetBelajarModal() { document.getElementById('modalTargetBelajar').classList.remove('active'); editingCompId = null; }
-    async function saveTargetBelajarComponent() {
-      if (!editingCompId) return;
-      const label = document.getElementById('targetBelajarLabelInput').value.trim();
-      if (!label) { showToast('Label wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          label,
-          placeholder: document.getElementById('targetBelajarPlaceholderInput').value.trim()
-        }});
-        closeTargetBelajarModal(); await loadComponents(activeActivityId);
-        showToast('✅ Target belajar diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openTombolSubmitRefleksiModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('tombolSubmitRefleksiLabelInput').value = data.label || 'Kirim Refleksi';
-      document.getElementById('tombolSubmitRefleksiMsgInput').value = data.success_message || 'Refleksi berhasil dikirim!';
-      document.getElementById('modalTombolSubmitRefleksi').classList.add('active');
-    }
-    function closeTombolSubmitRefleksiModal() { document.getElementById('modalTombolSubmitRefleksi').classList.remove('active'); editingCompId = null; }
-    async function saveTombolSubmitRefleksiComponent() {
-      if (!editingCompId) return;
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          label: document.getElementById('tombolSubmitRefleksiLabelInput').value.trim() || 'Kirim Refleksi',
-          success_message: document.getElementById('tombolSubmitRefleksiMsgInput').value.trim() || 'Refleksi berhasil dikirim!'
-        }});
-        closeTombolSubmitRefleksiModal(); await loadComponents(activeActivityId);
-        showToast('✅ Tombol refleksi diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // DISKUSI MODALS
-    // ============================================
-    function openTopikDiskusiModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('topikDiskusiTitleInput').value = data.title || '';
-      document.getElementById('topikDiskusiDescInput').value = data.description || '';
-      document.getElementById('modalTopikDiskusi').classList.add('active');
-    }
-    function closeTopikDiskusiModal() { document.getElementById('modalTopikDiskusi').classList.remove('active'); editingCompId = null; }
-    async function saveTopikDiskusiComponent() {
-      if (!editingCompId) return;
-      const title = document.getElementById('topikDiskusiTitleInput').value.trim();
-      if (!title) { showToast('Judul wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          title,
-          description: document.getElementById('topikDiskusiDescInput').value.trim()
-        }});
-        closeTopikDiskusiModal(); await loadComponents(activeActivityId);
-        showToast('✅ Topik diskusi diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openAturanDiskusiModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('aturanDiskusiTitleInput').value = data.title || 'Aturan Diskusi';
-      document.getElementById('aturanDiskusiTextInput').value = data.text || '';
-      document.getElementById('modalAturanDiskusi').classList.add('active');
-    }
-    function closeAturanDiskusiModal() { document.getElementById('modalAturanDiskusi').classList.remove('active'); editingCompId = null; }
-    async function saveAturanDiskusiComponent() {
-      if (!editingCompId) return;
-      const text = document.getElementById('aturanDiskusiTextInput').value.trim();
-      if (!text) { showToast('Isi aturan wajib', 'error'); return; }
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          title: document.getElementById('aturanDiskusiTitleInput').value.trim() || 'Aturan Diskusi',
-          text
-        }});
-        closeAturanDiskusiModal(); await loadComponents(activeActivityId);
-        showToast('✅ Aturan diskusi diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    function openKolomKomentarModal(compId) {
-      const comp = components.find(c => String(c.id) === String(compId));
-      if (!comp) return;
-      editingCompId = compId;
-      const data = comp.component_data || {};
-      document.getElementById('kolomKomentarLabelInput').value = data.label || 'Diskusi Kelas';
-      document.getElementById('kolomKomentarPlaceholderInput').value = data.placeholder || 'Tulis komentar...';
-      document.getElementById('modalKolomKomentar').classList.add('active');
-    }
-    function closeKolomKomentarModal() { document.getElementById('modalKolomKomentar').classList.remove('active'); editingCompId = null; }
-    async function saveKolomKomentarComponent() {
-      if (!editingCompId) return;
-      try {
-        await updateActivityComponent(editingCompId, { component_data: {
-          label: document.getElementById('kolomKomentarLabelInput').value.trim() || 'Diskusi Kelas',
-          placeholder: document.getElementById('kolomKomentarPlaceholderInput').value.trim()
-        }});
-        closeKolomKomentarModal(); await loadComponents(activeActivityId);
-        showToast('✅ Kolom komentar diperbarui', 'success');
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // ADD / MOVE / REMOVE COMPONENT
-    // ============================================
-    async function addComponent(type) {
-      if (!activeActivityId) { showToast('Pilih aktivitas dulu', 'error'); return; }
-      const defaults = {
-        text: { html: '' },
-        heading: { text: '', level: 'h2', align: 'left', color: '#0f172a' },
-        image: { url: '', alt: '', caption: '', align: 'center' },
-        video: { url: '', caption: '' },
-        audio: { url: '', caption: '' },
-        table: { columns: [], rows: [], widths: [] },
-        note: { variant: 'info', title: '', text: '' },
-        accordion: { items: [] },
-        file: { url: '', label: 'Download File', description: '' },
-        embed: { url: '', height: 500 },
-        identitas_siswa: { label: 'Identitas Siswa', show_name: true, show_nisn: true, show_kelas: false, show_tanggal: false },
-        petunjuk: { title: 'Petunjuk Pengerjaan', text: '' },
-        input_teks: { label: '', placeholder: '', required: false },
-        textarea: { label: '', placeholder: '', rows: 4, required: false },
-        checkbox: { label: '', options: ['Opsi 1', 'Opsi 2'], required: false },
-        radio: { label: '', options: ['Opsi 1', 'Opsi 2'], required: false },
-        dropdown: { label: '', options: ['Opsi 1', 'Opsi 2'], required: false },
-        tabel_isian: { label: '', columns: [], rows: [] },
-        penilaian_diri: { label: '', min: 1, max: 5, labels: [] },
-        tombol_submit: { label: 'Kumpulkan Jawaban', success_message: 'Jawaban berhasil dikumpulkan!' },
-        asesmen_setting: { title: '', description: '', duration: 30, auto_grade: false },
-        soal_pg: { question: '', options: ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D'], correct: 0, points: 10, feedback: '' },
-        soal_pg_kompleks: { question: '', options: ['Opsi A', 'Opsi B', 'Opsi C'], correct: [0], points: 15, feedback: '' },
-        soal_esai: { question: '', guide: '', points: 20, min_words: 10 },
-        soal_menjodohkan: { question: '', left: ['', ''], right: ['', ''], points: 15 },
-        soal_benar_salah: { question: '', correct: true, points: 5, feedback: '' },
-        pertanyaan_refleksi: { question: '', placeholder: '', answer_type: 'textarea' },
-        mood_tracker: { label: '', options: ['😢 Sedih', '😐 Biasa', '😊 Senang', '😄 Sangat Senang'] },
-        target_belajar: { label: '', placeholder: '' },
-        tombol_submit_refleksi: { label: 'Kirim Refleksi', success_message: 'Refleksi berhasil dikirim!' },
-        topik_diskusi: { title: '', description: '' },
-        aturan_diskusi: { title: 'Aturan Diskusi', text: '' },
-        kolom_komentar: { label: 'Diskusi Kelas', placeholder: 'Tulis komentar...' }
-      };
-      const componentData = defaults[type] || {};
-      try {
-        const created = await createActivityComponent({
-          activityId: activeActivityId, componentType: type, componentData
-        });
-        showToast('✅ Komponen ditambahkan', 'success');
-        await loadComponents(activeActivityId);
-        setTimeout(() => {
-          if (type === 'heading') openHeadingModal(created.id);
-          else if (type === 'image') openImageModal(created.id);
-          else if (type === 'video') openVideoModal(created.id);
-          else if (type === 'audio') openAudioModal(created.id);
-          else if (type === 'table') openTableModal(created.id);
-          else if (type === 'note') openNoteModal(created.id);
-          else if (type === 'accordion') openAccordionModal(created.id);
-          else if (type === 'file') openFileModal(created.id);
-          else if (type === 'embed') openEmbedModal(created.id);
-          else if (type === 'identitas_siswa') openIdentitasModal(created.id);
-          else if (type === 'petunjuk') openPetunjukModal(created.id);
-          else if (type === 'input_teks') openInputTeksModal(created.id);
-          else if (type === 'textarea') openTextareaModal(created.id);
-          else if (type === 'checkbox' || type === 'radio' || type === 'dropdown') openOptionsModal(created.id, type);
-          else if (type === 'tabel_isian') openTabelIsianModal(created.id);
-          else if (type === 'penilaian_diri') openPenilaianDiriModal(created.id);
-          else if (type === 'tombol_submit') openTombolSubmitModal(created.id);
-          else if (type === 'asesmen_setting') openAsesmenSettingModal(created.id);
-          else if (type === 'soal_pg') openSoalPGModal(created.id);
-          else if (type === 'soal_pg_kompleks') openSoalPGKModal(created.id);
-          else if (type === 'soal_esai') openSoalEsaiModal(created.id);
-          else if (type === 'soal_menjodohkan') openSoalJodohModal(created.id);
-          else if (type === 'soal_benar_salah') openSoalBSModal(created.id);
-          else if (type === 'pertanyaan_refleksi') openPertanyaanRefleksiModal(created.id);
-          else if (type === 'mood_tracker') openMoodTrackerModal(created.id);
-          else if (type === 'target_belajar') openTargetBelajarModal(created.id);
-          else if (type === 'tombol_submit_refleksi') openTombolSubmitRefleksiModal(created.id);
-          else if (type === 'topik_diskusi') openTopikDiskusiModal(created.id);
-          else if (type === 'aturan_diskusi') openAturanDiskusiModal(created.id);
-          else if (type === 'kolom_komentar') openKolomKomentarModal(created.id);
-        }, 300);
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    async function moveComponent(compId, direction) {
-      const idx = components.findIndex(c => String(c.id) === String(compId));
-      if (idx < 0) return;
-      const swapIdx = idx + direction;
-      if (swapIdx < 0 || swapIdx >= components.length) return;
-      const tmp = components[idx]; components[idx] = components[swapIdx]; components[swapIdx] = tmp;
-      try {
-        await reorderActivityComponents(components.map((c, i) => ({ id: c.id, order_index: i + 1 })));
-        components.forEach((c, i) => { c.order_index = i + 1; });
-        renderCanvas();
-      } catch (err) { showToast('Gagal ubah urutan', 'error'); }
-    }
-
-    async function removeComponent(compId) {
-      if (!confirm('Hapus komponen ini?')) return;
-      try {
-        await deleteActivityComponent(compId);
-        showToast('🗑️ Komponen dihapus', 'success');
-        await loadComponents(activeActivityId);
-      } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
-    }
-
-    // ============================================
-    // KELOLA KELAS
-    // ============================================
-    function openKelolaKelasModal() {
-      selectedKelolaKelas = new Set(unitClasses.map(uc => String(uc.class_id)));
-      renderKelolaKelasList();
-      document.getElementById('kelolaKelasError').classList.add('hidden');
-      document.getElementById('modalKelolaKelas').classList.add('active');
-    }
-    function closeKelolaKelasModal() { document.getElementById('modalKelolaKelas').classList.remove('active'); }
-    function renderKelolaKelasList() {
-      const c = document.getElementById('kelolaKelasList');
-      if (availableClasses.length === 0) { c.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Anda belum mengampu mapel ini di kelas manapun.</p>'; return; }
-      c.innerHTML = availableClasses.map(cls => {
-        const cid = String(cls.id);
-        const isChecked = selectedKelolaKelas.has(cid);
-        const uc = unitClasses.find(u => String(u.class_id) === cid);
-        const statusLabel = uc
-          ? (uc.is_published ? '<span class="kelas-check-status published">✓ Published</span>' : '<span class="kelas-check-status draft">○ Draft</span>')
-          : '';
-        return `<label class="kelas-check-item ${isChecked ? 'checked' : ''}">
-          <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleKelolaKelas('${cid}', this.checked)">
-          <div class="kelas-check-info">
-            <div class="kelas-check-name">${escapeHtml(cls.name)}${cls.grade ? ' — ' + escapeHtml(cls.grade) : ''}</div>
-            ${statusLabel}
-          </div>
-        </label>`;
-      }).join('');
-    }
-    function toggleKelolaKelas(cid, checked) {
-      if (checked) selectedKelolaKelas.add(String(cid)); else selectedKelolaKelas.delete(String(cid));
-      renderKelolaKelasList();
-    }
-    async function saveKelolaKelas() {
-      const errBox = document.getElementById('kelolaKelasError');
-      errBox.classList.add('hidden');
-      if (selectedKelolaKelas.size === 0) { errBox.textContent = 'Pilih minimal 1 kelas.'; errBox.classList.remove('hidden'); return; }
-      try {
-        const classIds = Array.from(selectedKelolaKelas).map(c => parseInt(c));
-        await setUnitClasses(currentUnit.id, classIds);
-        closeKelolaKelasModal();
-        showToast('✅ Kelas diperbarui', 'success');
-        await loadUnitClassesData();
-      } catch (err) { errBox.textContent = 'Gagal: ' + err.message; errBox.classList.remove('hidden'); }
-    }
-
-    // ============================================
-    // PUBLISH
-    // ============================================
-async function openPublishModal() {
-  await loadUnitClassesData();
-  // ✅ BARU: Pre-check kelas yang diampu
-  selectedPublishKelas = new Set(
-    availableClasses.filter(c => c._isMyClass).map(c => String(c.id))
-  );
-  renderPublishList();
-  document.getElementById('publishError').classList.add('hidden');
-  document.getElementById('modalPublish').classList.add('active');
-}
-    function closePublishModal() { document.getElementById('modalPublish').classList.remove('active'); }
-    function renderPublishList() {
-  const c = document.getElementById('publishKelasList');
-  if (availableClasses.length === 0) { c.innerHTML = '<div class="alert alert-error">Tidak ada kelas di sekolah ini.</div>'; return; }
-  
-  const sorted = [...availableClasses].sort((a, b) => {
-    if (a._isMyClass && !b._isMyClass) return -1;
-    if (!a._isMyClass && b._isMyClass) return 1;
-    return (a.name || '').localeCompare(b.name || '');
-  });
-  
-  c.innerHTML = sorted.map(cls => {
-    const cid = String(cls.id);
-    const isChecked = selectedPublishKelas.has(cid);
-    const uc = unitClasses.find(u => String(u.class_id) === cid);
-    let statusInfo;
-    if (!uc) statusInfo = '<span class="kelas-check-status draft">Belum terkait (akan ditambahkan)</span>';
-    else if (uc.is_published) statusInfo = `<span class="kelas-check-status published">✓ Terakhir publish: ${formatDate(uc.published_at)}</span>`;
-    else statusInfo = '<span class="kelas-check-status draft">Terkait, belum publish</span>';
-    
-    const myClassBadge = cls._isMyClass
-      ? '<span class="kelas-check-status published" style="background:#dbeafe;color:#1e40af;margin-left:4px;">Diampu</span>'
-      : '<span class="kelas-check-status draft" style="background:#fef3c7;color:#92400e;margin-left:4px;">Tidak diampu</span>';
-    
-    return `<label class="kelas-check-item ${isChecked ? 'checked' : ''}">
-      <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePublishKelas('${cid}', this.checked)">
-      <div class="kelas-check-info">
-        <div class="kelas-check-name">
-          ${escapeHtml(cls.name)}${cls.grade ? ' — ' + escapeHtml(cls.grade) : ''}
-          ${myClassBadge}
-        </div>
-        ${statusInfo}
-      </div>
-    </label>`;
-  }).join('');
-}
-    function togglePublishKelas(cid, checked) {
-      if (checked) selectedPublishKelas.add(String(cid)); else selectedPublishKelas.delete(String(cid));
-      renderPublishList();
-    }
-    async function confirmPublish() {
-      const errBox = document.getElementById('publishError');
-      errBox.classList.add('hidden');
-      if (selectedPublishKelas.size === 0) { errBox.textContent = 'Pilih minimal 1 kelas.'; errBox.classList.remove('hidden'); return; }
-      try {
-        const snapshot = await buildUnitSnapshot();
-        const classIds = Array.from(selectedPublishKelas).map(c => parseInt(c));
-        const existingIds = new Set(unitClasses.map(uc => String(uc.class_id)));
-        const newCount = classIds.filter(id => !existingIds.has(String(id))).length;
-        await publishUnitToClasses(currentUnit.id, classIds, snapshot);
-        closePublishModal();
-        let msg = '✅ Berhasil di-publish ke ' + classIds.length + ' kelas';
-        if (newCount > 0) msg += ` (${newCount} kelas baru)`;
-        showToast(msg, 'success');
-        currentUnit = await getUnitById(currentUnit.id);
-        updateStatusBadge(currentUnit.status);
-        await loadUnitClassesData();
-      } catch (err) { errBox.textContent = 'Gagal: ' + err.message; errBox.classList.remove('hidden'); }
-    }
-    async function buildUnitSnapshot() {
-      const acts = await getUnitActivities(currentUnit.id);
-      const snapshot = {
-        unit: { title: currentUnit.title, description: currentUnit.description, kktp_type: currentUnit.kktp_type, kktp_config: currentUnit.kktp_config },
-        activities: []
-      };
-      for (const act of acts) {
-        const comps = await getActivityComponents(act.id);
-        snapshot.activities.push({
-          id: act.id, title: act.title, type: act.type, order_index: act.order_index,
-          components: comps.map(c => ({ id: c.id, component_type: c.component_type, component_data: c.component_data, order_index: c.order_index }))
-        });
-      }
-      return snapshot;
-    }
-
-    // ============================================
-    // HELPERS
-    // ============================================
-    function renderEmptyCanvas() {
-      document.getElementById('panelCenter').innerHTML = `<div class="empty-canvas"><span class="emoji">👈</span><h3>Pilih Aktivitas</h3><p>Klik aktivitas di panel kiri untuk mulai mengedit.</p></div>`;
-    }
-    function enableToolButtons(enabled) {
-      const ids = ['toolText', 'toolHeading', 'toolImage', 'toolVideo', 'toolAudio', 'toolTable',
-       'toolIdentitas', 'toolPetunjuk', 'toolInputTeks', 'toolTextarea', 'toolCheckbox', 'toolRadio',
-       'toolDropdown', 'toolTabelIsian', 'toolPenilaianDiri', 'toolTombolSubmit',
-       'toolAsesmenSetting', 'toolSoalPG', 'toolSoalPGK', 'toolSoalEsai', 'toolSoalJodoh', 'toolSoalBS',
-       'toolPertanyaanRefleksi', 'toolMoodTracker', 'toolTargetBelajar', 'toolTombolSubmitRefleksi',
-       'toolTopikDiskusi', 'toolAturanDiskusi', 'toolKolomKomentar',
-       'toolNote', 'toolAccordion', 'toolFile', 'toolEmbed'];
-      ids.forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.disabled = !enabled;
-      });
-    }
-    function updateStatusBadge(status) {
-      const badge = document.getElementById('statusBadge');
-      badge.className = 'status-badge ' + (status || 'draft');
-      badge.textContent = { draft: 'Draft', published: 'Published', archived: 'Archived' }[status] || status;
-    }
-    function openPreview() {
-      if (window.self !== window.top) {
-        window.parent.postMessage({ type: 'GURU_GOTO', target: 'preview', params: { unitId: currentUnit.id }, from: 'editor' }, '*');
-      } else {
-        window.location.href = 'unit-preview.html?embed=1&unitId=' + currentUnit.id;
-      }
-    }
-    function goBack() {
-      if (window.self !== window.top) {
-        window.parent.postMessage({ type: 'GURU_BACK', view: 'workspace' }, '*');
-      } else {
-        window.location.href = 'mapel-workspace.html?embed=1&subjectId=' + (currentUnit?.annual_plans?.subject_id || '');
-      }
-    }
-    function formatDate(iso) { if (!iso) return '-'; try { return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); } catch { return '-'; } }
-    function escapeHtml(t) { if (t === null || t === undefined) return ''; const d = document.createElement('div'); d.textContent = String(t); return d.innerHTML; }
-    function showToast(msg, type = 'success') {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
-      clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
-    }
-
-    document.addEventListener('input', e => {
-      if (['headingTextInput', 'headingLevelSelect', 'headingAlignSelect', 'headingColorInput'].includes(e.target.id)) updateHeadingPreview();
-      if (e.target.id === 'imageUrlInput') updateImagePreview();
-      if (e.target.id === 'videoUrlInput') updateVideoPreview();
-      if (e.target.id === 'audioUrlInput') updateAudioPreview();
-    });
-    document.addEventListener('change', e => {
-      if (['headingLevelSelect', 'headingAlignSelect', 'headingColorInput'].includes(e.target.id)) updateHeadingPreview();
-    });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') {
-        closeAddActivityModal(); closeEditActivityModal(); closeDeleteActivityModal();
-        closeColorPicker(); closeHeadingModal(); closeImageModal(); closeVideoModal();
-        closeAudioModal(); closeTableModal(); closeNoteModal(); closeAccordionModal();
-        closeFileModal(); closeEmbedModal(); closeKelolaKelasModal(); closePublishModal();
-        closeIdentitasModal(); closePetunjukModal(); closeInputTeksModal(); closeTextareaModal();
-        closeOptionsModal(); closeTabelIsianModal(); closePenilaianDiriModal(); closeTombolSubmitModal();
-        closeAsesmenSettingModal(); closeSoalPGModal(); closeSoalPGKModal(); closeSoalEsaiModal();
-        closeSoalJodohModal(); closeSoalBSModal();
-        closePertanyaanRefleksiModal(); closeMoodTrackerModal(); closeTargetBelajarModal(); closeTombolSubmitRefleksiModal();
-        closeTopikDiskusiModal(); closeAturanDiskusiModal(); closeKolomKomentarModal();
-      }
-    });
-  </script>
+  <script src="../assets/js/guru/editor-tools.js"></script>
+  <script src="../assets/js/guru/editor-renderers.js"></script>
+  <script src="../assets/js/guru/editor-modals.js"></script>
+  <script src="../assets/js/guru/editor-shell.js"></script>
+  <script src="../assets/js/guru/activity-settings-modal.js"></script>
 </body>
 </html>

@@ -78,6 +78,7 @@
       margin-bottom: 0.4rem;
     }
     .activity-info-eyebrow.lkpd { background: #fef3c7; color: #92400e; }
+    .activity-info-eyebrow.lembar_aktivitas { background: #fef3c7; color: #92400e; }
     .activity-info-eyebrow.asesmen { background: #ede9fe; color: #6d28d9; }
     .activity-info-eyebrow.refleksi { background: #fce7f3; color: #be185d; }
     .activity-info-eyebrow.materi { background: #dbeafe; color: #1e40af; }
@@ -541,10 +542,13 @@
     let editingSubmissionId = null;
     let currentSubmission = null;
 
-    const ACTIVITY_TYPE_LABEL = {
-      materi: 'Materi', lkpd: 'LKPD', asesmen: 'Asesmen',
-      refleksi: 'Refleksi', diskusi: 'Diskusi', custom: 'Custom'
-    };
+const ACTIVITY_TYPE_LABEL = {
+  materi: 'Materi', 
+  lkpd: 'Lembar Aktivitas',          // backward compat
+  lembar_aktivitas: 'Lembar Aktivitas',
+  asesmen: 'Asesmen',
+  refleksi: 'Refleksi', diskusi: 'Diskusi', custom: 'Custom'
+};
 
     // ============================================
     // INIT

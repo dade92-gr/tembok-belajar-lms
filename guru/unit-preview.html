@@ -491,6 +491,9 @@
       .nav-info-text { width: 100%; justify-content: center; }
       .preview-topbar { flex-wrap: wrap; height: auto; padding: 0.5rem; gap: 0.5rem; }
     }
+    .nav-type.lembar_aktivitas { background: #fef3c7; color: #92400e; }
+.activity-render-eyebrow.lembar_aktivitas { background: #fef3c7; color: #92400e; }
+.activity-type-badge.lembar_aktivitas { background: #fef3c7; color: #92400e; }
   </style>
   <script>
     (function() {
@@ -574,14 +577,15 @@
     let activeActivityId = null;
     let renderSource = 'live';
 
-    const ACTIVITY_TYPE_LABEL = {
-      materi: 'Materi', lkpd: 'LKPD', asesmen: 'Asesmen',
-      refleksi: 'Refleksi', diskusi: 'Diskusi', custom: 'Custom'
-    };
-    const ACTIVITY_TYPE_ICON = {
-      materi: 'fa-book', lkpd: 'fa-file-pen', asesmen: 'fa-clipboard-check',
-      refleksi: 'fa-brain', diskusi: 'fa-comments', custom: 'fa-wrench'
-    };
+const ACTIVITY_TYPE_LABEL = {
+  materi: 'Materi', lkpd: 'Lembar Aktivitas', lembar_aktivitas: 'Lembar Aktivitas',
+  asesmen: 'Asesmen', refleksi: 'Refleksi', diskusi: 'Diskusi', custom: 'Custom'
+};
+const ACTIVITY_TYPE_ICON = {
+  materi: 'fa-book', lkpd: 'fa-file-pen', lembar_aktivitas: 'fa-file-pen',
+  asesmen: 'fa-clipboard-check', refleksi: 'fa-brain',
+  diskusi: 'fa-comments', custom: 'fa-wrench'
+};
 
     // ============================================
     // DRIVE URL CONVERTER
