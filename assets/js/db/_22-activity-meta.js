@@ -189,12 +189,28 @@ async function checkAllActivitiesGating(studentId, unitId) {
 
   // Ambil semua progress completed
   const activityIds = activities.map(a => a.id);
-  const { data: progressRows } = await client.from('progress')
-    .select('activity_id, status')
-    .eq('student_id', studentId)
-    .in('activity_id', activityIds)
-    .eq('status', 'completed');
-  const completedIds = new Set((progressRows || []).map(p => String(p.activity_id)));
+// FIX: gabungkan 3 sumber "completed" agar konsisten dengan sidebar
+const completedIds = new Set();
+
+const { data: progressRows } = await client.from('progress')
+  .select('activity_id')
+  .eq('student_id', studentId)
+  .in('activity_id', activityIds)
+  .eq('status', 'completed');
+(progressRows || []).forEach(p => completedIds.add(String(p.activity_id)));
+
+const { data: subs } = await client.from('submissions')
+  .select('activity_id')
+  .eq('student_id', studentId)
+  .in('activity_id', activityIds)
+  .in('status', ['submitted', 'graded', 'completed']);
+(subs || []).forEach(s => completedIds.add(String(s.activity_id)));
+
+const { data: refls } = await client.from('reflections')
+  .select('activity_id')
+  .eq('student_id', studentId)
+  .in('activity_id', activityIds);
+(refls || []).forEach(r => completedIds.add(String(r.activity_id)));
 
   // Ambil semua prerequisites (kalau ada require_ids)
   let prereqMap = {};

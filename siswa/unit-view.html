@@ -653,9 +653,12 @@
     let submitting = false;
     let autoCompleteTimers = {};  // FIX A3: timer per activity, bisa dibatalkan
     let gatingMap = {};              // { [activityId]: { unlocked, reason, missing } }
-let activeTrackers = [];         // tracker aktif (untuk stop saat ganti aktivitas)
-let unitAccess = null;           // hasil checkStudentUnitAccess
-let currentAttemptNumber = 1;    // untuk multi-attempt
+    let activeTrackers = [];         // tracker aktif (untuk stop saat ganti aktivitas)
+    let unitAccess = null;           // hasil checkStudentUnitAccess
+    let currentAttemptNumber = 1;    // untuk multi-attempt
+
+    // FIX GATING: guard agar refreshGating tidak dobel
+    let _gatingRefreshing = false;
 
 const ACTIVITY_TYPE_LABEL = {
   materi: '📖 Materi',
@@ -734,20 +737,6 @@ if (unitAccess && unitAccess.access === 'remedial') {
   showRemedialBanner();
 }
 
-function showRemedialBanner() {
-  const banner = document.createElement('div');
-  banner.style.cssText = 'background:linear-gradient(135deg,#fef3c7,#fde68a); border-left:4px solid #f59e0b; padding:0.8rem 1rem; border-radius:8px; margin:0.5rem; font-size:0.85rem; color:#92400e; display:flex; align-items:center; gap:0.6rem;';
-  banner.innerHTML = `
-    <i class="fas fa-redo-alt" style="font-size:1.2rem;"></i>
-    <div style="flex:1;">
-      <div style="font-weight:800;">Mode Remedial Aktif</div>
-      <div style="font-size:0.78rem;">Anda bisa mengulang aktivitas di unit ini. Nilai akhir dibatasi passing grade.</div>
-    </div>
-  `;
-  const container = document.querySelector('.preview-main');
-  if (container) container.insertBefore(banner, container.firstChild);
-}
-
         if (activities.length > 0) {
           activeActivityId = activities[0].id;
           renderActivityList();
@@ -774,6 +763,21 @@ function showRemedialBanner() {
           </div>`;
       }
     })();
+
+    // FIX GATING: pindahkan ke top-level scope
+    function showRemedialBanner() {
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:linear-gradient(135deg,#fef3c7,#fde68a); border-left:4px solid #f59e0b; padding:0.8rem 1rem; border-radius:8px; margin:0.5rem; font-size:0.85rem; color:#92400e; display:flex; align-items:center; gap:0.6rem;';
+      banner.innerHTML = `
+        <i class="fas fa-redo-alt" style="font-size:1.2rem;"></i>
+        <div style="flex:1;">
+          <div style="font-weight:800;">Mode Remedial Aktif</div>
+          <div style="font-size:0.78rem;">Anda bisa mengulang aktivitas di unit ini. Nilai akhir dibatasi passing grade.</div>
+        </div>
+      `;
+      const container = document.querySelector('.preview-main');
+      if (container) container.insertBefore(banner, container.firstChild);
+    }
 
     // ============================================
     // LOAD DATA
@@ -851,6 +855,32 @@ try {
     }
 
     // ============================================
+    // FIX GATING: refresh gatingMap dari DB
+    // Dipanggil setiap kali status completed berubah.
+    // ============================================
+async function refreshGating() {
+  if (_gatingRefreshing) return;
+  if (!currentUser || !currentUnit) return;
+  _gatingRefreshing = true;
+  try {
+    const fresh = await checkAllActivitiesGating(currentUser.id, currentUnit.id) || {};
+
+    // FIX: paksa unlocked jika lokal bilang completed
+    // (konsistensi dengan sidebar — mencegah mismatch)
+    for (const a of activities) {
+      if (checkActivityCompleted(a.id)) {
+        fresh[a.id] = { unlocked: true, reason: 'completed_local' };
+      }
+    }
+    gatingMap = fresh;
+  } catch (e) {
+    console.warn('refreshGating error:', e);
+  } finally {
+    _gatingRefreshing = false;
+  }
+}
+
+    // ============================================
     // RENDER ACTIVITY LIST
     // ============================================
     function renderActivityList() {
@@ -894,11 +924,24 @@ try {
 
     // ============================================
     // SWITCH ACTIVITY
+    // FIX GATING: re-check on-demand jika gatingMap stale
     // ============================================
     async function switchActivity(activityId) {
-  // Cek locked
-  const gating = gatingMap[activityId] || { unlocked: true };
-  if (!gating.unlocked) {
+  let gating = gatingMap[activityId];
+
+  // Jika tidak ada entry atau locked → re-check sekali (mungkin stale)
+  if (!gating || !gating.unlocked) {
+    try {
+      await refreshGating();
+      gating = gatingMap[activityId] || { unlocked: true };
+      // Re-render sidebar agar ikon lock hilang jika sudah terbuka
+      renderActivityList();
+    } catch (e) {
+      console.warn('re-check gating error:', e);
+    }
+  }
+
+  if (gating && !gating.unlocked) {
     const missingNames = (gating.missing || []).map(m => m.title).join(', ');
     showToast(`🔒 Selesaikan dulu: ${missingNames || 'aktivitas sebelumnya'}`, 'error');
     return;
@@ -1117,6 +1160,8 @@ async function markActivityComplete(activityId, data) {
       completed: true
     });
     await loadUserSubmissions(currentUnit.id);
+    // FIX GATING: refresh gating setelah completed
+    await refreshGating();
     renderActivityList();
     updateProgressBadge();
     showSaveIndicator();
@@ -1159,6 +1204,8 @@ async function markActivityComplete(activityId, data) {
           });
 
           await loadUserSubmissions(currentUnit.id);
+          // FIX GATING: refresh gating setelah completed
+          await refreshGating();
           renderActivityList();
           updateProgressBadge();
           showSaveIndicator();
@@ -1932,73 +1979,74 @@ async function markActivityComplete(activityId, data) {
     // ============================================
     // SUBMIT ACTIVITY (final)
     // ============================================
+    
     async function submitCurrentActivity() {
-      if (submitting) return;
-      const activity = activities.find(a => String(a.id) === String(activeActivityId));
-      if (!activity) return;
+  if (submitting) return;
+  const activity = activities.find(a => String(a.id) === String(activeActivityId));
+  if (!activity) return;
 
-      if (!confirm('Kumpulkan jawaban Anda? Setelah dikumpulkan, Anda masih bisa mengubah, tapi akan ditandai sebagai revisi.')) return;
+  if (!confirm('Kumpulkan jawaban Anda? Setelah dikumpulkan, Anda masih bisa mengubah, tapi akan ditandai sebagai revisi.')) return;
 
-      submitting = true;
+  submitting = true;
 
-      try {
-        if (saveTimers[activity.id]) {
-          clearTimeout(saveTimers[activity.id]);
-          await flushSave(activity.id);
-        }
+  try {
+    if (saveTimers[activity.id]) {
+      clearTimeout(saveTimers[activity.id]);
+      await flushSave(activity.id);
+    }
 
-        const client = initSupabase();
-        const isRefleksi = activity.type === 'refleksi';
+    const client = initSupabase();
+    const isRefleksi = activity.type === 'refleksi';
 
-        if (isRefleksi) {
-          await client.from('reflections')
-            .update({ submitted_at: new Date().toISOString() })
-            .eq('activity_id', activity.id)
-            .eq('student_id', currentUser.id);
-        } else {
-          // FIX A2: limit(1)
-          const { data: existing } = await client.from('submissions')
-            .select('id').eq('activity_id', activity.id).eq('student_id', currentUser.id).limit(1).maybeSingle();
+    if (isRefleksi) {
+      await client.from('reflections')
+        .update({ submitted_at: new Date().toISOString() })
+        .eq('activity_id', activity.id)
+        .eq('student_id', currentUser.id);
+    } else {
+      const { data: existing } = await client.from('submissions')
+        .select('id').eq('activity_id', activity.id).eq('student_id', currentUser.id).limit(1).maybeSingle();
 
-          if (existing) {
-            await client.from('submissions').update({
-              status: 'submitted',
-              submitted_at: new Date().toISOString()
-            }).eq('id', existing.id);
-          } else {
-            await client.from('submissions').insert([{
-              activity_id: activity.id,
-              student_id: currentUser.id,
-              answers: answersCache[activity.id] || {},
-              status: 'submitted',
-              submitted_at: new Date().toISOString()
-            }]);
-          }
-
-          try {
-            await upsertProgress({
-              studentId: currentUser.id,
-              unitId: currentUnit.id,
-              activityId: activity.id,
-              status: 'completed',
-              completedAt: new Date().toISOString()
-            });
-          } catch (e) { console.warn('Progress error:', e); }
-        }
-
-        showToast('✅ Aktivitas berhasil dikumpulkan!', 'success');
-
-        await loadUserSubmissions(currentUnit.id);
-        renderActivityList();
-        await renderActiveActivity();
-        updateProgressBadge();
-      } catch (err) {
-        console.error('Submit error:', err);
-        showToast('Gagal submit: ' + err.message, 'error');
-      } finally {
-        submitting = false;
+      if (existing) {
+        await client.from('submissions').update({
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        }).eq('id', existing.id);
+      } else {
+        await client.from('submissions').insert([{
+          activity_id: activity.id,
+          student_id: currentUser.id,
+          answers: answersCache[activity.id] || {},
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        }]);
       }
     }
+
+    // FIX KRITIS: progress WAJIB ditulis untuk SEMUA tipe (termasuk refleksi),
+    // dan JANGAN telan error — gating bergantung pada progress.status.
+    await upsertProgress({
+      studentId: currentUser.id,
+      unitId: currentUnit.id,
+      activityId: activity.id,
+      status: 'completed',
+      completedAt: new Date().toISOString()
+    });
+
+    showToast('✅ Aktivitas berhasil dikumpulkan!', 'success');
+
+    await loadUserSubmissions(currentUnit.id);
+    await refreshGating();
+    renderActivityList();
+    await renderActiveActivity();
+    updateProgressBadge();
+  } catch (err) {
+    console.error('Submit error:', err);
+    showToast('Gagal submit: ' + err.message, 'error');
+  } finally {
+    submitting = false;
+  }
+}
 
     // ============================================
     // KOMENTAR (forum per aktivitas)
